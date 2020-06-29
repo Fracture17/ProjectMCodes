@@ -10,14 +10,25 @@
 #include "MuSelctChrNameEntry.h"
 
 struct muSelCharPlayerArea {
-    char spacer[0x1FC];
+    char _spacer[0x1C8];
+
+    //0x1C8
+    //index into tag array
+    int currentTagIndex;
+
+    char _spacer2[0x1FC - 0x1C8 - 4];
 
     //0x1FC
     MuSelctChrList muSelctChrList;
 
     //0x370
     MuSelctChrNameEntry muSelctChrNameEntry;
+
+    void openNameList();
 };
+
+#define _openNameList ((void (*)(muSelCharPlayerArea* self)) 0x8069b340)
+
 
 
 #endif //CSSCUSTOMCONTROLS_MUSELCHARPLAYERAREA_H

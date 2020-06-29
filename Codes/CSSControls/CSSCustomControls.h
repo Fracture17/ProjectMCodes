@@ -15,6 +15,7 @@
 #include "CustomControlOffsets.h"
 #include "Brawl/GameGlobal.h"
 #include "Brawl/muSelCharPlayerArea.h"
+#include "Brawl/MuSelCharHand.h"
 
 
 class CSSButtonSetting {

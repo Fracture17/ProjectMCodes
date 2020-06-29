@@ -13,10 +13,36 @@
 
 static const int TESTS = 4;
 
-BASIC_INJECT("setMenuOpenFlag", 0x8069b340, "stwu sp, -0x20(sp)");
+/*BASIC_INJECT("setMenuOpenFlag", 0x8069b340, "stwu sp, -0x20(sp)");
 
 extern "C" void setMenuOpenFlag(muSelCharPlayerArea& area) {
     states[CSSTagMenuState::getPortFromList(&area.muSelctChrList)].open();
+}*/
+
+int _TEMP_nameListPosition = 0;
+
+INJECTION("setMenuOpenFlag", 0x8069b360, R"(
+    SAVE_REGS
+    bl setMenuOpenFlag
+    cmpwi r3, 0
+    RESTORE_REGS
+    beq- _SKIP_setMenuOpenFlag
+    lis r5, _TEMP_nameListPosition@ha
+    lwz r5, _TEMP_nameListPosition@l(r5)
+_SKIP_setMenuOpenFlag:
+    addi r3, r3, 508
+)");
+
+extern "C" bool setMenuOpenFlag(muSelCharPlayerArea& area) {
+    int port = CSSTagMenuState::getPortFromList(&area.muSelctChrList);
+    auto& state = states[port];
+    bool result = false;
+    if(state.shouldReopen) {
+        _TEMP_nameListPosition = state.indexOfTagBeingReplaced;
+        result = true;
+    }
+    state.open();
+    return result;
 }
 
 BASIC_INJECT("setMenuClosedFlag", 0x806a0714, "stwu sp, -0x10(sp)");
@@ -364,4 +390,72 @@ extern "C" bool openNameEntry(muSelCharPlayerArea& area) {
         return true;
     }
     return false;
+}
+
+
+int _TEMP_tagToReplace = 0;
+
+INJECTION("replaceName", 0x8069b87c, R"(
+    SAVE_REGS
+    mr r3, r29
+    bl replaceName
+    cmpwi r3, 0
+    RESTORE_REGS
+    beq- _SKIP_replaceName
+    lis r19, _TEMP_tagToReplace@ha
+    lwz r19, _TEMP_tagToReplace@l(r19)
+_SKIP_replaceName:
+    mr r3, r20
+)");
+
+
+extern "C" bool replaceName(muSelCharPlayerArea& area) {
+    int port = CSSTagMenuState::getPortFromList(&area.muSelctChrList);
+    auto& state = states[port];
+    if(state.isReplacingTag()) {
+        state.shouldReopen = true;
+        _TEMP_tagToReplace = state.indexOfTagBeingReplaced;
+        return true;
+    }
+    return false;
+}
+
+
+//r3 is MuSelCharHand*
+//r23 is muSelCharPlayerArea*
+INJECTION("reopenNameMenu", 0x8068a27c, R"(
+    SAVE_REGS
+    mr r4, r23
+    bl reopenNameMenu
+    RESTORE_REGS
+    #no replacement instruction
+)");
+
+
+extern "C" void reopenNameMenu(MuSelCharHand& hand, muSelCharPlayerArea& area) {
+    int port = CSSTagMenuState::getPortFromList(&area.muSelctChrList);
+    auto& state = states[port];
+    if(state.shouldReopen) {
+        hand.setMode(7, port);
+        area.openNameList();
+    }
+    else {
+        hand.setMode(0, 0);
+    }
+}
+
+INJECTION("setNameMenuReopenFlag", 0x8069b9e8, R"(
+    SAVE_REGS
+    mr r3, r29
+    bl setNameMenuReopenFlag
+    RESTORE_REGS
+    li r31, 1
+)");
+
+extern "C" void setNameMenuReopenFlag(muSelCharPlayerArea& area) {
+    int port = CSSTagMenuState::getPortFromList(&area.muSelctChrList);
+    auto& state = states[port];
+    if(state.isReplacingTag()) {
+        state.shouldReopen = true;
+    }
 }

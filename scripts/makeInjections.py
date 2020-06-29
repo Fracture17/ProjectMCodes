@@ -57,7 +57,6 @@ def main():
     nmFilePaths = sys.argv[2][2:].split(', ')
     isInitializerString = sys.argv[3]
     isInitializer = isInitializerString == 'true'
-    print(nmFilePaths)
 
     makeInjectionsFile(nmFilePaths, injectionsPath, isInitializer)
 
@@ -80,7 +79,6 @@ def makeInjectionsFile(nmFilePaths: list, injectionsPath, isInitializer: bool):
     #placeholder for actual function calls
     #can't know address until it actually is linked
     initializerPlaceholders = '\n'.join([".int 0"] * numInitializers)
-    print(initializerPlaceholders)
 
     if isInitializer:
         initializerList = initializerListTemplate.format(initializerPlaceholders=initializerPlaceholders,

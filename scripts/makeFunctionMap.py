@@ -67,7 +67,6 @@ def hasCppSource(func: Function):
 def combineNameAndSource(func: Function):
     name, loc = func.name.split('\t')
     p = loc.rfind('/')
-    #loc = loc[p+1:-1]
     loc = loc[p+1:]
     funcName = name + '@' + loc
     return funcName

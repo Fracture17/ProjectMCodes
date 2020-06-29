@@ -89,6 +89,8 @@ void CSSTagMenuState::open() {
     nameList->inNormalTagMenu = true;
     indexOfTagBeingEdited = -1;
     indexOfTagBeingReplaced = -1;
+    _isReplacingTag = false;
+    shouldReopen = false;
 }
 
 void CSSTagMenuState::close() {
@@ -120,13 +122,18 @@ bool CSSTagMenuState::isTagBeingEditedByOtherPort(int menuPos) {
 }
 
 void CSSTagMenuState::startReplaceTag() {
-    int cssTagIndex = nameList->listPosition;
+    int cssTagIndex = nameList->listPosition - 1;
     indexOfTagBeingReplaced = nameList->listIndex2TagIndex[cssTagIndex];
-    setMode(CSSTagMenuState::REPLACING_TAG);
+    _isReplacingTag = true;
 }
 
 bool CSSTagMenuState::isReplacingTag() {
-    return mode == REPLACING_TAG;
+    return _isReplacingTag;
+}
+
+void CSSTagMenuState::endReplaceTag() {
+    indexOfTagBeingReplaced = -1;
+    _isReplacingTag = false;
 }
 
 

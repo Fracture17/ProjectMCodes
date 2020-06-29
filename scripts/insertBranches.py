@@ -23,13 +23,7 @@ def main():
     compressedCodesPath = sys.argv[3]
     finalCodePath = sys.argv[4]
 
-    print(sys.argv)
-
     insertBranches(nmFilePath, baseAddress, compressedCodesPath, finalCodePath)
-
-
-def saveNM(inputFilePath, nmFilePath):
-    os.system(f"ppc-nm -C -S -l -v {inputFilePath} > {nmFilePath}")
 
 
 def insertBranches(nmFilePath, baseAddress, compressedCodesPath, finalCodePath):
@@ -51,12 +45,8 @@ def getInjectionInfo(nmFilePath, baseAddress):
 
     address2size = {func.address: func.size for func in funcs}
 
-    #base address is first function address
-    #baseAddress = funcs[0].address
-
     #first function is getInjections
     #8 bytes per inject, and 4 at the start
-    print(address2size[baseAddress])
     numInjections = (address2size[baseAddress] - 4) // 8
 
     return address2size, numInjections
@@ -64,7 +54,6 @@ def getInjectionInfo(nmFilePath, baseAddress):
 
 def getInitializerAddresses(nmFilePath):
     functions = getAllFunctions(nmFilePath)
-    print(functions)
     initializers = [func for func in functions
                     if func.name.startswith('_GLOBAL__sub_I_')]
     initializerAddresses = [i.address for i in initializers]
@@ -103,11 +92,8 @@ def makeReturnBranchInstruction(data, address2size, baseAddress, i):
 
 
 def setInitializerBranches(data, numInjections, baseAddress, initializerAddresses):
-    print(hex(baseAddress))
-    print(numInjections)
     for i, initAddress in enumerate(initializerAddresses):
         fileOffset = i * 4 + numInjections * 8 + 4
-        print(fileOffset)
         branchAddress = baseAddress + fileOffset
         instruction = makeBranchLinkInstruction(branchAddress, initAddress)
         data = replaceInt(data, fileOffset, instruction)
@@ -130,7 +116,6 @@ def makeBranchInstruction(startAddress, targetAddress):
 
 def makeBranchLinkInstruction(startAddress, targetAddress):
     offset = targetAddress - startAddress
-    print(hex(startAddress), hex(targetAddress), hex(offset), offset.bit_length())
     maskedOffset = (2**26 - 1) & offset
     branchInstruction = maskedOffset | 0x48000001
     return branchInstruction

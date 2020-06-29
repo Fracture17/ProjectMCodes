@@ -1,12 +1,14 @@
-#1. Build individual code
-#2. For each code, use nm binutil to get file with list of functions
-#3. After everything is built, call python script to use nm files to identify injections
-#python file makes a cpp file that calls the functions to inject and has their injection addresses
-#4. Compile and link injection cpp file and all compiled code libraries
-#5. Compress executable by removing debug info and other nonessential stuff
-#6. Edit compressed file to include injection addresses.  This is the final code file
-#7. Create a disassembly file that interlaces assembly with c++
-#8. Create function map to be used with Dolphin
+#I have numbered each "step" of the script, because it is difficult to keep track of otherwise
+#The numbered order isn't exactly accurate, since multiple things can happen at once
+#The general idea of this script is it builds a bunch of seperate code libraries and links them together
+#Since injections are not part of normal c++, they have to be handled differently
+#Injections are given special symbol names which are used to encode the location of the injection, and where the function ends up
+#The initializer build contains everything, and is ran once when the game is still loading
+#This lets it initialize the global variables and anything else needed for the codes to function
+#Since it only needs to work when the game is still loading, there is plenty of room
+#The code build removes everything that is not referenced by an injection
+#It is muc smaller, but has different data offsets than the initializer
+#To fix this, the linker forcefully sets the data addresses to the initializer build's values
 
 
 cmake_minimum_required(VERSION 3.15)
@@ -37,8 +39,6 @@ target_link_options(initializers PRIVATE "-Wl,-Ttext=${initializersStartAddress}
 target_link_options(initializers PRIVATE "-Wl,--gc-sections")
 #target_link_options(initializers PRIVATE "-Wl,--print-gc-sections")
 
-include_directories(initializers Common)
-
 
 #15. Compile and link the code injection cpp file and the code libraries with their ctors and dtors removed
 #Contains all code that is needed after initialization
@@ -47,16 +47,14 @@ add_executable(code ${codeInjectionsFile})
 target_link_options(code PRIVATE "-Wl,-Ttext=${codeStartAddress}")
 target_link_options(code PRIVATE "-Wl,--gc-sections")
 #target_link_options(code PRIVATE "-Wl,--print-gc-sections")
-target_link_options(code PRIVATE "-Wl,@dataAddresses.txt")
+target_link_options(code PRIVATE "-Wl,@${dataAddressesFile}")
 
 
 
-
-
-
-#1. Build individual code
+#Build individual codes
 #Every individual library runs this function
 function(add_code codeName)
+    #1. Create static library for each code group
     add_library(${codeName} STATIC "${ARGN}")
 
     #15. Create new library file without ctors and dtors
@@ -64,16 +62,17 @@ function(add_code codeName)
     #This occurs once initializers is built, since it modifies the library in place
     #Modifying in place is needed for proper linking
     add_custom_target(EXTRACTED_${codeName} ALL
-            COMMAND ppc-objcopy --remove-section=.ctors --remove-section=.dtors $<TARGET_FILE:${codeName}> ${codeName}
+            COMMAND ${PPC_OBJCOPY} --remove-section=.ctors --remove-section=.dtors $<TARGET_FILE:${codeName}> ${codeName}
             DEPENDS initializers)
 
-    #3. For each code, use nm binutil to get file with list of functions
+    #2. For each code group, use nm binutil to get file with list of functions
     add_custom_target("NM_${codeName}" ALL
-            COMMAND ppc-nm -C $<TARGET_FILE:${codeName}> > "NM_${codeName}.txt"
+            COMMAND ${PPC_NM} -C $<TARGET_FILE:${codeName}> > "NM_${codeName}.txt"
             DEPENDS ${codeName})
 
     add_dependencies(nmBarrier "NM_${codeName}")
     target_link_libraries(initializers ${codeName})
+    #link with the same library names as initializers, but they have been altered by the time it builds
     target_link_libraries(code ${codeName})
 
     #NMFiles property contains list of all built files
@@ -93,8 +92,9 @@ add_subdirectory(Libraries)
 add_subdirectory(Globals)
 
 
+#This section deals with building the initializer and data stuff
 
-#4. After everything is built, call python script to use nm files to identify injections
+#3. After all codes are built, call python script to use nm files to identify injections
 #Creates cpp file used as entry for the initializer build
 get_property(NMFiles GLOBAL PROPERTY source_list_property)
 add_custom_target(initializerInjections
@@ -104,86 +104,85 @@ add_custom_target(initializerInjections
         DEPENDS nmBarrier)
 add_dependencies(initializers initializerInjections)
 
-#Creates cpp file used as entry for the code build
-add_custom_target(codeInjections
-        COMMAND python ${makeInjectionsScript} ${codeInjectionsFile} ${NMFiles} false
-        BYPRODUCTS ${codeInjectionsFile}
-        OUTPUT ${codeInjectionsFile}
-        DEPENDS nmBarrier)
+
+#4. Initializer is built here
 
 
-#6. Split the initializer text and data sections into different files
+#5. Split the initializer text and data sections into different files
 add_custom_target(splitInitializersAndData ALL
-        COMMAND ppc-objcopy --only-section=.text $<TARGET_FILE:initializers> ${justInitializers}
-        COMMAND ppc-objcopy --remove-section=.text $<TARGET_FILE:initializers> ${justData}
-        BYPRODUCTS ${justInitializers} ${justData}
-        OUTPUT ${justInitializers} ${justData}
+        COMMAND ${PPC_OBJCOPY} --only-section=.text $<TARGET_FILE:initializers> ${justInitializersFile}
+        COMMAND ${PPC_OBJCOPY} --remove-section=.text $<TARGET_FILE:initializers> ${justDataFile}
+        BYPRODUCTS ${justInitializersFile} ${justDataFile}
+        OUTPUT ${justInitializersFile} ${justDataFile}
         DEPENDS initializers)
 
 
-
-#7. Make a list of all symbols in the initializer data file and their addresses
+#6. Make a list of all symbols in the initializer data file and their addresses
 #Since the initializer build contains everything, its data file is a superset of the code build
 #To prevent the initializer from having different data offsets from the code build, the code build will have these addresses forcibly set
 add_custom_target(makeDataNM ALL
-        COMMAND ppc-nm -C -S -l -v ${justData} > ${dataNM}
-        BYPRODUCTS ${dataNM}
-        OUTPUT ${dataNM}
+        COMMAND ${PPC_NM} -C -S -l -v ${justDataFile} > ${dataNMFile}
+        BYPRODUCTS ${dataNMFile}
+        OUTPUT ${dataNMFile}
         DEPENDS splitInitializersAndData)
 
 
-#8. Collect the relevent symbols and put them into a file for the linker
+#7. Collect the relevent symbols and put them into a file for the linker
 add_custom_target(getDataAddresses ALL
-        COMMAND python ${scriptFolder}/convertAddressesToLinkerCommands.py ${dataNM} dataAddresses.txt
+        COMMAND python ${convertAddressesToLinkerCommandsScript} ${dataNMFile} ${dataAddressesFile}
+        BYPRODUCTS ${dataAddressesFile}
+        OUTPUT ${dataAddressesFile}
         DEPENDS makeDataNM)
 add_dependencies(code getDataAddresses)
 
 
-#9. Compress initializer code by removing debug info, symbols, ect.
+#8. Compress initializer code by removing debug info, symbols, ect.
 add_custom_target(compressInitializers ALL
-        COMMAND ppc-objcopy -O binary -S ${justInitializers} ${compressedInitializers}
-        BYPRODUCTS ${compressedInitializers}
-        OUTPUT ${compressedInitializers}
+        COMMAND ${PPC_OBJCOPY} -O binary -S ${justInitializersFile} ${compressedInitializersFile}
+        BYPRODUCTS ${compressedInitializersFile}
+        OUTPUT ${compressedInitializersFile}
         DEPENDS splitInitializersAndData)
-#10. Compress initializer data by removing debug info, symbols, ect.
+
+
+#9. Compress initializer data by removing debug info, symbols, ect.
 #The data file doesn't need any more processing, so this is its final version
 add_custom_target(compressData ALL
-        COMMAND ppc-objcopy -O binary -S ${justData} ${finalData}
-        BYPRODUCTS ${finalData}
-        OUTPUT ${finalData}
+        COMMAND ${PPC_OBJCOPY} -O binary -S ${justDataFile} ${finalDataFile}
+        BYPRODUCTS ${finalDataFile}
+        OUTPUT ${finalDataFile}
         DEPENDS splitInitializersAndData)
 
 
-#11. Create symbol file for initializer file
+#10. Create nm symbol file for initializer file
 #Includes code and data because it's more useful together
 add_custom_target(makeInitializersNM ALL
-        COMMAND ppc-nm -C -S -l -v $<TARGET_FILE:initializers> > ${initializersNM}
-        BYPRODUCTS ${initializersNM}
-        OUTPUT ${initializersNM}
+        COMMAND ${PPC_NM} -C -S -l -v $<TARGET_FILE:initializers> > ${initializersNMFile}
+        BYPRODUCTS ${initializersNMFile}
+        OUTPUT ${initializersNMFile}
         DEPENDS initializers)
 
 
-#12. Edit compressed initializer code file to include injection addresses.  This is the final initializer code file
+#11. Edit compressed initializer code file to include injection addresses.  This is the final initializer code file
 add_custom_target(initializerInsertBranches ALL
-        COMMAND python ${insertBranchesScript} ${initializersNM} ${initializersStartAddress} ${compressedInitializers} ${finalInitializers}
-        BYPRODUCTS ${finalInitializers}
-        OUTPUT ${finalInitializers}
-        DEPENDS compressInitializers)
+        COMMAND python ${insertBranchesScript} ${initializersNMFile} ${initializersStartAddress} ${compressedInitializersFile} ${finalInitializersFile}
+        BYPRODUCTS ${finalInitializersFile}
+        OUTPUT ${finalInitializersFile}
+        DEPENDS compressInitializers makeInitializersNM)
 
 
-#13. Create a disassembly file that interlaces assembly with c++
+#12. Create a disassembly file that interlaces assembly with c++
 add_custom_target(createInitializersDisassembly ALL
-        COMMAND ppc-objdump -C -S -l -h -M broadway $<TARGET_FILE:initializers> > ${initializersDisassembly}
+        COMMAND ${PPC_OBJDUMP} -C -S -l -h -M broadway $<TARGET_FILE:initializers> > ${initializersDisassembly}
         BYPRODUCTS ${initializersDisassembly}
         OUTPUT ${initializersDisassembly}
         DEPENDS initializers)
 
-#14. Create function map of initializers to be used with Dolphin
+#13. Create function map of initializers to be used with Dolphin
 #There are two seperate function maps because they largely contain the same functions
 #Having both in one would cause a bunch of duplicates and confusion
-#Additionally, the initializer functions are lost after they are run once, so they would only be useful in specific circumstances
+#Additionally, the initializer functions are lost after the loading stage, so they would only be accurate in specific circumstances
 add_custom_target(makeInitializersFunctionMap ALL
-        COMMAND python ${makeFunctionMapScript} ${initializersNM} ${initializersCPPFuncMap} ${baseFuncMap}
+        COMMAND python ${makeFunctionMapScript} ${initializersNMFile} ${initializersCPPFuncMap} ${baseFuncMap}
         BYPRODUCTS ${initializersCPPFuncMap}
         OUTPUT ${initializersCPPFuncMap}
         DEPENDS makeInitializersNM)
@@ -191,51 +190,68 @@ add_custom_target(makeInitializersFunctionMap ALL
 
 
 
+#This sections deals with building the codes stuff
+
+
+#14. Creates cpp file used as entry for the code build
+add_custom_target(codeInjections
+        COMMAND python ${makeInjectionsScript} ${codeInjectionsFile} ${NMFiles} false
+        BYPRODUCTS ${codeInjectionsFile}
+        OUTPUT ${codeInjectionsFile}
+        DEPENDS nmBarrier)
+
+
+#15. Codes file is built here
+
+
 #16. Extract the text section from the code build
-#The data section is not necessary, and would probably be inaccurate
+#The data section is not necessary, and would likely be inaccurate
 add_custom_target(getJustCodes ALL
-        COMMAND ppc-objcopy --only-section=.text $<TARGET_FILE:code> ${justCodes}
-        BYPRODUCTS ${justCodes}
-        OUTPUT ${justCodes}
+        COMMAND ${PPC_OBJCOPY} --only-section=.text $<TARGET_FILE:code> ${justCodesFile}
+        BYPRODUCTS ${justCodesFile}
+        OUTPUT ${justCodesFile}
         DEPENDS code)
+
 
 #17. Compress code by removing debug info, symbols, ect.
 add_custom_target(compressCodes ALL
-        COMMAND ppc-objcopy -O binary -S ${justCodes} ${compressedCodes}
-        BYPRODUCTS ${compressedCodes}
-        OUTPUT ${compressedCodes}
+        COMMAND ${PPC_OBJCOPY} -O binary -S ${justCodesFile} ${compressedCodesFile}
+        BYPRODUCTS ${compressedCodesFile}
+        OUTPUT ${compressedCodesFile}
         DEPENDS getJustCodes)
 
 
 #18. Create symbol file for code file
 #Includes code and data because it's more useful together
+#TODO: symbol data is currently incomplete, since most data is lost
+#TODO: need to use initializer data addresses instead
 add_custom_target(makeCodesNM ALL
-        COMMAND ppc-nm -C -S -l -v $<TARGET_FILE:code> > ${codesNM}
-        BYPRODUCTS ${codesNM}
-        OUTPUT ${codesNM}
+        COMMAND ${PPC_NM} -C -S -l -v $<TARGET_FILE:code> > ${codesNMFile}
+        BYPRODUCTS ${codesNMFile}
+        OUTPUT ${codesNMFile}
         DEPENDS code)
 
 
 #19. Edit compressed code file to include injection addresses.  This is the final code file
 add_custom_target(codeInsertBranches ALL
-        COMMAND python ${insertBranchesScript} ${codesNM} ${codeStartAddress} ${compressedCodes} ${finalCodes}
-        BYPRODUCTS ${codesNM} ${finalCodes}
-        OUTPUT ${codesNM} ${finalCodes}
+        COMMAND python ${insertBranchesScript} ${codesNMFile} ${codeStartAddress} ${compressedCodesFile} ${finalCodesFile}
+        BYPRODUCTS ${finalCodesFile}
+        OUTPUT ${finalCodesFile}
         DEPENDS compressCodes)
 
 
 #20. Create a disassembly file that interlaces assembly with c++
 add_custom_target(createCodesDisassembly ALL
-        COMMAND ppc-objdump -C -S -l -h -M broadway $<TARGET_FILE:code> > ${codesDisassembly}
-        BYPRODUCTS ${codesDisassembly}
-        OUTPUT ${codesDisassembly}
+        COMMAND ${PPC_OBJDUMP} -C -S -l -h -M broadway $<TARGET_FILE:code> > ${codesDisassemblyFile}
+        BYPRODUCTS ${codesDisassemblyFile}
+        OUTPUT ${codesDisassemblyFile}
         DEPENDS code)
 
 
 #21. Create function map of the code build to be used with Dolphin
 #This is intended to be the main map used in most cases
 add_custom_target(makeCodesFunctionMap ALL
-        COMMAND python ${makeFunctionMapScript} ${codesNM} ${cppFuncMap} ${baseFuncMap}
+        COMMAND python ${makeFunctionMapScript} ${codesNMFile} ${cppFuncMap} ${baseFuncMap}
         BYPRODUCTS ${cppFuncMap}
         OUTPUT ${cppFuncMap}
         DEPENDS makeCodesNM)

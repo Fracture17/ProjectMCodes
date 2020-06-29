@@ -22,7 +22,6 @@ class Function:
 
 def main():
     dataNMPath = sys.argv[1]
-    #os.system(f"ppc-nm -C -S -l -v splitData > {dataNMPath}")
     outputFilePath = sys.argv[2]
 
     convertAddressesToLinkerCommands(dataNMPath, outputFilePath)
@@ -33,7 +32,6 @@ def convertAddressesToLinkerCommands(dataNMPath, outputFilePath):
     with open(outputFilePath, 'w') as file:
         commands = [func.asLinkerCommand() for func in funcs]
         file.write(' '.join(commands))
-        print(commands)
 
 
 

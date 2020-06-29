@@ -21,8 +21,7 @@ public:
         CLOSED,
         NAME_SELECT,
         BUTTON_SELECT,
-        CONTROL_EDIT,
-        REPLACING_TAG
+        CONTROL_EDIT
     };
 
     static int getPortFromList(MuSelctChrList* list);
@@ -45,6 +44,7 @@ public:
     void enterButtonSelectFromTagEdit();
     void enterTagSelectFromButtonSelect();
     void startReplaceTag();
+    void endReplaceTag();
 
     void open();
     void close();
@@ -60,8 +60,11 @@ public:
     unsigned char oldNameListSize = 0;
     unsigned char oldNameListPosition = 0;
     unsigned char oldButtonListPosition = 0;
+    bool _isReplacingTag = false;
+    //index to tag array, not menu
     short indexOfTagBeingEdited = -1;
     short indexOfTagBeingReplaced = -1;
+    bool shouldReopen = false;
 };
 
 

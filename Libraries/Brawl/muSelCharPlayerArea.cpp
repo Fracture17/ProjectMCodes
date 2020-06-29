@@ -3,3 +3,8 @@
 //
 
 #include "muSelCharPlayerArea.h"
+
+
+void muSelCharPlayerArea::openNameList() {
+    _openNameList(this);
+}
