@@ -1,7 +1,7 @@
 #pragma once
 
 
-enum GCButtonBits {
+enum PADButtonBits {
     Start = 0x1000,
     Y = 0x800,
     X = 0x400,
@@ -17,7 +17,7 @@ enum GCButtonBits {
 };
 
 //This is the representation of the physical buttons pressed on a GC controller
-union GCButtons {
+union PADButtons {
     unsigned short bits;
     struct {
         unsigned _none: 3;

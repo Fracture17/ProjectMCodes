@@ -6,14 +6,20 @@
 #define CSSCUSTOMCONTROLS_GAMEGLOBAL_H
 
 #include "PlayerTagSystem.h"
+#include "gmGlobalModeMelee.h"
 
 
 //has a bunch of pointers to stuff
-class GameGlobal {
-public:
+struct GameGlobal {
+    char _spacer[8];
+    //0x8
+    gmGlobalModeMelee* globalModeMelee;
+
     //0x24
     //button setting thing
-    char spacer[0x28];
+
+
+    char _spacer2[0x28 - 0x8 - 4];
     //0x28
     PlayerTagSystem* playerTagSystem;
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GCButtons.h"
+#include "Wii/PADButtons.h"
 
 enum controllerType {
     GAMECUBE,
@@ -15,7 +15,7 @@ enum controllerType {
 struct gfPadGamecube {
 	char _spacer[6];
 	//0x6
-	GCButtons buttons;
+	PADButtons buttons;
 	char _spacer2[0x30 - 8];
 	//0x30
 	char stickX;

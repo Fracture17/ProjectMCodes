@@ -1,0 +1,14 @@
+//
+// Created by johno on 7/1/2020.
+//
+
+#ifndef PROJECTMCODES_SOCONTROLLERMODULEIMPL_H
+#define PROJECTMCODES_SOCONTROLLERMODULEIMPL_H
+
+
+struct soControllerModuleImpl {
+
+};
+
+
+#endif //PROJECTMCODES_SOCONTROLLERMODULEIMPL_H

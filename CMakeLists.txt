@@ -37,7 +37,7 @@ add_custom_target(nmBarrier)
 add_executable(initializers ${initializerInjectionsFile})
 target_link_options(initializers PRIVATE "-Wl,-Ttext=${initializersStartAddress}")
 target_link_options(initializers PRIVATE "-Wl,--gc-sections")
-#target_link_options(initializers PRIVATE "-Wl,--print-gc-sections")
+target_link_options(initializers PRIVATE "-Wl,--print-gc-sections")
 
 
 #15. Compile and link the code injection cpp file and the code libraries with their ctors and dtors removed
@@ -46,8 +46,10 @@ target_link_options(initializers PRIVATE "-Wl,--gc-sections")
 add_executable(code ${codeInjectionsFile})
 target_link_options(code PRIVATE "-Wl,-Ttext=${codeStartAddress}")
 target_link_options(code PRIVATE "-Wl,--gc-sections")
-#target_link_options(code PRIVATE "-Wl,--print-gc-sections")
+target_link_options(code PRIVATE "-Wl,--print-gc-sections")
 target_link_options(code PRIVATE "-Wl,@${dataAddressesFile}")
+target_link_options(code PRIVATE "-Wl,--section-start=.text.setMenuOpenFlag=0x88000000")
+#target_link_options(code PRIVATE "testLinkerScript")
 
 
 
@@ -62,12 +64,21 @@ function(add_code codeName)
     #This occurs once initializers is built, since it modifies the library in place
     #Modifying in place is needed for proper linking
     add_custom_target(EXTRACTED_${codeName} ALL
-            COMMAND ${PPC_OBJCOPY} --remove-section=.ctors --remove-section=.dtors $<TARGET_FILE:${codeName}> ${codeName}
+            COMMAND ${PPC_OBJCOPY} --remove-section=.ctors --remove-section=.dtors $<TARGET_FILE:${codeName}> $<TARGET_FILE:${codeName}>
             DEPENDS initializers)
+    #add_custom_target(DIS____${codeName} ALL
+    #        COMMAND ${PPC_OBJDUMP} -h $<TARGET_FILE:${codeName}> dump.txt
+    #        DEPENDS ${codeName})
+    #add_custom_target(EXTRACTED_${codeName} ALL
+    #        COMMAND python ${scriptsFolder}/renameFunctions.py dump.txt $<TARGET_FILE:${codeName}>
+    #        DEPENDS DIS____${codeName})
+    add_custom_target(NOT_EXTRACTED_${codeName} ALL
+            COMMAND ${PPC_OBJCOPY} $<TARGET_FILE:${codeName}> ${codeName}
+            DEPENDS ${codeName})
 
     #2. For each code group, use nm binutil to get file with list of functions
     add_custom_target("NM_${codeName}" ALL
-            COMMAND ${PPC_NM} -C $<TARGET_FILE:${codeName}> > "NM_${codeName}.txt"
+            COMMAND ${PPC_NM} -C -S -l -v $<TARGET_FILE:${codeName}> > "NM_${codeName}.txt"
             DEPENDS ${codeName})
 
     add_dependencies(nmBarrier "NM_${codeName}")
