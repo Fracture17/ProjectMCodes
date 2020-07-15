@@ -5,5 +5,5 @@ OSTick getTick() {
 }
 
 OSTime getTime() {
-	OSGetTime();
+	return OSGetTime();
 }

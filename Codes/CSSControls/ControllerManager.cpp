@@ -44,16 +44,16 @@ extern "C" void manageControllers(gfPadSystem* padSystem) {
         manager.clampMaxY[i] = 0x7F;
         manager.clampMinY[i] = -128;
         //check for presses
-        GCButtons difference = {(unsigned short) (manager.trueButtons[i].bits ^ manager.prevTrueButtons[i].bits)};
+        PADButtons difference = {(unsigned short) (manager.trueButtons[i].bits ^ manager.prevTrueButtons[i].bits)};
         manager.truePresses[i] = {(unsigned short) (difference.bits & manager.trueButtons[i].bits)};
     }
 }
 
-void ControllerManager::setButtonsToBeNegated(GCButtons buttons, int port) {
+void ControllerManager::setButtonsToBeNegated(PADButtons buttons, int port) {
     negations[port].bits |= buttons.bits;
 }
 
-void ControllerManager::setPersisentNegations(GCButtons buttons, int port) {
+void ControllerManager::setPersisentNegations(PADButtons buttons, int port) {
     persistentNegations[port].bits |= buttons.bits;
 }
 

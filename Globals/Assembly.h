@@ -23,9 +23,20 @@ asm(R"(
 //Use this to inject assembly into a Brawl function
 //Automatically inserts a nop for the branch back
 //takes a string name, the address to inject into, and a string of GAS PPC assembly
+//#define INJECTION(name, address, code) \
+	asm( \
+		//".text\n" \
+		//".globl " name "_INJECTION_" #address "\n" \
+		//"\t.type " name "_INJECTION_" #address ", @function\n" \
+		//name "_INJECTION_" #address ":\n" \
+		//code "\n" \
+		//"\tnop\n\n" \
+		//"\t.size " name "_INJECTION_" #address ", .-" name "_INJECTION_" #address \
+//	)
+
 #define INJECTION(name, address, code) \
 	asm( \
-		".text\n" \
+	    ".section " ".text." name "_INJECTION_" #address "\n" \
 		".globl " name "_INJECTION_" #address "\n" \
 		"\t.type " name "_INJECTION_" #address ", @function\n" \
 		name "_INJECTION_" #address ":\n" \

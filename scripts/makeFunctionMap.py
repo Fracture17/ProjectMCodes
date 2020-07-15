@@ -16,17 +16,6 @@ class Function:
             self.size = int(self.size, 16)
 
 
-def main():
-    nmFilePath = sys.argv[1]
-    mapFilePath = sys.argv[2]
-    try:
-        existingMapPath = sys.argv[3]
-    except:
-        existingMapPath = ''
-
-    makeMap(nmFilePath, mapFilePath, existingMapPath)
-
-
 def makeMap(nmFilePath, mapFilePath, existingMapPath=''):
     mapFormat = "{address} {size} {address} 0 {name}\n"
 
@@ -70,6 +59,3 @@ def combineNameAndSource(func: Function):
     loc = loc[p+1:]
     funcName = name + '@' + loc
     return funcName
-
-
-main()

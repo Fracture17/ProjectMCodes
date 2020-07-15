@@ -12,12 +12,12 @@
 
 class ControllerManager {
 public:
-    GCButtons trueButtons[4];
-    GCButtons prevTrueButtons[4];
-    GCButtons negations[4];
+    PADButtons trueButtons[4];
+    PADButtons prevTrueButtons[4];
+    PADButtons negations[4];
     //Negates buttons until they are released
-    GCButtons persistentNegations[4];
-    GCButtons truePresses[4];
+    PADButtons persistentNegations[4];
+    PADButtons truePresses[4];
 
     signed char trueStickX[4];
     signed char trueStickY[4];
@@ -36,8 +36,8 @@ public:
 
 
 
-    void setButtonsToBeNegated(GCButtons buttons, int port);
-    void setPersisentNegations(GCButtons buttons, int port);
+    void setButtonsToBeNegated(PADButtons buttons, int port);
+    void setPersisentNegations(PADButtons buttons, int port);
     void clampStickX(signed char max, signed char min, int port);
     void clampStickY(signed char max, signed char min, int port);
 };

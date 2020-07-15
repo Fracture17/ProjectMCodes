@@ -1,5 +1,6 @@
 import re
 import sys
+import os
 
 
 startupFunctionsTemplate = """
@@ -7,11 +8,12 @@ startupFunctionsTemplate = """
 	.type __STARTUP_FUNCTIONS__, @function
 __STARTUP_FUNCTIONS__:
     SAVE_REGS
+    bl initMemory
     b _INITIALIZER_LIST_
 _POST_INITIALIZER_LIST_:
     {functionCalls}
     RESTORE_REGS
-    mr r26, r3
+    blr
     nop
     .size __STARTUP_FUNCTIONS__, .-__STARTUP_FUNCTIONS__
 """
@@ -52,21 +54,12 @@ asm("_start:");
 """
 
 
-def main():
-    injectionsPath = sys.argv[1]
-    nmFilePaths = sys.argv[2][2:].split(', ')
-    isInitializerString = sys.argv[3]
-    isInitializer = isInitializerString == 'true'
+def makeInjectionsFile(nmDirectory: str, injectionsPath, isInitializer: bool):
+    injections, startups, numInitializers = getAllInjections(nmDirectory)
 
-    makeInjectionsFile(nmFilePaths, injectionsPath, isInitializer)
-
-
-def makeInjectionsFile(nmFilePaths: list, injectionsPath, isInitializer: bool):
-    injections, startups, numInitializers = getAllInjections(nmFilePaths)
-
-    if not isInitializer:
+    #if not isInitializer:
         #removes startup injection
-        injections = injections[:-1]
+        #injections = injections[:-1]
 
     numInjections = len(injections)
     injectionInfo = [(branch, injectionAddress) for branch, injectionAddress, *_ in injections]
@@ -90,12 +83,12 @@ def makeInjectionsFile(nmFilePaths: list, injectionsPath, isInitializer: bool):
     writeCodeToFile(x, injectionsPath)
 
 
-def getAllInjections(nmFilePaths: list):
+def getAllInjections(nmDirectory: str):
     allInjections = []
     allStartups = []
     numInitializers = 0
-    for nmFile in nmFilePaths:
-        with open(nmFile, 'r', encoding='utf-8') as file:
+    for nmFile in os.listdir(nmDirectory):
+        with open(f"{nmDirectory}/{nmFile}", 'r', encoding='utf-8') as file:
             text = file.read()
 
             injections = getInjections(text)
@@ -104,9 +97,10 @@ def getAllInjections(nmFilePaths: list):
             startups = getStartups(text)
             allStartups.extend(startups)
 
+            print(getInitializers(text))
             numInitializers += len(getInitializers(text))
 
-    allInjections.append(('__STARTUP_FUNCTIONS__', '0x8002d50c'))
+    #allInjections.append(('__STARTUP_FUNCTIONS__', '0x8002d50c'))
 
     return allInjections, allStartups, numInitializers
 
@@ -119,7 +113,7 @@ def getStartups(text):
     return re.findall(r'[a-zA-Z0-9_]*_STARTUP_', text)
 
 def getInitializers(text):
-    return re.findall(r"_GLOBAL__sub_I_", text)
+    return re.findall(r"_GLOBAL__sub_I_*", text)
 
 
 def makeInjectionCode(numInjections, injections, initializerList):
@@ -133,4 +127,3 @@ def writeCodeToFile(code, filePath):
         file.write(code)
 
 
-main()

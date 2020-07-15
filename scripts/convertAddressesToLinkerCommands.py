@@ -20,13 +20,6 @@ class Function:
         return f"--defsym={self.name}={hex(self.address)}"
 
 
-def main():
-    dataNMPath = sys.argv[1]
-    outputFilePath = sys.argv[2]
-
-    convertAddressesToLinkerCommands(dataNMPath, outputFilePath)
-
-
 def convertAddressesToLinkerCommands(dataNMPath, outputFilePath):
     funcs = getAllFunctions(dataNMPath)
     with open(outputFilePath, 'w') as file:
@@ -43,6 +36,3 @@ def getAllFunctions(nmFilePath):
         funcs = re.findall(r"([0-9a-zA-Z]{8}) ([0-9a-zA-Z]{8}) . (.*?)[^\S]", file.read())
         funcs = [Function(*f) for f in funcs]
         return funcs
-
-
-main()

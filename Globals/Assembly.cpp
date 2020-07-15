@@ -3,6 +3,7 @@
 //Assembly function used to save the state of registers during an injection
 //TODO: Make this work when MSR has floating point disabled
 asm(R"(
+    .section .text.saveRegs
 	.globl saveRegs
 	.type saveRegs, @function
 saveRegs:
@@ -36,6 +37,7 @@ saveRegs:
 //assembly function used to restore the state of save registers in an injection
 //TODO: Make this work when MSR has floating point disabled
 asm(R"(
+    .section .text.restoreRegs
 	.globl restoreRegs
 	.type restoreRegs, @function
 restoreRegs:

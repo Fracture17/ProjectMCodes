@@ -2,7 +2,7 @@
 
 MEMHeapHandle mainHeap;
 
-BASIC_INJECT("initMemory", 0x8002d4fc, "stw	r0, 0x0024 (r1)");
+//STARTUP("initMemory");
 
 extern "C" void initMemory() {
 	mainHeap = createExpHeap(MAIN_HEAP_ADDRESS, MAIN_HEAP_SIZE);
