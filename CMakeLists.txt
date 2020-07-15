@@ -107,7 +107,7 @@ add_subdirectory(Globals)
 
 
 add_custom_target(initializerInjections ALL
-        COMMAND python ${scriptFolder}/Main.py CompiledCodes "-fno-function-cse -ffunction-sections -fno-exceptions -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps -fverbose-asm" "-z common-page-size=4 -z max-page-size=4 -Wl,--relax -Wl,--section-start=.rodata=${dataStartAddress} -Wl,--gc-sections -nostdlib" "C:\\devkitPro\\devkitPPC\\bin" ${initializersStartAddress} "0x8057a800 0x8057a900, 0x8057aa00 0x8057ac00, 0x8057ad00 0x8057af00, 0x8057b000 0x8057b800, 0x8057ba00 0x8057cf00, 0x804e2a00 0x804e3600"
+        COMMAND python ${scriptFolder}/Main.py CompiledCodes "-fno-function-cse -ffunction-sections -fno-exceptions -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps -fverbose-asm" "-z common-page-size=4 -z max-page-size=4 -Wl,--relax -Wl,--section-start=.rodata=${dataStartAddress} -Wl,--gc-sections -nostdlib" "C:\\devkitPro\\devkitPPC\\bin" ${initializersStartAddress} "0x804e2a00 0x804e3600"
         DEPENDS codeBarrier)
 
 
