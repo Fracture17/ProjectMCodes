@@ -1,6 +1,3 @@
-from CodeSegment import CodeSegment
-
-
 cppText = """
 #include "Setup.h"
 
@@ -214,7 +211,6 @@ def makeSetupFile(segments, injections, startupFunctionAddress, setupCPPPath, se
         file.write(cppText)
 
     print(startupFunctionAddress)
-
 
     with open(setupHeaderPath, "w") as file:
         fileNamesText = []

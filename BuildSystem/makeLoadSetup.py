@@ -1,6 +1,3 @@
-import sys
-
-
 loadSetupFormat = """
 .set SETUP_FILE_ADDRESS, {setupFileAddress}
 

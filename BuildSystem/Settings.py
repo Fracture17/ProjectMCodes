@@ -48,6 +48,7 @@ loadSetupBinaryPath = f"{intermediateFilesDirectory}/LoadSetup.bin"
 finalDataPath = f"{outputDirectory}/Data.bin"
 finalInitializersPath = f"{outputDirectory}/Init.bin"
 finalSetupPath = f"{outputDirectory}/Setup.bin"
+loadSetupASMPath = f"{outputDirectory}/LoadSetupFile.asm"
 
 dataAddressesPath = f"{disassemblyDirectory}/DataAddresses.txt"
 initializersAddressesPath = f"{disassemblyDirectory}/InitializersAddresses.txt"
@@ -60,7 +61,7 @@ setupAddressesPath = f"{disassemblyDirectory}/SetupAddresses.txt"
 setupDisassemblyPath = f"{disassemblyDirectory}/SetupDisassembly.txt"
 setupMapPath = f"{disassemblyDirectory}/Setup.map"
 
-loadSetupASMPath = f"LoadSetupFile.asm"
+
 
 
 ppcObjCopy = "powerpc-eabi-objcopy.exe"

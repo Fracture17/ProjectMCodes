@@ -1,6 +1,4 @@
-import sys
 import re
-import os
 from dataclasses import dataclass
 
 
@@ -15,15 +13,6 @@ class Function:
             self.address = int(self.address, 16)
         if isinstance(self.size, str):
             self.size = int(self.size, 16)
-
-
-def main():
-    nmFilePath = sys.argv[1]
-    baseAddress = int(sys.argv[2], 16)
-    compressedCodesPath = sys.argv[3]
-    finalCodePath = sys.argv[4]
-
-    insertBranches(nmFilePath, baseAddress, compressedCodesPath, finalCodePath)
 
 
 def insertBranches(nmFilePath, baseAddress, compressedCodesPath, finalCodePath):
@@ -44,6 +33,7 @@ def getInjectionInfo(nmFilePath, baseAddress):
     funcs = getAllFunctions(nmFilePath)
 
     address2size = {func.address: func.size for func in funcs}
+    print(address2size)
 
     #first function is getInjections
     #8 bytes per inject, and 4 at the start
@@ -129,4 +119,3 @@ def replaceInt(data, offset, value):
     return data[:offset] + value.to_bytes(4, byteorder='big') + data[offset+4:]
 
 
-main()

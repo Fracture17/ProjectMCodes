@@ -2,17 +2,19 @@ import os
 import shutil
 
 
-codeFolder = R"C:\Users\johno\CLionProjects\ProjectMCodes\cmake-build-debug-mingw-powerpc\output"
+codeFolder = R"C:\Users\johno\CLionProjects\ProjectMCodes\cmake-build-debug-mingw-powerpc\Output"
+sdPath = R"C:\Users\johno\Downloads\c++Testing.raw"
+mountDrive = 'G'
 
 #os.system("osfmount.com -D -m G:")
 
-os.system(R"osfmount.com -a -t file -f C:\Users\johno\Downloads\c++Testing.raw -m G: -o rw")
+os.system(Rf"osfmount.com -a -t file -f {sdPath} -m {mountDrive}: -o rw")
 
 
 for file in os.listdir(codeFolder):
     try:
         shutil.copy(f"{codeFolder}/{file}",
-                    f"G:/{file}")
+                    f"{mountDrive}:/{file}")
         print(file)
     except Exception as e:
         print(e)
@@ -41,6 +43,6 @@ for file in os.listdir(codeFolder):
 
 
 
-os.system("osfmount.com -D -m G:")
+os.system(f"osfmount.com -D -m {mountDrive}:")
 
 input()
