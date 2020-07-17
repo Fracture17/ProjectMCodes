@@ -23,9 +23,9 @@ include(CMake/Paths.cmake)
 include(CMake/Functions.cmake)
 
 
-create_folder(${outputFolder})
-create_folder(${PROJECT_BINARY_DIR}/CompiledCodes)
-create_folder(${disassemblyFolder})
+#create_folder(${outputFolder})
+create_folder(${PROJECT_BINARY_DIR}/IncludedCodes)
+#create_folder(${disassemblyFolder})
 #create_folder(${disassemblyFolder})
 
 
@@ -62,7 +62,7 @@ function(add_code codeName)
     #1. Create static library for each code group
     add_library(${codeName} STATIC "${ARGN}")
     set_target_properties(${codeName} PROPERTIES
-            ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/CompiledCodes)
+            ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/IncludedCodes)
     SET_TARGET_PROPERTIES(${codeName} PROPERTIES SUFFIX "")
     SET_TARGET_PROPERTIES(${codeName} PROPERTIES PREFIX "")
 
@@ -107,7 +107,7 @@ add_subdirectory(Globals)
 
 
 add_custom_target(initializerInjections ALL
-        COMMAND python ${scriptFolder}/Main.py CompiledCodes "-fno-function-cse -ffunction-sections -fno-exceptions -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps -fverbose-asm" "-z common-page-size=4 -z max-page-size=4 -Wl,--relax -Wl,--section-start=.rodata=${dataStartAddress} -Wl,--gc-sections -nostdlib" "C:\\devkitPro\\devkitPPC\\bin" ${initializersStartAddress} "0x804e2a00 0x804e3600"
+        COMMAND python ${scriptFolder}/BuildFromCMake.py ${PROJECT_BINARY_DIR} ${PPC_BIN_DIRECTORY}
         DEPENDS codeBarrier)
 
 

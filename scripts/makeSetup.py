@@ -1,4 +1,4 @@
-import sys
+from CodeSegment import CodeSegment
 
 
 cppText = """
@@ -209,17 +209,17 @@ injectionFormat = """
 
 
 
-def makeSetupFile(fileNames, injections, startupFunctionAddress):
-    with open("Setup.cpp", "w") as file:
+def makeSetupFile(segments, injections, startupFunctionAddress, setupCPPPath, setupHeaderPath):
+    with open(setupCPPPath, "w") as file:
         file.write(cppText)
 
     print(startupFunctionAddress)
 
 
-    with open("Setup.h", "w") as file:
+    with open(setupHeaderPath, "w") as file:
         fileNamesText = []
-        for name in fileNames:
-            fileNamesText.append(fileNameFormat.format(name=name[0], address=name[1]))
+        for segment in segments:
+            fileNamesText.append(fileNameFormat.format(name=segment.filename, address=segment.startAddress))
         fileNamesText = ''.join(fileNamesText)
 
         injectionsText = []
@@ -229,6 +229,6 @@ def makeSetupFile(fileNames, injections, startupFunctionAddress):
 
         startupFunctionText = f".int {startupFunctionAddress}\n"
 
-        headerText = headerFormat.format(fileNames=fileNamesText, injections=injectionsText, startupFunctionAddress=startupFunctionText, numFiles=len(fileNames), numInjections=len(injections))
+        headerText = headerFormat.format(fileNames=fileNamesText, injections=injectionsText, startupFunctionAddress=startupFunctionText, numFiles=len(segments), numInjections=len(injections))
 
         file.write(headerText)
