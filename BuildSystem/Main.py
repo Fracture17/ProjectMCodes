@@ -6,7 +6,6 @@ import shutil
 from Settings import *
 from Function import Function
 from makeInjections import makeInjectionsFile
-from convertAddressesToLinkerCommands import convertAddressesToLinkerCommands
 from makeFunctionMap import makeMap
 from makeLoadSetup import makeLoadSetupFile
 from makeSetup import makeSetupFile
@@ -85,7 +84,7 @@ def buildInitializers():
     #linking and compiling are seperate because it makes it more portable
     initializerLibraries = ' '.join([f"{includedCodesDirectory}/{file}" for file in os.listdir(includedCodesDirectory)])
 
-    initializersExtraLinkerSettings = f"-Ttext={hex(initializersStartAddress)} " + "--print-gc-sections"
+    initializersExtraLinkerSettings = f"-Ttext={hex(initializersStartAddress)} " + "--print-gc-sections" + " --no-gc-sections"
     link(linkerSettings, initializersObjectPath, initializersExtraLinkerSettings, initializerLibraries, linkedInitializersPath)
 
     #extract the initializer functions from the linked file
@@ -117,8 +116,7 @@ def buildData():
     #TODO: remove garbage symbols in beggining
     makeNM(extractedDataPath, dataAddressesPath)
 
-    #make file to enforce data addresses for when the codes are linked
-    convertAddressesToLinkerCommands(dataAddressesPath, dataAddressesFileForLinkerPath)
+
 
     #remove all debug info and puts all data in the correct positions
     compress(extractedDataPath, finalDataPath)
@@ -133,7 +131,7 @@ def buildCodes():
         renameFunctionsAndRemoveConstructorsInCodeFile(file)
 
     #get function names from edited codes
-    makeFunctionListsFromCodes(editedCodesDirectory, editedCodesFunctionListsDirectory)
+    makeFunctionListsFromCodes(editedCodesDirectory, editedCodesFunctionListsDirectory, True)
 
     #make cpp file for codes
     makeInjectionsFile(editedCodesFunctionListsDirectory, codesCPPPath, False)
@@ -143,10 +141,11 @@ def buildCodes():
     #another link will be required to put the functions in specific addresses
     codesObjectPath = getObjectPath(codesCPPPath)
     compile(compilerSettings, codesCPPPath, codesObjectPath)
+
     codeLibraries = ' '.join([f"{editedCodesDirectory}/{file}" for file in os.listdir(editedCodesDirectory)])
     #Ttext can be pretty much anything, since it only affects some symbols in the map files in practice
     #Needs to be in the 0x80000000 area though, or it will make the linker use bctrl
-    codesExtraLinkerSettings = f"@{dataAddressesFileForLinkerPath} -Ttext=0x81234568 " + "--print-gc-sections"
+    codesExtraLinkerSettings = f"-Ttext=0x81234568 " + "--print-gc-sections"
     link(linkerSettings, codesObjectPath, codesExtraLinkerSettings, codeLibraries, linkedCodesPath)
 
     #get list of remaining functions
@@ -163,12 +162,24 @@ def buildCodes():
         functionAddressLinkerCommands.append(command)
     functionAddressLinkerCommands = ' '.join(functionAddressLinkerCommands)
 
+    #get the addresses of each data section
+    text = subprocess.check_output(f"{ppcObjDump} -h {extractedDataPath}", shell=True)
+    text = text.decode('utf-8')
+    sectionsToForce = ['.rodata', '.data', '.bss', '.sbss']
+    sectionsRegex = '(' + '|'.join(sectionsToForce) + ')' + " +[0-9a-f]{8}  ([0-9a-f]{8})"
+    sections = re.findall(sectionsRegex, text)
+
+    #turn the data section addresses into a linker command
+    dataSectionsLinkerCommand = ''
+    for name, address in sections:
+        dataSectionsLinkerCommand += f"--section-start={name}={address} "
+
     #link the codes again but this time force each function to go to its assigned address
-    codesExtraLinkerSettings = f"{functionAddressLinkerCommands} @{dataAddressesFileForLinkerPath} -Ttext=0x81234568 " + "--print-gc-sections"
+    codesExtraLinkerSettings = f"{functionAddressLinkerCommands} {dataSectionsLinkerCommand} -Ttext=0x81234568 --no-gc-sections"
     link(linkerSettings, codesObjectPath, codesExtraLinkerSettings, codeLibraries, linkedCodesPath)
 
     #make list of addresses, includes data addresses
-    #TODO: remove garbage symbols in beggining
+    #TODO: Use sections instead because this is inaccurate
     makeNM(linkedCodesPath, codesAddressesPath)
 
     #make dissasembly file
@@ -208,7 +219,6 @@ def buildSetupFile():
     with open(initializersAddressesPath, 'r') as file:
         text = file.read()
         startupFunctionInfo = re.findall(r"([0-9a-f]{8}) [0-9a-f]{8} [tT] __STARTUP_FUNCTIONS__", text)[0]
-        print(startupFunctionInfo)
         startupFunctionAddress = hex(int(startupFunctionInfo, 16))
 
     #add the initializer and data files to the setup list
@@ -264,7 +274,7 @@ def buildLoadSetupFile():
             file.write(f"* {word1.upper()} {word2.upper()}\n")
 
 
-def makeFunctionListsFromCodes(codesDirectory, functionListsDirectory):
+def makeFunctionListsFromCodes(codesDirectory, functionListsDirectory, x = False):
     for file in os.listdir(codesDirectory):
         makeNM(f"{codesDirectory}/{file}", f"{functionListsDirectory}/{file}.txt")
 
@@ -286,7 +296,9 @@ def renameFunctionsAndRemoveConstructorsInCodeFile(codeName):
     for name, newName in name2NewName.items():
         renames.append(f"--rename-section {name}={newName}")
     renames = ' '.join(renames)
-    os.system(f"{ppcObjCopy} {renames} --remove-section=.ctors --remove-section=.dtors {includedCodesDirectory}/{codeName} {editedCodesDirectory}/{codeName}")
+    with open(renameFunctionsCommandFilePath, 'w') as file:
+        file.write(renames)
+    os.system(f"{ppcObjCopy} @{renameFunctionsCommandFilePath} --remove-section=.ctors --remove-section=.dtors {includedCodesDirectory}/{codeName} {editedCodesDirectory}/{codeName}")
 
 
 #gets all functions in file, assuming that they are all their own section

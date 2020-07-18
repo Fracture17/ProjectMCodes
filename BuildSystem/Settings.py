@@ -14,7 +14,7 @@ compilerSettings = "-g -fno-function-cse -ffunction-sections -fno-exceptions -fn
 linkerSettings = f"-z common-page-size=4 -z max-page-size=4 --relax --section-start=.rodata={hex(dataStartAddress)} --gc-sections -nostdlib"
 
 #not required
-brawlFunctionMapPath = ''
+brawlFunctionMapPath = R"C:\Users\johno\CLionProjects\ProjectMCodes\BrawlFuncMap.map"
 
 
 
@@ -44,6 +44,8 @@ linkedSetupPath = f"{intermediateFilesDirectory}/LinkedSetup"
 loadSetupFilePath = f"{intermediateFilesDirectory}/LoadSetup.s"
 linkedLoadSetupFilePath = f"{intermediateFilesDirectory}/LinkedLoadSetup"
 loadSetupBinaryPath = f"{intermediateFilesDirectory}/LoadSetup.bin"
+#exists because windows is dumb and still has a path limit in 2020
+renameFunctionsCommandFilePath = f"{intermediateFilesDirectory}/RenameFunctionsCommands.txt"
 
 finalDataPath = f"{outputDirectory}/Data.bin"
 finalInitializersPath = f"{outputDirectory}/Init.bin"

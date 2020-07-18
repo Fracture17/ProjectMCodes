@@ -65,4 +65,10 @@ void Message::printChar(const UTF16 character) {
     }
 }
 
+//sets the camera for printing to screen
+//doesn't seem t work yet
+void Message::std2DView() {
+    _std2DView();
+}
+
 

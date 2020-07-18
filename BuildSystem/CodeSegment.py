@@ -26,6 +26,7 @@ class CodeSegment:
     def insertFunction(self, func: Function):
         assert self.canInsert(func)
         self.functions.append(func)
+        self.size -= func.size
         self.remainingSize -= func.size
         self.currentAddress += func.size
 

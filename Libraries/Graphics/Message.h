@@ -50,6 +50,8 @@ struct Message {
     //run each frame before printing
     void setup();
 
+    static void std2DView();
+
 
     //null terminated
     void printString(const char* characters);
@@ -211,6 +213,7 @@ extern Message message;
 //not 100% sure what the flags do, but color flag should be 0, and font flag should be 9
 #define _setDefaultEnv_Message ((void (*)(Message* message, int _textColorFlagThing, int _fontFlagThing)) 0x8006a964)
 #define _Print_Message ((void (*)(Message* message, const UTF16 character)) 0x8006fe50)
+#define _std2DView ((void (*)()) 0x8006b360)
 
 
 //These seem to be pointers to some currently loaded fonts
