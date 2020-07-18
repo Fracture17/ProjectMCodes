@@ -14,7 +14,7 @@ compilerSettings = "-g -fno-function-cse -ffunction-sections -fno-exceptions -fn
 linkerSettings = f"-z common-page-size=4 -z max-page-size=4 --relax --section-start=.rodata={hex(dataStartAddress)} --gc-sections -nostdlib"
 
 #not required
-brawlFunctionMapPath = R"C:\Users\dareb\OneDrive\Documents\Gekko-ppc-asm\fracture_pmcodes\BrawlFuncMap.map"
+brawlFunctionMapPath = R"..\BrawlFuncMap.map"
 
 
 

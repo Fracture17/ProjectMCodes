@@ -17,9 +17,9 @@ struct ftControllerModuleImpl: public soControllerModuleImpl {
     soModuleAccessor* modules;
     //0x30
     soControllerImpl controller;
-    char _spacer_ft2[0x14C - 0x34];
+    char _spacer_ft2[0x14C - 0x30 - sizeof(soControllerImpl)];
     //0x14C
-    //Seems to just be a ptr to controller attribute
+    //Seems to just be a ptr back to controller
     soControllerImpl* controllerPtr;
 };
 

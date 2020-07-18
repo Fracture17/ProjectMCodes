@@ -9,6 +9,8 @@
 #include "Brawl/ftManager.h"
 #include "Brawl/aiMgr.h"
 
+#include "Graphics/Draw.h"
+
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
 
@@ -64,7 +66,14 @@ unsigned int getScene() {
     return false;
 }
 
+
+
+
 extern "C" void testPrint() {
+    setupDrawPrimitives();
+    draw2DQuad(0xFF00FFFF, -20, 20, -20, 20);
+
+
     auto scene = getScene();
     message.setup();
     message.fontSize = 0.1;

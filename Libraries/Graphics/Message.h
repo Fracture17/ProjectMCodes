@@ -10,15 +10,10 @@
 #include "Brawl/gfCameraManager.h"
 #include "Memory.h"
 #include "Assembly.h"
+#include "Wii/GX.h"
 
 
-//Alpha is ignored if not used
-struct GXColor {
-    u8 red;
-    u8 green;
-    u8 blue;
-    u8 alpha;
-};
+
 
 
 //each of these colors a portion of the text, not sure which yet
@@ -29,7 +24,7 @@ struct CharWriterTextColor {
     GXColor color3;
     GXColor color4;
     GXColor color5;
-};
+}__attribute__((packed, aligned(4)));
 
 //FontData may not be the real name, and may not be used completly correctly
 struct FontData {
@@ -204,7 +199,7 @@ struct Message {
     void* _messageBuffer;
 
     char _spacer10[0x200 - 0x1D0 - 4];
-}__attribute__((packed, aligned(4)));;
+}__attribute__((packed, aligned(4)));
 
 
 extern Message message;

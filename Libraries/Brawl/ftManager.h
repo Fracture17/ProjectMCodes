@@ -8,7 +8,7 @@
 
 #include "Fighter.h"
 #include "Inputs.h"
-#include "aiInput.h"
+#include "aiAct.h"
 
 //the port of the fighter
 typedef char playerNumber;
@@ -19,7 +19,7 @@ struct ftInput {
     float leftStickX;
     float leftStickY;
     char _spacer2[0x44 - 0x18];
-    aiInput* aiInputPtr;
+    aiAct* aiInputPtr;
 };
 
 struct ftManager {
