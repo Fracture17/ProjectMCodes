@@ -12,6 +12,26 @@ entryID ftManager::getEntryId(playerNumber playerNo) {
     return _getEntryID_ftManager(this, playerNo);
 }
 
+entryID ftManager::getEntryIdFromIndex(int index) {
+    return _getEntryIDFromIndex_ftManager(this, index);
+}
+
 Fighter* ftManager::getFighter(entryID entry, bool getFollower) {
     return _getFighter_ftManager(this, entry, getFollower);
+}
+
+unsigned int ftManager::getFighterCount(entryID entry) {
+    return _getFighterCount_ftManager(this, entry);
+}
+
+ftInput* ftManager::getInput(entryID entry) {
+    return _getInput_ftManager(this, entry);
+}
+
+int ftManager::getEntryCount() {
+    return _getEntryCount_ftManager(this);
+}
+
+void ftManager::setSlow(int excludeTeam, int unknown, int slowStrength, int durationInFrames) {
+    return _setSlow_ftManager(this, excludeTeam, unknown, slowStrength, durationInFrames);
 }

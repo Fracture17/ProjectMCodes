@@ -37,9 +37,9 @@ void Message::setup() {
     //just copying the code menu print fps for now
 
     //This camera matrix happens to always be perfect for printing text to the screen
-    _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[4].modelView, 0);
-    auto scale = CAMERA_MANAGER->cameras[0].scale;
-    this->fontSize = scale * 0.22;
+//    _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[4].modelView, 0);
+//    auto scale = CAMERA_MANAGER->cameras[0].scale;
+//    this->fontSize = scale * 0.22;
 }
 
 void Message::printString(const char* characters) {
