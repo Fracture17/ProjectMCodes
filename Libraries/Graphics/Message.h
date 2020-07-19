@@ -12,8 +12,68 @@
 #include "Assembly.h"
 #include "Wii/GX.h"
 
-
-
+//TODO: relocate this
+enum HEAPTYPE {
+//    00 *Null
+    SystemFW = 0x01,
+    System = 0x02,
+    Effect = 0x03,
+    RenderFifo = 0x04,
+    Sound = 0x05,
+    Network = 0x06,
+    WiiPad = 0x07,
+    IteamResource = 0x08,
+    InfoResource = 0x09,
+    CommonResource = 0x0A,
+    Replay = 0x0B,
+    Tmp = 0x0C,
+    Physics = 0x0D,
+    ItemInstance = 0x0E,
+    StageInstance = 0x0F,
+//    *Null = 0x10,
+    StageResoruce = 0x11,
+    Fighter1Resoruce = 0x12,
+    Fighter2Resoruce = 0x13,
+    Fighter3Resoruce = 0x14,
+    Fighter4Resoruce = 0x15,
+    Fighter1Resoruce2 = 0x16,
+    Fighter2Resoruce2 = 0x17,
+    Fighter3Resoruce2 = 0x18,
+    Fighter4Resoruce2 = 0x19,
+    FighterEffect = 0x1A,
+    Fighter1Instance = 0x1B,
+    Fighter2Instance = 0x1C,
+    Fighter3Instance = 0x1D,
+    Fighter4Instance = 0x1E,
+    FighterTechqniq = 0x1F,
+    FighterKirbyResource1 = 0x20,
+    FighterKirbyResource2 = 0x21,
+    FighterKirbyResource3 = 0x22,
+    AssistFigureResource = 0x23,
+    ItemExtraResource = 0x24,
+//    *Null = 0x25,
+    PokemonResource = 0x26,
+//    *Null = 0x27,
+    InfoInstance = 0x28,
+//    *Null = 0x29,
+    MenuInstance = 0x2A,
+//    *Null = 0x2B,
+    CopyFB = 0x2C,
+    GameGlobal = 0x2D,
+    GlobalMode = 0x2E,
+//    *Null = 0x2F,
+    MeleeFont = 0x30,
+//    *Null = 0x31,
+    OverlayCommon = 0x32,
+    OverlayStage = 0x33,
+    OverlayMenu = 0x34,
+    OverlayFighter1 = 0x35,
+    OverlayFighter2 = 0x36,
+    OverlayFighter3 = 0x37,
+    OverlayFighter4 = 0x38,
+//    *Null = 0x39,
+    Thread = 0x3A,
+};
 
 
 //each of these colors a portion of the text, not sure which yet
@@ -53,6 +113,8 @@ struct Message {
     //null terminated
     void printStringUTF(const UTF16* characters);
     void printChar(const UTF16 character);
+
+    void allocMsgBuffer(int bufferSize, int unk1, HEAPTYPE heaptype);
 
 
 
@@ -100,7 +162,12 @@ struct Message {
     //don't know what this is, but notes say to set it to 1 and leave it
     int _thingEqualToOne2 = 1;
 
-    char _spacer2[0x44 - 0x3C - 4];
+    char _spacer2[0x43 - 0x3C - 4];
+
+    // 0x43
+    // appears to be a flag that tells if the message has fixed width
+    // or not, and if so, uses the fixedWidth defined at 0x44
+    char enableFixedWidth;
 
     //0x44
     float fixedWidth;
@@ -219,6 +286,12 @@ extern Message message;
 
 //pretty sure this is melee font, which is always loaded
 #define MELEE_FONT ((FontData*) 0x80497e44)
+
+// not sure what these fonts are but they were defined
+// and used in the same area as MELEE_FONT in ghidra
+#define UNK_FONT ((FontData*) 0x80497ecc)
+#define UNK_FONT2 ((FontData*) 0x80497ed0)
+#define UNK_FONT3 ((FontData*) 0x80497ed4)
 
 
 #define _GXLoadPosMtxImm ((void (*)(const Mtx* matrix, u32 id)) 0x801f51dc)

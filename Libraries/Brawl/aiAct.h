@@ -9,14 +9,18 @@ struct aiScriptValues {
 };
 
 struct aiAct {
+    // 0x00
     float variables[26];
-    char _spacer[0xC];
+    char _spacer[0x74 - 0x68];
 
+    // 0x74
     aiScriptValues* scriptValues;
 
+    // 0x78
     unsigned short aiScript;
+    char _spacer2[0xAC - 0x78 - 2];
 
-    char _spacer2[0x30];
+    // 0xAC
     unsigned int framesSinceScriptChanged;
 };
 

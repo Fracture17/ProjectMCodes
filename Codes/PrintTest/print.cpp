@@ -17,7 +17,7 @@
 BASIC_INJECT("testPrint", 0x8001792c, "addi r3, r30, 280");
 
 
-char FRAME[] = "Frame: %.1f";
+char CAMERA_SCALE[] = "cam scale: %.3f";
 char TARGET[] = "Target Idx: %d";
 char LSTICK[] = "lstick: %.3f; %.3f";
 char INPUTS_VALUE[] = "Inputs Value: %04x";
@@ -44,6 +44,8 @@ char LAST_SCRIPT_CHANGE[] = "script active for: %04d frames";
 char VARIABLES[] = "Ai Vars:";
 char VARIABLE[] = "[%02d]: %.3f";
 
+//unsigned int BASE_SCALE = CAMERA_MANAGER->cameras[0].scale;
+
 
 //hacky way to check if in game
 enum SCENE_TYPE {
@@ -68,6 +70,10 @@ unsigned int getScene() {
     }
     return false;
 }
+
+//float CAMERA_SCALE_ADJUSTMENT = 0;
+//CAMERA_MANAGER->cameras[0].scale += CAMERA_SCALE_ADJUSTMENT;
+//CAMERA_SCALE_ADJUSTMENT += 0.001;
 
 
 
@@ -159,8 +165,14 @@ extern "C" void testPrint() {
 
                 _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[4].modelView, 0);
                 message.fontSize = CAMERA_MANAGER->cameras[0].scale * 0.10;
-                message.xPos = 0;
-                message.yPos = 0;
+                message.xPos = -33 * 1/message.fontSize;
+                message.yPos = -20 * 1/message.fontSize - 20;
+
+                sprintf(buffer, CAMERA_SCALE, CAMERA_MANAGER->cameras[0].scale);
+                message.printString(buffer);
+
+                message.xPos = -33 * 1/message.fontSize;
+                message.yPos = -20 * 1/message.fontSize + 0;
 
                 sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
                 message.printString(buffer);
@@ -187,6 +199,4 @@ extern "C" void testPrint() {
             }
         }
     }
-
-
 }
