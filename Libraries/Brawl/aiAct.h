@@ -5,9 +5,19 @@
 #ifndef PROJECTMCODES_AIACT_H
 #define PROJECTMCODES_AIACT_H
 
+struct aiScriptValues {
+};
+
 struct aiAct {
-    char _spacer[0x78];
+    float variables[26];
+    char _spacer[0xC];
+
+    aiScriptValues* scriptValues;
+
     unsigned short aiScript;
+
+    char _spacer2[0x30];
+    unsigned int framesSinceScriptChanged;
 };
 
 

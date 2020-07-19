@@ -12,6 +12,7 @@ typedef f32	Mtx[3][4];
 
 //size is 0x134
 struct gfCamera {
+    void setGX();
     //0
     //probbaly an array of these
     Mtx modelView;

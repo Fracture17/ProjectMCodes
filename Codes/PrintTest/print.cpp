@@ -2,7 +2,6 @@
 // Created by johno on 7/14/2020.
 //
 
-#include "Graphics/Message.h"
 #include "Assembly.h"
 #include "Memory.h"
 
@@ -10,6 +9,7 @@
 #include "Brawl/aiMgr.h"
 
 #include "Graphics/Draw.h"
+#include "Graphics/Message.h"
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
@@ -40,6 +40,9 @@ char INPUTS_NAMES[][9] = {
         "tapJump "
 };
 char AI_SCRIPT[] = "AI Script: %04x";
+char LAST_SCRIPT_CHANGE[] = "script active for: %04d frames";
+char VARIABLES[] = "Ai Vars:";
+char VARIABLE[] = "[%02d]: %.3f";
 
 
 //hacky way to check if in game
@@ -70,21 +73,20 @@ unsigned int getScene() {
 
 
 extern "C" void testPrint() {
-    setupDrawPrimitives();
-    draw2DQuad(0xFF00FFFF, -20, 20, -20, 20);
-
-
     auto scene = getScene();
     message.setup();
-    message.fontSize = 0.1;
     message.fontScaleX = 1;
     message.fontScaleY = 1;
 
-    char buffer[100] = {};
-    char btnBuffer[100] = {};
+    char buffer[200] = {};
+    char aiInputBuffer[100] = {};
     if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
         for(int i = 0; i < entryCount; i++) {
+            auto manager = _getManager_gfCameraManager();
+            _setGX_gfCamera(manager->cameras);
+            message.fontSize = 0.1;
+
             auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
 
             auto fighter = FIGHTER_MANAGER->getFighter(id);
@@ -104,49 +106,87 @@ extern "C" void testPrint() {
 
             message.xPos = xPos * 1/message.fontSize + 20;
             message.yPos = yPos * -1/message.fontSize - 40;
-            message.zPos = zPos;
 
             sprintf(buffer, LSTICK, input->leftStickX, input->leftStickY);
             message.printString(buffer);
 
             message.xPos = xPos * 1/message.fontSize + 20;
             message.yPos = yPos * -1/message.fontSize - 20;
-            message.zPos = zPos;
 
             sprintf(buffer, INPUTS_VALUE, input->buttons.bits);
             message.printString(buffer);
 
             auto buttons = input->buttons;
-            if (buttons.attack == 1) { strcat(btnBuffer, INPUTS_NAMES[0]); }
-            if (buttons.special == 1) { strcat(btnBuffer, INPUTS_NAMES[1]); }
-            if (buttons.jump == 1) { strcat(btnBuffer, INPUTS_NAMES[2]); }
-            if (buttons.shield == 1) { strcat(btnBuffer, INPUTS_NAMES[3]); }
-            if (buttons.cStick == 1) { strcat(btnBuffer, INPUTS_NAMES[4]); }
-            if (buttons.uTaunt == 1) { strcat(btnBuffer, INPUTS_NAMES[5]); }
-            if (buttons.sTaunt == 1) { strcat(btnBuffer, INPUTS_NAMES[6]); }
-            if (buttons.dTaunt == 1) { strcat(btnBuffer, INPUTS_NAMES[7]); }
-//            if (buttons.tapJump == 1) { strcat(btnBuffer, INPUTS_NAMES[8]); }
+            if (buttons.attack == 1) { strcat(aiInputBuffer, INPUTS_NAMES[0]); }
+            if (buttons.special == 1) { strcat(aiInputBuffer, INPUTS_NAMES[1]); }
+            if (buttons.jump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[2]); }
+            if (buttons.shield == 1) { strcat(aiInputBuffer, INPUTS_NAMES[3]); }
+            if (buttons.cStick == 1) { strcat(aiInputBuffer, INPUTS_NAMES[4]); }
+            if (buttons.uTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[5]); }
+            if (buttons.sTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[6]); }
+            if (buttons.dTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[7]); }
+//            if (buttons.tapJump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[8]); }
 
             message.xPos = xPos * 1/message.fontSize + 20;
             message.yPos = yPos * -1/message.fontSize - 0;
-            message.zPos = zPos;
 
-            sprintf(buffer, INPUTS, btnBuffer);
+            sprintf(buffer, INPUTS, aiInputBuffer);
             message.printString(buffer);
 
             message.xPos = xPos * 1/message.fontSize + 20;
             message.yPos = yPos * -1/message.fontSize + 20;
-            message.zPos = zPos;
 
             sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
             message.printString(buffer);
+
+            message.xPos = xPos * 1/message.fontSize + 20;
+            message.yPos = yPos * -1/message.fontSize + 40;
+
+            sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiInputPtr->framesSinceScriptChanged);
+            message.printString(buffer);
+
+            if (i == 1) {
+                GXColor color = 0xff000088;
+//                float left = -33 * 1/message.fontSize;
+//                float top = -20 * 1/message.fontSize + 0;
+//                float bottom = -20 * 1/message.fontSize + 40;
+//                float right = 33 * 1/message.fontSize;
+
+                setupDrawPrimitives();
+                setup2DDraw();
+                draw2DQuad(color, 50, 100, 50, 100);
+                message.setup();
+
+                _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[4].modelView, 0);
+                message.fontSize = CAMERA_MANAGER->cameras[0].scale * 0.10;
+                message.xPos = 0;
+                message.yPos = 0;
+
+                sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
+                message.printString(buffer);
+
+                message.xPos = -33 * 1/message.fontSize;
+                message.yPos = -20 * 1/message.fontSize + 20;
+
+                sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiInputPtr->framesSinceScriptChanged);
+                message.printString(buffer);
+
+                message.xPos = -33 * 1/message.fontSize;
+                message.yPos = -20 * 1/message.fontSize + 40;
+
+                sprintf(buffer, VARIABLES);
+                message.printString(buffer);
+
+                auto aiVars = input->aiInputPtr->variables;
+                for (int j = 0; j < 26; j++) {
+                    message.xPos = (-30 + 9 * (j % 7)) * 1/message.fontSize ;
+                    if (j % 7 == 0) { message.yPos += 20; }
+                    sprintf(buffer, VARIABLE, j, aiVars[j]);
+                    message.printString(buffer);
+                }
+            }
         }
     }
-//    _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[4].modelView, 0);
-//    message.fontSize = CAMERA_MANAGER->cameras[0].scale * 0.22;
-//    message.xPos = 100;
-//    message.yPos = 100;
-//
-//    sprintf(buffer, SCENE, scene);
-//    message.printString(buffer);
+
+
 }
