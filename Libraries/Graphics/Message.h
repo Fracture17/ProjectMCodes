@@ -11,7 +11,7 @@
 #include "Memory.h"
 #include "Assembly.h"
 #include "Wii/GX.h"
-
+#include "Draw.h"
 
 
 
@@ -77,6 +77,7 @@ struct Message {
 
     char _spacer[0x24 - 0x1C - 4];
 
+    //use these to change font size
     //0x24
     float fontScaleX = 1;
 
@@ -116,9 +117,8 @@ struct Message {
     char _spacer3[0x50 - 0x4C - 1];
 
     //0x50
-    //use this in general to scale font
     //also changes scale of positions
-    float fontSize = 0.0625;
+    float scale = 1;
 
     char _spacer4[0x58 - 0x50 - 4];
 

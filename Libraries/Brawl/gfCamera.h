@@ -21,7 +21,7 @@ struct gfCamera {
 
     char _spacer[0xD8 - 3 * 4 * 4];
 
-    //0xB8
+    //0xD8
     //seems to be how large everything is
     //could be a bunch of camera related things though
     //use it to scale text

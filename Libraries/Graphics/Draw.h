@@ -9,10 +9,13 @@
 #include "Wii/GX.h"
 #include "Brawl/gfDraw.h"
 
-void setup2DDraw();
+void start2DDraw();
+void startNormalDraw();
 void setupDrawPrimitives();
 
 void drawTriangleFan(GXColor color, Position3D* vertices, u32 numVertices);
-void draw2DQuad(GXColor color, float top, float bottom, float left, float right);
+void draw2DRectangle(GXColor color, float top, float bottom, float left, float right);
+void drawPrimitive(GXColor color, Position3D* vertices, u32 numVertices);
+
 
 #endif //PROJECTMCODES_DRAW_H

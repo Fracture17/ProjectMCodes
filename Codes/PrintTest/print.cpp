@@ -14,6 +14,24 @@
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
 
+
+INJECTION("incrementScale", 0x80018c30, R"(
+    SAVE_REGS
+    stfs f0, 0xD8(r31)
+    bl incrementScale
+    RESTORE_REGS
+)");
+
+float scaleIncrease = 0;
+float increaseRate = 0.0001;
+
+extern "C" void incrementScale() {
+    //CAMERA_MANAGER->cameras[0].scale += scaleIncrease;
+    //scaleIncrease += increaseRate;
+}
+
+
+
 BASIC_INJECT("testPrint", 0x8001792c, "addi r3, r30, 280");
 
 
@@ -71,122 +89,50 @@ unsigned int getScene() {
 
 
 
+float CAMERA_SCALE_ADJUSTMENT = 0;
+
+char text[] = "TEXT";
+
+float xPos = 0;
+float yPos = 20;
 
 extern "C" void testPrint() {
     auto scene = getScene();
+
     message.setup();
+
     message.fontScaleX = 1;
     message.fontScaleY = 1;
+    message.scale = 1;
 
-    char buffer[200] = {};
-    char aiInputBuffer[100] = {};
-    if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
-        auto entryCount = FIGHTER_MANAGER->getEntryCount();
-        for(int i = 0; i < entryCount; i++) {
-            auto manager = _getManager_gfCameraManager();
-            _setGX_gfCamera(manager->cameras);
-            message.fontSize = 0.1;
+    message.xPos = xPos;
+    message.yPos = -yPos;
 
-            auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
+    message.printString(text);
 
-            auto fighter = FIGHTER_MANAGER->getFighter(id);
-            auto input = FIGHTER_MANAGER->getInput(id);
-            auto xPos = fighter->modules->postureModule->xPos;
-            auto yPos = fighter->modules->postureModule->yPos;
-            auto zPos = fighter->modules->postureModule->zPos;
+    setupDrawPrimitives();
+    draw2DRectangle(0xFFFFFFFF, 20, 40, 30, 50);
 
-            auto target = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(id));
+    //_gfDrawSetVtxPosColorPrimEnvironment();
+    //_GXSetZMode(true, GXCompare::GX_EQUAL, false);
+    //_GXSetCullMode(GXCullMode::GX_CULL_NONE);
+    //_GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, 1, GXCompare::GX_ALWAYS, 0);
+    //_gfDrawSetupCoord2D();
 
-            message.xPos = xPos * 1/message.fontSize + 20;
-            message.yPos = yPos * -1/message.fontSize - 60;
-            message.zPos = zPos;
+    message.setup();
+    start2DDraw();
 
-            sprintf(buffer, TARGET, target);
-            message.printString(buffer);
+    //CAMERA_MANAGER->cameras[4].setGX();
+    message.fontScaleX = 1;
+    message.fontScaleY = -1;
+    message.scale = 1;
 
-            message.xPos = xPos * 1/message.fontSize + 20;
-            message.yPos = yPos * -1/message.fontSize - 40;
+    message.xPos = xPos;
+    message.yPos = -yPos;
 
-            sprintf(buffer, LSTICK, input->leftStickX, input->leftStickY);
-            message.printString(buffer);
+    message.printString(text);
 
-            message.xPos = xPos * 1/message.fontSize + 20;
-            message.yPos = yPos * -1/message.fontSize - 20;
-
-            sprintf(buffer, INPUTS_VALUE, input->buttons.bits);
-            message.printString(buffer);
-
-            auto buttons = input->buttons;
-            if (buttons.attack == 1) { strcat(aiInputBuffer, INPUTS_NAMES[0]); }
-            if (buttons.special == 1) { strcat(aiInputBuffer, INPUTS_NAMES[1]); }
-            if (buttons.jump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[2]); }
-            if (buttons.shield == 1) { strcat(aiInputBuffer, INPUTS_NAMES[3]); }
-            if (buttons.cStick == 1) { strcat(aiInputBuffer, INPUTS_NAMES[4]); }
-            if (buttons.uTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[5]); }
-            if (buttons.sTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[6]); }
-            if (buttons.dTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[7]); }
-//            if (buttons.tapJump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[8]); }
-
-            message.xPos = xPos * 1/message.fontSize + 20;
-            message.yPos = yPos * -1/message.fontSize - 0;
-
-            sprintf(buffer, INPUTS, aiInputBuffer);
-            message.printString(buffer);
-
-            message.xPos = xPos * 1/message.fontSize + 20;
-            message.yPos = yPos * -1/message.fontSize + 20;
-
-            sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
-            message.printString(buffer);
-
-            message.xPos = xPos * 1/message.fontSize + 20;
-            message.yPos = yPos * -1/message.fontSize + 40;
-
-            sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiInputPtr->framesSinceScriptChanged);
-            message.printString(buffer);
-
-            if (i == 1) {
-                GXColor color = 0xff000088;
-//                float left = -33 * 1/message.fontSize;
-//                float top = -20 * 1/message.fontSize + 0;
-//                float bottom = -20 * 1/message.fontSize + 40;
-//                float right = 33 * 1/message.fontSize;
-
-                setupDrawPrimitives();
-                setup2DDraw();
-                draw2DQuad(color, 50, 100, 50, 100);
-                message.setup();
-
-                _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[4].modelView, 0);
-                message.fontSize = CAMERA_MANAGER->cameras[0].scale * 0.10;
-                message.xPos = 0;
-                message.yPos = 0;
-
-                sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
-                message.printString(buffer);
-
-                message.xPos = -33 * 1/message.fontSize;
-                message.yPos = -20 * 1/message.fontSize + 20;
-
-                sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiInputPtr->framesSinceScriptChanged);
-                message.printString(buffer);
-
-                message.xPos = -33 * 1/message.fontSize;
-                message.yPos = -20 * 1/message.fontSize + 40;
-
-                sprintf(buffer, VARIABLES);
-                message.printString(buffer);
-
-                auto aiVars = input->aiInputPtr->variables;
-                for (int j = 0; j < 26; j++) {
-                    message.xPos = (-30 + 9 * (j % 7)) * 1/message.fontSize ;
-                    if (j % 7 == 0) { message.yPos += 20; }
-                    sprintf(buffer, VARIABLE, j, aiVars[j]);
-                    message.printString(buffer);
-                }
-            }
-        }
-    }
-
-
+    setupDrawPrimitives();
+    start2DDraw();
+    draw2DRectangle(0x000000FF, 20, 100, 30, 150);
 }

@@ -25,8 +25,9 @@ void Message::setup() {
 
     _setDefaultEnv_Message(this, 0, 9);
 
-    auto manager = _getManager_gfCameraManager();
-    _setGX_gfCamera(manager->cameras);
+    startNormalDraw();
+
+    _GXSetCullMode(GXCullMode::GX_CULL_NONE);
 
     font = MELEE_FONT;
 
