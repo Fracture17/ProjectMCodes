@@ -6,7 +6,6 @@
 
 Message message;
 
-
 void Message::setup() {
     //save font values
     auto savedFont1 = *_FONT_THING1;

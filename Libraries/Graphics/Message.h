@@ -107,12 +107,12 @@ struct Message {
 
     static void std2DView();
 
-
     //null terminated
     void printString(const char* characters);
     //null terminated
     void printStringUTF(const UTF16* characters);
     void printChar(const UTF16 character);
+    void printGlyph(double xpos, double ypos, double zpos, FontData * TextureIndex);
 
     void allocMsgBuffer(int bufferSize, int unk1, HEAPTYPE heaptype);
 
@@ -163,15 +163,21 @@ struct Message {
     //don't know what this is, but notes say to set it to 1 and leave it
     int _thingEqualToOne2 = 1;
 
+//    // 0x40
+//    u16 unknown_a = 0xCCCC;
+//
+//    // 0x42
+//    u8 unknown_b = 0xFF;
+
     char _spacer2[0x43 - 0x3C - 4];
 
     // 0x43
     // appears to be a flag that tells if the message has fixed width
     // or not, and if so, uses the fixedWidth defined at 0x44
-    char enableFixedWidth;
+    char enableFixedWidth = 0;
 
     //0x44
-    float fixedWidth;
+    f32 fixedWidth = -1;
 
     //0x48
     FontData* font;
@@ -201,6 +207,7 @@ struct Message {
     //0x60
     //Set by SetEdge, each byte set individually
     char _edgeBytes[4];
+//    unsigned char _edgeBytes[4] = {0, 0, 0, 0xFF};
 
 
     char _spacer5[0x68 - 0x60 - 4];
@@ -276,7 +283,7 @@ extern Message message;
 #define _setDefaultEnv_Message ((void (*)(Message* message, int _textColorFlagThing, int _fontFlagThing)) 0x8006a964)
 #define _Print_Message ((void (*)(Message* message, const UTF16 character)) 0x8006fe50)
 #define _std2DView ((void (*)()) 0x8006b360)
-
+#define _Print_Glyph ((void (*)(double xpos, double ypos, double zpos, Message* self, FontData * TextureIndex)) 0x8007001c)
 
 //These seem to be pointers to some currently loaded fonts
 //These must be cleared and restored durign setup, or can crash
