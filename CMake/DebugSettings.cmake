@@ -9,4 +9,4 @@ set(VERBOSE 1)
 
 #can use -Og to shrink code size
 #-O2 and -Os should also work, but don't right now for different reasons
-set(CMAKE_CXX_FLAGS "-g -fno-function-cse -ffunction-sections -fno-exceptions -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps -fverbose-asm")
+set(CMAKE_CXX_FLAGS "-g -fno-function-cse -ffunction-sections -fdata-sections -fno-exceptions -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps -fverbose-asm")

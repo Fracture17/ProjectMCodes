@@ -10,8 +10,8 @@ dataStartAddress = 0x8057d000
 setupStartAddress = 0x804E2000
 
 
-compilerSettings = "-g -fno-function-cse -ffunction-sections -fno-exceptions -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps -fverbose-asm"
-linkerSettings = f"-z common-page-size=4 -z max-page-size=4 --relax --section-start=.rodata={hex(dataStartAddress)} --gc-sections -nostdlib"
+compilerSettings = "-g -fno-function-cse -ffunction-sections -fdata-sections -fno-exceptions -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps -fverbose-asm"
+linkerSettings = f"-z common-page-size=4 -z max-page-size=4 --relax --gc-sections -nostdlib"
 
 #not required
 brawlFunctionMapPath = R"..\BrawlFuncMap.map"
@@ -26,9 +26,10 @@ disassemblyDirectory = "Disassembly"
 intermediateFilesDirectory = "IntermediateFiles"
 
 
-includedCodesFunctionListsDirectory = f"{intermediateFilesDirectory}/IncludedCodesFunctionLists"
-editedCodesDirectory = f"{intermediateFilesDirectory}/EditedCodes"
-editedCodesFunctionListsDirectory = f"{intermediateFilesDirectory}/EditedCodesFunctionLists"
+renamedCodesDirectory = f"{intermediateFilesDirectory}/RenamedCodes"
+renamedCodesCodesFunctionListsDirectory = f"{intermediateFilesDirectory}/RenamedCodesFunctionLists"
+removedConstructorsCodeDirectory = f"{intermediateFilesDirectory}/RemovedConstructorCodes"
+removedConstructorsCodesFunctionListsDirectory = f"{intermediateFilesDirectory}/RemovedConstructorsCodesFunctionLists"
 
 initializersCPPPath = f"{intermediateFilesDirectory}/Initializers.cpp"
 linkedInitializersPath = f"{intermediateFilesDirectory}/LinkedInitializers"
@@ -38,6 +39,7 @@ compressedInitializersPath = f"{intermediateFilesDirectory}/CompressedInitialize
 dataAddressesFileForLinkerPath = f"{intermediateFilesDirectory}/DataAddressesForLinker.txt"
 codesCPPPath = f"{intermediateFilesDirectory}/Codes.cpp"
 linkedCodesPath = f"{intermediateFilesDirectory}/LinkedCodes"
+extractedCodeDataPath = f"{intermediateFilesDirectory}/ExtractedCodeData"
 setupCPPPath = f"{intermediateFilesDirectory}/Setup.cpp"
 setupHeaderPath = f"{intermediateFilesDirectory}/Setup.h"
 linkedSetupPath = f"{intermediateFilesDirectory}/LinkedSetup"
@@ -46,10 +48,14 @@ linkedLoadSetupFilePath = f"{intermediateFilesDirectory}/LinkedLoadSetup"
 loadSetupBinaryPath = f"{intermediateFilesDirectory}/LoadSetup.bin"
 #exists because windows is dumb and still has a path limit in 2020
 renameFunctionsCommandFilePath = f"{intermediateFilesDirectory}/RenameFunctionsCommands.txt"
+setCodeSectionAddressesLinkerCommandsFilePath = f"{intermediateFilesDirectory}/SetCodeSectionAddressesLinkerCommands.txt"
+setInitializerDataAddressesLinkerCommandsFilePath = f"{intermediateFilesDirectory}/SetInitializerDataAddressesLinkerCommands.txt"
+extractSectionsLinkerCommandsFilePath = f"{intermediateFilesDirectory}/ExtractSectionsLinkerCommands.txt"
 
 finalDataPath = f"{outputDirectory}/Data.bin"
 finalInitializersPath = f"{outputDirectory}/Init.bin"
 finalSetupPath = f"{outputDirectory}/Setup.bin"
+finalCodeDataPath = f"{outputDirectory}/CData.bin"
 loadSetupASMPath = f"{outputDirectory}/LoadSetupFile.asm"
 
 dataAddressesPath = f"{disassemblyDirectory}/DataAddresses.txt"

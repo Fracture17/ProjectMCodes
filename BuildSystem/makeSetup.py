@@ -164,10 +164,6 @@ extern "C" void inject() {
 
 
 headerFormat = """
-
-
-
-
 asm(R"(
 .int setup
 
