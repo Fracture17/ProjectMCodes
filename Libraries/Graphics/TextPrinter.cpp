@@ -104,11 +104,12 @@ void TextPrinter::drawBoundingBox(GXColor color, float boxPadding) {
     }
 
     setupDrawPrimitives();
-    start2D();
+//    start2D();
 
     int multiplier = (is2D) ? 1 : -1;
     // I THINK the zAxis thing has something to do with this line
     _GXSetZMode(true, GXCompare::GX_LESS, true);
+//    _GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, GXAlphaOp::GX_AND, GXCompare::GX_ALWAYS, 0);
     draw2DRectangle(
             color,
             (startY - boxPadding) * multiplier,
@@ -116,9 +117,10 @@ void TextPrinter::drawBoundingBox(GXColor color, float boxPadding) {
             lineStart - boxPadding,
             lineStart + maxWidth + boxPadding,
             message.zPos - 1);
-    //_GXSetZMode(true, GXCompare::GX_EQUAL, false);
+//    _GXSetZMode(true, GXCompare::GX_EQUAL, false);
+//    _GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, GXAlphaOp::GX_OR, GXCompare::GX_ALWAYS, 0);
     setup();
-    start2D();
+//    start2D();
 }
 
 void TextPrinter::padToWidth(float width) {

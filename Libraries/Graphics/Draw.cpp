@@ -13,7 +13,7 @@ void setupDrawPrimitives() {
     _GXSetCullMode(GXCullMode::GX_CULL_NONE);
     _gfDrawSetVtxPosColorPrimEnvironment();
     _GXSetZMode(true, GXCompare::GX_EQUAL, false);
-    _GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, 1, GXCompare::GX_ALWAYS, 0);
+    _GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, GXAlphaOp::GX_OR, GXCompare::GX_ALWAYS, 0);
 }
 
 void startNormalDraw() {

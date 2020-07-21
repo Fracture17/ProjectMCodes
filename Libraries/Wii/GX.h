@@ -77,11 +77,18 @@ enum GXCompare {
     GX_ALWAYS = 7
 };
 
+enum GXAlphaOp {
+    GX_AND = 0,
+    GX_OR = 1,
+    GX_XOR = 2,
+    GX_XNOR = 3
+};
+
 //Write to this to draw stuff
 #define WG_PIPE ((WGPipe*) 0xCC008000)
 
 #define _GXSetZMode ((void (*)(bool compareEnabled, GXCompare compareType, bool updateEnabled)) 0x801f4774)
-#define _GXSetAlphaCompare ((void (*)(GXCompare comp0, u8 ref0, u32 op, GXCompare comp1, u8 ref1)) 0x801f3fd8)
+#define _GXSetAlphaCompare ((void (*)(GXCompare comp0, u8 ref0, GXAlphaOp op, GXCompare comp1, u8 ref1)) 0x801f3fd8)
 //Width is in pixels / 6
 //just set textOffsets to 0
 #define _GXSetLineWidth ((void (*)(u8 width, int texOffsets)) 0x801f12ac)

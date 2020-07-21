@@ -150,6 +150,7 @@ extern "C" void testPrint() {
             auto yPos = fighter->modules->postureModule->yPos * -1;
             auto zPos = fighter->modules->postureModule->zPos;
 
+            printer.lineHeight = 20 * 0.1;
             message->xPos = xPos + 5;
             message->yPos = yPos - printer.lineHeight * 6;
             message->fontScaleX = 0.1;
@@ -225,6 +226,7 @@ extern "C" void testPrint() {
 
                 setupDrawPrimitives();
                 printer.drawBoundingBox(0x00000088);
+                printer.startNormal();
             }
         }
     }
