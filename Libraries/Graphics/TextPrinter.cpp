@@ -6,10 +6,14 @@
 
 TextPrinter printer;
 
+//Must be called before doing anything after graphics settings were
+//modified. Otherwise the game will likely hang and crash.
 void TextPrinter::setup() {
     //save font values
     auto savedFont1 = *_FONT_THING1;
     auto savedFont2 = *_FONT_THING2;
+    auto savedFontScaleX = message.fontScaleX;
+    auto savedFontScaleY = message.fontScaleY;
 
     //clear font values
     *_FONT_THING1 = nullptr;
@@ -17,6 +21,7 @@ void TextPrinter::setup() {
 
     //clear 2D flag
     is2D = false;
+    startBoundingBox();
 
     //setDefaultEnv uses some values from the message buffer
     //We don't need these values to print, but ignoring it will causes crashes
@@ -26,8 +31,6 @@ void TextPrinter::setup() {
 
     _setDefaultEnv_Message(&message, 0, 9);
 
-    startNormalDraw();
-
     _GXSetCullMode(GXCullMode::GX_CULL_NONE);
 
     message.font = MELEE_FONT;
@@ -35,15 +38,20 @@ void TextPrinter::setup() {
     //restore font values
     *_FONT_THING1 = savedFont1;
     *_FONT_THING2 = savedFont2;
+    message.fontScaleX = savedFontScaleX;
+    message.fontScaleY = savedFontScaleY;
 }
 
 void TextPrinter::start2D() {
     is2D = true;
 
-    _GXSetZMode(true, GXCompare::GX_EQUAL, false);
-    _GXSetCullMode(GXCullMode::GX_CULL_NONE);
-    _GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, 1, GXCompare::GX_ALWAYS, 0);
-    _gfDrawSetupCoord2D();
+    start2DDraw();
+}
+
+void TextPrinter::startNormal() {
+    is2D = false;
+
+    startNormalDraw();
 }
 
 void TextPrinter::printLine(const char *chars) {
@@ -59,9 +67,7 @@ void TextPrinter::print(const char *chars) {
 
     for (; *chars; chars++) {
         if (*chars == '\n') {
-            message.xPos = lineStart;
-            lastPadLocation = lineStart;
-            message.yPos += (is2D) ? -lineHeight : lineHeight;
+            newLine(true);
         }
         else {
             message.printChar(*chars);
@@ -74,16 +80,41 @@ void TextPrinter::print(const char *chars) {
     }
 }
 
-void TextPrinter::newLine() {
+void TextPrinter::newLine(bool fromPrintFn) {
+    if (lineStart + maxWidth < message.xPos) {
+        maxWidth = message.xPos - lineStart;
+    }
     message.xPos = lineStart;
     lastPadLocation = lineStart;
-    message.yPos += lineHeight;
+    message.yPos += (fromPrintFn && is2D) ? -lineHeight : lineHeight;
 }
 
-#define _printf ((char* (*)(char* format, ...)) 0x803f861c)
+void TextPrinter::startBoundingBox() {
+    startY = message.yPos;
+    lineStart = message.xPos;
+    lastPadLocation = message.xPos;
+    maxWidth = 0;
+}
 
-void TextPrinter::printInBox(const char *chars, float boxPadding) {
+#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 
+void TextPrinter::drawBoundingBox(GXColor color, float boxPadding) {
+    if (lineStart + maxWidth < message.xPos) {
+        maxWidth = message.xPos - lineStart;
+    }
+
+    int multiplier = (is2D) ? 1 : -1;
+    // I THINK the zAxis thing has something to do with this line
+    _GXSetZMode(true, GXCompare::GX_EQUAL, true);
+    draw2DRectangle(
+            color,
+            (startY - boxPadding) * multiplier,
+            (message.yPos + lineHeight + boxPadding) * multiplier,
+            lineStart - boxPadding,
+            lineStart + maxWidth + boxPadding,
+            message.zPos + 1);
+    _GXSetZMode(true, GXCompare::GX_EQUAL, false);
+    setup();
 }
 
 void TextPrinter::padToWidth(float width) {
@@ -97,5 +128,3 @@ void TextPrinter::padToWidth(float width) {
         lastPadLocation = message.xPos;
     }
 }
-
-// PrintMessageBox

@@ -10,18 +10,20 @@
 
 struct TextPrinter {
     void print(const char* characters);
-    void printf(const char* characters, ...);
     void printLine(const char* characters);
     void padToWidth(float width);
-    void newLine();
-    void printInBox(const char* characters, float boxPadding);
+    void newLine(bool fromPrintFn = false);
+    void startBoundingBox();
+    void drawBoundingBox(GXColor color, float boxPadding = 0);
     void start2D();
+    void startNormal();
     void setup();
 
     Message message;
     float lineHeight = 20;
+    float maxWidth;
     float lineStart;
-
+    float startY;
     float lastPadLocation;
     bool is2D = false;
 };

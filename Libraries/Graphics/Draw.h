@@ -14,7 +14,7 @@ void startNormalDraw();
 void setupDrawPrimitives();
 
 void drawTriangleFan(GXColor color, Position3D* vertices, u32 numVertices);
-void draw2DRectangle(GXColor color, float top, float bottom, float left, float right);
+void draw2DRectangle(GXColor color, float top, float bottom, float left, float right, float zPos = 0);
 void drawPrimitive(GXColor color, Position3D* vertices, u32 numVertices);
 
 

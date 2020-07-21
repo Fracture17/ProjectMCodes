@@ -14,7 +14,6 @@ void setupDrawPrimitives() {
     _gfDrawSetVtxPosColorPrimEnvironment();
     _GXSetZMode(true, GXCompare::GX_EQUAL, false);
     _GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, 1, GXCompare::GX_ALWAYS, 0);
-    startNormalDraw();
 }
 
 void startNormalDraw() {
@@ -28,27 +27,27 @@ void drawTriangleFan(GXColor color, Position3D* vertices, u32 numVertices) {
     drawPrimitive(color, vertices, numVertices);
 }
 
-void draw2DRectangle(GXColor color, float top, float bottom, float left, float right) {
+void draw2DRectangle(GXColor color, float top, float bottom, float left, float right, float zPos) {
     _GXBegin(GXPrimitive::GX_QUADS, 1, 4);
 
     WG_PIPE->F32 = left;
     WG_PIPE->F32 = top;
-    WG_PIPE->F32 = 0;
+    WG_PIPE->F32 = zPos;
     WG_PIPE->U32 = color.value;
 
     WG_PIPE->F32 = right;
     WG_PIPE->F32 = top;
-    WG_PIPE->F32 = 0;
+    WG_PIPE->F32 = zPos;
     WG_PIPE->U32 = color.value;
 
     WG_PIPE->F32 = right;
     WG_PIPE->F32 = bottom;
-    WG_PIPE->F32 = 0;
+    WG_PIPE->F32 = zPos;
     WG_PIPE->U32 = color.value;
 
     WG_PIPE->F32 = left;
     WG_PIPE->F32 = bottom;
-    WG_PIPE->F32 = 0;
+    WG_PIPE->F32 = zPos;
     WG_PIPE->U32 = color.value;
 }
 
