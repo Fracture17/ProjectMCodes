@@ -11,7 +11,7 @@
 #include "Memory.h"
 #include "Assembly.h"
 #include "Wii/GX.h"
-#include "Draw.h"
+#include "Graphics/Draw.h"
 //TODO: relocate this
 enum HEAPTYPE {
 //    00 *Null
@@ -111,7 +111,7 @@ struct Message {
     void printString(const char* characters);
     //null terminated
     void printStringUTF(const UTF16* characters);
-    void printChar(const UTF16 character);
+    float printChar(const UTF16 character);
     void printGlyph(double xpos, double ypos, double zpos, FontData * TextureIndex);
 
     void allocMsgBuffer(int bufferSize, int unk1, HEAPTYPE heaptype);
@@ -273,15 +273,12 @@ struct Message {
     void* _messageBuffer;
 
     char _spacer10[0x200 - 0x1D0 - 4];
+
 }__attribute__((packed, aligned(4)));
-
-
-extern Message message;
-
 
 //not 100% sure what the flags do, but color flag should be 0, and font flag should be 9
 #define _setDefaultEnv_Message ((void (*)(Message* message, int _textColorFlagThing, int _fontFlagThing)) 0x8006a964)
-#define _Print_Message ((void (*)(Message* message, const UTF16 character)) 0x8006fe50)
+#define _Print_Message ((float (*)(Message* message, const UTF16 character)) 0x8006fe50)
 #define _std2DView ((void (*)()) 0x8006b360)
 #define _Print_Glyph ((void (*)(double xpos, double ypos, double zpos, Message* self, FontData * TextureIndex)) 0x8007001c)
 

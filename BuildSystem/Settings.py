@@ -40,8 +40,8 @@ dataAddressesFileForLinkerPath = f"{intermediateFilesDirectory}/DataAddressesFor
 codesCPPPath = f"{intermediateFilesDirectory}/Codes.cpp"
 linkedCodesPath = f"{intermediateFilesDirectory}/LinkedCodes"
 extractedCodeDataPath = f"{intermediateFilesDirectory}/ExtractedCodeData"
-setupCPPPath = f"{intermediateFilesDirectory}/Setup.cpp"
-setupHeaderPath = f"{intermediateFilesDirectory}/Setup.h"
+setupCPPPath = f"{intermediateFilesDirectory}/setup.cpp"
+setupHeaderPath = f"{intermediateFilesDirectory}/setup.h"
 linkedSetupPath = f"{intermediateFilesDirectory}/LinkedSetup"
 loadSetupFilePath = f"{intermediateFilesDirectory}/LoadSetup.s"
 linkedLoadSetupFilePath = f"{intermediateFilesDirectory}/LinkedLoadSetup"
@@ -54,7 +54,7 @@ extractSectionsLinkerCommandsFilePath = f"{intermediateFilesDirectory}/ExtractSe
 
 finalDataPath = f"{outputDirectory}/Data.bin"
 finalInitializersPath = f"{outputDirectory}/Init.bin"
-finalSetupPath = f"{outputDirectory}/Setup.bin"
+finalSetupPath = f"{outputDirectory}/setup.bin"
 finalCodeDataPath = f"{outputDirectory}/CData.bin"
 loadSetupASMPath = f"{outputDirectory}/LoadSetupFile.asm"
 
@@ -67,7 +67,7 @@ codesDisassemblyPath = f"{disassemblyDirectory}/CodesDisassembly.txt"
 codesMapPath = f"{disassemblyDirectory}/Codes.map"
 setupAddressesPath = f"{disassemblyDirectory}/SetupAddresses.txt"
 setupDisassemblyPath = f"{disassemblyDirectory}/SetupDisassembly.txt"
-setupMapPath = f"{disassemblyDirectory}/Setup.map"
+setupMapPath = f"{disassemblyDirectory}/setup.map"
 
 
 

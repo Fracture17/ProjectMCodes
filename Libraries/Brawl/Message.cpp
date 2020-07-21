@@ -2,9 +2,7 @@
 // Created by johno on 7/13/2020.
 //
 
-#include "Message.h"
-
-Message message;
+#include "Brawl/Message.h"
 
 void Message::setup() {
     //save font values
@@ -20,7 +18,7 @@ void Message::setup() {
     //We don't need these values to print, but ignoring it will causes crashes
     void* fakeMessageBuffer[0x40] = {};
     fakeMessageBuffer[0x4C / 4] = &fakeMessageBuffer;
-    message._messageBuffer = &fakeMessageBuffer;
+    _messageBuffer = &fakeMessageBuffer;
 
     _setDefaultEnv_Message(this, 0, 9);
 
@@ -54,15 +52,8 @@ void Message::printStringUTF(const UTF16* characters) {
     }
 }
 
-void Message::printChar(const UTF16 character) {
-    if(character == '\n') {
-        //newline
-        //just guesstimate size for now
-
-    }
-    else {
-        _Print_Message(this, character);
-    }
+float Message::printChar(const UTF16 character) {
+    return _Print_Message(this, character);
 }
 
 //sets the camera for printing to screen

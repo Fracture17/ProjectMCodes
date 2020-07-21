@@ -2,7 +2,7 @@
 // Created by dareb on 7/19/2020.
 //
 
-#include <Graphics/Message.h>
+#include <Brawl/Message.h>
 #include "Assembly.h"
 
 BASIC_INJECT("messageMaker", 0x8001792c, "addi r3, r30, 280");

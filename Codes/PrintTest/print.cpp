@@ -2,6 +2,7 @@
 // Created by johno on 7/14/2020.
 //
 
+#include <Graphics/TextPrinter.h>
 #include "Assembly.h"
 #include "Memory.h"
 
@@ -9,7 +10,7 @@
 #include "Brawl/aiMgr.h"
 
 #include "Graphics/Draw.h"
-#include "Graphics/Message.h"
+#include "Brawl/Message.h"
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
@@ -79,27 +80,29 @@ unsigned int getScene() {
 
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 
-int RENDER_X_DIST = 20;
-int RENDER_X_SPACING = 80;
+float RENDER_X_DIST = 20;
+float RENDER_X_SPACING = 80;
 float RENDER_SCALE_X = 0.5;
 float RENDER_SCALE_Y = 0.5;
-int BOX_PADDING = 5;
-int TOP_PADDING = 69; // nice
-int LEFT_PADDING = 20;
+float BOX_PADDING = 5;
+float TOP_PADDING = 69; // nice
+float LEFT_PADDING = 20;
 
 extern "C" void testPrint() {
     auto scene = getScene();
-    message.setup();
-    message.fontScaleX = 0.1;
-    message.fontScaleY = 0.1;
-    auto newLineDist = 20 * message.fontScaleY;
+    printer.setup();
+
+    Message * message = &printer.message;
+    message->fontScaleX = 0.1;
+    message->fontScaleY = 0.1;
+    printer.lineHeight = 20 * message->fontScaleY;
 
     char buffer[200] = {};
     char aiInputBuffer[100] = {};
 
-    message.xPos = 1;
-    message.yPos = 1;
-    message.zPos = 0;
+    message->xPos = 1;
+    message->yPos = 1;
+    message->zPos = 0;
 
     if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
@@ -116,26 +119,21 @@ extern "C" void testPrint() {
             auto yPos = fighter->modules->postureModule->yPos * -1;
             auto zPos = fighter->modules->postureModule->zPos;
 
+            message->xPos = xPos + 5;
+            message->yPos = yPos - printer.lineHeight * 6;
+            printer.lineStart = xPos + 5;
+            message->zPos = zPos;
+
             auto target = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(id));
 
-            message.xPos = xPos + 5;
-            message.yPos = yPos - newLineDist * 6;
-            message.zPos = zPos;
-
             sprintf(buffer, TARGET, target);
-            message.printString(buffer);
-
-            message.xPos = xPos + 5;
-            message.yPos = yPos - newLineDist * 5;
+            printer.printLine(buffer);
 
             sprintf(buffer, LSTICK, input->leftStickX, input->leftStickY);
-            message.printString(buffer);
-
-            message.xPos = xPos + 5;
-            message.yPos = yPos - newLineDist * 4;
+            printer.printLine(buffer);
 
             sprintf(buffer, INPUTS_VALUE, input->buttons.bits);
-            message.printString(buffer);
+            printer.printLine(buffer);
 
             sprintf(aiInputBuffer, "");
             auto buttons = input->buttons;
@@ -149,121 +147,70 @@ extern "C" void testPrint() {
             if (buttons.dTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[7]); }
 //            if (buttons.tapJump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[8]); }
 
-            message.xPos = xPos + 5;
-            message.yPos = yPos - newLineDist * 3;
-
             sprintf(buffer, INPUTS, aiInputBuffer);
-            message.printString(buffer);
-
-            message.xPos = xPos + 5;
-            message.yPos = yPos - newLineDist * 2;
+            printer.printLine(buffer);
 
             sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
-            message.printString(buffer);
-
-            message.xPos = xPos + 5;
-            message.yPos = yPos - newLineDist * 1;
+            printer.printLine(buffer);
 
             sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiInputPtr->framesSinceScriptChanged);
-            message.printString(buffer);
+            printer.printLine(buffer);
 
             if (i == 1) {
                 GXColor color = 0x00000088;
 
                 setupDrawPrimitives();
-                start2DDraw();
-                draw2DRectangle(
-                    color,
-                    TOP_PADDING - BOX_PADDING,
-                    TOP_PADDING + (RENDER_SCALE_Y * 20 * 8) + BOX_PADDING,
-                    LEFT_PADDING - BOX_PADDING,
-                    LEFT_PADDING + RENDER_X_DIST + RENDER_X_SPACING * 7 + BOX_PADDING);
-                message.setup();
+//                draw2DRectangle(
+//                    color,
+//                    TOP_PADDING - BOX_PADDING,
+//                    TOP_PADDING + (RENDER_SCALE_Y * 20 * 8) + BOX_PADDING,
+//                    LEFT_PADDING - BOX_PADDING,
+//                    LEFT_PADDING + RENDER_X_DIST + RENDER_X_SPACING * 7 + BOX_PADDING);
 
-                _GXSetZMode(true, GXCompare::GX_EQUAL, false);
-                _GXSetCullMode(GXCullMode::GX_CULL_NONE);
-                _GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, 1, GXCompare::GX_ALWAYS, 0);
-                _gfDrawSetupCoord2D();
-                message.fontScaleY = -RENDER_SCALE_Y;
-                message.fontScaleX = RENDER_SCALE_X;
-                newLineDist = 20 * message.fontScaleY * -1;
+                printer.setup();
+                printer.start2D();
 
-                message.xPos = LEFT_PADDING;
-                message.yPos = -TOP_PADDING - newLineDist * 0;
+                message->fontScaleY = RENDER_SCALE_Y;
+                message->fontScaleX = RENDER_SCALE_X;
+
+                printer.lineStart = LEFT_PADDING;
+                printer.lineHeight = 20 * message->fontScaleY;
+
+                message->xPos = LEFT_PADDING;
+                message->yPos = TOP_PADDING;
 
                 sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
-                message.printString(buffer);
-
-                message.xPos = LEFT_PADDING;
-                message.yPos = -TOP_PADDING - newLineDist * 1;
+                printer.printLine(buffer);
 
                 sprintf(buffer, INPUTS, aiInputBuffer);
-                message.printString(buffer);
-
-                message.xPos = LEFT_PADDING;
-                message.yPos = -TOP_PADDING - newLineDist * 2;
+                printer.printLine(buffer);
 
                 sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiInputPtr->framesSinceScriptChanged);
-                message.printString(buffer);
-
-                message.xPos = LEFT_PADDING;
-                message.yPos = -TOP_PADDING - newLineDist * 3;
+                printer.printLine(buffer);
 
                 sprintf(buffer, VARIABLES);
-                message.printString(buffer);
+                printer.printLine(buffer);
 
                 auto aiVars = input->aiInputPtr->variables;
                 for (int j = 0; j < 26; j++) {
-                    message.xPos = (LEFT_PADDING + RENDER_X_DIST + RENDER_X_SPACING * (j % 7)) ;
-                    if (j % 7 == 0) { message.yPos -= newLineDist; }
+                    printer.padToWidth(RENDER_X_SPACING);
+                    if (j % 7 == 0) { printer.newLine(); }
                     sprintf(buffer, VARIABLE, j, aiVars[j]);
-                    message.printString(buffer);
+                    printer.print(buffer);
                 }
             }
         }
     }
 }
 
-//int stickX = PAD_SYSTEM->pads[0].stickX;
-//if (stickX > 148 && stickX < (255 - 20)) {
-//adjustment -= (255 - stickX) * 0.00125;
-//} else if (stickX < 148 && stickX > (148 - 120)) {
-//adjustment += stickX * 0.00125;
-//}
 
-//message.setup();
+//INJECTION("CPUBehavior", 0x809031B4, R"(
+//    SAVE_REGS
+//    stfs f0, 0xD8(r0)
+//    bl CPUBehavior
+//    RESTORE_REGS
+//)");
 //
-//message.fontScaleX = 1;
-//message.fontScaleY = 1;
-//message.scale = 1;
+//extern "C" void CPUBehavior() {
 //
-//message.xPos = xPos;
-//message.yPos = -yPos;
-//
-//message.printString(text);
-//
-//setupDrawPrimitives();
-//draw2DRectangle(0xFFFFFFFF, 20, 40, 30, 50);
-//
-////_gfDrawSetVtxPosColorPrimEnvironment();
-////_GXSetZMode(true, GXCompare::GX_EQUAL, false);
-////_GXSetCullMode(GXCullMode::GX_CULL_NONE);
-////_GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, 1, GXCompare::GX_ALWAYS, 0);
-////_gfDrawSetupCoord2D();
-//
-//message.setup();
-//start2DDraw();
-//
-////CAMERA_MANAGER->cameras[4].setGX();
-//message.fontScaleX = 1;
-//message.fontScaleY = -1;
-//message.scale = 1;
-//
-//message.xPos = xPos;
-//message.yPos = -yPos;
-//
-//message.printString(text);
-//
-//setupDrawPrimitives();
-//start2DDraw();
-//draw2DRectangle(0x000000FF, 20, 100, 30, 150);
+//}
