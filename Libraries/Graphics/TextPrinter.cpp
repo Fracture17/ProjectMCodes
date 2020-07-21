@@ -103,18 +103,22 @@ void TextPrinter::drawBoundingBox(GXColor color, float boxPadding) {
         maxWidth = message.xPos - lineStart;
     }
 
+    setupDrawPrimitives();
+    start2D();
+
     int multiplier = (is2D) ? 1 : -1;
     // I THINK the zAxis thing has something to do with this line
-    _GXSetZMode(true, GXCompare::GX_EQUAL, true);
+    _GXSetZMode(true, GXCompare::GX_LESS, true);
     draw2DRectangle(
             color,
             (startY - boxPadding) * multiplier,
             (message.yPos + lineHeight + boxPadding) * multiplier,
             lineStart - boxPadding,
             lineStart + maxWidth + boxPadding,
-            message.zPos + 1);
-    _GXSetZMode(true, GXCompare::GX_EQUAL, false);
+            message.zPos - 1);
+    //_GXSetZMode(true, GXCompare::GX_EQUAL, false);
     setup();
+    start2D();
 }
 
 void TextPrinter::padToWidth(float width) {
