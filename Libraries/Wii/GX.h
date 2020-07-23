@@ -84,6 +84,56 @@ enum GXAlphaOp {
     GX_XNOR = 3
 };
 
+enum GXClipMode {
+    GX_CLIP_ENABLE = 0,
+    GX_CLIP_DISABLE = 1
+};
+
+enum GXBlendType {
+    // write input directly to EFB
+    GX_BM_NONE = 0,
+    // blend using blending equation
+    GX_BM_BLEND = 1,
+    // blend using boolean operation
+    GX_BM_LOGIC = 2,
+    // input subtracts from existing pixels
+    GX_BM_SUBTRACT = 3,
+    GX_MAX_BLENDMODE = 4
+};
+
+enum GXBlendControl {
+    GX_BL_ZERO = 0,
+    GX_BL_ONE = 1,
+    GX_BL_SRCCLR = 2,
+    GX_BL_DSTCLR = 2,
+    GX_BL_INVSRCCLR = 3,
+    GX_BL_INVDSTCLR = 3,
+    GX_BL_SRCALPHA = 4,
+    GX_BL_INVSRCALPHA = 5,
+    GX_BL_DSTALPHA = 6,
+    GX_BL_INVDSTALPHA = 7,
+
+};
+
+enum GXLoType {
+    GX_LO_CLEAR = 0,
+    GX_LO_AND = 1,
+ 	GX_LO_REVAND = 2,
+ 	GX_LO_COPY = 3,
+ 	GX_LO_INVAND = 4,
+ 	GX_LO_NOOP = 5,
+ 	GX_LO_XOR = 6,
+ 	GX_LO_OR = 7,
+ 	GX_LO_NOR = 8,
+ 	GX_LO_EQUIV = 9,
+ 	GX_LO_INV = 10,
+ 	GX_LO_REVOR = 11,
+ 	GX_LO_INVCOPY = 12,
+ 	GX_LO_INVOR = 13,
+ 	GX_LO_NAND = 14,
+ 	GX_LO_SET = 15
+};
+
 //Write to this to draw stuff
 #define WG_PIPE ((WGPipe*) 0xCC008000)
 
@@ -93,6 +143,9 @@ enum GXAlphaOp {
 //just set textOffsets to 0
 #define _GXSetLineWidth ((void (*)(u8 width, int texOffsets)) 0x801f12ac)
 #define _GXSetCullMode ((void (*)(GXCullMode cullMode)) 0x801f136c)
+#define _GXSetClipMode ((void (*)(GXClipMode clipMode)) 0x801f55ec)
+#define _GXSetCompLoc ((void (*)(GXBlendType type, )) 0x801f47a8)
+#define _GXSetBlendMode ((void (*)(GXBlendType type, GXBlendControl src_fact, GXBlendControl dst_fact, GXLoType op)) 0x801f46cc)
 
 #define _GXBegin ((void (*)(GXPrimitive type, int format, u16 numVerts)) 0x801f1088)
 

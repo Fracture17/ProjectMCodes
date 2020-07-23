@@ -74,21 +74,18 @@ unsigned int getScene() {
     return false;
 }
 
-//float CAMERA_SCALE_ADJUSTMENT = 0;
-//CAMERA_MANAGER->cameras[0].scale += CAMERA_SCALE_ADJUSTMENT;
-//CAMERA_SCALE_ADJUSTMENT += 0.001;
+//#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 
-#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
-
-float RENDER_X_DIST = 20;
 float RENDER_X_SPACING = 80;
 float RENDER_SCALE_X = 0.5;
 float RENDER_SCALE_Y = 0.5;
-float BOX_PADDING = 5;
 float TOP_PADDING = 69; // nice
 float LEFT_PADDING = 20;
 
 extern "C" void testPrint() {
+    printer.drawBoundingBoxes(0);
+    startNormalDraw();
+
     auto scene = getScene();
     printer.setup();
 
@@ -104,41 +101,7 @@ extern "C" void testPrint() {
     message->yPos = 1;
     message->zPos = 0;
 
-    _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[4].modelView, 0);
-    setupDrawPrimitives();
-    start2DDraw();
-    draw2DRectangle(
-            0xffffffff,
-            10, 20, 10, 20);
-    draw2DRectangle(
-            0xff0000ff,
-            20, 40, 20, 40);
-
-    printer.setup();
-    printer.start2D();
-    message->xPos = 50;
-    message->yPos = 50;
-    message->fontScaleX = 1;
-    message->fontScaleY = 1;
-    printer.lineHeight = 20;
-    printer.startBoundingBox();
-    printer.print("2D world");
-    setupDrawPrimitives();
-    printer.drawBoundingBox(0xff00ff88);
-
-    message->fontScaleX = 0.1;
-    message->fontScaleY = 0.1;
-    printer.lineHeight = 20 * 0.1;
-    printer.startNormal();
-    printer.startBoundingBox();
-    printer.print("3D world");
-
-    setupDrawPrimitives();
-    printer.drawBoundingBox(0xffffff88, 2);
-
     if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
-
-
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
         for(int i = 0; i < entryCount; i++) {
             _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[0].modelView, 0);
@@ -190,8 +153,7 @@ extern "C" void testPrint() {
 
             sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiInputPtr->framesSinceScriptChanged);
             printer.print(buffer);
-            setupDrawPrimitives();
-            printer.drawBoundingBox(0x00000088, 2);
+            printer.saveBoundingBox(0, 0x00000088, 2);
 
             if (i == 1) {
                 printer.setup();
@@ -224,9 +186,8 @@ extern "C" void testPrint() {
                     printer.print(buffer);
                 }
 
-                setupDrawPrimitives();
-                printer.drawBoundingBox(0x00000088);
-                printer.startNormal();
+                printer.saveBoundingBox(0, 0x00000088, 2);
+                startNormalDraw();
             }
         }
     }

@@ -6,6 +6,8 @@
 
 TextPrinter printer;
 
+#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
+
 //Must be called before doing anything after graphics settings were
 //modified. Otherwise the game will likely hang and crash.
 void TextPrinter::setup() {
@@ -32,6 +34,7 @@ void TextPrinter::setup() {
     _setDefaultEnv_Message(&message, 0, 9);
 
     _GXSetCullMode(GXCullMode::GX_CULL_NONE);
+//    message.setObjZCompare(GXCompare::GX_EQUAL, true);
 
     message.font = MELEE_FONT;
 
@@ -59,7 +62,37 @@ void TextPrinter::printLine(const char *chars) {
     newLine();
 }
 
+void TextPrinter::drawBoundingBoxes(int id) {
+    for (int i = 0; i < bboxVecs.size(); i++) {
+        if (bboxVecs[i].id == id) {
+            vector<RectBounds> * boxes = &bboxVecs[i].rectBounds;
+            size_t size = boxes->size();
+            setupDrawPrimitives();
+
+
+            for (int j = 0; j < size; j++) {
+                if ((*boxes)[j].is2D) {
+                    start2DDraw();
+                } else {
+                    startNormalDraw();
+                }
+                draw2DRectangle(
+                    (*boxes)[j].color,
+                    (*boxes)[j].top,
+                    (*boxes)[j].bottom,
+                    (*boxes)[j].left,
+                    (*boxes)[j].right,
+                    (*boxes)[j].zPos);
+            }
+            boxes->clear();
+            setup();
+            break;
+        }
+    }
+}
+
 void TextPrinter::print(const char *chars) {
+//    _GXSetZMode(true, GXCompare::GX_EQUAL, true);
     if (is2D) {
         message.yPos *= -1;
         message.fontScaleY *= -1;
@@ -80,6 +113,8 @@ void TextPrinter::print(const char *chars) {
     }
 }
 
+
+
 void TextPrinter::newLine(bool fromPrintFn) {
     if (lineStart + maxWidth < message.xPos) {
         maxWidth = message.xPos - lineStart;
@@ -96,31 +131,36 @@ void TextPrinter::startBoundingBox() {
     maxWidth = 0;
 }
 
-#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
-
-void TextPrinter::drawBoundingBox(GXColor color, float boxPadding) {
+void TextPrinter::saveBoundingBox(int id, GXColor color, float boxPadding) {
     if (lineStart + maxWidth < message.xPos) {
         maxWidth = message.xPos - lineStart;
     }
 
-    setupDrawPrimitives();
-//    start2D();
-
     int multiplier = (is2D) ? 1 : -1;
-    // I THINK the zAxis thing has something to do with this line
-    _GXSetZMode(true, GXCompare::GX_LESS, true);
-//    _GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, GXAlphaOp::GX_AND, GXCompare::GX_ALWAYS, 0);
-    draw2DRectangle(
+    int bboxVecCount = bboxVecs.size();
+    int idx = -1;
+    for (int i = 0; i < bboxVecCount; i++) {
+        if (bboxVecs[i].id == id) {
+            idx = i;
+            break;
+        }
+    }
+    if (idx == -1) {
+        vecRef v;
+        v.id = id;
+        bboxVecs.push(v);
+        idx = bboxVecCount;
+    }
+    bboxVecs[idx].rectBounds.push({
             color,
             (startY - boxPadding) * multiplier,
             (message.yPos + lineHeight + boxPadding) * multiplier,
             lineStart - boxPadding,
             lineStart + maxWidth + boxPadding,
-            message.zPos - 1);
-//    _GXSetZMode(true, GXCompare::GX_EQUAL, false);
-//    _GXSetAlphaCompare(GXCompare::GX_ALWAYS, 0, GXAlphaOp::GX_OR, GXCompare::GX_ALWAYS, 0);
+            message.zPos,
+            is2D
+    });
     setup();
-//    start2D();
 }
 
 void TextPrinter::padToWidth(float width) {

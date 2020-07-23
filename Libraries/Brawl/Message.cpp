@@ -62,4 +62,7 @@ void Message::std2DView() {
     _std2DView();
 }
 
+void Message::setObjZCompare(int unk1, bool active) {
+    _setObjZCompare(this, unk1, active);
+}
 

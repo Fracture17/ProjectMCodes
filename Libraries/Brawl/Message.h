@@ -113,7 +113,7 @@ struct Message {
     void printStringUTF(const UTF16* characters);
     float printChar(const UTF16 character);
     void printGlyph(double xpos, double ypos, double zpos, FontData * TextureIndex);
-
+    void setObjZCompare(int unk1, bool active);
     void allocMsgBuffer(int bufferSize, int unk1, HEAPTYPE heaptype);
 
 
@@ -279,6 +279,8 @@ struct Message {
 //not 100% sure what the flags do, but color flag should be 0, and font flag should be 9
 #define _setDefaultEnv_Message ((void (*)(Message* message, int _textColorFlagThing, int _fontFlagThing)) 0x8006a964)
 #define _Print_Message ((float (*)(Message* message, const UTF16 character)) 0x8006fe50)
+#define _setObjZCompare ((void (*)(Message* message, int comparetype, bool active)) 0x8006b660)
+
 #define _std2DView ((void (*)()) 0x8006b360)
 #define _Print_Glyph ((void (*)(double xpos, double ypos, double zpos, Message* self, FontData * TextureIndex)) 0x8007001c)
 
@@ -287,6 +289,9 @@ struct Message {
 //crashes occur in between certain loads, like when a game ends
 #define _FONT_THING1 ((void**) 0x805a0174)
 #define _FONT_THING2 ((void**) 0x805a0178)
+
+#define _FONT_SCALE_THING ((double*) 0x805a1a80)
+#define _FONT_SCALE_THING2 ((double*) 0x805a2bc0)
 
 //pretty sure this is melee font, which is always loaded
 #define MELEE_FONT ((FontData*) 0x80497e44)

@@ -30,7 +30,7 @@ public:
     bool operator<=(const vector<T>& other);
     bool operator>=(const vector<T>& other);*/
     void push(const T& val);
-    //void pop();
+    void pop_back();
     size_t size() const;
     void reallocate(size_t newSize);
     //void insert(size_t index, const T& val);
@@ -101,16 +101,17 @@ void vector<T>::push(const T& val) {
     length++;
 }
 
-
-/*template<class T>
-void vector<T>::pop() {
-
-}*/
+template<class T>
+void vector<T>::pop_back() {
+    (Array + length)->~T();
+    length--;
+}
 
 template<class T>
 size_t vector<T>::size() const {
     return length;
 }
+
 
 
 template<class T>
@@ -148,7 +149,6 @@ size_t vector<T>::findIf(bool (*condition)(const T& x)) {
     }
     return this->size();
 }*/
-
 
 template<class T>
 void vector<T>::clear() {
