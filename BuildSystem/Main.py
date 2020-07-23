@@ -266,19 +266,24 @@ def buildSetupFile():
 
     #objcopy doesn't add leading 0s to data file
     #add offset of when it does start and add to load address
-    loadedSectionRegex = r" +[0-9]+ +[\.a-zA-Z0-0_]+ +[0-9a-f]{8}  +[0-9a-f]{8}  +([0-9a-f]{8}).+\n.+LOAD"
+    loadedSectionRegex = r" +[0-9]+ +[\.a-zA-Z0-9_]+ +[0-9a-f]{8}  +[0-9a-f]{8}  +([0-9a-f]{8}).+\n.+LOAD"
     text = subprocess.check_output(f"{ppcObjDump} -h {extractedDataPath}", shell=True)
     text = text.decode('utf-8')
-    firstLoadedSectionAddress = int(re.findall(loadedSectionRegex, text)[0], 16)
-    print(firstLoadedSectionAddress)
+    try:
+        firstLoadedSectionAddress = int(re.findall(loadedSectionRegex, text)[0], 16)
+    except:
+        print("NO DATA")
+        firstLoadedSectionAddress = dataStartAddress
+    print(hex(firstLoadedSectionAddress))
 
     dataSegment = CodeSegment(firstLoadedSectionAddress, firstLoadedSectionAddress)
     dataSegment.setName("Data")
     codeSegments.append(dataSegment)
 
-    codeDataSegment = CodeSegment(dataStartAddress, dataStartAddress)
-    codeDataSegment.setName("CData")
-    codeSegments.append(codeDataSegment)
+    if firstLoadedSectionAddress != dataStartAddress:
+        codeDataSegment = CodeSegment(dataStartAddress, dataStartAddress)
+        codeDataSegment.setName("CData")
+        codeSegments.append(codeDataSegment)
 
     fileSegments = [s for s in codeSegments if s.name is not None]
     makeSetupFile(fileSegments, injectionInfo, startupFunctionAddress, setupCPPPath, setupHeaderPath)
