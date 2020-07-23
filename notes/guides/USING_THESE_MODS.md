@@ -10,6 +10,8 @@ gecko code.
 developed in the "codes" folder. All of its files will be in the "AIDebug"
 folder.
 
+Here is a direct link to that folder: [guides/codes/AIDebug](./codes/AIDebug)
+
 ### Warning:
 
 doing this with the netplay `sd.raw` will cause it to desync - therefor
