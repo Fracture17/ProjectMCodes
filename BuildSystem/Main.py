@@ -106,7 +106,7 @@ def buildCodes():
     link(linkerSettings, codesObjectPath, codesExtraLinkerSettings, codeLibraries, linkedCodesPath)
 
     #get list of remaining functions
-    sectionsText, unnamedDaatSections = getSectionsText(linkedCodesPath)
+    sectionsText, unnamedDataSections = getSectionsText(linkedCodesPath)
     sectionsUsedByCodes = [s for s in allSections if s.name in sectionsText]
 
     #assign each function a place in the list of availible memory segments
@@ -114,7 +114,8 @@ def buildCodes():
     data = [s for s in sectionsUsedByCodes if s.type != '.text']
 
     assignFunctionAddresses(functions)
-    assignDataSections(data, unnamedDaatSections)
+    assignDataSections(data, unnamedDataSections)
+
 
     #create a list of linker commands that force each function to be in the assigned address
     sectionAddressLinkerCommands = []
@@ -386,11 +387,17 @@ def assignDataSections(data, unnamedDaatSections):
     for s in unnamedDaatSections:
         address += int(s[1], 16)
 
+    address = ((address + 4) // 4) * 4
+
     for d in data:
         d.address = address
-        address += d.size
+        #address += d.size
         #align by 4
-        address = ((address + 3) // 4) * 4
+
+        newAddress = ((address + d.size + 4) // 4) * 4
+        print(hex(address), d.size, hex(newAddress), hex(newAddress - address))
+        d.size = newAddress - address
+        address = newAddress
     global codeDataSectionSize
     codeDataSectionSize = address - dataStartAddress
 
