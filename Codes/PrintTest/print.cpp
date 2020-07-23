@@ -3,6 +3,7 @@
 //
 
 #include <Graphics/TextPrinter.h>
+#include <Wii/PADStatus.h>
 #include "Assembly.h"
 #include "Memory.h"
 
@@ -41,6 +42,7 @@ char INPUTS_NAMES[][9] = {
         "tapJump "
 };
 char AI_SCRIPT[] = "AI Script: %04x";
+char SELECTED_SCRIPT[] = "Selected Script: %04x";
 char LAST_SCRIPT_CHANGE[] = "script active for: %04d frames";
 char VARIABLES[] = "Ai Vars:";
 char VARIABLE[] = "[%02d]: %.3f";
@@ -74,14 +76,152 @@ unsigned int getScene() {
     return false;
 }
 
-//#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
-
 float RENDER_X_SPACING = 80;
 float RENDER_SCALE_X = 0.5;
 float RENDER_SCALE_Y = 0.5;
 float TOP_PADDING = 69; // nice
 float LEFT_PADDING = 20;
 
+// global variables for the injection down-below
+int aiRoutineIdx = 0;
+int timer = 5;
+bool AIDefault = false;
+unsigned short AIRoutineList[] = {
+        0x8000,
+        0x8001,
+        0x8002,
+        0x8003,
+        0x8004,
+        0x8006,
+        0x8007,
+        0x8008,
+        0x8009,
+        0x8010,
+        0x8020,
+        0x8040,
+        0x8050,
+        0x8070,
+        0x1030,
+        0x1060,
+        0x1070,
+        0x1071,
+        0x1090,
+        0x10A0,
+        0x10A1,
+        0x10A2,
+        0x10A3,
+        0x10F0,
+        0x1120,
+        0x1130,
+        0x1170,
+        0x2010,
+        0x2011,
+        0x2012,
+        0x2013,
+        0x2014,
+        0x2040,
+        0x2041,
+        0x2042,
+        0x2050,
+        0x2051,
+        0x2060,
+        0x2070,
+        0x3010,
+        0x3020,
+        0x3030,
+        0x3060,
+        0x30A0,
+        0x30B0,
+        0x30D0,
+        0x30E0,
+        0x4010,
+        0x4020,
+        0x4030,
+        0x4031,
+        0x4032,
+        0x4033,
+        0x4034,
+        0x4035,
+        0x4036,
+        0x4037,
+        0x4038,
+        0x403A,
+        0x4040,
+        0x4041,
+        0x4042,
+        0x4043,
+        0x4044,
+        0x4045,
+        0x4046,
+        0x4047,
+        0x404A,
+        0x404B,
+        0x4050,
+        0x4051,
+        0x4052,
+        0x4053,
+        0x4054,
+        0x4055,
+        0x4056,
+        0x4057,
+        0x4058,
+        0x4059,
+        0x405A,
+        0x405B,
+        0x405C,
+        0x4060,
+        0x4061,
+        0x4062,
+        0x4063,
+        0x4064,
+        0x4065,
+        0x4066,
+        0x4067,
+        0x4069,
+        0x406A,
+        0x406B,
+        0x4070,
+        0x4071,
+        0x4072,
+        0x4073,
+        0x4074,
+        0x4075,
+        0x4076,
+        0x4077,
+        0x4078,
+        0x5000,
+        0x5001,
+        0x6000,
+        0x6001,
+        0x6002,
+        0x6003,
+        0x600F,
+        0x6032,
+        0x6033,
+        0x6034,
+        0x6035,
+        0x6036,
+        0x6037,
+        0x6038,
+        0x6039,
+        0x603A,
+        0x603B,
+        0x6040,
+        0x6041,
+        0x6042,
+        0x6043,
+        0x6044,
+        0x6045,
+        0x6046,
+        0x6047,
+        0x6048,
+        0x6049,
+        0x6100,
+        0x7001,
+        0x7002,
+        0x7003,
+        0x7004
+};
 extern "C" void testPrint() {
     printer.drawBoundingBoxes(0);
     startNormalDraw();
@@ -166,6 +306,10 @@ extern "C" void testPrint() {
                 message->yPos = TOP_PADDING;
 
                 printer.startBoundingBox();
+                if (AIDefault) { sprintf(buffer, "Selected Script: DEFAULT"); }
+                else { sprintf(buffer, SELECTED_SCRIPT, AIRoutineList[aiRoutineIdx]); }
+                printer.printLine(buffer);
+
                 sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
                 printer.printLine(buffer);
 
@@ -191,16 +335,48 @@ extern "C" void testPrint() {
             }
         }
     }
+
+    if (PREVIOUS_PADS[0].button.Z) {
+        if (PREVIOUS_PADS[0].button.DownDPad) {
+            timer --;
+            if (timer <= 0) {
+                AIDefault = !AIDefault;
+                timer = 5;
+            }
+        }
+        if (PREVIOUS_PADS[0].button.RightDPad) {
+            timer --;
+            if (timer == 0) {
+                aiRoutineIdx++;
+                if (aiRoutineIdx >= sizeof(AIRoutineList) / 2) {
+                    aiRoutineIdx = 0;
+                }
+            }
+        } else if (PREVIOUS_PADS[0].button.LeftDPad) {
+            timer --;
+            if (timer == 0) {
+                aiRoutineIdx--;
+                if (aiRoutineIdx <= 0) {
+                    aiRoutineIdx = sizeof(AIRoutineList) / 2;
+                }
+            }
+        }
+        if (timer <= 0) timer = 5;
+    } else {
+        timer = 5;
+    }
 }
 
+// lwz r3, 0x74(r25)
+INJECTION("CPUForceBehavior", 0x809188B0, R"(
+    bl CPUForceBehavior
+    addi r26, r3, 0
+    sth r26, 120(r25)
+)");
 
-//INJECTION("CPUBehavior", 0x809031B4, R"(
-//    SAVE_REGS
-//    stfs f0, 0xD8(r0)
-//    bl CPUBehavior
-//    RESTORE_REGS
-//)");
-//
-//extern "C" void CPUBehavior() {
-//
-//}
+#define _get_script_tag_AI_SCRIPT_PACK ((int * (*)(int param_1, int param_2, int param_3)) 0x8091dedc)
+#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
+
+extern "C" short CPUForceBehavior(int param1) {
+    return (AIDefault) ? param1 : AIRoutineList[aiRoutineIdx]; // normal routine
+}
