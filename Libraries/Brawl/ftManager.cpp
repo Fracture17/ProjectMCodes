@@ -12,6 +12,10 @@ entryID ftManager::getEntryId(playerNumber playerNo) {
     return _getEntryID_ftManager(this, playerNo);
 }
 
+ftOwner * ftManager::getOwner(entryID entry) {
+    return _getOwner_ftManager(this, entry);
+}
+
 entryID ftManager::getEntryIdFromIndex(int index) {
     return _getEntryIDFromIndex_ftManager(this, index);
 }

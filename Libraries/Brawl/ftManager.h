@@ -9,6 +9,7 @@
 #include "Fighter.h"
 #include "Inputs.h"
 #include "aiAct.h"
+#include "ftOwner.h"
 
 //the port of the fighter
 typedef char playerNumber;
@@ -24,7 +25,7 @@ struct ftInput {
 
 struct ftManager {
     playerNumber getPlayerNo(entryID entry);
-    //ftOwner* getOwner(entryID entry);
+    ftOwner* getOwner(entryID entry);
     entryID getEntryId(playerNumber playerNo);
     entryID getEntryIdFromIndex(int index);
     Fighter* getFighter(entryID entry, bool getFollower=false);
@@ -38,7 +39,7 @@ struct ftManager {
 #define FIGHTER_MANAGER ((ftManager*) 0x80629a00)
 
 #define _getPlayerNo_ftManager ((playerNumber (*)(ftManager * self, entryID entry)) 0x80815ad0)
-//#define getOwner_ftManager ((ftOwner* const (*)(ftManager * This, entryID entry)) 0x808159e4)
+#define _getOwner_ftManager ((ftOwner* const (*)(ftManager * This, entryID entry)) 0x808159e4)
 #define _getEntryID_ftManager ((entryID (*)(ftManager * self, playerNumber playerNo)) 0x80815c40)
 #define _getEntryIDFromIndex_ftManager ((entryID (*)(ftManager * self, int index)) 0x80815bf8)
 //fighterNo: -1 for load option from ftEntry, 0 for main fighter, 1 for follower

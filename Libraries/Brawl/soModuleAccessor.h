@@ -30,7 +30,7 @@ struct soModuleAccessor {
 
     //0xC + 0xC = 0x18
     soPostureModuleImpl* postureModule;
-    char _spacer3[0x68 - 0x1C + 4];
+    char _spacer3[0x68 - 0x18 - 4];
     //0x5C + 0xC = 0x64
     soControllerModuleImpl* controllerModule;
     char _spacer4[0x70 - 0x6C];

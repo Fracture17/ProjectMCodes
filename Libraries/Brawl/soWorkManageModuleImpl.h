@@ -20,5 +20,6 @@ public:
     //not sure what the structure is yet
 };
 
+#define _getInt_soWorkManageModuleImpl ((int (*)(void* self, unsigned int identifier)) 0x807ac9e0)
 
 #endif //PROJECTMCODES_SOWORKMANAGEMODULEIMPL_H

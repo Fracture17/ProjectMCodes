@@ -15,8 +15,8 @@
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
-
-BASIC_INJECT("testPrint", 0x8001792c, "addi r3, r30, 280");
+#define strcmp ((int (*)(const char* str1, const char* str2)) 0x803fa3fc)
+#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 
 
 char CAMERA_SCALE[] = "cam scale: %.3f";
@@ -83,10 +83,21 @@ float TOP_PADDING = 69; // nice
 float LEFT_PADDING = 20;
 
 // global variables for the injection down-below
-int aiRoutineIdx = 0;
 int timer = 5;
-bool AIDefault = false;
+bool SpecialMode = false;
+int specialIdx = 0;
+int md_debugThreshold = 20;
+int md_debugTimer = 0;
+double md_debugDamage = 0;
+const char *SpecialModes[] = {
+        "DEFAULT",
+        "DEBUG"
+};
+
+
+int aiRoutineIdx = 0;
 unsigned short AIRoutineList[] = {
+//region
         0x8000,
         0x8001,
         0x8002,
@@ -221,7 +232,46 @@ unsigned short AIRoutineList[] = {
         0x7002,
         0x7003,
         0x7004
+//endregion
 };
+
+void ModSpecialIdx(int amount) {
+    specialIdx += amount;
+    if (specialIdx >= sizeof(SpecialModes) / sizeof(SpecialModes[0])) {
+        specialIdx = 0;
+    } else if (specialIdx < 0) {
+        specialIdx = sizeof(SpecialModes) / sizeof(SpecialModes[0]);
+    }
+}
+
+void ModAiRoutineIdx(int amount) {
+    aiRoutineIdx += amount;
+    if (aiRoutineIdx > sizeof(AIRoutineList) / 2) {
+        aiRoutineIdx = 0;
+    } else if (aiRoutineIdx < 0) {
+        aiRoutineIdx = sizeof(AIRoutineList) / 2;
+    }
+}
+
+float fighterXPos = 0;
+float fighterYPos = 0;
+void setPosition(Fighter *fighter, ftInput *input) {
+    fighterXPos += input->leftStickX;
+    fighterYPos += input->leftStickY;
+
+    input->leftStickX = 0;
+    input->leftStickY = 0;
+
+    fighter->modules->postureModule->xPos = fighterXPos;
+    fighter->modules->postureModule->yPos = fighterYPos;
+}
+
+void setDamage(ftOwner * owner) {
+    owner->setDamage(md_debugDamage, 0);
+}
+
+BASIC_INJECT("testPrint", 0x8001792c, "addi r3, r30, 280");
+
 extern "C" void testPrint() {
     printer.drawBoundingBoxes(0);
     startNormalDraw();
@@ -249,6 +299,24 @@ extern "C" void testPrint() {
 
             auto fighter = FIGHTER_MANAGER->getFighter(id);
             auto input = FIGHTER_MANAGER->getInput(id);
+
+            if (i == 0 && strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
+                auto LAVars = fighter->modules->workModule->LAVariables;
+                auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
+                auto remainingHitstun = LABasicsArr[56];
+                if (remainingHitstun == 0 || remainingHitstun + md_debugThreshold <= 0) {
+                    if (md_debugTimer <= 0) {
+                        setPosition(fighter, input);
+                        setDamage(FIGHTER_MANAGER->getOwner(id));
+                        md_debugTimer = 0;
+                    } else {
+                        md_debugTimer--;
+                    }
+                } else {
+                    md_debugTimer = md_debugThreshold;
+                }
+            }
+
             auto xPos = fighter->modules->postureModule->xPos;
             auto yPos = fighter->modules->postureModule->yPos * -1;
             auto zPos = fighter->modules->postureModule->zPos;
@@ -306,9 +374,24 @@ extern "C" void testPrint() {
                 message->yPos = TOP_PADDING;
 
                 printer.startBoundingBox();
-                if (AIDefault) { sprintf(buffer, "Selected Script: DEFAULT"); }
+                if (SpecialMode) { sprintf(buffer, "Selected Script: %s", SpecialModes[specialIdx]); }
                 else { sprintf(buffer, SELECTED_SCRIPT, AIRoutineList[aiRoutineIdx]); }
                 printer.printLine(buffer);
+
+                if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
+                    auto player0 = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryIdFromIndex(0));
+                    auto LAVars = player0->modules->workModule->LAVariables;
+                    auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
+                    auto remainingHitstun = LABasicsArr[56];
+
+                    printer.padToWidth(RENDER_X_SPACING / 2);
+                    sprintf(buffer, "hitstun: %d", remainingHitstun);
+                    printer.print(buffer);
+
+                    printer.padToWidth(RENDER_X_SPACING);
+                    sprintf(buffer, "timer (%d): %d", md_debugThreshold, md_debugTimer + remainingHitstun);
+                    printer.printLine(buffer);
+                }
 
                 sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
                 printer.printLine(buffer);
@@ -340,43 +423,63 @@ extern "C" void testPrint() {
         if (PREVIOUS_PADS[0].button.DownDPad) {
             timer --;
             if (timer <= 0) {
-                AIDefault = !AIDefault;
+                SpecialMode = !SpecialMode;
                 timer = 5;
             }
         }
         if (PREVIOUS_PADS[0].button.RightDPad) {
             timer --;
             if (timer == 0) {
-                aiRoutineIdx++;
-                if (aiRoutineIdx >= sizeof(AIRoutineList) / 2) {
-                    aiRoutineIdx = 0;
+                if (SpecialMode) {
+                    ModSpecialIdx(1);
+                } else {
+                    ModAiRoutineIdx(1);
                 }
             }
         } else if (PREVIOUS_PADS[0].button.LeftDPad) {
             timer --;
             if (timer == 0) {
-                aiRoutineIdx--;
-                if (aiRoutineIdx <= 0) {
-                    aiRoutineIdx = sizeof(AIRoutineList) / 2;
+                if (SpecialMode) {
+                    ModSpecialIdx(-1);
+                } else {
+                    ModAiRoutineIdx(-1);
                 }
             }
         }
         if (timer <= 0) timer = 5;
+    } else if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
+        if (PREVIOUS_PADS[0].button.UpDPad) {
+            timer -= 2;
+            if (timer <= 0 && md_debugDamage < 999) {
+                md_debugDamage++;
+            }
+        } else if (PREVIOUS_PADS[0].button.DownDPad) {
+            timer -= 2;
+            if (timer <= 0 && md_debugDamage > 0) {
+                md_debugDamage--;
+            }
+        } else if (PREVIOUS_PADS[0].button.LeftDPad) {
+            timer -= 2;
+            if (timer <= 0) {
+                md_debugThreshold--;
+            }
+        } else if (PREVIOUS_PADS[0].button.RightDPad) {
+            timer -= 2;
+            if (timer <= 0) {
+                md_debugThreshold++;
+            }
+        }
     } else {
         timer = 5;
     }
 }
 
-// lwz r3, 0x74(r25)
 INJECTION("CPUForceBehavior", 0x809188B0, R"(
     bl CPUForceBehavior
     addi r26, r3, 0
     sth r26, 120(r25)
 )");
 
-#define _get_script_tag_AI_SCRIPT_PACK ((int * (*)(int param_1, int param_2, int param_3)) 0x8091dedc)
-#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
-
 extern "C" short CPUForceBehavior(int param1) {
-    return (AIDefault) ? param1 : AIRoutineList[aiRoutineIdx]; // normal routine
+    return (SpecialMode && strcmp(SpecialModes[specialIdx], "DEFAULT") == 0) ? param1 : AIRoutineList[aiRoutineIdx]; // normal routine
 }
