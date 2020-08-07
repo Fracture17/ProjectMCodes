@@ -20,7 +20,7 @@ def insertBranches(nmFilePath, baseAddress, compressedCodesPath, finalCodePath):
         data = file.read()
 
         address2size, numInjections = getInjectionInfo(nmFilePath, baseAddress)
-        data = setReturnBranches(data, address2size, baseAddress, numInjections)
+        #data = setReturnBranches(data, address2size, baseAddress, numInjections)
 
         initializerAddresses = getInitializerAddresses(nmFilePath)
         data = setInitializerBranches(data, numInjections, baseAddress, initializerAddresses)
@@ -70,6 +70,7 @@ def makeReturnBranchInstruction(data, address2size, baseAddress, i):
     branchLocation = i * 8 + 4
     functionOffset = getBranchTargetOffset(data, branchLocation)
     functionAddress = functionOffset + baseAddress
+    print(hex(functionOffset), hex(baseAddress))
     functionSize = address2size[functionAddress]
     nopAddress = functionAddress + functionSize - 4
     nopOffset = nopAddress - baseAddress

@@ -11,7 +11,7 @@ from makeFunctionMap import makeMap
 from makeLoadSetup import makeLoadSetupFile
 from makeSetup import makeSetupFile
 from insertBranches import insertBranches
-
+from VariableLocations import makeVariableLocationMap
 
 allSections = []
 sectionsUsedByCodes = []
@@ -31,6 +31,8 @@ def build(baseDirectory, ppcBinDirectory):
     buildSetupFile()
 
     buildLoadSetupFile()
+
+    makeVariableLocationMap(dataAddressesPath, linkedInitializersPath, intermediateFilesDirectory + "/commands.txt", intermediateFilesDirectory + "/vars.txt", intermediateFilesDirectory + "/vars.dmw", ppcBinDirectory + "/ppc-gdb")
 
 
 def setPaths(baseDirectory, ppcBinDirectory):
@@ -164,11 +166,13 @@ def buildInitializers():
     initializerLibraries = ' '.join([f"{renamedCodesDirectory}/{file}" for file in os.listdir(renamedCodesDirectory)])
 
     #take all the data sections from codes, and force them to be in the same place
-    dataSections = [s for s in sectionsUsedByCodes if s.type != '.text']
+    #dataSections = [s for s in sectionsUsedByCodes if s.type != '.text']
     sectionAddressLinkerCommands = []
-    for s in dataSections:
+    for s in sectionsUsedByCodes:
         command = f"--section-start={s.name}={hex(s.address)}"
         sectionAddressLinkerCommands.append(command)
+
+
     sectionAddressLinkerCommands = ' '.join(sectionAddressLinkerCommands)
 
     with open(setInitializerDataAddressesLinkerCommandsFilePath, 'w') as file:
@@ -181,7 +185,7 @@ def buildInitializers():
     #extract the initializer functions from the linked file
     textSectionsLinkerCommands = '--only-section=.text'
     for s in allSections:
-        if s.type == '.text':
+        if s.type == '.text' and s not in sectionsUsedByCodes:
             textSectionsLinkerCommands += f" --only-section={s.name}"
 
     with open(extractSectionsLinkerCommandsFilePath, 'w') as file:
@@ -395,6 +399,7 @@ def assignDataSections(data, unnamedDaatSections):
         #align by 4
 
         newAddress = ((address + d.size + 4) // 4) * 4
+        print(d.name)
         print(hex(address), d.size, hex(newAddress), hex(newAddress - address))
         d.size = newAddress - address
         address = newAddress
