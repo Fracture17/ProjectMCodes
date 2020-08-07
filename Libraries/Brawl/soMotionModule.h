@@ -8,6 +8,13 @@
 
 struct soMotionModule {
     float getFrame();
+
+    char _spacer[0x40];
+    float animFrame;
+
+    char _spacer2[0x58 - 0x40 - 4];
+    // 0x58
+    int subAction;
 };
 
 

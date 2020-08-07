@@ -7,7 +7,8 @@
 
 
 struct soControllerModuleImpl {
-
+    char _spacer[0x8F];
+    int framesSinceShieldPressed;
 };
 
 

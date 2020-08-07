@@ -11,6 +11,12 @@
 #include "soWorkManageModuleImpl.h"
 #include "soPostureModuleImpl.h"
 #include "soMotionModule.h"
+#include "soStatusModuleImpl.h"
+#include "soCollisionAttackModuleImpl.h"
+#include "soKineticModuleGenericImpl.h"
+#include "soGroundModuleImpl.h"
+#include "ftParamCustomizeModuleImpl.h"
+#include "ftStopModuleImpl.h"
 
 
 struct StageObject;
@@ -30,15 +36,33 @@ struct soModuleAccessor {
 
     //0xC + 0xC = 0x18
     soPostureModuleImpl* postureModule;
-    char _spacer3[0x68 - 0x18 - 4];
-    //0x5C + 0xC = 0x64
+
+    //0x10 + 0xC = 0x1C
+    soGroundModuleImpl* groundModule;
+
+    char _spacer3[0x28 - 0x1C - 4];
+    //0x1C + 0xC = 0x28
+    soCollisionAttackModuleImpl* collisionAttackModule;
+
+    char _spacer4[0x50 - 0x28 - 4];
+    // 0x44 + 0xC = 0x50
+    ftStopModuleImpl* ftStopModule;
+
+    char _spacer5[0x68 - 0x50 - 4];
+    //0x5C + 0xC = 0x68
     soControllerModuleImpl* controllerModule;
-    char _spacer4[0x70 - 0x6C];
+    char _spacer6[0x70 - 0x68 - 4];
     //0x64 + 0xC = 0x70
     soWorkManageModuleImpl* workModule;
-    //char _spacer5[0x7C - 0x74];
+    char _spacer7[0x7C - 0x70 - 4];
     //0x70 + 0xC = 0x7C
-    //soStatusModuleImpl* statusModule;
+    soStatusModuleImpl* statusModule;
+    char _spacer8[0x88 - 0x7C - 4];
+    //0x7C + 0xC = 0x88
+    soKineticModuleGenericImpl* kineticModule;
+    char _spacer9[0xD0 - 0x88 - 4];
+    //0xC4 + 0xC = 0xD0
+    ftParamCustomizeModuleImpl* paramCustomizeModule;
 };
 
 
