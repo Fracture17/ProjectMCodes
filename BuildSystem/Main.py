@@ -172,7 +172,6 @@ def buildInitializers():
         command = f"--section-start={s.name}={hex(s.address)}"
         sectionAddressLinkerCommands.append(command)
 
-
     sectionAddressLinkerCommands = ' '.join(sectionAddressLinkerCommands)
 
     with open(setInitializerDataAddressesLinkerCommandsFilePath, 'w') as file:
@@ -351,6 +350,7 @@ def renameSectionsAndRemoveConstructorsForCodeFile(codeName):
 
     renames = []
     for name, newName in name2NewSectionName.items():
+        print(name, newName)
         renames.append(f"--rename-section {name}={newName[0]}")
     renames = ' '.join(renames)
     with open(renameFunctionsCommandFilePath, 'w') as file:
@@ -425,7 +425,8 @@ def getNewSectionNames(file):
     sections = re.findall(r"((\.text|\.rodata|\.sbss|\.bss|\.data|\.sdata)\.[a-zA-Z0-9_]+) *([0-9a-f]{8})", text)
     name2NewName = {}
     for section in sections:
-        name2NewName[section[0]] = (section[0].replace(section[1] + '.', ''), section[1], section[2])
+        name2NewName[section[0]] = (section[0].replace(section[1] + '.', '') + '_' + section[1][1:], section[1], section[2])
+        print(name2NewName[section[0]])
     return name2NewName
 
 
