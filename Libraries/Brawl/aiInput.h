@@ -9,7 +9,7 @@
 
 struct aiInput: IpHuman {
     //won't work until IpHuman is correct size
-    char _spacer[0x90 - sizeof(IpHuman)]
+    char _spacer[0x90 - sizeof(IpHuman)];
     //0x90
     //aiParam
 };

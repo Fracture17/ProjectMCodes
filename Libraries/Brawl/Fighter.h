@@ -12,6 +12,14 @@ struct Fighter : public StageObject {
 	//Fighter* ct(entryID id, int, int);
 	//IpHuman* getInput();
 	//ftOwner* getOwner();
+	char _spacer[0x4];
+
+	// 0x4
+	int entryId;
+	char _spacer2[0x18 - 0x4 - 4];
+
+	// 0x18
+	int playerNumber;
 };
 
 //first int is fighter id or somethign

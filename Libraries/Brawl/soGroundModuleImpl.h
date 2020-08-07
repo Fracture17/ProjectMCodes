@@ -5,37 +5,34 @@
 #ifndef PROJECTMCODES_SOGROUNDMODULEIMPL_H
 #define PROJECTMCODES_SOGROUNDMODULEIMPL_H
 
-struct unk4_soGroundModule {
-    char _spacer[0x18];
+#include <Containers/Vec3f.h>
+
+struct unk3_soGroundModule {
+    char _spacer[0x14];
+
+    // 0x14
+    float landingCollisionBottomXPos;
 
     // 0x18
-    // used in custom AI function 0x3D
     float landingCollisionBottomYPos;
 };
 
-struct unk3_soGroundModule {
+struct unk2_soGroundModule {
     char _spacer[0x8];
 
     // 0x8
-    int airGroundState;
+    char airGroundState;
 
-    char _spacer2[0x60 - 0x8 - 4];
+
+    char _spacer2[0x60 - 0x8 - 1];
 
     // 0x60
-    // used in custom AI function 0x3D
-    unk4_soGroundModule * unk1;
-};
-
-struct unk2_soGroundModule {
-    char _spacer[0x10];
-
-    // 0x10
     // used in custom AI function 0x3D
     unk3_soGroundModule * unk1;
 };
 
 struct unk1_soGroundModule {
-    char _spacer[0x28];
+    char _spacer[0x10];
 
     // 0x28
     // used in custom AI function 0x3D
@@ -43,21 +40,23 @@ struct unk1_soGroundModule {
 };
 
 struct soGroundModuleImpl {
-    double getDistanceFromUnderGrCol(double min_unk, float * unk);
+    double getDistanceFromUnderGrCol(double maxDistance, Vec3f * unk, bool unkBool);
+    void setCorrect(int mode);
 
-    char _spacer[0x1C];
+    char _spacer[0x28];
 
-    // 0x1C
-    // used in custom AI function 0x3D
+    // 0x28
     unk1_soGroundModule * unk1;
 
-    char _spacer2[0x24 - 0x1C - 4];
+//    char _spacer2[0x24 - 0x1C - 4];
 
     // 0x24
     // used in custom AI function 0x4B / 0x4C
-    int * unk2;
+//    int * unk2;
 };
 
-#define _getDistanceFromUnderGrCol_soGroundModuleImpl ((double (*)(double min_unk, soGroundModuleImpl * self, float * unk)) 0x80734f8c)
+#define _getDistanceFromUnderGrCol_soGroundModuleImpl ((double (*)(double maxDistance, soGroundModuleImpl * self, Vec3f * position, bool unkBool)) 0x80734f8c)
+#define _setGrCollisisonMode ((void (*)(soGroundModuleImpl * self, int collisionMode)) 0x80730a04)
+#define _setCorrect_soGroundModuleImpl ((void (*)(soGroundModuleImpl * self, int mode, int unk)) 0x80731324)
 
 #endif //PROJECTMCODES_SOGROUNDMODULEIMPL_H

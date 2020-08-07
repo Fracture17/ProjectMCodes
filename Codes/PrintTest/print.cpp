@@ -24,12 +24,6 @@ char TARGET[] = "Target Idx: %d";
 char LSTICK[] = "lstick: %.3f; %.3f";
 char INPUTS_VALUE[] = "Inputs Value: %04x";
 char INPUTS[] = "Inputs: %s";
-//char BTN_NAMES[][4] = { "A ","B ","X ","Y ","L ","R ","Z " };
-//char START[] = "Start ";
-//char DUP[] = "DUp ";
-//char DDOWN[] = "DDown ";
-//char DLEFT[] = "DLeft ";
-//char DRIGHT[] = "DRight";
 char INPUTS_NAMES[][9] = {
         "attack ",
         "special ",
@@ -42,6 +36,7 @@ char INPUTS_NAMES[][9] = {
         "tapJump "
 };
 char AI_SCRIPT[] = "AI Script: %04x";
+char AI_MD[] = "AI Md: %02x";
 char SELECTED_SCRIPT[] = "Selected Script: %04x";
 char LAST_SCRIPT_CHANGE[] = "script active for: %04d frames";
 char VARIABLES[] = "Ai Vars:";
@@ -89,50 +84,113 @@ int specialIdx = 0;
 int md_debugThreshold = 20;
 int md_debugTimer = 0;
 double md_debugDamage = 0;
+double md_customFnInjection = 0;
 const char *SpecialModes[] = {
+        "OFF",
         "DEFAULT",
-        "DEBUG"
+        "DEBUG",
+        "MD"
 };
 
 
-int aiRoutineIdx = 0;
 unsigned short AIRoutineList[] = {
 //region
+        0x0000,
+
         0x8000,
         0x8001,
         0x8002,
         0x8003,
         0x8004,
+        0x8005,
         0x8006,
         0x8007,
         0x8008,
         0x8009,
+        0x800A,
+        0x800B,
+        0x800C,
+        0x800D,
+        0x800E,
+        0x800F,
+
         0x8010,
         0x8020,
+        0x8021,
+        0x8022,
+        0x8023,
+        0x8024,
+        0x8030,
+        0x8031,
+        0x8032,
+        0x8033,
         0x8040,
         0x8050,
+        0x8051,
+        0x8052,
+        0x8053,
+        0x8054,
+        0x8055,
+        0x8056,
+        0x8057,
+        0x8058,
+        0x8060,
         0x8070,
+        0x8071,
+        0x8072,
+        0x8080,
+        0x8090,
+        0x1010,
+        0x1020,
         0x1030,
+        0x1040,
+        0x1050,
         0x1060,
         0x1070,
         0x1071,
+        0x1072,
+        0x1073,
+        0x1074,
+        0x1075,
+        0x1076,
+        0x1077,
+        0x1078,
+        0x1080,
         0x1090,
         0x10A0,
         0x10A1,
         0x10A2,
         0x10A3,
         0x10F0,
+        0x1100,
         0x1120,
         0x1130,
+        0x1140,
+        0x1150,
+        0x1160,
         0x1170,
         0x2010,
         0x2011,
         0x2012,
         0x2013,
         0x2014,
+        0x2015,
+        0x2016,
+        0x2017,
+        0x2018,
+        0x2019,
+        0x2020,
+        0x2030,
         0x2040,
         0x2041,
         0x2042,
+        0x2043,
+        0x2044,
+        0x2045,
+        0x2046,
+        0x2047,
+        0x2048,
+        0x2049,
         0x2050,
         0x2051,
         0x2060,
@@ -140,7 +198,11 @@ unsigned short AIRoutineList[] = {
         0x3010,
         0x3020,
         0x3030,
+        0x3040,
+        0x3050,
         0x3060,
+        0x3080,
+        0x3090,
         0x30A0,
         0x30B0,
         0x30D0,
@@ -156,7 +218,13 @@ unsigned short AIRoutineList[] = {
         0x4036,
         0x4037,
         0x4038,
+        0x4039,
         0x403A,
+        0x403B,
+        0x403C,
+        0x403D,
+        0x403E,
+        0x403F,
         0x4040,
         0x4041,
         0x4042,
@@ -165,8 +233,14 @@ unsigned short AIRoutineList[] = {
         0x4045,
         0x4046,
         0x4047,
+        0x4048,
+        0x4049,
         0x404A,
         0x404B,
+        0x404C,
+        0x404D,
+        0x404E,
+        0x404F,
         0x4050,
         0x4051,
         0x4052,
@@ -180,6 +254,9 @@ unsigned short AIRoutineList[] = {
         0x405A,
         0x405B,
         0x405C,
+        0x405D,
+        0x405E,
+        0x405F,
         0x4060,
         0x4061,
         0x4062,
@@ -188,9 +265,14 @@ unsigned short AIRoutineList[] = {
         0x4065,
         0x4066,
         0x4067,
+        0x4068,
         0x4069,
         0x406A,
         0x406B,
+        0x406C,
+        0x406D,
+        0x406E,
+        0x406F,
         0x4070,
         0x4071,
         0x4072,
@@ -200,13 +282,55 @@ unsigned short AIRoutineList[] = {
         0x4076,
         0x4077,
         0x4078,
+        0x4079,
+        0x407A,
+        0x407B,
+        0x407C,
+        0x407D,
+        0x407E,
+        0x407F,
         0x5000,
         0x5001,
+        0x5002,
+        0x5003,
+        0x5004,
+        0x5005,
+        0x5006,
+        0x5007,
+        0x5008,
+        0x5009,
+        0x500A,
+        0x500B,
+        0x500C,
+        0x500D,
+        0x500E,
+        0x500F,
+        0x5010,
+
         0x6000,
         0x6001,
         0x6002,
         0x6003,
+        0x6004,
+        0x6005,
+        0x6006,
+        0x6007,
+        0x6008,
+        0x6009,
+        0x600A,
+        0x600B,
+        0x600C,
+        0x600D,
+        0x600E,
         0x600F,
+
+        0x601A,
+        0x6022,
+        0x6023,
+        0x6024,
+        0x6025,
+
+        0x6031,
         0x6032,
         0x6033,
         0x6034,
@@ -217,6 +341,9 @@ unsigned short AIRoutineList[] = {
         0x6039,
         0x603A,
         0x603B,
+        0x603C,
+        0x603D,
+
         0x6040,
         0x6041,
         0x6042,
@@ -227,20 +354,39 @@ unsigned short AIRoutineList[] = {
         0x6047,
         0x6048,
         0x6049,
+
         0x6100,
         0x7001,
         0x7002,
         0x7003,
-        0x7004
+        0x7004,
+        0x7005,
+        0x7006,
+        0x7007,
+        0x7008,
+        0x7009,
+        0x700A,
+        0x700B,
+        0x700C,
+        0x700D,
+        0x700E,
+        0x700F,
+        0x7010,
+        0xFFFF
 //endregion
 };
+int aiRoutineIdx = sizeof(AIRoutineList) / 2;
 
+
+int forcedAiMd = 0;
+
+// we need to do this manually for char-based ones :C
 void ModSpecialIdx(int amount) {
     specialIdx += amount;
-    if (specialIdx >= sizeof(SpecialModes) / sizeof(SpecialModes[0])) {
+    if (specialIdx >= 4) {
         specialIdx = 0;
     } else if (specialIdx < 0) {
-        specialIdx = sizeof(SpecialModes) / sizeof(SpecialModes[0]);
+        specialIdx = 3;
     }
 }
 
@@ -255,9 +401,14 @@ void ModAiRoutineIdx(int amount) {
 
 float fighterXPos = 0;
 float fighterYPos = 0;
+bool noClip = false;
+char airGroundState = 0;
 void setPosition(Fighter *fighter, ftInput *input) {
-    fighterXPos += input->leftStickX;
-    fighterYPos += input->leftStickY;
+    fighterXPos += input->leftStickX * 2;
+    airGroundState = fighter->modules->groundModule->unk1->unk1->airGroundState;
+    if (airGroundState != 1) {
+        fighterYPos += input->leftStickY * 2;
+    }
 
     input->leftStickX = 0;
     input->leftStickY = 0;
@@ -300,20 +451,49 @@ extern "C" void testPrint() {
             auto fighter = FIGHTER_MANAGER->getFighter(id);
             auto input = FIGHTER_MANAGER->getInput(id);
 
-            if (i == 0 && strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
-                auto LAVars = fighter->modules->workModule->LAVariables;
-                auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
-                auto remainingHitstun = LABasicsArr[56];
-                if (remainingHitstun == 0 || remainingHitstun + md_debugThreshold <= 0) {
-                    if (md_debugTimer <= 0) {
-                        setPosition(fighter, input);
-                        setDamage(FIGHTER_MANAGER->getOwner(id));
-                        md_debugTimer = 0;
-                    } else {
+            if (forcedAiMd != 0) input->aiMd = forcedAiMd;
+
+            if (i == 0) {
+                OSReport("p1 fighter: %08x\n", fighter);
+                OSReport("p1 fighterWM: %08x\n", fighter->modules->workModule);
+
+
+                auto idP2 = FIGHTER_MANAGER->getEntryIdFromIndex(1);
+                if (idP2 != -1) {
+                    auto aiFtInput = FIGHTER_MANAGER->getInput(idP2);
+                    auto aiVars = aiFtInput->aiActPtr->variables;
+                    setupDrawPrimitives();
+                    startNormalDraw();
+
+                    auto xPos = fighter->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos;
+                    auto yPos = fighter->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomYPos;
+                    draw2DRectangle(0xff0000ff,
+                                    yPos, yPos - aiVars[0], xPos - 2, xPos + 2);
+                    printer.setup();
+                }
+
+                if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
+                    auto LAVars = fighter->modules->workModule->LAVariables;
+                    auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
+                    auto remainingHitstun = LABasicsArr[56];
+                    if (remainingHitstun == 0 || remainingHitstun + md_debugThreshold <= 0) {
                         md_debugTimer--;
+                        if (md_debugTimer == 0) {
+                            noClip = true;
+                            fighter->modules->groundModule->setCorrect(0);
+                        }
+                        if (md_debugTimer <= 0) {
+                            if (noClip && md_debugTimer == -1) {
+                                noClip = false;
+                                fighter->modules->groundModule->setCorrect(5);
+                            }
+                            setPosition(fighter, input);
+                            setDamage(FIGHTER_MANAGER->getOwner(id));
+                            md_debugTimer = 0;
+                        }
+                    } else {
+                        md_debugTimer = md_debugThreshold;
                     }
-                } else {
-                    md_debugTimer = md_debugThreshold;
                 }
             }
 
@@ -356,14 +536,19 @@ extern "C" void testPrint() {
             sprintf(buffer, INPUTS, aiInputBuffer);
             printer.printLine(buffer);
 
-            sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
+            sprintf(buffer, AI_SCRIPT, input->aiActPtr->aiScript);
+            printer.print(buffer);
+            printer.padToWidth(RENDER_X_SPACING / 5);
+            sprintf(buffer, AI_MD, input->aiMd);
             printer.printLine(buffer);
 
-            sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiInputPtr->framesSinceScriptChanged);
+            sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
             printer.print(buffer);
             printer.saveBoundingBox(0, 0x00000088, 2);
 
             if (i == 1) {
+                OSReport("p2 fighter: %08x\n", fighter);
+                OSReport("p2 fighterWM: %08x\n", fighter->modules->workModule);
                 printer.setup();
                 printer.start2D();
 
@@ -388,25 +573,34 @@ extern "C" void testPrint() {
                     sprintf(buffer, "hitstun: %d", remainingHitstun);
                     printer.print(buffer);
 
+                    if (md_debugTimer > 0) printer.setTextColor(0xff8888ff);
                     printer.padToWidth(RENDER_X_SPACING);
                     sprintf(buffer, "timer (%d): %d", md_debugThreshold, md_debugTimer + remainingHitstun);
                     printer.printLine(buffer);
+                    printer.setTextColor(0xffffffff);
+
+                    printer.padToWidth(RENDER_X_SPACING / 2);
+                    sprintf(buffer, "custom value: %.3f", md_customFnInjection);
+                    printer.printLine(buffer);
                 }
 
-                sprintf(buffer, AI_SCRIPT, input->aiInputPtr->aiScript);
+                sprintf(buffer, AI_SCRIPT, input->aiActPtr->aiScript);
+                printer.print(buffer);
+                printer.padToWidth(RENDER_X_SPACING + 10);
+                sprintf(buffer, AI_MD, input->aiMd);
                 printer.printLine(buffer);
 
                 sprintf(buffer, INPUTS, aiInputBuffer);
                 printer.printLine(buffer);
 
-                sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiInputPtr->framesSinceScriptChanged);
+                sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
                 printer.printLine(buffer);
 
                 sprintf(buffer, VARIABLES);
                 printer.printLine(buffer);
 
-                auto aiVars = input->aiInputPtr->variables;
-                for (int j = 0; j < 26; j++) {
+                auto aiVars = input->aiActPtr->variables;
+                for (int j = 0; j < 24; j++) {
                     printer.padToWidth(RENDER_X_SPACING);
                     if (j % 7 == 0) { printer.newLine(); }
                     sprintf(buffer, VARIABLE, j, aiVars[j]);
@@ -421,15 +615,14 @@ extern "C" void testPrint() {
 
     if (PREVIOUS_PADS[0].button.Z) {
         if (PREVIOUS_PADS[0].button.DownDPad) {
-            timer --;
+            timer -= 10;
             if (timer <= 0) {
                 SpecialMode = !SpecialMode;
-                timer = 5;
             }
         }
         if (PREVIOUS_PADS[0].button.RightDPad) {
-            timer --;
-            if (timer == 0) {
+            timer -= 10;
+            if (timer <= 0) {
                 if (SpecialMode) {
                     ModSpecialIdx(1);
                 } else {
@@ -437,8 +630,8 @@ extern "C" void testPrint() {
                 }
             }
         } else if (PREVIOUS_PADS[0].button.LeftDPad) {
-            timer --;
-            if (timer == 0) {
+            timer -= 10;
+            if (timer <= 0) {
                 if (SpecialMode) {
                     ModSpecialIdx(-1);
                 } else {
@@ -446,40 +639,98 @@ extern "C" void testPrint() {
                 }
             }
         }
-        if (timer <= 0) timer = 5;
-    } else if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
-        if (PREVIOUS_PADS[0].button.UpDPad) {
-            timer -= 2;
-            if (timer <= 0 && md_debugDamage < 999) {
-                md_debugDamage++;
-            }
-        } else if (PREVIOUS_PADS[0].button.DownDPad) {
-            timer -= 2;
-            if (timer <= 0 && md_debugDamage > 0) {
-                md_debugDamage--;
-            }
-        } else if (PREVIOUS_PADS[0].button.LeftDPad) {
-            timer -= 2;
-            if (timer <= 0) {
-                md_debugThreshold--;
+    } else if (strcmp(SpecialModes[specialIdx], "MD") == 0) {
+        if (PREVIOUS_PADS[0].button.LeftDPad) {
+            timer -= 8;
+            if (timer <= 0 && 0 < forcedAiMd) {
+                forcedAiMd--;
             }
         } else if (PREVIOUS_PADS[0].button.RightDPad) {
-            timer -= 2;
-            if (timer <= 0) {
-                md_debugThreshold++;
+            timer -= 8;
+            if (timer <= 0 && forcedAiMd < 0x20) {
+                forcedAiMd++;
+            }
+        }
+    } else if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
+        if (PREVIOUS_PADS[0].button.A) {
+            if (PREVIOUS_PADS[0].button.UpDPad) {
+                timer -= 20;
+                if (timer <= 0) {
+                    md_customFnInjection++;
+                }
+            } else if (PREVIOUS_PADS[0].button.DownDPad) {
+                timer -= 20;
+                if (timer <= 0) {
+                    md_customFnInjection--;
+                }
+            } else if (PREVIOUS_PADS[0].button.LeftDPad) {
+                timer -= 20;
+                if (timer <= 0) {
+                    md_customFnInjection -= 0.05;
+                }
+            } else if (PREVIOUS_PADS[0].button.RightDPad) {
+                timer -= 20;
+                if (timer <= 0) {
+                    md_customFnInjection += 0.05;
+                }
+            }
+        }
+        else {
+            if (PREVIOUS_PADS[0].button.UpDPad) {
+                timer -= 20;
+                if (timer <= 0 && md_debugDamage < 999) {
+                    md_debugDamage++;
+                }
+            } else if (PREVIOUS_PADS[0].button.DownDPad) {
+                timer -= 20;
+                if (timer <= 0 && md_debugDamage > 0) {
+                    md_debugDamage--;
+                }
+            } else if (PREVIOUS_PADS[0].button.LeftDPad) {
+                timer -= 10;
+                if (timer <= 0) {
+                    md_debugThreshold--;
+                }
+            } else if (PREVIOUS_PADS[0].button.RightDPad) {
+                timer -= 10;
+                if (timer <= 0) {
+                    md_debugThreshold++;
+                }
             }
         }
     } else {
-        timer = 5;
+        timer = 50;
     }
+    if (timer <= 0) timer = 50;
+}
+
+//INJECTION("CPUForceMd", 0x808fe31c, R"(
+//    bl CPUForceMd
+//    addi r11, r1, 0x210
+//)");
+
+INJECTION("CPUForceMd", 0x80905204, R"(
+    SAVE_REGS
+    mr r3, r26
+    mr r4, r27
+    bl CPUForceMd
+    RESTORE_REGS
+)");
+
+extern "C" void CPUForceMd(ftInput * aiInput, int intent) {
+    if (forcedAiMd != 0) aiInput->aiMd = forcedAiMd;
+    else aiInput->aiMd = intent;
 }
 
 INJECTION("CPUForceBehavior", 0x809188B0, R"(
+    addi r4, r25, 0
     bl CPUForceBehavior
     addi r26, r3, 0
     sth r26, 120(r25)
 )");
 
-extern "C" short CPUForceBehavior(int param1) {
-    return (SpecialMode && strcmp(SpecialModes[specialIdx], "DEFAULT") == 0) ? param1 : AIRoutineList[aiRoutineIdx]; // normal routine
+extern "C" short CPUForceBehavior(int param1, aiAct * aiActPtr) {
+    if (AIRoutineList[aiRoutineIdx] == 0xFFFF || strcmp(SpecialModes[specialIdx], "DEFAULT") == 0) return param1; // normal routine
+    // forced routines
+    return (aiActPtr->intermediateNextAiScript != 0) ? param1 : AIRoutineList[aiRoutineIdx];
 }

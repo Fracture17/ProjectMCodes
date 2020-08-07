@@ -5,20 +5,29 @@
 #ifndef PROJECTMCODES_AIACT_H
 #define PROJECTMCODES_AIACT_H
 
-struct aiScriptValues {
-};
+#include "ftInput.h"
+#include "aiStat.h"
 
 struct aiAct {
     // 0x00
-    float variables[26];
-    char _spacer[0x74 - 0x68];
+    float variables[24];
+    char _spacer[0x70 - 0x60];
+
+    // 0x70
+    ftInput* ftInputPtr;
 
     // 0x74
-    aiScriptValues* scriptValues;
+    aiStat* scriptValues;
 
     // 0x78
     unsigned short aiScript;
-    char _spacer2[0xAC - 0x78 - 2];
+    // 0x7A
+    unsigned short nextScript;
+    // 0x7C
+    unsigned short intermediateCurrentAiScript;
+    // 0x7E
+    unsigned short intermediateNextAiScript;
+    char _spacer2[0xAC - 0x7E - 2];
 
     // 0xAC
     unsigned int framesSinceScriptChanged;

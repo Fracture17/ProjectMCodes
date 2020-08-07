@@ -7,10 +7,12 @@
 
 #include "Fighter.h"
 
+// size: 0x157
 struct aiManager {
     entryID getAiCpuTarget(entryID fighter);
 };
 
+// vBrawl: 0x80b89a20
 #define AI_MANAGER ((aiManager *) 0x80622d20)
 
 // gets the AI's target

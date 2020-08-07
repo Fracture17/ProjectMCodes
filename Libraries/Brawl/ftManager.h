@@ -5,23 +5,14 @@
 #ifndef PROJECTMCODES_FTMANAGER_H
 #define PROJECTMCODES_FTMANAGER_H
 
-
 #include "Fighter.h"
 #include "Inputs.h"
 #include "aiAct.h"
 #include "ftOwner.h"
+#include "ftEntryManager.h"
 
 //the port of the fighter
 typedef char playerNumber;
-
-struct ftInput {
-    char _spacer[0x0D];
-    Inputs buttons;
-    float leftStickX;
-    float leftStickY;
-    char _spacer2[0x44 - 0x18];
-    aiAct* aiInputPtr;
-};
 
 struct ftManager {
     playerNumber getPlayerNo(entryID entry);
@@ -33,6 +24,12 @@ struct ftManager {
     ftInput* getInput(entryID entry);
     void setSlow(int excludeTeam, int unknown, int slowStrength, int durationInFrames);
     int getEntryCount();
+
+    char _spacer[0x154];
+    ftEntryManager* entryManager;
+//  ftSlotManager* slotManager;
+//  ftDataProvider* dataProvider;
+
 };
 
 //static location of global ftManager object

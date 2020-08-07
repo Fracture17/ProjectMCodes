@@ -70,8 +70,8 @@ struct OSThread {
 	bool isSuspended();
 	bool isTerminated();
 	void cancel();
-	//The address of the result of the joined thread is written at the
-	//address pointed to by result
+	//The address of the fn_result of the joined thread is written at the
+	//address pointed to by fn_result
 	bool join(void** result = nullptr);
 	//The suspend counter is decremented.
 	//If the counter is 0 the thread will be schedualed

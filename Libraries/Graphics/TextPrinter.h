@@ -32,6 +32,7 @@ struct TextPrinter {
     void startBoundingBox();
     void saveBoundingBox(int id, GXColor color, float boxPadding = 0);
     void drawBoundingBoxes(int id);
+    void setTextColor(GXColor color);
     void start2D();
     void startNormal();
     void setup();

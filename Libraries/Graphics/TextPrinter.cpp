@@ -91,6 +91,15 @@ void TextPrinter::drawBoundingBoxes(int id) {
     }
 }
 
+void TextPrinter::setTextColor(GXColor color) {
+    this->message.textColor.color1 = color;
+    this->message.textColor.color2 = color;
+    this->message.textColor.color3 = color;
+    this->message.textColor.color4 = color;
+//    appears to be unused?
+//    this->message.textColor.color5 = color;
+}
+
 void TextPrinter::print(const char *chars) {
 //    _GXSetZMode(true, GXCompare::GX_EQUAL, true);
     if (is2D) {

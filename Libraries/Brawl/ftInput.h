@@ -5,12 +5,35 @@
 #ifndef PROJECTMCODES_FTINPUT_H
 #define PROJECTMCODES_FTINPUT_H
 
+#include "Inputs.h"
+#include "aiAct.h"
 
-#include "aiInput.h"
+struct aiAct;
 
+// size: 0x274
 struct ftInput {
-    //0xC
-    aiInput*
+    char _spacer[0x0D];
+
+    //0xD
+    Inputs buttons;
+
+    // 0x10
+    float leftStickX;
+    float leftStickY;
+    char _spacer3[0x44 - 0x18];
+
+    // 0x44
+    aiAct* aiActPtr;
+
+    // 0x48
+    int aiMd;
+    char _spacer4[0x58 - 0x48 - 4];
+
+    // 0x58
+    short aiThing;
+    char _spacer5[0x110 - 0x58 - 2];
+    // 0x110
+    int isPlayer;
 };
 
 
