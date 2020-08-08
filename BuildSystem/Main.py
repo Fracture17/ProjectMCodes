@@ -84,10 +84,15 @@ def buildCodes():
     #to keep them seperate after linking, remove the .text
     #also remove the .ctors and .dtors so unesassarry code can be removed
     #do this for each code file
+    allSectionsWithDuplicates = []
     for file in os.listdir(includedCodesDirectory):
         sections = renameSectionsAndRemoveConstructorsForCodeFile(file)
-        allSections.extend(sections)
-    allSections = [Section(name, -1, int(size, 16), type) for name, type, size in allSections]
+        allSectionsWithDuplicates.extend(sections)
+    allSectionsWithDuplicates = [Section(name, -1, int(size, 16), type) for name, type, size in allSectionsWithDuplicates]
+
+    for s in allSectionsWithDuplicates:
+        if s not in allSections:
+            allSections.append(s)
 
     #get function names from edited codes
     makeFunctionListsFromCodes(removedConstructorsCodeDirectory, removedConstructorsCodesFunctionListsDirectory)
@@ -112,6 +117,13 @@ def buildCodes():
     sectionsUsedByCodes = [s for s in allSections if s.name in sectionsText]
 
     #assign each function a place in the list of availible memory segments
+
+    for s in sectionsUsedByCodes:
+        x = sectionsUsedByCodes.count(s)
+        if x > 1:
+            print(x, s)
+    #quit()
+
     functions = [s for s in sectionsUsedByCodes if s.type == '.text']
     data = [s for s in sectionsUsedByCodes if s.type != '.text']
 
@@ -376,9 +388,12 @@ def getObjectPath(sourcePath):
 
 
 def assignFunctionAddresses(functions):
+    print('sssssss')
     for func in functions:
         for segment in codeSegments:
             if segment.canInsert(func):
+                print(segment)
+                print(func)
                 func.address = segment.currentAddress
                 segment.insertFunction(func)
                 break
