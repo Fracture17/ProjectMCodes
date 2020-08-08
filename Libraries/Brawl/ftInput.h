@@ -20,18 +20,22 @@ struct ftInput {
     // 0x10
     float leftStickX;
     float leftStickY;
-    char _spacer3[0x44 - 0x18];
+    char _spacer3[0x2C - 0x18];
+
+    // 0x2C
+    int fighterId;
+    char _spacer4[0x44 - 0x2C - 4];
 
     // 0x44
     aiAct* aiActPtr;
 
     // 0x48
     int aiMd;
-    char _spacer4[0x58 - 0x48 - 4];
+    char _spacer5[0x58 - 0x48 - 4];
 
     // 0x58
     short aiThing;
-    char _spacer5[0x110 - 0x58 - 2];
+    char _spacer6[0x110 - 0x58 - 2];
     // 0x110
     int isPlayer;
 };

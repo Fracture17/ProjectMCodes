@@ -6,7 +6,9 @@
 #include <Brawl/ftManager.h>
 #include <Wii/MATH.h>
 #include <Containers/Vec3f.h>
+#include <Containers/vector.h>
 #include <Brawl/aiMgr.h>
+#include <Graphics/Drawable.h>
 #include "Assembly.h"
 #include "Brawl/Fighter.h"
 #include "Brawl/aiStat.h"
@@ -69,7 +71,6 @@ extern "C" {
                 return;
             }
             aiInputPtr += 0x140;
-            OSReport("aiInputPtr from customFn: %08x", aiInputPtr);
 
             u32 unk_res1_2 = targetAiStat->unkValue;
             if (unk_res1_2 == 0x10) {
@@ -131,6 +132,9 @@ INJECTION("CUSTOM_AI_COMMANDS", 0x80917450, R"(
 )");
 
 #define _get_script_value_aiAct ((double (*)(aiAct * self, int soughtValue, int isPartOfVector)) 0x8091dfc4)
+//extern vector<Drawable> drawables;
+extern vector<Point> pointsToDraw;
+extern vector<Line> linesToDraw;
 extern "C" {
     void aiCommandHandlers(aiAct* aiActInst, const int* args) {
         int cmd = (args[0] & 0xFF000000) >> 24;
@@ -140,14 +144,15 @@ extern "C" {
             double index = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
             bool shouldGetTarget = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
 
-            int aiInputPtr = *(int *) &aiActInst->ftInputPtr + 0x140;
-            int entryManagerAddr = *(int *) FIGHTER_MANAGER->entryManager;
-            while (*(int *) (entryManagerAddr + 0x2C) != aiInputPtr) {
-                entryManagerAddr += 0x244;
+            soWorkManageModuleImpl* targetWorkModule;
+            if (shouldGetTarget) {
+                auto targetPlayerNum = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->fighterId));
+                Fighter* target = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(targetPlayerNum));
+                if (target == nullptr) return;
+                targetWorkModule = target->modules->workModule;
+            } else {
+                targetWorkModule = FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId)->modules->workModule;
             }
-            auto ownFighter = *(Fighter **) (entryManagerAddr + 0x34);
-            auto targetWorkModule = ((shouldGetTarget) ? FIGHTER_MANAGER->getFighter(
-                    AI_MANAGER->getAiCpuTarget(ownFighter->entryId)) : ownFighter)->modules->workModule;
 
             switch (cmd) {
                 case 0x35:
@@ -168,6 +173,47 @@ extern "C" {
                 case 0x3A:
                     aiActInst->variables[varToMod] = (float) (*(int (*)[targetWorkModule->LAVariables->floatsSize]) (targetWorkModule->LAVariables->floats))[(int) index];
                     return;
+            }
+        }
+        if (cmd <= 0x3C) {
+            if (cmd == 0x3B) {
+                double x1 = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
+                double y1 = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
+                int color = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
+                pointsToDraw.push(Point{
+                        0x000000FF,
+                        (float)x1,
+                        (float)y1,
+                        2
+                });
+                pointsToDraw.push(Point{
+                       color,
+                       (float)x1,
+                       (float)y1,
+                       1
+               });
+            } else {
+                double x1 = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
+                double y1 = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
+                double x2 = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
+                double y2 = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
+                int color = _get_script_value_aiAct(aiActInst, *(int *) &args[5], 0);
+                linesToDraw.push(Line{
+                        0x000000FF,
+                        (float)x1,
+                        (float)y1,
+                        (float)x2,
+                        (float)y2,
+                        2
+                });
+                linesToDraw.push(Line{
+                        color,
+                        (float)x1,
+                        (float)y1,
+                        (float)x2,
+                        (float)y2,
+                        1
+                });
             }
         }
     }

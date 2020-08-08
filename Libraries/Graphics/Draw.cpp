@@ -51,6 +51,31 @@ void draw2DRectangle(GXColor color, float top, float bottom, float left, float r
     WG_PIPE->U32 = color.value;
 }
 
+void draw2DLine(GXColor color, float x1, float y1, float x2, float y2, u8 thickness) {
+    _GXBegin(GXPrimitive::GX_LINES, 1, 2);
+    _GXSetPointSize(0, 0);
+    _GXSetLineWidth(thickness, 0);
+
+    WG_PIPE->F32 = x1;
+    WG_PIPE->F32 = y1;
+    WG_PIPE->F32 = 0;
+    WG_PIPE->U32 = color.value;
+
+    WG_PIPE->F32 = x2;
+    WG_PIPE->F32 = y2;
+    WG_PIPE->F32 = 0;
+    WG_PIPE->U32 = color.value;
+}
+
+void draw2DPoint(GXColor color, float x1, float y1, u8 thickness) {
+    _GXBegin(GXPrimitive::GX_POINTS, 1, 1);
+    _GXSetPointSize(thickness, 0);
+
+    WG_PIPE->F32 = x1;
+    WG_PIPE->F32 = y1;
+    WG_PIPE->F32 = 0;
+    WG_PIPE->U32 = color.value;
+}
 
 /*void drawQuads(GXColor color, Position3D* vertices, u32 numVertices) {
     _GXBegin(GXPrimitive::GX_QUADS, 1, numVertices);

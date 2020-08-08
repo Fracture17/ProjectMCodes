@@ -6,6 +6,7 @@
 #include <Wii/PADStatus.h>
 #include "Assembly.h"
 #include "Memory.h"
+#include "Graphics/Drawable.h"
 
 #include "Brawl/ftManager.h"
 #include "Brawl/aiMgr.h"
@@ -77,6 +78,12 @@ float RENDER_SCALE_Y = 0.5;
 float TOP_PADDING = 69; // nice
 float LEFT_PADDING = 20;
 
+// global variables used by CustomAiFunctions
+double md_customFnInjection = 0;
+//vector<Drawable> drawables;
+vector<Point> pointsToDraw;
+vector<Line> linesToDraw;
+
 // global variables for the injection down-below
 int timer = 5;
 bool SpecialMode = false;
@@ -84,7 +91,6 @@ int specialIdx = 0;
 int md_debugThreshold = 20;
 int md_debugTimer = 0;
 double md_debugDamage = 0;
-double md_customFnInjection = 0;
 const char *SpecialModes[] = {
         "OFF",
         "DEFAULT",
@@ -394,7 +400,7 @@ void ModAiRoutineIdx(int amount) {
     aiRoutineIdx += amount;
     if (aiRoutineIdx > sizeof(AIRoutineList) / 2) {
         aiRoutineIdx = 0;
-    } else if (aiRoutineIdx < 0) {
+    } else if (aiRoutineIdx <= 0) {
         aiRoutineIdx = sizeof(AIRoutineList) / 2;
     }
 }
@@ -448,16 +454,13 @@ extern "C" void testPrint() {
             _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[0].modelView, 0);
             auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
 
+
             auto fighter = FIGHTER_MANAGER->getFighter(id);
             auto input = FIGHTER_MANAGER->getInput(id);
 
             if (forcedAiMd != 0) input->aiMd = forcedAiMd;
 
             if (i == 0) {
-                OSReport("p1 fighter: %08x\n", fighter);
-                OSReport("p1 fighterWM: %08x\n", fighter->modules->workModule);
-
-
                 auto idP2 = FIGHTER_MANAGER->getEntryIdFromIndex(1);
                 if (idP2 != -1) {
                     auto aiFtInput = FIGHTER_MANAGER->getInput(idP2);
@@ -547,8 +550,6 @@ extern "C" void testPrint() {
             printer.saveBoundingBox(0, 0x00000088, 2);
 
             if (i == 1) {
-                OSReport("p2 fighter: %08x\n", fighter);
-                OSReport("p2 fighterWM: %08x\n", fighter->modules->workModule);
                 printer.setup();
                 printer.start2D();
 
@@ -702,6 +703,19 @@ extern "C" void testPrint() {
         timer = 50;
     }
     if (timer <= 0) timer = 50;
+
+    //    for (int i = 0; i < drawables.size(); i++) {
+    //        drawables[i].draw();
+    //    }
+    //    drawables.clear();
+    for (int i = 0; i < linesToDraw.size(); i ++) {
+        linesToDraw[i].draw();
+    }
+    linesToDraw.clear();
+    for (int i = 0; i < pointsToDraw.size(); i ++) {
+        pointsToDraw[i].draw();
+    }
+    pointsToDraw.clear();
 }
 
 //INJECTION("CPUForceMd", 0x808fe31c, R"(

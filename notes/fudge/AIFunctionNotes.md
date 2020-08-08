@@ -3,7 +3,8 @@
 register | value
 :--- | :--- 
 r4 | *[0] the selected command
-r21 | unknown
+r21 | zero (again) ?
+r22 | negative one (-1)
 r23 | unknown
 r26 | `aiAct *`
 r27 | Pointer to AI's left stick x, y (floats)

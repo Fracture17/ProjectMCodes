@@ -142,6 +142,9 @@ enum GXLoType {
 //Width is in pixels / 6
 //just set textOffsets to 0
 #define _GXSetLineWidth ((void (*)(u8 width, int texOffsets)) 0x801f12ac)
+//Width is in pixels / 6
+//just set textOffsets to 0
+#define _GXSetPointSize ((void (*)(u8 width, int texOffsets)) 0x801f12fc)
 #define _GXSetCullMode ((void (*)(GXCullMode cullMode)) 0x801f136c)
 #define _GXSetClipMode ((void (*)(GXClipMode clipMode)) 0x801f55ec)
 #define _GXSetCompLoc ((void (*)(GXBlendType type, )) 0x801f47a8)

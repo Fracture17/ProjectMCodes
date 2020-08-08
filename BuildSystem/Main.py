@@ -32,7 +32,7 @@ def build(baseDirectory, ppcBinDirectory):
 
     buildLoadSetupFile()
 
-    makeVariableLocationMap(dataAddressesPath, linkedInitializersPath, intermediateFilesDirectory + "/commands.txt", intermediateFilesDirectory + "/vars.txt", intermediateFilesDirectory + "/vars.dmw", ppcBinDirectory + "/ppc-gdb")
+    # makeVariableLocationMap(dataAddressesPath, linkedInitializersPath, intermediateFilesDirectory + "/commands.txt", intermediateFilesDirectory + "/vars.txt", intermediateFilesDirectory + "/vars.dmw", ppcBinDirectory + "/ppc-gdb")
 
 
 def setPaths(baseDirectory, ppcBinDirectory):
