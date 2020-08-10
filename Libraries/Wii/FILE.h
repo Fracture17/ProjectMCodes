@@ -34,4 +34,10 @@ size_t fread(const void* destination, size_t size, size_t count, FILE* stream);
 s32 fseek(FILE* file, s32 offset, int origin=SEEK_SET);
 
 
+#define WRITE ("w")
+#define READ ("r")
+#define APPEND ("a")
+
+
+
 #endif //PROJECTMCODES_FILE_H

@@ -7,11 +7,15 @@
 
 #include "PlayerTagSystem.h"
 #include "gmGlobalModeMelee.h"
+#include "GameFrame.h"
 
 
 //has a bunch of pointers to stuff
 struct GameGlobal {
-    char _spacer[8];
+    //0
+    GameFrame* gameFrame;
+
+    char _spacer[8 - 4];
     //0x8
     gmGlobalModeMelee* globalModeMelee;
 

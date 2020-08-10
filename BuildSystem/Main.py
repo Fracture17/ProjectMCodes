@@ -32,8 +32,6 @@ def build(baseDirectory, ppcBinDirectory):
 
     buildLoadSetupFile()
 
-    # makeVariableLocationMap(dataAddressesPath, linkedInitializersPath, intermediateFilesDirectory + "/commands.txt", intermediateFilesDirectory + "/vars.txt", intermediateFilesDirectory + "/vars.dmw", ppcBinDirectory + "/ppc-gdb")
-
 
 def setPaths(baseDirectory, ppcBinDirectory):
     os.chdir(baseDirectory)
@@ -117,13 +115,6 @@ def buildCodes():
     sectionsUsedByCodes = [s for s in allSections if s.name in sectionsText]
 
     #assign each function a place in the list of availible memory segments
-
-    for s in sectionsUsedByCodes:
-        x = sectionsUsedByCodes.count(s)
-        if x > 1:
-            print(x, s)
-    #quit()
-
     functions = [s for s in sectionsUsedByCodes if s.type == '.text']
     data = [s for s in sectionsUsedByCodes if s.type != '.text']
 
@@ -287,6 +278,7 @@ def buildSetupFile():
     text = text.decode('utf-8')
     try:
         firstLoadedSectionAddress = int(re.findall(loadedSectionRegex, text)[0], 16)
+        print(re.findall(loadedSectionRegex, text))
     except:
         print("NO DATA")
         firstLoadedSectionAddress = dataStartAddress
@@ -296,7 +288,7 @@ def buildSetupFile():
     dataSegment.setName("Data")
     codeSegments.append(dataSegment)
 
-    if firstLoadedSectionAddress != dataStartAddress:
+    if os.path.exists(finalCodeDataPath):
         codeDataSegment = CodeSegment(dataStartAddress, dataStartAddress)
         codeDataSegment.setName("CData")
         codeSegments.append(codeDataSegment)
@@ -388,12 +380,9 @@ def getObjectPath(sourcePath):
 
 
 def assignFunctionAddresses(functions):
-    print('sssssss')
     for func in functions:
         for segment in codeSegments:
             if segment.canInsert(func):
-                print(segment)
-                print(func)
                 func.address = segment.currentAddress
                 segment.insertFunction(func)
                 break
@@ -406,17 +395,20 @@ def assignDataSections(data, unnamedDaatSections):
     for s in unnamedDaatSections:
         address += int(s[1], 16)
 
-    address = ((address + 4) // 4) * 4
+    address = ((address + 3) // 4) * 4
 
     for d in data:
         d.address = address
         #address += d.size
-        #align by 4
+        #align by 8
 
-        newAddress = ((address + d.size + 4) // 4) * 4
+
+        newAddress = ((address + d.size + 7) // 8) * 8
+        #newAddress = address + d.size + 1
         print(d.name)
-        print(hex(address), d.size, hex(newAddress), hex(newAddress - address))
+        print(hex(address), hex(d.size), hex(newAddress), hex(newAddress - address))
         d.size = newAddress - address
+        print(hex(d.size))
         address = newAddress
     global codeDataSectionSize
     codeDataSectionSize = address - dataStartAddress
@@ -442,14 +434,4 @@ def getNewSectionNames(file):
     for section in sections:
         name2NewName[section[0]] = (section[0].replace(section[1] + '.', '') + '_' + section[1][1:], section[1], section[2])
         print(name2NewName[section[0]])
-    return name2NewName
-
-
-def getNewDataNames(file):
-    text = subprocess.check_output(f"{ppcObjDump} -h {file}", shell=True)
-    text = text.decode('utf-8')
-    dataSections = re.findall(r"((\.rodata|\.sbss|\.bss|\.data|\.sdata)\.[a-zA-Z0-9_]+) *([0-9a-f]{8})", text)
-    name2NewName = {}
-    for section in dataSections:
-        name2NewName[section[0]] = (section[0].replace(section[1] + '.', ''), section[1], section[2])
     return name2NewName

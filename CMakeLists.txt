@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.15)
 
 project(ProjectMCodes)
 
+set(CMAKE_CXX_COMPILER C:\\devkitPro\\devkitPPC\\bin\\powerpc-eabi-g++.exe)
+set(CMAKE_LINKER C:\\devkitPro\\devkitPPC\\bin\\powerpc-eabi-ld.exe)
+set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_LINKER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR ppc)
+set(CMAKE_CROSSCOMPILING 1)
+
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     include(CMake/DebugSettings.cmake)
 endif(CMAKE_BUILD_TYPE STREQUAL "Debug")

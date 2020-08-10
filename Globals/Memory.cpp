@@ -38,7 +38,7 @@ void operator delete(void* p) {
 }
 
 void operator delete(void* p, size_t size) {
-	delete((char*)p);
+    free(p);
 }
 
 void* operator new[](size_t s) {

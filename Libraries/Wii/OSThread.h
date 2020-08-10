@@ -61,9 +61,20 @@ struct OSMutexLink {
 	OSMutex* prev;
 };
 
+enum class OS_THREAD_STATE: u16{
+    OS_THREAD_STATE_READY = 1,
+    OS_THREAD_STATE_RUNNING = 2,
+    OS_THREAD_STATE_WAITING = 4,
+    OS_THREAD_STATE_MORIBUND = 8
+};
+
 //Must be global or dynamically allocated
 //It will cause problems if it goes out of scope
+//BE VERY CAREFUL WITH THESE!!!
+//Any function that's passed to it must be referred to by a CODE function (Something required beyond initialization)
+//Otherwise the function will not exist and the code will break
 struct OSThread {
+    OSThread() = default;
 	OSThread(void* (*func)(void*), void* param, u32 stackSize, OSPriority priority, bool isDetached = false);
 	OSThread(void* (*func)(), u32 stackSize, OSPriority priority, bool isDetached = false);
 
@@ -85,13 +96,14 @@ struct OSThread {
 
 	OSContext context;
 
-	u16 state;
+    OS_THREAD_STATE state;
 	u16 attr;       // OS_THREAD_ATTR_*
 	s32 suspendCounter;    // suspended if the count is greater than zero
 	OSPriority effective;
 	OSPriority base;
 	void* exitValue;
 
+	//0x2DC
 	OSThreadQueue* queue;      // queue thread is on
 	OSThreadLink link;       // queue link
 
@@ -106,15 +118,19 @@ struct OSThread {
 	u32* stackEnd;   // last word of stack (low address)
 
 	s32 error;
+	//0x310
 	void* specific[OS_THREAD_SPECIFIC_MAX];   // thread specific data
 };
 
-enum OS_THREAD_STATE {
-	OS_THREAD_STATE_READY = 1,
-	OS_THREAD_STATE_RUNNING = 2,
-	OS_THREAD_STATE_WAITING = 4,
-	OS_THREAD_STATE_MORIBUND = 8
-};
+
+#define DEFAULT_CONTEXT ((OSContext**) 0x800000d4)
+//I don't know what this is.  It's usually the default thread, but it can change
+#define DEFAULT_THREAD ((OSThread**) 0x800000d8)
+//Link to all active threads, use linkActive member to continue
+//Last thread's next is null, first thread's prev is null
+#define ACTIVE_THREAD_QUEUE ((OSThreadQueue*) 0x800000dc)
+//Current running thread, is null if waiting (Like when stalling in schedualer)
+#define CURRENT_THREAD ((OSThread**) 0x800000E4)
 
 //Thread attributes
 #define OS_THREAD_ATTR_DETACH 0x0001u //is currently detatched
