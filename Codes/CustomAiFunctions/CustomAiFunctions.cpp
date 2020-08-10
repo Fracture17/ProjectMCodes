@@ -108,7 +108,6 @@ extern "C" {
             asm("stfd f1, 0x00(%0)"
                 :
                 : "r" (&fn_result));
-            OSReport("Result: %.3f\n", fn_result);
             fn_shouldReturnResult = 1;
         }
     };
@@ -132,9 +131,9 @@ INJECTION("CUSTOM_AI_COMMANDS", 0x80917450, R"(
 )");
 
 #define _get_script_value_aiAct ((double (*)(aiAct * self, int soughtValue, int isPartOfVector)) 0x8091dfc4)
-//extern vector<Drawable> drawables;
 extern vector<Point> pointsToDraw;
 extern vector<Line> linesToDraw;
+extern vector<RectOutline> rectOutlinesToDraw;
 extern "C" {
     void aiCommandHandlers(aiAct* aiActInst, const int* args) {
         int cmd = (args[0] & 0xFF000000) >> 24;
@@ -175,45 +174,107 @@ extern "C" {
                     return;
             }
         }
-        if (cmd <= 0x3C) {
-            if (cmd == 0x3B) {
-                double x1 = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
-                double y1 = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-                int color = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
-                pointsToDraw.push(Point{
-                        0x000000FF,
-                        (float)x1,
-                        (float)y1,
-                        2
-                });
-                pointsToDraw.push(Point{
-                       color,
-                       (float)x1,
-                       (float)y1,
-                       1
-               });
-            } else {
-                double x1 = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
-                double y1 = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-                double x2 = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
-                double y2 = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
-                int color = _get_script_value_aiAct(aiActInst, *(int *) &args[5], 0);
-                linesToDraw.push(Line{
-                        0x000000FF,
-                        (float)x1,
-                        (float)y1,
-                        (float)x2,
-                        (float)y2,
-                        2
-                });
-                linesToDraw.push(Line{
-                        color,
-                        (float)x1,
-                        (float)y1,
-                        (float)x2,
-                        (float)y2,
-                        1
-                });
+        if (cmd < 0x50) {
+            switch (cmd) {
+                case 0x40: {
+                    double x1 = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
+                    double y1 = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
+                    int red = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
+                    int green = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
+                    int blue = _get_script_value_aiAct(aiActInst, *(int *) &args[5], 0);
+                    int alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[6], 0);
+                    pointsToDraw.push({
+                              0x000000FF,
+                              (float) x1,
+                              (float) y1,
+                              42
+                      });
+                    pointsToDraw.push({
+                              (red << 24) | (green << 16) | (blue << 8) | alpha,
+                              (float) x1,
+                              (float) y1,
+                              30
+                      });
+                    return;
+                }
+                case 0x41: {
+                    double x1 = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
+                    double y1 = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
+                    double x2 = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
+                    double y2 = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
+                    int red = _get_script_value_aiAct(aiActInst, *(int *) &args[5], 0);
+                    int green = _get_script_value_aiAct(aiActInst, *(int *) &args[6], 0);
+                    int blue = _get_script_value_aiAct(aiActInst, *(int *) &args[7], 0);
+                    int alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[8], 0);
+                    linesToDraw.push({
+                             0x000000FF,
+                             (float) x1,
+                             (float) y1,
+                             (float) x2,
+                             (float) y2,
+                             42
+                     });
+                    linesToDraw.push({
+                             (red << 24) | (green << 16) | (blue << 8) | alpha,
+                             (float) x1,
+                             (float) y1,
+                             (float) x2,
+                             (float) y2,
+                             30
+                     });
+                    return;
+                }
+                case 0x42: {
+                    double x = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
+                    double y = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
+                    double width = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
+                    double height = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
+                    int red = _get_script_value_aiAct(aiActInst, *(int *) &args[5], 0);
+                    int green = _get_script_value_aiAct(aiActInst, *(int *) &args[6], 0);
+                    int blue = _get_script_value_aiAct(aiActInst, *(int *) &args[7], 0);
+                    int alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[8], 0);
+                    rectOutlinesToDraw.push({
+                            0x000000FF,
+                            (float) (y - height),
+                            (float) (y + height),
+                            (float) (x - width),
+                            (float) (x + width),
+                            42
+                    });
+                    rectOutlinesToDraw.push({
+                        (red << 24) | (green << 16) | (blue << 8) | alpha,
+                        (float) (y - height),
+                        (float) (y + height),
+                        (float) (x - width),
+                        (float) (x + width),
+                        30
+                    });
+                    return;
+                }
+            }
+        }
+        if (cmd < 0x60) {
+            auto colorModule = FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId)->modules->colorBlendModule;
+            switch (cmd) {
+                case 0x50:
+                    colorModule->isEnabled = 1;
+                    return;
+                case 0x51:
+                    colorModule->isEnabled = 0;
+                    return;
+                case 0x52:
+                    colorModule->red = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
+                    colorModule->green = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
+                    colorModule->blue = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
+                    colorModule->alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
+                    return;
+            }
+        }
+        if (cmd < 0x70) {
+            switch (cmd) {
+                case 0x60:
+                    OSReport("LOGGED VALUE: %.3f\n", _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0));
+                    return;
             }
         }
     }

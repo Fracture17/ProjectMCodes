@@ -17,6 +17,7 @@
 #include "soGroundModuleImpl.h"
 #include "ftParamCustomizeModuleImpl.h"
 #include "ftStopModuleImpl.h"
+#include "soColorBlendModule.h"
 
 
 struct StageObject;
@@ -60,7 +61,10 @@ struct soModuleAccessor {
     char _spacer8[0x88 - 0x7C - 4];
     //0x7C + 0xC = 0x88
     soKineticModuleGenericImpl* kineticModule;
-    char _spacer9[0xD0 - 0x88 - 4];
+    char _spacer9[0xB8 - 0x88 - 4];
+    //0xAC + 0xC = 0xB8
+    soColorBlendModule* colorBlendModule;
+    char _spacer10[0xD0 - 0xB8 - 4];
     //0xC4 + 0xC = 0xD0
     ftParamCustomizeModuleImpl* paramCustomizeModule;
 };

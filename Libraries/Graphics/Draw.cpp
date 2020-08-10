@@ -52,9 +52,9 @@ void draw2DRectangle(GXColor color, float top, float bottom, float left, float r
 }
 
 void draw2DLine(GXColor color, float x1, float y1, float x2, float y2, u8 thickness) {
-    _GXBegin(GXPrimitive::GX_LINES, 1, 2);
     _GXSetPointSize(0, 0);
     _GXSetLineWidth(thickness, 0);
+    _GXBegin(GXPrimitive::GX_LINES, 1, 2);
 
     WG_PIPE->F32 = x1;
     WG_PIPE->F32 = y1;
@@ -68,11 +68,42 @@ void draw2DLine(GXColor color, float x1, float y1, float x2, float y2, u8 thickn
 }
 
 void draw2DPoint(GXColor color, float x1, float y1, u8 thickness) {
-    _GXBegin(GXPrimitive::GX_POINTS, 1, 1);
     _GXSetPointSize(thickness, 0);
+    _GXBegin(GXPrimitive::GX_POINTS, 1, 1);
 
     WG_PIPE->F32 = x1;
     WG_PIPE->F32 = y1;
+    WG_PIPE->F32 = 0;
+    WG_PIPE->U32 = color.value;
+}
+
+void draw2DRectOutline(GXColor color, float top, float bottom, float left, float right, u8 thickness) {
+    _GXSetPointSize(thickness, 0);
+    _GXSetLineWidth(thickness, 0);
+    _GXBegin(GXPrimitive::GX_LINESTRIP, 1, 5);
+
+    WG_PIPE->F32 = left;
+    WG_PIPE->F32 = top;
+    WG_PIPE->F32 = 0;
+    WG_PIPE->U32 = color.value;
+
+    WG_PIPE->F32 = right;
+    WG_PIPE->F32 = top;
+    WG_PIPE->F32 = 0;
+    WG_PIPE->U32 = color.value;
+
+    WG_PIPE->F32 = right;
+    WG_PIPE->F32 = bottom;
+    WG_PIPE->F32 = 0;
+    WG_PIPE->U32 = color.value;
+
+    WG_PIPE->F32 = left;
+    WG_PIPE->F32 = bottom;
+    WG_PIPE->F32 = 0;
+    WG_PIPE->U32 = color.value;
+
+    WG_PIPE->F32 = left;
+    WG_PIPE->F32 = top;
     WG_PIPE->F32 = 0;
     WG_PIPE->U32 = color.value;
 }
