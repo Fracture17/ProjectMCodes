@@ -29,4 +29,15 @@ struct Line {
     void draw();
 };
 
+struct RectOutline {
+
+    GXColor color;
+    float top;
+    float bottom;
+    float left;
+    float right;
+    int thickness;
+    void draw();
+};
+
 #endif //PROJECTMCODES_DRAWABLE_H

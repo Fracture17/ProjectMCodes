@@ -72,6 +72,10 @@ unsigned int getScene() {
     return false;
 }
 
+bool isUnPaused() {
+    return (*(char*)0x805B50C5) & 0x01;
+}
+
 float RENDER_X_SPACING = 80;
 float RENDER_SCALE_X = 0.5;
 float RENDER_SCALE_Y = 0.5;
@@ -83,6 +87,7 @@ double md_customFnInjection = 0;
 //vector<Drawable> drawables;
 vector<Point> pointsToDraw;
 vector<Line> linesToDraw;
+vector<RectOutline> rectOutlinesToDraw;
 
 // global variables for the injection down-below
 int timer = 5;
@@ -431,6 +436,7 @@ BASIC_INJECT("testPrint", 0x8001792c, "addi r3, r30, 280");
 
 extern "C" void testPrint() {
     printer.drawBoundingBoxes(0);
+
     startNormalDraw();
 
     auto scene = getScene();
@@ -461,20 +467,6 @@ extern "C" void testPrint() {
             if (forcedAiMd != 0) input->aiMd = forcedAiMd;
 
             if (i == 0) {
-                auto idP2 = FIGHTER_MANAGER->getEntryIdFromIndex(1);
-                if (idP2 != -1) {
-                    auto aiFtInput = FIGHTER_MANAGER->getInput(idP2);
-                    auto aiVars = aiFtInput->aiActPtr->variables;
-                    setupDrawPrimitives();
-                    startNormalDraw();
-
-                    auto xPos = fighter->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos;
-                    auto yPos = fighter->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomYPos;
-                    draw2DRectangle(0xff0000ff,
-                                    yPos, yPos - aiVars[0], xPos - 2, xPos + 2);
-                    printer.setup();
-                }
-
                 if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
                     auto LAVars = fighter->modules->workModule->LAVariables;
                     auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
@@ -550,6 +542,19 @@ extern "C" void testPrint() {
             printer.saveBoundingBox(0, 0x00000088, 2);
 
             if (i == 1) {
+                setupDrawPrimitives();
+                startNormalDraw();
+
+                for (int k = 0; k < linesToDraw.size(); k ++) {
+                    linesToDraw[k].draw();
+                }
+                for (int k = 0; k < pointsToDraw.size(); k ++) {
+                    pointsToDraw[k].draw();
+                }
+                for (int k = 0; k < rectOutlinesToDraw.size(); k ++) {
+                    rectOutlinesToDraw[k].draw();
+                }
+
                 printer.setup();
                 printer.start2D();
 
@@ -609,7 +614,6 @@ extern "C" void testPrint() {
                 }
 
                 printer.saveBoundingBox(0, 0x00000088, 2);
-                startNormalDraw();
             }
         }
     }
@@ -703,25 +707,16 @@ extern "C" void testPrint() {
         timer = 50;
     }
     if (timer <= 0) timer = 50;
-
-    //    for (int i = 0; i < drawables.size(); i++) {
-    //        drawables[i].draw();
-    //    }
-    //    drawables.clear();
-    for (int i = 0; i < linesToDraw.size(); i ++) {
-        linesToDraw[i].draw();
-    }
-    linesToDraw.clear();
-    for (int i = 0; i < pointsToDraw.size(); i ++) {
-        pointsToDraw[i].draw();
-    }
-    pointsToDraw.clear();
 }
 
-//INJECTION("CPUForceMd", 0x808fe31c, R"(
-//    bl CPUForceMd
-//    addi r11, r1, 0x210
-//)");
+
+BASIC_INJECT("updateUnpaused", 0x8082f140, "lwz r4, 0xc(r3)");
+
+extern "C" void updateUnpaused() {
+    linesToDraw.clear();
+    pointsToDraw.clear();
+    rectOutlinesToDraw.clear();
+}
 
 INJECTION("CPUForceMd", 0x80905204, R"(
     SAVE_REGS
