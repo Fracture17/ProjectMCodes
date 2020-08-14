@@ -263,10 +263,14 @@ extern "C" {
                     colorModule->isEnabled = 0;
                     return;
                 case 0x52:
-                    colorModule->red = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
-                    colorModule->green = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-                    colorModule->blue = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
-                    colorModule->alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
+                    int red = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
+                    int green = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
+                    int blue = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
+                    int alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
+                    colorModule->red = red;
+                    colorModule->green = green;
+                    colorModule->blue = blue;
+                    colorModule->alpha = alpha;
                     return;
             }
         }
@@ -275,6 +279,16 @@ extern "C" {
                 case 0x60:
                     OSReport("LOGGED VALUE: %.3f\n", _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0));
                     return;
+                case 0x61:
+                    OSReport("LOGGED STRING: ");
+                    for (int i = 1; i <= 5; i++) {
+                        unsigned int toConvert = _get_script_value_aiAct(aiActInst, *(int *) &args[i], 0);
+                        OSReport("%c%c%c",
+                                (toConvert & 0xFF000000) >> 24,
+                                (toConvert & 0x00FF0000) >> 16,
+                                (toConvert & 0x0000FF00) >> 8);
+                    }
+                    OSReport("\n");
             }
         }
     }
