@@ -6,19 +6,30 @@
 
 
 void writeEXI(void* data, u32 size, EXIChannel channel, EXIDevice device, EXIFrequency frequency) {
-    flushDataCache(data, size);
+    //need to make new buffer to ensure data is aligned to cache block
+    void* alignedData = malloc(size, 32);
+    memcpy(alignedData, data, size);
+
+    flushDataCache(alignedData, size);
     setupEXIDevice(channel, device, frequency);
-    transferDataEXI(channel, data, size, EXITransfer::write);
+    transferDataEXI(channel, alignedData, size, EXITransfer::write);
     syncEXITransfer(channel);
     removeEXIDevice(channel);
+
+    free(alignedData);
 }
 
 void readEXI(void* destination, u32 size, EXIChannel channel, EXIDevice device, EXIFrequency frequency) {
+    void* alignedDestination = malloc(size, 32);
+
     setupEXIDevice(channel, device, frequency);
-    transferDataEXI(channel, destination, size, EXITransfer::read);
+    transferDataEXI(channel, alignedDestination, size, EXITransfer::read);
     syncEXITransfer(channel);
     removeEXIDevice(channel);
-    flushDataCache(destination, size);
+    flushDataCache(alignedDestination, size);
+
+    memcpy(destination, alignedDestination, size);
+    free(alignedDestination);
 }
 
 void setupEXIDevice(EXIChannel channel, EXIDevice device, EXIFrequency frequency) {

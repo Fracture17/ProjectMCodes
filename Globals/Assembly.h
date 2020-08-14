@@ -18,6 +18,8 @@ asm(R"(
 .set f20,20; .set f21,21; .set f22,22; .set f23,23; .set f24,24
 .set f25,25; .set f26,26; .set f27,27; .set f28,28; .set f29,29
 .set f30,30; .set f31,31;
+.set cr0,0; .set cr1,1; .set cr2,2; .set cr3,3;
+.set cr4,4; .set cr5,5; .set cr6,6; .set cr7,7;
 )");
 
 //Use this to inject assembly into a Brawl function
@@ -68,6 +70,8 @@ asm(R"(
 
 
 
+
+
 //macro for calling saveRegs
 asm(R"(.macro SAVE_REGS
 	stw r0, -4(sp)
@@ -92,6 +96,13 @@ asm(R"(.macro PUSH reg
 asm(R"(.macro POP reg
 	lwz \reg, 0(sp)
     addi sp, sp, -0x8
+.endm)");
+
+
+
+asm(R"(.macro SETREG reg label
+    lis \reg, \label@ha
+    ori \reg, \reg, \label@l
 .endm)");
 
 

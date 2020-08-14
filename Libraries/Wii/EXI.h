@@ -6,33 +6,33 @@
 #define PROJECTMCODES_EXI_H
 
 #include "stddef.h"
-
+#include "Memory.h"
 #include "Wii/OSCache.h"
 
 //I don't understand the specifics of these yet, but I can just copy UnclePunch's transfer logic and it should work
 //Untested so far
 
-enum EXITransfer {
+enum class EXITransfer {
     read = 0,
     write = 1,
     //not sure how it reads and writes
     readWrite = 2
 };
 
-enum EXIChannel {
+enum class EXIChannel {
     slotA = 0,
     slotB = 1,
     serialPort2 = 2
 };
 
 //not really sure how devices are distinguished
-enum EXIDevice {
+enum class EXIDevice {
     device0 = 0,
     device1 = 1,
     device2 = 2
 };
 
-enum EXIFrequency {
+enum class EXIFrequency {
     EXI_1MHz = 0,
     EXI_2MHz = 1,
     EXI_4MHz = 2,

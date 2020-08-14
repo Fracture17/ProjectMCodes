@@ -6,7 +6,7 @@
 
 
 //needs to be global var or the symbol will be lost
-char WRITE[] = "w";
+//char WRITE[] = "w";
 
 void writeToSDFile(const char* filepath, const void* data, size_t size) {
     //more logic here to get proper root directory
@@ -18,7 +18,7 @@ void writeToSDFile(const char* filepath, const void* data, size_t size) {
 
 
 //needs to be global var or the symbol will be lost
-char APPEND[] = "a";
+//char APPEND[] = "a";
 
 void appendToSDFile(const char* filepath, const void* data, size_t size) {
     //more logic here to get proper root directory
@@ -29,7 +29,7 @@ void appendToSDFile(const char* filepath, const void* data, size_t size) {
 }
 
 
-char READ[] = "r";
+//char READ[] = "r";
 
 void readFromSDFile(const char* filepath, void* destination, size_t size, size_t offset) {
     FILE* file;

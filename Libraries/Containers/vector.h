@@ -7,7 +7,7 @@
 
 #include "Memory.h"
 #include "stddef.h"
-#include "../../Codes/CSSControls//C++Stuff.h"
+#include "CLibs/InitializerList.h"
 
 
 
@@ -22,7 +22,7 @@ public:
     vector(std::initializer_list<T> list);
     ~vector<T>();
 
-    T& operator[](size_t index) const;
+    T& operator[](int index) const;
     bool operator==(const vector<T>& other);
     bool operator!=(const vector<T>& other);
     /*bool operator<(const vector<T>& other);
@@ -52,7 +52,7 @@ private:
 
 
 template<class T>
-T& vector<T>::operator[](size_t index) const{
+T& vector<T>::operator[](int index) const{
     if (index < 0) {
         index += length;
     }

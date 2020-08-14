@@ -5,6 +5,259 @@
 #include "ReplayFix.h"
 
 
+ReplayFrameEventManager eventManager(reinterpret_cast<ReplayEvent*>(REPLAY_BUFFER_START + 0x2000),
+                                     0x10000);
+
+//only applies at begining of game
+//most codes use isRecording instead
+bool isInReplay = false;
+
+bool isRecording = false;
+bool isPlaying = false;
+
+bool shouldStartRecording = false;
+bool shouldStartPlaying = false;
+
+bool shouldStopRecording = false;
+bool shouldStopPlaying = false;
+
+char recordReplayPath[]  = "/Project+/rp/rp_200701_1500.bin";
+
+FILE* replayFile = nullptr;
+
+
+bool isGamePaused() {
+    return (GF_APPLICATION->_gameFlags & 0x01000000) != 0;
+}
+
+BASIC_INJECT("gameStart", 0x806cf140, "stwu sp, -0x70(sp)");
+
+
+extern "C" void gameStart() {
+    if(isInReplay) {
+        eventManager.loadNextFrame();
+        auto gameStartEvent = eventManager.getGameStartEvent();
+        DEFAULT_MT_RAND->seed = gameStartEvent->randSeed;
+        *GM_GLOBAL_MODE_MELEE = gameStartEvent->meleeInfo;
+    }
+    else {
+        replayFile = fopen(recordReplayPath, WRITE);
+        eventManager.openReplayFileForWriting(replayFile);
+
+        auto gameStartEvent = new ReplayGameStartEvent;
+        gameStartEvent->randSeed = DEFAULT_MT_RAND->seed;
+        eventManager.push(gameStartEvent);
+    }
+}
+
+
+BASIC_INJECT("setBaseInfo", 0x8004b0f8, "blr");
+
+extern "C" void setBaseInfo() {
+    if(isInReplay == false) {
+        eventManager.getGameStartEvent()->meleeInfo = *GM_GLOBAL_MODE_MELEE;
+    }
+}
+
+
+
+
+BASIC_INJECT("frameStart", 0x800171b4, "li r25, 1");
+
+extern "C" void frameStart() {
+    if(shouldStopRecording) {
+        shouldStopRecording = false;
+        isRecording = false;
+
+        //add frame end event
+        auto frameEndEvent = new ReplayFrameEndEvent;
+        frameEndEvent->frameNum = GAME_FRAME->frameCounter;
+        frameEndEvent->randSeed = DEFAULT_MT_RAND->seed;
+        eventManager.push(frameEndEvent);
+
+        eventManager.saveFrameEvents();
+
+        auto endEvent = new ReplayGameEndEvent;
+        eventManager.push(endEvent);
+
+        eventManager.saveAndClose();
+
+        replayFile = nullptr;
+
+        return;
+    }
+    if(shouldStopPlaying) {
+        shouldStopPlaying = false;
+        isPlaying = false;
+        eventManager.fileIO.shouldClose = true;
+        replayFile = nullptr;
+    }
+
+
+
+    if(isGamePaused() == false) {
+        if(isRecording) {
+            //add frame end event
+            auto frameEndEvent = new ReplayFrameEndEvent;
+            frameEndEvent->frameNum = GAME_FRAME->frameCounter;
+            frameEndEvent->randSeed = DEFAULT_MT_RAND->seed;
+            eventManager.push(frameEndEvent);
+
+            eventManager.saveFrameEvents();
+
+            //set up for next frame
+            auto frameStartEvent = new ReplayFrameStartEvent;
+            frameStartEvent->randomSeed = DEFAULT_MT_RAND->seed;
+            frameStartEvent->frameNum = GAME_FRAME->frameCounter;
+            eventManager.push(frameStartEvent);
+        }
+        else if(isPlaying) {
+            eventManager.loadNextFrame();
+
+            auto frameStartEvent = eventManager.getFrameStartEvent();
+            DEFAULT_MT_RAND->seed = frameStartEvent->randomSeed;
+
+            auto frame = eventManager.getFrameStartEvent();
+            if(frame->frameNum != (GAME_FRAME->frameCounter + 1)) {
+                int x = 0;
+                x += 3;
+            }
+        }
+    }
+
+
+
+
+    //The signal to start recording is sent in the middle of the frame
+    //This means that info that occurred before would be lost, so just skip that frame and start now
+    if(shouldStartRecording) {
+        eventManager.saveFrameEvents();
+
+        isRecording = true;
+        shouldStartRecording = false;
+
+        //set up for next frame
+        auto frameStartEvent = new ReplayFrameStartEvent;
+        frameStartEvent->randomSeed = DEFAULT_MT_RAND->seed;
+        frameStartEvent->frameNum = GAME_FRAME->frameCounter;
+        eventManager.push(frameStartEvent);
+    }
+    if(shouldStartPlaying) {
+        isPlaying = true;
+        shouldStartPlaying = false;
+
+        eventManager.loadNextFrame();
+
+        auto frameStartEvent = eventManager.getFrameStartEvent();
+        DEFAULT_MT_RAND->seed = frameStartEvent->randomSeed;
+    }
+}
+
+
+//sets should start recording flag, and stops Brawl start recording function
+BASIC_INJECT("startRecording", 0x8004b328, "blr");
+
+extern "C" void startRecording() {
+    if(isInReplay) {
+        shouldStartPlaying = true;
+    }
+    else {
+        shouldStartRecording = true;
+    }
+}
+
+
+BASIC_INJECT("endRecording", 0x8004b5e4, "blr");
+
+extern "C" void endRecording() {
+    if(isRecording) {
+        shouldStopRecording = true;
+    }
+    if(isPlaying) {
+        shouldStopPlaying = true;
+    }
+}
+
+
+
+
+//r28 is padStatus array ptr
+INJECTION("playOrRecord", 0x8004aa5c, R"(
+    SAVE_REGS
+    bl playOrRecord
+    RESTORE_REGS
+    addi r5, sp, 32
+)");
+
+
+extern "C" void playOrRecord() {
+    if(isGamePaused() == false) {
+        if(isPlaying) {
+            auto frame = eventManager.getFrameStartEvent();
+            if(frame->frameNum != (GAME_FRAME->frameCounter + 1)) {
+                int x = 0;
+                x += 2;
+            }
+            for(int i = 0; i < 4; i++) {
+                auto fighterEvent = eventManager.getFighterEventFromPort(i);
+                if(fighterEvent != nullptr) {
+                    auto& pad = PAD_SYSTEM->pads[i];
+                    pad.buttons = fighterEvent->buttons;
+                    pad.stickX = fighterEvent->stickX;
+                    pad.stickY = fighterEvent->stickY;
+                    pad.cStickX = fighterEvent->cStickX;
+                    pad.cStickY = fighterEvent->cStickY;
+                    pad.LTrigger = fighterEvent->LTrigger;
+                    pad.RTrigger = fighterEvent->RTrigger;
+                }
+            }
+        }
+        else if(isRecording) {
+            for(int i = 0; i < 4; i++) {
+                auto entry = FIGHTER_MANAGER->getEntryIdFromIndex(i);
+                if(entry != -1) {
+                    auto fighterEvent = new ReplayPreFrameFighterEvent;
+                    auto& pad = PAD_SYSTEM->pads[i];
+                    fighterEvent->buttons = pad.buttons;
+                    fighterEvent->stickX = pad.stickX;
+                    fighterEvent->stickY = pad.stickY;
+                    fighterEvent->cStickX = pad.cStickX;
+                    fighterEvent->cStickY = pad.cStickY;
+                    fighterEvent->LTrigger = pad.LTrigger;
+                    fighterEvent->RTrigger = pad.RTrigger;
+                    fighterEvent->port = i;
+
+                    eventManager.push(fighterEvent);
+                }
+            }
+        }
+    }
+}
+
+
+
+
+INJECTION("stopKeyRecorderClear", 0x8004b060, "blr");
+INJECTION("stopSetInitialProcessCount", 0x8004b310, "blr");
+INJECTION("stopMeleeGetInitialProcessCount", 0x8004b304, "blr");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 INJECTION("replaceReplayPathWithFakeFile", 0x81198350, R"(
     SAVE_REGS
@@ -32,99 +285,11 @@ extern "C" bool replaceReplayPathWithFakeFile(char* buffer, muCollectionViewer* 
 
 
 
-bool isInGame = false;
-int dataIndex = 0;
-
-INJECTION("stopKeyRecorderClear", 0x8004b060, "blr");
-INJECTION("stopSetInitialProcessCount", 0x8004b310, "blr");
-INJECTION("stopStartRec", 0x8004b328, R"(
-    li r3, 1
-    lis r4, isInGame@ha
-    stb r3, isInGame@l(r4)
-    blr
-)");
-
-
-BASIC_INJECT("setBaseInfo", 0x8004b0f8, "blr");
-
-extern "C" void setBaseInfo() {
-    memcpy(SAVED_GAME_INFO, GM_GLOBAL_MODE_MELEE, sizeof(gmGlobalModeMelee));
-}
-
-BASIC_INJECT("saveReplay", 0x8004b5e4, "lwz r0, 0(r3)");
-
-char path[]  = "/Project+/rp/rp_200701_1500.bin";
-bool hasSaved = false;
-extern "C" void saveReplay() {
-    if(hasSaved == false) {
-        auto file = gfFileIO(path, 0, dataIndex * sizeof(FighterInputDataForReplayFrame) + sizeof(gmGlobalModeMelee),
-                             SAVED_GAME_INFO,
-                             nullptr);
-        //file.writeSDFile();
-        writeToSDFile(path, SAVED_GAME_INFO,
-                      dataIndex * sizeof(FighterInputDataForReplayFrame) + sizeof(gmGlobalModeMelee));
-        dataIndex = 0;
-        isInGame = false;
-        hasSaved = true;
-    }
-}
-
-
-/*INJECTION("record", 0x808391c0, R"(
-    SAVE_REGS
-    mr r3, r4
-    bl record
-    RESTORE_REGS
-    addi r11, sp, 32
-)");
-
-
-extern "C" void record(soModuleAccessor& accessor) {
-    if(isInGame) {
-
-
-
-        auto& controller = ((ftControllerModuleImpl*)accessor.controllerModule)->controller;
-        SAVED_INPUT[dataIndex].currentInputs = controller.inputs;
-        SAVED_INPUT[dataIndex].prevInputs = controller.prevInputs;
-        SAVED_INPUT[dataIndex].stickY = controller.stickY;
-        SAVED_INPUT[dataIndex].stickX = controller.stickX;
-
-        auto& LAVariables = accessor.workModule->LAVariables;
-        SAVED_INPUT[dataIndex].cStickY = (*LAVariables->floats)[35];
-        SAVED_INPUT[dataIndex].cStickX = (*LAVariables->floats)[34];
-        SAVED_INPUT[dataIndex].lightShield = (*LAVariables->basics)[77];
-
-        dataIndex++;
-    }
-}*/
-
-
-
-INJECTION("record", 0x80029570, R"(
-    #This is the replacement.  Doing it now so I have room on the stack
-    addi sp, sp, 1328
-
-    SAVE_REGS
-    mr r3, r4
-    bl record
-    RESTORE_REGS
-)");
-
-bool isInReplay = false;
-
-
-extern "C" void record(soModuleAccessor& accessor) {
-    if(isInGame && isInReplay == false) {
-        SAVED_INPUT[dataIndex] = PAD_SYSTEM->pads[0];
-
-        dataIndex++;
-    }
-}
-
 
 //prevents replays from being considered corrupted when selected
 INJECTION("alwaysAllowReplayToBeSelected", 0x8119811c, "cmpwi r0, 1");
+
+
 
 
 
@@ -134,14 +299,10 @@ void getCurrentReplayName(muReplayTask& replayTask, char* buffer) {
 }
 
 
+const char REPLAY_DIRECTORY[] = "A:/Project+/rp/";
 
 //r3 already has muReplayTask*
 BASIC_INJECT("setGameInfoForReplay", 0x8119841c, "blr");
-
-
-
-
-const char REPLAY_DIRECTORY[] = "A:/Project+/rp/";
 
 extern "C" void setGameInfoForReplay(muReplayTask& replayTask) {
     char replayName[100] = {};
@@ -150,45 +311,68 @@ extern "C" void setGameInfoForReplay(muReplayTask& replayTask) {
     strcpy(replayPath, REPLAY_DIRECTORY);
     strcat(replayPath, replayName);
 
-    readFromSDFile(replayPath, SAVED_GAME_INFO, 0x8000, 0);
+    replayFile = fopen(replayPath, READ);
+
+
+
+
+    fread(REPLAY_BUFFER_START + 0x10000, sizeof(ReplayGameStartEvent), 1, replayFile);
+    auto gameStartEvent = (ReplayGameStartEvent*) (REPLAY_BUFFER_START + 0x10000);
+    DEFAULT_MT_RAND->seed = gameStartEvent->randSeed;
+    *GM_GLOBAL_MODE_MELEE = gameStartEvent->meleeInfo;
+
+    fseek(replayFile, 0);
+
+
+    eventManager.openReplayFileForReading(replayFile);
+
+
+
+
+    //fread(REPLAY_BUFFER_START + 0x5000, sizeof(ReplayGameStartEvent), 1, replayFile);
+    //ReplayGameStartEvent* gameStartEvent = (ReplayGameStartEvent*) (REPLAY_BUFFER_START + 0x5000);
+    //DEFAULT_MT_RAND->seed = gameStartEvent->randSeed;
+    //*GM_GLOBAL_MODE_MELEE = gameStartEvent->meleeInfo;
+
+
+    //eventManager.loadNextFrame();
+
+    //readFromSDFile(replayPath, SAVED_GAME_INFO, sizeof(ReplayGameStartInfo), 0);
 
     //auto file = gfFileIO(replayPath, 0, 0, nullptr, SAVED_GAME_INFO);
     //file.readSDFile();
 
-    memcpy(GM_GLOBAL_MODE_MELEE, SAVED_GAME_INFO, sizeof(gmGlobalModeMelee));
+    //DEFAULT_MT_RAND->seed = SAVED_GAME_INFO->randSeed;
+    //*GM_GLOBAL_MODE_MELEE = SAVED_GAME_INFO->meleeInfo;
+
+    //replayIOThread = OSThread(_readReplayFrame, 0x2000, 0);
+
+    //memcpy(GM_GLOBAL_MODE_MELEE, &SAVED_GAME_INFO->meleeInfo, sizeof(gmGlobalModeMelee));
 
     //IP_SWITCH->controllerFLags ^= 0x80000000;
     replayTask.resources->startReplayFlag = 0;
 
     isInReplay = true;
-    dataIndex = 0;
+    //dataIndex = 0;
 }
 
 
 
 
 
-INJECTION("stopMeleeGetInitialProcessCount", 0x8004b304, "blr");
-INJECTION("stopStartPlay", 0x8004b608, R"(
-    li r3, 0
-    blr
-)");
-INJECTION("stopEndPlay", 0x8004b738, R"(
-    li r3, 0
-    lis r4, isInReplay@ha
-    stb r3, isInReplay@l(r4)
-    blr
-)");
+BASIC_INJECT("startPlayback", 0x8004b608, "blr");
 
-BASIC_INJECT("play", 0x8002956c, "mtlr r0");
+extern "C" void startPlayback() {
+    shouldStartPlaying = true;
+}
 
 
-extern "C" void play() {
-    if(isInReplay) {
-        PAD_SYSTEM->pads[0] = SAVED_INPUT[dataIndex];
-        dataIndex++;
+
+BASIC_INJECT("stopPlayback", 0x8004b738, "blr");
+
+
+extern "C" void stopPlayback() {
+    if(isPlaying) {
+        shouldStopPlaying = true;
     }
 }
-
-
-
