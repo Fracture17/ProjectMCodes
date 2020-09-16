@@ -9,21 +9,6 @@
 #include <Brawl/Message.h>
 #include <Containers/vector.h>
 
-struct RectBounds {
-    GXColor color;
-    float top;
-    float bottom;
-    float left;
-    float right;
-    float zPos;
-    bool is2D;
-};
-
-struct vecRef {
-    int id;
-    vector<RectBounds> rectBounds;
-};
-
 struct TextPrinter {
     void print(const char* characters);
     void printLine(const char* characters);
@@ -43,7 +28,6 @@ struct TextPrinter {
     float lineStart;
     float startY;
     float lastPadLocation;
-    vector<vecRef> bboxVecs;
     bool is2D = false;
 };
 

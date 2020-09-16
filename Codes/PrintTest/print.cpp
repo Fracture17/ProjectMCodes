@@ -84,10 +84,6 @@ float LEFT_PADDING = 20;
 
 // global variables used by CustomAiFunctions
 double md_customFnInjection = 0;
-//vector<Drawable> drawables;
-vector<Point> pointsToDraw;
-vector<Line> linesToDraw;
-vector<RectOutline> rectOutlinesToDraw;
 
 // global variables for the injection down-below
 int timer = 5;
@@ -435,6 +431,7 @@ void setDamage(ftOwner * owner) {
 BASIC_INJECT("testPrint", 0x8001792c, "addi r3, r30, 280");
 
 extern "C" void testPrint() {
+    printer.setup();
     printer.drawBoundingBoxes(0);
 
     startNormalDraw();
@@ -456,10 +453,16 @@ extern "C" void testPrint() {
 
     if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
+        setupDrawPrimitives();
+        printer.startNormal();
+
+        renderables.renderAll();
+
         for(int i = 0; i < entryCount; i++) {
+            printer.setup();
+            printer.startNormal();
             _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[0].modelView, 0);
             auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
-
 
             auto fighter = FIGHTER_MANAGER->getFighter(id);
             auto input = FIGHTER_MANAGER->getInput(id);
@@ -495,27 +498,27 @@ extern "C" void testPrint() {
             auto xPos = fighter->modules->postureModule->xPos;
             auto yPos = fighter->modules->postureModule->yPos * -1;
             auto zPos = fighter->modules->postureModule->zPos;
-
+//
             printer.lineHeight = 20 * 0.1;
             message->xPos = xPos + 5;
             message->yPos = yPos - printer.lineHeight * 6;
             message->fontScaleX = 0.1;
             message->fontScaleY = 0.1;
             printer.lineStart = xPos + 5;
-            message->zPos = zPos;
-
+//            message->zPos = zPos;
+//
             printer.startBoundingBox();
-            auto target = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(id));
-
-            sprintf(buffer, TARGET, target);
-            printer.printLine(buffer);
-
+//            auto target = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(id));
+//
+//            sprintf(buffer, TARGET, target);
+//            printer.printLine(buffer);
+//
             sprintf(buffer, LSTICK, input->leftStickX, input->leftStickY);
             printer.printLine(buffer);
-
-            sprintf(buffer, INPUTS_VALUE, input->buttons.bits);
-            printer.printLine(buffer);
-
+//
+//            sprintf(buffer, INPUTS_VALUE, input->buttons.bits);
+//            printer.printLine(buffer);
+//
             sprintf(aiInputBuffer, "");
             auto buttons = input->buttons;
             if (buttons.attack == 1) { strcat(aiInputBuffer, INPUTS_NAMES[0]); }
@@ -530,31 +533,18 @@ extern "C" void testPrint() {
 
             sprintf(buffer, INPUTS, aiInputBuffer);
             printer.printLine(buffer);
-
+//
             sprintf(buffer, AI_SCRIPT, input->aiActPtr->aiScript);
             printer.print(buffer);
             printer.padToWidth(RENDER_X_SPACING / 5);
             sprintf(buffer, AI_MD, input->aiMd);
-            printer.printLine(buffer);
-
-            sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
             printer.print(buffer);
+//
+//            sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
+//            printer.print(buffer);
             printer.saveBoundingBox(0, 0x00000088, 2);
 
             if (i == 1) {
-                setupDrawPrimitives();
-                startNormalDraw();
-
-                for (int k = 0; k < linesToDraw.size(); k ++) {
-                    linesToDraw[k].draw();
-                }
-                for (int k = 0; k < pointsToDraw.size(); k ++) {
-                    pointsToDraw[k].draw();
-                }
-                for (int k = 0; k < rectOutlinesToDraw.size(); k ++) {
-                    rectOutlinesToDraw[k].draw();
-                }
-
                 printer.setup();
                 printer.start2D();
 
@@ -596,7 +586,22 @@ extern "C" void testPrint() {
                 sprintf(buffer, AI_MD, input->aiMd);
                 printer.printLine(buffer);
 
+                sprintf(aiInputBuffer, "");
+                auto buttons = input->buttons;
+                if (buttons.attack == 1) { strcat(aiInputBuffer, INPUTS_NAMES[0]); }
+                if (buttons.special == 1) { strcat(aiInputBuffer, INPUTS_NAMES[1]); }
+                if (buttons.jump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[2]); }
+                if (buttons.shield == 1) { strcat(aiInputBuffer, INPUTS_NAMES[3]); }
+                if (buttons.cStick == 1) { strcat(aiInputBuffer, INPUTS_NAMES[4]); }
+                if (buttons.uTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[5]); }
+                if (buttons.sTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[6]); }
+                if (buttons.dTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[7]); }
+
                 sprintf(buffer, INPUTS, aiInputBuffer);
+                printer.print(buffer);
+
+                printer.padToWidth(RENDER_X_SPACING + 10);
+                sprintf(buffer, LSTICK, input->leftStickX, input->leftStickY);
                 printer.printLine(buffer);
 
                 sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
@@ -616,6 +621,8 @@ extern "C" void testPrint() {
                 printer.saveBoundingBox(0, 0x00000088, 2);
             }
         }
+
+//        renderables.renderAll();
     }
 
     if (PREVIOUS_PADS[0].button.Z) {
@@ -713,12 +720,28 @@ extern "C" void testPrint() {
 BASIC_INJECT("updateUnpaused", 0x8082f140, "lwz r4, 0xc(r3)");
 
 extern "C" void updateUnpaused() {
-    linesToDraw.clear();
-    pointsToDraw.clear();
-    rectOutlinesToDraw.clear();
+//    for (int i = 0; i < 4; i++) {
+//        vector<Drawable> * d;
+//        if (i == 0) d = (vector<Drawable>*) &renderables.points.tick;
+//        else if (i == 1) d = (vector<Drawable>*) &renderables.lines.tick;
+//        else if (i == 2) d = (vector<Drawable>*) &renderables.rectOutlines.tick;
+//        else if (i == 3) d = (vector<Drawable>*) &renderables.rects.tick;
+//
+//        for (int j = 0; j < (*d).size(); j++) {
+//            if ((*d)[j].delay == 0) {
+//                (*d)[j].lifeTime --;
+//            } else {
+//                (*d)[j].delay --;
+//            }
+//            if ((*d)[j].lifeTime == 0) {
+//                (*d).erase(j);
+//            }
+//        }
+//    }
+    renderables.updateTick();
 }
 
-INJECTION("CPUForceMd", 0x80905204, R"(
+INJECTION("CPUForceMd", g, R"(
     SAVE_REGS
     mr r3, r26
     mr r4, r27
@@ -727,19 +750,27 @@ INJECTION("CPUForceMd", 0x80905204, R"(
 )");
 
 extern "C" void CPUForceMd(ftInput * aiInput, int intent) {
-    if (forcedAiMd != 0) aiInput->aiMd = forcedAiMd;
+    if (forcedAiMd != 0 && AIRoutineList[aiRoutineIdx] != 0xFFFF) aiInput->aiMd = forcedAiMd;
     else aiInput->aiMd = intent;
 }
 
 INJECTION("CPUForceBehavior", 0x809188B0, R"(
-    addi r4, r25, 0
+    SAVE_REGS
+    mr r3, r26
+    mr r4, r25
     bl CPUForceBehavior
     addi r26, r3, 0
     sth r26, 120(r25)
+    RESTORE_REGS
 )");
-
 extern "C" short CPUForceBehavior(int param1, aiAct * aiActPtr) {
-    if (AIRoutineList[aiRoutineIdx] == 0xFFFF || strcmp(SpecialModes[specialIdx], "DEFAULT") == 0) return param1; // normal routine
+    if (AIRoutineList[aiRoutineIdx] == 0xFFFF || strcmp(SpecialModes[specialIdx], "DEFAULT") == 0) {
+        OSReport("intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
+        OSReport("current: %04x; ", aiActPtr->aiScript);
+        OSReport("next: %04x\n", param1);
+        
+        return param1; // normal routine
+    }
     // forced routines
     return (aiActPtr->intermediateNextAiScript != 0) ? param1 : AIRoutineList[aiRoutineIdx];
 }

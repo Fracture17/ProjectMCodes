@@ -8,6 +8,7 @@
 #include "ftInput.h"
 #include "aiStat.h"
 
+struct ftInput;
 struct aiAct {
     // 0x00
     float variables[24];

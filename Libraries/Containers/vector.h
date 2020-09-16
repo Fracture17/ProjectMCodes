@@ -34,7 +34,7 @@ public:
     size_t size() const;
     void reallocate(size_t newSize);
     //void insert(size_t index, const T& val);
-    //void erase(size_t index);
+    void erase(size_t index);
     //destroys elements from start, up to (but not including) end
     //void erase(size_t start, size_t end);
     void clear();
@@ -112,7 +112,14 @@ size_t vector<T>::size() const {
     return length;
 }
 
-
+template<class T>
+void vector<T>::erase(size_t index) {
+    (Array + index)->~T();
+    for (int i = index; i <= length; i++) {
+        Array[i] = Array[i + 1];
+    }
+    length --;
+}
 
 template<class T>
 void vector<T>::reallocate(size_t newSize) {

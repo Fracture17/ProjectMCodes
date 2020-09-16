@@ -12,15 +12,11 @@ struct Fighter : public StageObject {
 	//Fighter* ct(entryID id, int, int);
 	//IpHuman* getInput();
 	//ftOwner* getOwner();
-	char _spacer[0x4];
 
-	// 0x4
-	int entryId;
-	char _spacer2[0x18 - 0x4 - 4];
-
-	// 0x18
-	int playerNumber;
+	char _spacer_ft[0x110 - sizeof(StageObject)];
 };
+
+#define _getFtKind_Fighter (( (*)()) 0x8076b00c)
 
 //first int is fighter id or somethign
 //second int seems to not be used (immediatly overwritten)

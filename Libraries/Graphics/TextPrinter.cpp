@@ -3,6 +3,7 @@
 //
 
 #include "TextPrinter.h"
+#include "Drawable.h"
 
 TextPrinter printer;
 
@@ -62,33 +63,34 @@ void TextPrinter::printLine(const char *chars) {
     newLine();
 }
 
+// deprecated
 void TextPrinter::drawBoundingBoxes(int id) {
-    for (int i = 0; i < bboxVecs.size(); i++) {
-        if (bboxVecs[i].id == id) {
-            vector<RectBounds> * boxes = &bboxVecs[i].rectBounds;
-            size_t size = boxes->size();
-            setupDrawPrimitives();
-
-
-            for (int j = 0; j < size; j++) {
-                if ((*boxes)[j].is2D) {
-                    start2DDraw();
-                } else {
-                    startNormalDraw();
-                }
-                draw2DRectangle(
-                    (*boxes)[j].color,
-                    (*boxes)[j].top,
-                    (*boxes)[j].bottom,
-                    (*boxes)[j].left,
-                    (*boxes)[j].right,
-                    (*boxes)[j].zPos);
-            }
-            boxes->clear();
-            setup();
-            break;
-        }
-    }
+//    for (int i = 0; i < bboxVecs.size(); i++) {
+//        if (bboxVecs[i].id == id) {
+//            vector<RectBounds> * boxes = &bboxVecs[i].rectBounds;
+//            size_t size = boxes->size();
+//            setupDrawPrimitives();
+//
+//
+//            for (int j = 0; j < size; j++) {
+//                if ((*boxes)[j].is2D) {
+//                    start2DDraw();
+//                } else {
+//                    startNormalDraw();
+//                }
+//                draw2DRectangle(
+//                    (*boxes)[j].color,
+//                    (*boxes)[j].top,
+//                    (*boxes)[j].bottom,
+//                    (*boxes)[j].left,
+//                    (*boxes)[j].right,
+//                    (*boxes)[j].zPos);
+//            }
+//            boxes->clear();
+//            setup();
+//            break;
+//        }
+//    }
 }
 
 void TextPrinter::setTextColor(GXColor color) {
@@ -146,29 +148,18 @@ void TextPrinter::saveBoundingBox(int id, GXColor color, float boxPadding) {
     }
 
     int multiplier = (is2D) ? 1 : -1;
-    int bboxVecCount = bboxVecs.size();
-    int idx = -1;
-    for (int i = 0; i < bboxVecCount; i++) {
-        if (bboxVecs[i].id == id) {
-            idx = i;
-            break;
-        }
-    }
-    if (idx == -1) {
-        vecRef v;
-        v.id = id;
-        bboxVecs.push(v);
-        idx = bboxVecCount;
-    }
-    bboxVecs[idx].rectBounds.push({
+    Rect r{
+            0,
+            1,
             color,
             (startY - boxPadding) * multiplier,
             (message.yPos + lineHeight + boxPadding) * multiplier,
             lineStart - boxPadding,
             lineStart + maxWidth + boxPadding,
-            message.zPos,
             is2D
-    });
+    };
+//    OSReport("Rect in (t, b, l, r): %.3f, %.3f, %.3f, %.3f\n", r.top, r.bottom, r.left, r.right);
+    renderables.rects.frame.push(r);
     setup();
 }
 
