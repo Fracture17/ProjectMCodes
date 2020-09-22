@@ -25,6 +25,11 @@ char recordReplayPath[]  = "/Project+/rp/rp_200701_1500.bin";
 
 FILE* replayFile = nullptr;
 
+//these are the hashes of the load events that were already supposed to occur
+vector<u16> playbackSchedualedLoadEvents;
+//these are references to files that have finsihed loading, but were not loaded yet in the recorded game
+vector<gfFileIORequest*> playbackEncounteredLoadEvents;
+
 
 bool isGamePaused() {
     return (GF_APPLICATION->_gameFlags & 0x01000000) != 0;
@@ -60,9 +65,50 @@ extern "C" void setBaseInfo() {
 }
 
 
+//r28 is gfFileIORequest*
+INJECTION("handleFileLoads", 0x80023210, R"(
+    SAVE_REGS
+    mr r3, r28
+    bl handleFileLoads
+    RESTORE_REGS
+    lwz r3, 0x18(r3)
+)");
 
+
+extern "C" void handleFileLoads(gfFileIORequest* fileIoRequest) {
+    if(isPlaying) {
+        for(int i = 0; i < playbackSchedualedLoadEvents.size(); i++) {
+            if(playbackSchedualedLoadEvents[i] == fileIoRequest->hash) {
+                playbackSchedualedLoadEvents.erase(i);
+                return;
+            }
+        }
+
+        fileIoRequest->params &= ~IS_READY_PARAM_GF_FILE_IO_REQUEST;
+        playbackEncounteredLoadEvents.push(fileIoRequest);
+    }
+    else if(isRecording) {
+        auto loadEvent = new ReplayLoadEvent();
+        loadEvent->loadHash = fileIoRequest->hash;
+        eventManager.push(loadEvent);
+    }
+}
+
+
+
+bool removeLoadEvent(ReplayLoadEvent* event) {
+    for(int i = 0; i < playbackEncounteredLoadEvents.size(); i++) {
+        if(playbackEncounteredLoadEvents[i]->hash == event->loadHash) {
+            playbackEncounteredLoadEvents[i]->params |= IS_READY_PARAM_GF_FILE_IO_REQUEST;
+            playbackEncounteredLoadEvents.erase(i);
+            return true;
+        }
+    }
+    return false;
+}
 
 BASIC_INJECT("frameStart", 0x800171b4, "li r25, 1");
+
 
 extern "C" void frameStart() {
     if(shouldStopRecording) {
@@ -91,6 +137,9 @@ extern "C" void frameStart() {
         isPlaying = false;
         eventManager.fileIO.shouldClose = true;
         replayFile = nullptr;
+        eventManager.clear();
+        playbackEncounteredLoadEvents.clear();
+        playbackSchedualedLoadEvents.clear();
     }
 
 
@@ -112,15 +161,33 @@ extern "C" void frameStart() {
             eventManager.push(frameStartEvent);
         }
         else if(isPlaying) {
-            eventManager.loadNextFrame();
+            if(playbackSchedualedLoadEvents.empty()) {
+                eventManager.loadNextFrame();
 
-            auto frameStartEvent = eventManager.getFrameStartEvent();
-            DEFAULT_MT_RAND->seed = frameStartEvent->randomSeed;
+                auto frameStartEvent = eventManager.getFrameStartEvent();
+                DEFAULT_MT_RAND->seed = frameStartEvent->randomSeed;
 
-            auto frame = eventManager.getFrameStartEvent();
-            if(frame->frameNum != (GAME_FRAME->frameCounter + 1)) {
-                int x = 0;
-                x += 3;
+
+                //TODO: Clean this
+                //Checks if recorded load event has happend
+                for(int i = 0; i < eventManager.events.size(); i++) {
+                    if(eventManager.events[i]->id == ReplayEventID::load) {
+                        auto event = (ReplayLoadEvent*) eventManager.events[i];
+                        if(removeLoadEvent(event) == false) {
+                            playbackSchedualedLoadEvents.push(event->loadHash);
+                        }
+                    }
+                }
+
+
+                auto frame = eventManager.getFrameStartEvent();
+                if(frame->frameNum != (GAME_FRAME->frameCounter)) {
+                    int x = 0;
+                    x += 3;
+                }
+            }
+            if(playbackSchedualedLoadEvents.empty() == false) {
+                //pause until loaded
             }
         }
     }
@@ -190,6 +257,7 @@ INJECTION("playOrRecord", 0x8004aa5c, R"(
 )");
 
 
+//TODO: called once per character, either move or only record/play current port
 extern "C" void playOrRecord() {
     if(isGamePaused() == false) {
         if(isPlaying) {
@@ -349,7 +417,7 @@ extern "C" void setGameInfoForReplay(muReplayTask& replayTask) {
 
     //memcpy(GM_GLOBAL_MODE_MELEE, &SAVED_GAME_INFO->meleeInfo, sizeof(gmGlobalModeMelee));
 
-    //IP_SWITCH->controllerFLags ^= 0x80000000;
+    IP_SWITCH->controllerFLags ^= 0x80000000;
     replayTask.resources->startReplayFlag = 0;
 
     isInReplay = true;
@@ -357,7 +425,7 @@ extern "C" void setGameInfoForReplay(muReplayTask& replayTask) {
 }
 
 
-
+INJECTION("stopReplayButtonConfig", 0x8011051c, "mr r28, r29");
 
 
 BASIC_INJECT("startPlayback", 0x8004b608, "blr");

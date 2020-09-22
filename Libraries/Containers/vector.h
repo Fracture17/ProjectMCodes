@@ -10,11 +10,11 @@
 #include "CLibs/InitializerList.h"
 
 
-
-
 template<class T>
 class vector {
 public:
+    typedef bool (*unaryPredicate)(const T& v);
+
     vector();
     explicit vector(size_t size);
     vector(size_t size, const T& val);
@@ -34,10 +34,11 @@ public:
     size_t size() const;
     void reallocate(size_t newSize);
     //void insert(size_t index, const T& val);
-    //void erase(size_t index);
+    void erase(size_t index);
     //destroys elements from start, up to (but not including) end
     //void erase(size_t start, size_t end);
     void clear();
+    bool empty();
 
     T* allocate(size_t newSize);
 
@@ -52,9 +53,11 @@ private:
 
 
 template<class T>
-T& vector<T>::operator[](int index) const{
+T& vector<T>::operator[](int index) const {
     if (index < 0) {
-        index += length;
+        //crash, should get better exception handling in future
+        int x = *((int*) 0);
+        x++;
     }
     return Array[index];
 }
@@ -201,6 +204,18 @@ vector<T>::vector(std::initializer_list<T> list) {
         push(*x);
         x++;
     }
+}
+
+template<class T>
+void vector<T>::erase(size_t index) {
+    (Array + index)->~T();
+    memmove(Array + index, Array + index + 1, sizeof(T) * (length - index - 1));
+    length -= 1;
+}
+
+template<class T>
+bool vector<T>::empty() {
+    return length == 0;
 }
 
 #endif //CSSCUSTOMCONTROLS_VECTOR_H

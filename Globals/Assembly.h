@@ -64,7 +64,7 @@ asm(R"(
 		"SAVE_REGS\n" \
 		"bl " name "\n" \
 		"RESTORE_REGS\n" \
-		"\tnop\n\n" \
+		"\tblr\n\n" \
 		"\t.size " name "_STARTUP_, .-" name "_STARTUP_" \
 	)
 

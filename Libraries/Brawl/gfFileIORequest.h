@@ -17,7 +17,7 @@ struct gfFileIORequest {
     //0x8
     u32 size;
 
-    char _spacer2[0x1C - 8 - 2];
+    char _spacer2[0x18 - 8 - 4];
 
     //0x18
     //bitflags
@@ -31,5 +31,6 @@ struct gfFileIORequest {
     u16 hash;
 };
 
+#define IS_READY_PARAM_GF_FILE_IO_REQUEST (0x1000u)
 
 #endif //PROJECTMCODES_GFFILEIOREQUEST_H

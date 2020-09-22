@@ -17,6 +17,7 @@
 #include "ReplayPreFrameFighterEvent.h"
 #include "Brawl/ftManager.h"
 #include "ReplayFrameEndEvent.h"
+#include "ReplayLoadEvent.h"
 
 #define REPLAY_BUFFER_START ((u8*) 0x91301c00)
 

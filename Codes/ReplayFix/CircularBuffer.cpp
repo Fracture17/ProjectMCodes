@@ -36,6 +36,7 @@ void CircularBuffer::reset() {
     currentStart = bufferStart;
     currentEnd = bufferStart;
     isFull = false;
+    wrapLocation = nullptr;
 }
 
 u32 CircularBuffer::unbrokenEmptySize() {
@@ -59,8 +60,8 @@ void* CircularBuffer::reserve(u32 size) {
         currentEnd = ((char*) bufferStart) + size;
     }
     else if(newEnd == bufferEnd) {
-        currentStart = bufferStart;
-        wrapLocation = currentEnd;
+        wrapLocation = bufferEnd;
+        currentEnd = bufferStart;
     }
     else {
         currentEnd = newEnd;
@@ -83,6 +84,7 @@ void* CircularBuffer::pop(u32 size) {
             memcpy(((char*) result) + firstPartSize, bufferStart, secondPartSize);
             currentStart = ((char*) bufferStart) + secondPartSize;
             wrapLocation = nullptr;
+            isFull = false;
             return result;
         }
     }

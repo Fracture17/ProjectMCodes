@@ -30,6 +30,8 @@ struct gfPadGamecube {
 	//0xFF if not connected, else 0
 	bool isNotConnected;
 
+    char _spacer4[0x3C - 0x38 - 1];
+
 	//0x3C
 	controllerType type = GAMECUBE;
 }__attribute__((packed, aligned(4)));
