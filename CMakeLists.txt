@@ -50,6 +50,5 @@ add_subdirectory(Globals)
 
 
 add_custom_target(build ALL
-        COMMAND python ${buildSystemDirectory}/BuildFromCMake.py ${PROJECT_BINARY_DIR} ${PPC_BIN_DIRECTORY}
+        COMMAND python ${buildSystemDirectory}/Build.py ${PROJECT_BINARY_DIR} ${PPC_BIN_DIRECTORY}
         DEPENDS codeBarrier)
-

@@ -17,7 +17,9 @@ linkerSettings = f"-z common-page-size=4 -z max-page-size=4 --relax --gc-section
 brawlFunctionMapPath = R"..\BrawlFuncMap.map"
 
 
+PM_BUILD = "Project+"
 
+baseSDPath = f"{PM_BUILD}/codes"
 
 
 includedCodesDirectory = "IncludedCodes"
@@ -68,8 +70,6 @@ codesMapPath = f"{disassemblyDirectory}/Codes.map"
 setupAddressesPath = f"{disassemblyDirectory}/SetupAddresses.txt"
 setupDisassemblyPath = f"{disassemblyDirectory}/SetupDisassembly.txt"
 setupMapPath = f"{disassemblyDirectory}/setup.map"
-
-
 
 
 ppcObjCopy = "powerpc-eabi-objcopy.exe"

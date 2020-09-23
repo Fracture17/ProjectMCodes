@@ -89,9 +89,11 @@ _ADDRESS:
 
 
     setupFileName:
-    .asciz "setup.bin"
+    .asciz "{baseSDPath}/setup.bin"
 openMode:
     .asciz "r"
+    
+    .align 4
 
 
     	.globl saveRegs
@@ -132,7 +134,7 @@ END:
 """
 
 
-def makeLoadSetupFile(filePath, setupFileAddress):
+def makeLoadSetupFile(filePath, baseSDPath, setupFileAddress):
     with open(filePath, "w") as file:
-        loadSetupText = loadSetupFormat.format(setupFileAddress=setupFileAddress)
+        loadSetupText = loadSetupFormat.format(baseSDPath=baseSDPath, setupFileAddress=setupFileAddress)
         file.write(loadSetupText)

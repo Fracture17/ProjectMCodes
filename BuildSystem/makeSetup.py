@@ -17,7 +17,6 @@ struct SetupInfo {
     CodeFile fileNames[NUM_FILES];
     Injection injections[NUM_INJECTIONS];
     void (*startupFunction)();
-
 };
 
 asm(R"(
@@ -84,8 +83,18 @@ void readFile(const char* name, void* destination) {
 }
 
 void readCodeFiles(SetupInfo& info) {
+    int i = 0;
+    while(pathBuffer[i] != 0) {
+        i++;
+    }
     for(auto& file: info.fileNames) {
-        readFile(file.name, (void*)file.address);
+        int j = i;
+        *((int*) (pathBuffer + j)) = *((int*) file.name);
+        j += 4;
+        *((int*) (pathBuffer + j)) = *((int*) (file.name + 4));
+        j += 4;
+        *((int*) (pathBuffer + j)) = *((int*) (file.name + 8));
+        readFile(pathBuffer, (void*)file.address);
     }
 }
 
@@ -179,6 +188,8 @@ SETUP_INFO:
     {startupFunctionAddress}
 )");
 
+char pathBuffer[50] = "{baseSDPath}/";
+
 #define NUM_FILES ({numFiles})
 #define NUM_INJECTIONS ({numInjections} + 1)
 """
@@ -202,7 +213,7 @@ injectionFormat = """
 
 
 
-def makeSetupFile(segments, injections, startupFunctionAddress, setupCPPPath, setupHeaderPath):
+def makeSetupFile(segments, injections, startupFunctionAddress, setupCPPPath, setupHeaderPath, baseSDPath):
     with open(setupCPPPath, "w") as file:
         file.write(cppText)
 
@@ -221,6 +232,6 @@ def makeSetupFile(segments, injections, startupFunctionAddress, setupCPPPath, se
 
         startupFunctionText = f".int {startupFunctionAddress}\n"
 
-        headerText = headerFormat.format(fileNames=fileNamesText, injections=injectionsText, startupFunctionAddress=startupFunctionText, numFiles=len(segments), numInjections=len(injections))
+        headerText = headerFormat.format(fileNames=fileNamesText, injections=injectionsText, startupFunctionAddress=startupFunctionText, numFiles=len(segments), numInjections=len(injections), baseSDPath=baseSDPath)
 
         file.write(headerText)

@@ -11,7 +11,6 @@ from makeFunctionMap import makeMap
 from makeLoadSetup import makeLoadSetupFile
 from makeSetup import makeSetupFile
 from insertBranches import insertBranches
-from VariableLocations import makeVariableLocationMap
 
 allSections = []
 sectionsUsedByCodes = []
@@ -34,18 +33,25 @@ def build(baseDirectory, ppcBinDirectory):
 
 
 def setPaths(baseDirectory, ppcBinDirectory):
-    os.chdir(baseDirectory)
+    #os.chdir(baseDirectory)
 
-    global ppcObjCopy
-    global ppcNM
-    global ppcCompiler
-    global ppcLinker
-    global ppcObjDump
-    ppcObjCopy = f"{ppcBinDirectory}/{ppcObjCopy}"
-    ppcNM = f"{ppcBinDirectory}/{ppcNM}"
-    ppcCompiler = f"{ppcBinDirectory}/{ppcCompiler}"
-    ppcLinker = f"{ppcBinDirectory}/{ppcLinker}"
-    ppcObjDump = f"{ppcBinDirectory}/{ppcObjDump}"
+    os.environ['PATH'] = re.sub(r"(;|^)[^;]*?devkitPro.*?(;|$)", ";", os.environ['PATH'])
+    os.environ['PATH'] = re.sub(r"(;|^)[^;]*?mingw.*?(;|$)", ";", os.environ['PATH'])
+
+    os.environ['PATH'] += f";{ppcBinDirectory}"
+
+    #quit()
+
+    #global ppcObjCopy
+    #global ppcNM
+    #global ppcCompiler
+    #global ppcLinker
+    #global ppcObjDump
+    #ppcObjCopy = f"{ppcBinDirectory}/{ppcObjCopy}"
+    #ppcNM = f"{ppcBinDirectory}/{ppcNM}"
+    #ppcCompiler = f"{ppcBinDirectory}/{ppcCompiler}"
+    #ppcLinker = f"{ppcBinDirectory}/{ppcLinker}"
+    #ppcObjDump = f"{ppcBinDirectory}/{ppcObjDump}"
 
 
 def cleanFolders():
@@ -278,7 +284,7 @@ def buildSetupFile():
     text = text.decode('utf-8')
     try:
         firstLoadedSectionAddress = int(re.findall(loadedSectionRegex, text)[0], 16)
-        print(re.findall(loadedSectionRegex, text))
+        #print(re.findall(loadedSectionRegex, text))
     except:
         print("NO DATA")
         firstLoadedSectionAddress = dataStartAddress
@@ -294,7 +300,7 @@ def buildSetupFile():
         codeSegments.append(codeDataSegment)
 
     fileSegments = [s for s in codeSegments if s.name is not None]
-    makeSetupFile(fileSegments, injectionInfo, startupFunctionAddress, setupCPPPath, setupHeaderPath)
+    makeSetupFile(fileSegments, injectionInfo, startupFunctionAddress, setupCPPPath, setupHeaderPath, baseSDPath)
 
     setupObjectPath = getObjectPath(setupCPPPath)
     compile(compilerSettings, setupCPPPath, setupObjectPath)
@@ -312,7 +318,7 @@ def buildSetupFile():
 #LoadSetupFile loads the setup file and calls its setup function
 #it should be added to the standard gct
 def buildLoadSetupFile():
-    makeLoadSetupFile(loadSetupFilePath, hex(setupStartAddress))
+    makeLoadSetupFile(loadSetupFilePath, baseSDPath, hex(setupStartAddress))
 
     loadSetupObjectPath = getObjectPath(loadSetupFilePath)
     compile(compilerSettings, loadSetupFilePath, loadSetupObjectPath)
@@ -341,7 +347,9 @@ def makeFunctionListsFromCodes(codesDirectory, functionListsDirectory):
 
 def compile(compilerArgs, cppFilePath, objPath):
     #print(f"{ppcCompiler} -c {compilerArgs} {cppFilePath} -o {objPath} -save-temps=obj")
+    print(ppcCompiler)
     os.system(f"{ppcCompiler} -c {compilerArgs} {cppFilePath} -o {objPath} -save-temps=obj")
+    #quit()
 
 
 def link(linkerArgs, objectFilePath, extraArgs, libraries, outputPath):
@@ -354,7 +362,6 @@ def renameSectionsAndRemoveConstructorsForCodeFile(codeName):
 
     renames = []
     for name, newName in name2NewSectionName.items():
-        print(name, newName)
         renames.append(f"--rename-section {name}={newName[0]}")
     renames = ' '.join(renames)
     with open(renameFunctionsCommandFilePath, 'w') as file:
