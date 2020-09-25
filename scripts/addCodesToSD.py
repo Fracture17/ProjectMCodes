@@ -4,9 +4,8 @@ import shutil
 
 baseSDPath = "Project+/codes"
 codeFolder = R"C:\Users\johno\CLionProjects\ProjectMCodes\cmake-build-debug-mingw-powerpc\Output"
-sdPath = R"C:\Users\johno\Dolphins\Modding\User\Wii\sd.raw"
+sdPath = R"C:\Users\johno\Documents\Project+v2.15_C++\sd.raw"
 mountDrive = 'G'
-
 
 os.system(Rf"osfmount.com -a -t file -f {sdPath} -m {mountDrive}: -o rw")
 
@@ -19,6 +18,7 @@ for file in os.listdir(f"{mountDrive}:/{baseSDPath}"):
         print(e)
 print()
 
+
 for file in os.listdir(codeFolder):
     try:
         shutil.copy(f"{codeFolder}/{file}",
@@ -27,5 +27,6 @@ for file in os.listdir(codeFolder):
     except Exception as e:
         print(e)
 print()
+
 
 os.system(f"osfmount.com -D -m {mountDrive}:")

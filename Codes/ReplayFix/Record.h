@@ -1,25 +1,47 @@
 //
-// Created by johno on 7/1/2020.
+// Created by johno on 9/24/2020.
 //
 
-#ifndef PROJECTMCODES_REPLAYFIX_H
-#define PROJECTMCODES_REPLAYFIX_H
-
-
-#include "Record.h"
-#include "Play.h"
+#ifndef PROJECTMCODES_RECORD_H
+#define PROJECTMCODES_RECORD_H
 
 #include "ReplayEvent.h"
 #include "Assembly.h"
 #include "Memory.h"
+//#include "AsyncFileIO.h"
 #include "ReplayFrameEventManager.h"
 #include "Brawl/ftManager.h"
 #include "Wii/mtRand.h"
 #include "Debug.h"
+#include "Brawl/gfFileIORequest.h"
 
-//#include "Tests/test_ReplayFix.cpp"
+#include "Tests/test_ReplayFix.h"
 
-//#define REPLAY_BUFFER_START ((u8*) 0x91301c00)
+#include "ReplayRecorder.h"
+
+
+
+void recordGameStart(char* recordReplayPath);
+
+
+void recordMeleeInfo();
+
+void recordLoadEvent(gfFileIORequest* fileIoRequest);
+
+
+void recordFrameEnd();
+
+void recordFrameStart();
+
+void startRecording();
+
+
+void stopRecording();
+
+
+void recordFighterInfo();
+
+#define REPLAY_BUFFER_START ((u8*) 0x91301c00)
 
 
 #include "Assembly.h"
@@ -40,4 +62,4 @@
 #include "Wii/OSThread.h"
 #include "Brawl/gfFileIOHandle.h"
 
-#endif //PROJECTMCODES_REPLAYFIX_H
+#endif //PROJECTMCODES_RECORD_H

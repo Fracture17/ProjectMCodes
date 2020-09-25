@@ -7,8 +7,7 @@
 
 
 //use ASSERT macro in code, might have extra logic later to remove it in release builds or something
-//use b assert in GDB to break on failed asserts
-//use b _assert to break on any assert statement
+//Put bp on assert when debuging to catched failures
 void _assert(bool condition);
 void assert();
 

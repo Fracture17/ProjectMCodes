@@ -11,6 +11,4 @@ void _assert(bool condition) {
     }
 }
 
-void assert() {
-
-}
+void assert() {}
