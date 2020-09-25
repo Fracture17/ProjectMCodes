@@ -9,7 +9,6 @@
 #include "Assembly.h"
 #include "Memory.h"
 //#include "AsyncFileIO.h"
-#include "ReplayFrameEventManager.h"
 #include "Brawl/ftManager.h"
 #include "Wii/mtRand.h"
 #include "Debug.h"

@@ -12,7 +12,6 @@
 #include "ReplayEvent.h"
 #include "Assembly.h"
 #include "Memory.h"
-#include "ReplayFrameEventManager.h"
 #include "Brawl/ftManager.h"
 #include "Wii/mtRand.h"
 #include "Debug.h"
