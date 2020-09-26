@@ -15,6 +15,8 @@
 #include "Brawl/ftManager.h"
 #include "Wii/mtRand.h"
 #include "Debug.h"
+#include "Wii/OSTime.h"
+#include "CLibs/cstring.h"
 
 //#include "Tests/test_ReplayFix.cpp"
 

@@ -28,8 +28,10 @@ typedef u32         OSTick;
 
 #define OSDiffTick(tick1, tick0)        ((s32) (tick1) - (s32) (tick0))
 
-#define OSGetTick ((OSTick (*)()) 0x801e1b4c)
-#define OSGetTime ((OSTime (*)()) 0x801e1b34)
+#define _OSGetTick ((OSTick (*)()) 0x801e1b4c)
+#define _OSGetTime ((OSTime (*)()) 0x801e1b34)
+
+#define _OSTicksToCalendarTime ((void (*)(OSTime ticks, OSCalendarTime* td)) 0x801e1d80)
 
 //gets the lower 32 bits of the TB register
 OSTick getTick();
@@ -51,7 +53,7 @@ struct OSCalendarTime {
 };
 
 OSTime OSCalendarTimeToTicks(OSCalendarTime* td);
-void   OSTicksToCalendarTime(OSTime ticks, OSCalendarTime* td);
+OSCalendarTime OSTimeToCalendarTime(OSTime time);
 
 struct OSStopwatch
 {

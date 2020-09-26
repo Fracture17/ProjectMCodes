@@ -23,7 +23,7 @@ enum class ReplayState {
 
 ReplayState replayState = ReplayState::none;
 
-char recordReplayPath[]  = "/Project+/rp/rp_200701_1500.bin";
+char replayPathFormat[]  = "/Project+/rp/rp_%02d%02d%02d_%02d%02d_%02d.bin";
 
 
 //these are the hashes of the load events that were already supposed to occur
@@ -44,7 +44,22 @@ extern "C" void gameStart() {
         playGameStart();
     }
     else {
-        recordGameStart(recordReplayPath);
+        char replayPath[100] = {};
+
+        auto time = getTime();
+
+        auto calendarTime = OSTimeToCalendarTime(time);
+
+        sprintf(replayPath, replayPathFormat,
+                    calendarTime.year,
+                    calendarTime.mon + 1,
+                    calendarTime.mday,
+                    calendarTime.hour,
+                    calendarTime.min,
+                    calendarTime.sec
+                );
+
+        recordGameStart(replayPath);
     }
 }
 

@@ -1,9 +1,15 @@
 #include "OSTime.h"
 
 OSTick getTick() {
-	return OSGetTick();
+	return _OSGetTick();
 }
 
 OSTime getTime() {
-	return OSGetTime();
+	return _OSGetTime();
+}
+
+OSCalendarTime OSTimeToCalendarTime(OSTime time) {
+    OSCalendarTime calendarTime;
+    _OSTicksToCalendarTime(time, &calendarTime);
+    return calendarTime;
 }
