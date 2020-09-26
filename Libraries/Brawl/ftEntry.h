@@ -11,6 +11,11 @@ struct ftEntry {
     //0 seems to mean hasn't started loading, 1 seems to mean is ready, but won't load in replays
     //3 means completly ready
     char _loadStatus;
+
+
+    //0x70
+    //0 based, + 0x10 for replays
+    int playerNum;
 };
 
 

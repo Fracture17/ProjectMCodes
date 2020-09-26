@@ -142,3 +142,11 @@ void setGameInfoForReplay(muReplayTask& replayTask) {
 
     //dataIndex = 0;
 }
+
+
+//Replays have 0x10 added to the playerNum
+//This causes it to not be found with my codes, so this converts it back
+INJECTION("removeReplayPlayerNum", 0x80048134, R"(
+    andi. r4, r4, ~0x10 & 0xFFFF
+    stw r4, 0x8(r3)
+)");

@@ -5,9 +5,15 @@
 #ifndef PROJECTMCODES_IPHUMAN_H
 #define PROJECTMCODES_IPHUMAN_H
 
+#include "stddef.h"
+
 
 struct IpHuman {
-    char _spacer[0x10];
+    //0x0
+    //0 based, + 0x10 if replay
+    int playerNum;
+
+    char _spacer[0x10 - 4];
     //0x10
     float stickX;
     //0x14
