@@ -368,3 +368,11 @@ getPadInput[ipPadConfig]:
 
 getInstance[ipPadConfig]:
     returns ipPadConfig*
+
+
+exit[scMelee]:
+    @ 806d483c
+    Part of a group of functions, like stopGameFirst[scMelee] and stopGame[scMelee]
+    Called when game ends
+    If you want to end the game, just clear 0x20 bit from scMelee + 0xD8
+    It will call all of the shutdown functions ASAP

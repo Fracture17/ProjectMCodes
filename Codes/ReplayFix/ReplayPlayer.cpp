@@ -55,7 +55,7 @@ void ReplayPlayer::loadEventsToVector() {
         event = (ReplayEvent*) fileIO.buffer.currentStart;
         event = (ReplayEvent*) fileIO.read(event->size);
         events.push(event);
-    } while((event->id != ReplayEventID::frameEnd) && (event->id != ReplayEventID::gameStart));
+    } while((event->id != ReplayEventID::frameEnd) && (event->id != ReplayEventID::gameStart) && (event->id != ReplayEventID::gameEnd));
 }
 
 void ReplayPlayer::openReplayFile(FILE* file) {
@@ -65,5 +65,19 @@ void ReplayPlayer::openReplayFile(FILE* file) {
 void ReplayPlayer::close() {
     fileIO.shouldClose = true;
     clear();
+}
+
+
+//if game end event exists, should be only event
+ReplayGameEndEvent* ReplayPlayer::getGameEndEvent() {
+    ASSERT(events.size() > 0);
+
+    auto event = (ReplayGameEndEvent*) events[0];
+    if(event->id != ReplayEventID::gameEnd) {
+        return nullptr;
+    }
+
+    ASSERT(events.size() == 1);
+    return (ReplayGameEndEvent*) event;
 }
 

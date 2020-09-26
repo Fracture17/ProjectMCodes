@@ -17,6 +17,7 @@
 #include "Debug.h"
 #include "Wii/OSTime.h"
 #include "CLibs/cstring.h"
+#include "Brawl/scMelee.h"
 
 //#include "Tests/test_ReplayFix.cpp"
 

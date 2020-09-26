@@ -10,6 +10,7 @@
 #include "ReplayEvent.h"
 #include "Containers/vector.h"
 #include "AsyncFileIO.h"
+#include "Debug.h"
 
 
 class ReplayPlayer {
@@ -20,6 +21,7 @@ public:
     ReplayGameStartEvent* getGameStartEvent();
     ReplayFrameStartEvent* getFrameStartEvent();
     ReplayPreFrameFighterEvent* getFighterEventFromPort(int port, bool createIfNotFound=false);
+    ReplayGameEndEvent* getGameEndEvent();
 
     void clear();
     void loadEventsToVector();

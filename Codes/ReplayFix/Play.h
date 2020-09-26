@@ -23,7 +23,7 @@ void playGameStart();
 void playFileLoad(gfFileIORequest* fileIoRequest);
 
 
-void playFrameStart();
+bool playFrameStart();
 
 
 void startPlayback();

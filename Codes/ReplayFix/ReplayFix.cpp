@@ -10,6 +10,7 @@
 //most codes use isRecording instead
 bool isInReplay = false;
 
+bool TEMP_SHOULD_FINISH = false;
 
 enum class ReplayState {
     none,
@@ -114,8 +115,17 @@ extern "C" void frameStart() {
     if(replayState == ReplayState::playing) {
         ASSERT(isInReplay);
 
+        ASSERT(TEMP_SHOULD_FINISH == false);
+
         if(isGamePaused() == false) {
-            playFrameStart();
+            bool replayFinished = playFrameStart();
+            if(replayFinished) {
+                TEMP_SHOULD_FINISH = true;
+
+                replayState = ReplayState::shouldStopPlaying;
+
+                SC_MELEE->flags &= ~SC_MELEE_GAME_END_FLAG;
+            }
         }
     }
     else if(replayState == ReplayState::recording) {
@@ -141,6 +151,8 @@ extern "C" void frameStart() {
     }
     else if(replayState == ReplayState::shouldStopPlaying) {
         ASSERT(isInReplay);
+
+        TEMP_SHOULD_FINISH = false;
 
         replayState = ReplayState::none;
 
@@ -302,3 +314,10 @@ extern "C" void setStopPlaybackFlag() {
 }
 
 
+//My code causes the game to think it's in a match during replays
+//When trying to quit, this causes the game to try and write a syncCommand instead of properly exiting the replay
+//r3 should equal 1 when in a replay, and 0 otherwise
+INJECTION("exitReplay", 0x806d49a4, R"(
+    lis r3, isInReplay@ha
+    lbz r3, isInReplay@l(r3)
+)");

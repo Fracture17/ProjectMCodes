@@ -417,6 +417,12 @@ gfPadSystem:
 scMelee:
 	static @ 90ff50c0 ?
 	64: stOperatorController*
+	BC: thing used in process[scMelee] to determine what to do
+	    Set to 0xB7C in replay to finish
+	C0: flag used to end match? 1 normally, seems to need to be 2 to finish
+	D8: (byte) flags
+	    0x20 determines if should quit out of match.  if cleared, match ends as soon as possible
+	        Setting it during countdown buffers match end as soon as GO! appears
 	F4: (half) melee process counter
 
 scFigureGetDemo:

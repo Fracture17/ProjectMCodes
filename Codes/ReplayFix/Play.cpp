@@ -24,12 +24,20 @@ void playFileLoad(gfFileIORequest* fileIoRequest) {
     }
 }
 
-void playFrameStart() {
+bool playFrameStart() {
     if(loadSyncer.isWaiting() == false) {
         player.loadNextFrame();
 
         auto frameStartEvent = player.getFrameStartEvent();
-        ASSERT(frameStartEvent != nullptr);
+
+        if(frameStartEvent == nullptr) {
+            auto gameEndEvent = player.getGameEndEvent();
+            ASSERT(gameEndEvent != nullptr);
+
+            return true;
+        }
+
+
         DEFAULT_MT_RAND->seed = frameStartEvent->randomSeed;
         ASSERT(frameStartEvent->frameNum == GAME_FRAME->frameCounter);
 
@@ -44,6 +52,8 @@ void playFrameStart() {
     if(loadSyncer.isWaiting()) {
         //TODO: pause until loaded
     }
+
+    return false;
 }
 
 void startPlayback() {
