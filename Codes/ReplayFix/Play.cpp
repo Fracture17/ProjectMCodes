@@ -51,6 +51,7 @@ bool playFrameStart() {
     }
     if(loadSyncer.isWaiting()) {
         //TODO: pause until loaded
+        ASSERT(false);
     }
 
     return false;

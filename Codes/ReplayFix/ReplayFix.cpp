@@ -10,8 +10,6 @@
 //most codes use isRecording instead
 bool isInReplay = false;
 
-bool TEMP_SHOULD_FINISH = false;
-
 enum class ReplayState {
     none,
     recording,
@@ -108,20 +106,17 @@ extern "C" void handlePlaybackFileLoads(gfFileIORequest* fileIoRequest) {
 }
 
 
-BASIC_INJECT("frameStart", 0x800171b4, "li r25, 1");
+BASIC_INJECT("frameStart", 0x8001761c, "mflr r0");
+//BASIC_INJECT("frameStart", 0x800171b4, "li r25, 1");
 
 
 extern "C" void frameStart() {
     if(replayState == ReplayState::playing) {
         ASSERT(isInReplay);
 
-        ASSERT(TEMP_SHOULD_FINISH == false);
-
         if(isGamePaused() == false) {
             bool replayFinished = playFrameStart();
             if(replayFinished) {
-                TEMP_SHOULD_FINISH = true;
-
                 replayState = ReplayState::shouldStopPlaying;
 
                 SC_MELEE->flags &= ~SC_MELEE_GAME_END_FLAG;
@@ -151,8 +146,6 @@ extern "C" void frameStart() {
     }
     else if(replayState == ReplayState::shouldStopPlaying) {
         ASSERT(isInReplay);
-
-        TEMP_SHOULD_FINISH = false;
 
         replayState = ReplayState::none;
 

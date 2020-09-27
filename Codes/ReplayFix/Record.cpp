@@ -33,6 +33,9 @@ void recordFrameEnd() {
     frameEndEvent->randSeed = DEFAULT_MT_RAND->seed;
     recorder.push(frameEndEvent);
 
+    auto frameStart = recorder.getFrameStartEvent();
+    ASSERT(frameStart->frameNum == frameEndEvent->frameNum - 1);
+
     recorder.saveFrameEvents();
 }
 
