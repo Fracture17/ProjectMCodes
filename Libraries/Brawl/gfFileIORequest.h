@@ -7,17 +7,13 @@
 
 
 #include "stddef.h"
+#include "gfFileIO.h"
 
+//This should have all member variables
 struct gfFileIORequest {
-    //0
-    char* filePath;
+    gfFileIO fileIO;
 
-    char _spacer[0x8 - 4];
-
-    //0x8
-    u32 size;
-
-    char _spacer2[0x18 - 8 - 4];
+    char _spacer[0x18 - sizeof(gfFileIO)];
 
     //0x18
     //bitflags
@@ -30,6 +26,9 @@ struct gfFileIORequest {
     //CRC16
     u16 hash;
 };
+
+
+static_assert(sizeof(gfFileIORequest) == 0x20, "gfFileIORequest not right size");
 
 #define IS_READY_PARAM_GF_FILE_IO_REQUEST (0x1000u)
 

@@ -36,7 +36,7 @@ section (my name):
     C: low time word
     10: circular dependancy check result
     14: globalRumble | ((WiiDistubutionType << 5) & 0xFF)
-    15: (byte) 2 (dunno)
+    15: (byte) 2 (data type, 2 for replays)
     16: (byte) 0 (dunno)
     17: (byte) DB (magic number?)
     18: origonal buffer size (not including this header)
@@ -56,13 +56,15 @@ muReplayTask:
 	
 
 
-ResourcePack (Temporary Name):
+muCollection:
 	Might be static, at least for replay
 	size seems to be 1D40, might be dependent on exact derived class
 	Actually might be same for all muColletionViewers
 	Seems to contain a bunch of info for muCollectionViewer
+	inherits gfTask
 	1A0: where to look for replays, 0 = Wii, 1 = SD.  Used as an index, so probbly generalizes for other viewers
 	1A4: array of file handle array ptrs.  4 words per element.  1st look like some kind of bit flags, 2nd is size of pointed to array, 3rd is ptr, 4th is possibly index in this arrray
+	380-383: byte optins for starting file scan
 	1B40: currentFileID.  Updates as soon as movement begins (815e83e0)
 	1BFC: index to function list.  Used by controlProc[muCollectionViewer]. 4 causes current highlighted replay to play, even if corupted.  5 causes you to leave the menu
 	1CE4: thing*.   Thing* + 0x350 is some kind of flag that controls replay loading.  SHould be 0 to load.  +0x354 should also be 0
@@ -73,14 +75,11 @@ PADStatus:
     804F67B0
 
 
-muCollection:
-    inherits gfTask
-    380-383: byte optins for starting file scan
-
 gfCollectionIO:
     58: gfFileIOHandle
     E4: buffer ptr
     E8: size (of file)
+    EC: seems to be data type (2 for replays)
     F4: filesstem type (1 = SD, 0 = VF)
     F8: collection type (1 for pictures, 2 for replays)
     Other nerby stuff might be how far along it is for reading everything
@@ -431,3 +430,11 @@ scFigureGetDemo:
 
 itManager:
 	0x50 word, some kind of setting
+
+
+gfSceneManager:
+    @ 805b8ba0
+    228: scene? 1 if in game, 2 causes exit[scMelee] to be called
+
+nteSection:
+    0: data* (unkown type, but defintly not just void*)

@@ -19,6 +19,34 @@ void recordGameStart(char* recordReplayPath) {
 
 void recordMeleeInfo() {
     recorder.getGameStartEvent()->meleeInfo = *GM_GLOBAL_MODE_MELEE;
+
+
+    char* compressTest = new char[sizeof(gmGlobalModeMelee)];
+    int compressSize = compressLZ(GM_GLOBAL_MODE_MELEE, sizeof(gmGlobalModeMelee), compressTest);
+    ASSERT(compressSize > 0);
+
+    auto crypto = gfCryptoESP();
+    crypto.encrypt(compressTest, compressSize);
+    while(crypto.isDone == false) {
+        OSSleepTicks(0xed4e);
+    }
+    ASSERT(crypto.resultBuffer != nullptr);
+    ASSERT(crypto.resultSize > 0);
+
+    auto crypto2 = gfCryptoESP();
+    crypto2.decrypt(crypto.resultBuffer, crypto.resultSize);
+    while(crypto2.isDone == false) {
+        OSSleepTicks(0xed4e);
+    }
+    ASSERT(crypto2.resultBuffer != nullptr);
+    ASSERT(crypto2.resultSize > 0);
+    //adds some extra stuff at the end to align to 16 bytes
+    ASSERT(crypto2.resultSize >= compressSize);
+    ASSERT(memcmp(compressTest, crypto2.resultBuffer, compressSize) == 0);
+
+    char* decompressed = new char[0x1000];
+    uncompressLZ(crypto2.resultBuffer, decompressed);
+    ASSERT(memcmp(decompressed, GM_GLOBAL_MODE_MELEE, sizeof(gmGlobalModeMelee)) == 0);
 }
 
 void recordLoadEvent(gfFileIORequest* fileIoRequest) {

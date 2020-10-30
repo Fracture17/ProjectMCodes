@@ -13,3 +13,8 @@ char* strcat(char* destination, const char* source) {
 char* strcpy(char* destination, const char* source) {
     return _strcpy(destination, source);
 }
+
+
+char* strstr(const char* buffer, const char* target) {
+    return _strstr(buffer, target);
+}

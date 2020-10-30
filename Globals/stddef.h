@@ -34,4 +34,4 @@ struct Position3D {
     f32 z;
 };
 
-#define offsetof(st, m) ((size_t)&(((st *)0)->m))
+#define offsetof(type, member) (__builtin_offsetof(type, member))

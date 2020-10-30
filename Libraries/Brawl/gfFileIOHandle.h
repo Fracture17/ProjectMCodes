@@ -12,7 +12,12 @@
 struct gfFileIOHandle {
     //0
     gfFileIORequest* request;
+
+    bool checkFileRequest(char* filePath);
 };
+
+
+#define _checkFileRequest_GF_FILE_IO_HANDLE ((bool (*)(gfFileIOHandle* self, char* filePath)) 0x80020c88)
 
 
 #endif //PROJECTMCODES_GFFILEIOHANDLE_H

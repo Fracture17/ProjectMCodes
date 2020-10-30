@@ -376,3 +376,16 @@ exit[scMelee]:
     Called when game ends
     If you want to end the game, just clear 0x20 bit from scMelee + 0xD8
     It will call all of the shutdown functions ASAP
+
+
+_processLoad[gfCollectionIO]
+    r26 is constant gfCollectionIO*
+
+
+setSection[nteSection]:
+    @ 80153504
+    r3: nteSection*
+    r4: data*
+    Checks to see if specific magic values are in the correct place, and then checks the CRC32
+    sets the data* at nteSection* + 0
+    returns true if correct

@@ -18,6 +18,7 @@
 #include "Wii/OSTime.h"
 #include "CLibs/cstring.h"
 #include "Brawl/scMelee.h"
+#include "Brawl/gfFileIOHandle.h"
 
 //#include "Tests/test_ReplayFix.cpp"
 

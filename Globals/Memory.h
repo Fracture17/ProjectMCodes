@@ -31,10 +31,12 @@ void operator delete[](void* p, size_t size);
 extern "C" void* memmove(void* dest, const void* source, size_t size);
 extern "C" void* memcpy(void* dest, const void* source, size_t size);
 extern "C" void* memset(void* data, int value, size_t size);
-
+//returns <0 if a < b, 0 if a == b
+extern "C" int memcmp(const void* a, const void* b, size_t size);
 
 #define _memmove ((void* const (*)(void* dest, const void* source, size_t size)) 0x803f602c)
 #define _memset ((void* (*)(void* data, int value, size_t size)) 0x8000443c)
+#define _memcmp ((int (*)(const void* a, const void* b, size_t size)) 0x803f6150)
 
 //returns heap manager address from a given heap index
 //extern void* const (*getMemAllocator)(int heap);

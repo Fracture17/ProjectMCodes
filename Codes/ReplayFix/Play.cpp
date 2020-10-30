@@ -49,10 +49,6 @@ bool playFrameStart() {
             }
         }
     }
-    if(loadSyncer.isWaiting()) {
-        //TODO: pause until loaded
-        ASSERT(false);
-    }
 
     return false;
 }
@@ -161,3 +157,21 @@ INJECTION("removeReplayPlayerNum", 0x80048134, R"(
     andi. r4, r4, ~0x10 & 0xFFFF
     stw r4, 0x8(r3)
 )");
+
+
+//if waiting for loads, clear file bit
+//r22 is gfFileIOManager*
+INJECTION("waitForFileLoad", 0x8002347c, R"(
+    SAVE_REGS
+    mr r3, r22
+    bl waitForFileLoad
+    RESTORE_REGS
+    addi r11, sp, 64
+)");
+
+
+extern "C" void waitForFileLoad(gfFileIOManager* manager) {
+    if(loadSyncer.isWaiting()) {
+        manager->flags &= ~FILE_MANAGER_ALL_FILES_LOADED_FLAG;
+    }
+}

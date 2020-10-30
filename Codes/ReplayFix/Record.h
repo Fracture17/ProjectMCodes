@@ -17,7 +17,8 @@
 #include "Tests/test_ReplayFix.h"
 
 #include "ReplayRecorder.h"
-
+#include "Wii/Compression.h"
+#include "Brawl/gfCryptoESP.h"
 
 
 void recordGameStart(char* recordReplayPath);

@@ -235,7 +235,7 @@ INJECTION("stopMeleeGetInitialProcessCount", 0x8004b304, "blr");
 
 
 
-
+/*
 INJECTION("replaceReplayPathWithFakeFile", 0x81198350, R"(
     SAVE_REGS
     bl replaceReplayPathWithFakeFile
@@ -245,7 +245,7 @@ INJECTION("replaceReplayPathWithFakeFile", 0x81198350, R"(
     blr
 _SKIP_replaceReplayPathWithFakeFile:
     lwz r4, 0x1AC(r4)
-)");
+)");*/
 
 
 const char FAKE_REPLAY_NAME[] = "fake.bin";
@@ -267,9 +267,30 @@ extern "C" bool replaceReplayPathWithFakeFile(char* buffer, muCollectionViewer* 
 INJECTION("alwaysAllowReplayToBeSelected", 0x8119811c, "cmpwi r0, 1");
 
 
+//if trying to load a replay, only load the header to make the preview work
+//This is called all the time, so make sure "/rp/rp_" is in the file path
+//sp + 40 = filePath, sp + 16 = fileSize
+INJECTION("onlyLoadReplayHeader", 0x8001cca0, R"(
+    #have to do this before saving regs because its stack based
+    #r3 is important so use r5 outside of saves
+    addi r5, sp, 40
+    addi r4, sp, 16
+    SAVE_REGS
+    mr r3, r5
+    bl onlyLoadReplayHeader
+    RESTORE_REGS
+    cmpwi r3, 0
+)");
 
-
-
+extern "C" void onlyLoadReplayHeader(char* filePath, int* fileSize) {
+    if(strstr(filePath, "/rp/rp_") != nullptr) {
+        ASSERT(fileSize != 0);
+        //let the file be shown as corrupted if it can't be read
+        if(fileSize != 0) {
+            *fileSize = 0x200;
+        }
+    }
+}
 
 
 //r3 already has muReplayTask*

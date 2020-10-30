@@ -8,13 +8,13 @@
 
 #include "Assembly.h"
 #include "CLibs/cstring.h"
-#include "ResourcePack.h"
+#include "muCollection.h"
 
 struct muCollectionViewer {
     char _spacer[0x1AC];
 
     //0x1AC
-    ResourcePack* resources;
+    muCollection* resources;
 
     int getCurFileID();
     static void getFileHandle(char* buffer, muCollectionViewer* base, int fileID);

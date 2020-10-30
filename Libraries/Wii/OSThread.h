@@ -120,7 +120,10 @@ struct OSThread {
 	s32 error;
 	//0x310
 	void* specific[OS_THREAD_SPECIFIC_MAX];   // thread specific data
-};
+}__attribute__((packed));
+
+static_assert(offsetof(OSThread, specific) == 0x310, "OSThread is misaligned");
+static_assert(sizeof(OSThread) == 0x318, "OSThread is wrong size");
 
 
 #define DEFAULT_CONTEXT ((OSContext**) 0x800000d4)

@@ -31,7 +31,10 @@ struct gfFileIO {
 
     int readSDFile();
     int writeSDFile();
-};
+}__attribute__((packed));
+
+
+static_assert(sizeof(gfFileIO) == 0x18, "gfFileIO is not right size");
 
 
 
