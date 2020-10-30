@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.15)
 
 #add_subdirectory("CSSControls")
-add_subdirectory("ReplayFix")
+#add_subdirectory("ReplayFix")
 #add_subdirectory("CustomAiFunctions")
 #add_subdirectory("ManualMessage")
 #add_subdirectory("PrintTest")
@@ -9,3 +9,4 @@ add_subdirectory("ReplayFix")
 #add_subdirectory("SlippiTest")
 #add_subdirectory("ManualMessage")
 #add_subdirectory("DebugTest")
+add_subdirectory(Random1To1Alts)
