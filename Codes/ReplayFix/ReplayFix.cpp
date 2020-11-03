@@ -293,6 +293,46 @@ extern "C" void onlyLoadReplayHeader(char* filePath, int* fileSize) {
 }
 
 
+
+
+INJECTION("loadReplayHeader", 0x8003c000, R"(
+    SAVE_REGS
+    bl loadReplayHeader
+    cmpwi r3, 0
+    beq r3, runNormally
+
+    RESTORE_REGS
+    li r3, 0
+    blr
+
+runNormally:
+    RESTORE_REGS
+    stwu sp, -0x30(sp)
+)");
+extern "C" bool loadReplayHeader(gfCollectionIO* collectionIo) {
+    if(collectionIo->fileSystemType == 1) {
+        if(strstr(collectionIo->collectionName, "rp_") != nullptr) {
+            char replayPath[0x100];
+            sprintf(replayPath, "/Project+/rp/%s", collectionIo->collectionName);
+            auto file = fopen(replayPath);
+
+            //Needs to alloc from here or will cause issues when the game tries to free it
+            //void* buffer = REPLAY_MENU_INSTANCE_MEMORY_POOL->alloc(0x200);
+            char* buffer = new char[0x300];
+            fread(buffer, 0x200, 1, file);
+            fclose(file);
+
+            collectionIo->data = buffer;
+            collectionIo->dataSize = 0x200;
+            collectionIo->dataType = 5;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 //r3 already has muReplayTask*
 BASIC_INJECT("setupReplay", 0x8119841c, "blr");
 

@@ -23,6 +23,8 @@ struct gfFileIO {
     void* source;
     //0x10
     //used when reading
+    //Also seems to accept gfMemoryPool ptrs
+    //Maybe have to set flags for it to work
     void* destination;
     //0x14
     int thing = 0xC80;

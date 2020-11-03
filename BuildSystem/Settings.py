@@ -1,5 +1,5 @@
 from CodeSegment import CodeSegment
-codeSegments = [CodeSegment(0x804e2a00, 0x804e3600), #after code menu, area before used for loading music
+codeSegments = [#CodeSegment(0x804e2a00, 0x804e3600), #after code menu, area before used for loading music
                 CodeSegment(0x8055a600, 0x80563100), #after BOOST.gct, I gave a buffer of 20KB at the time of writing
                 CodeSegment(0x805b5200, 0x805b61d0), #in system FW, in dynamically allocated area, but allocations are consistant and only happen during boot
                 ]
@@ -7,7 +7,7 @@ codeSegments = [CodeSegment(0x804e2a00, 0x804e3600), #after code menu, area befo
 
 initializersStartAddress = 0x80d00000
 dataStartAddress = 0x8057d000
-setupStartAddress = 0x804E2000
+setupStartAddress = 0x804E2800
 
 
 compilerSettings = "-g -fno-function-cse -ffunction-sections -fdata-sections -fno-exceptions -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps -fverbose-asm"

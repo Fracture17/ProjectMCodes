@@ -19,11 +19,14 @@
 #include "CLibs/cstring.h"
 #include "Brawl/scMelee.h"
 #include "Brawl/gfFileIOHandle.h"
+#include "Brawl/gfCollectionIO.h"
+#include "Brawl/gfMemoryPool.h"
 
 //#include "Tests/test_ReplayFix.cpp"
 
 //#define REPLAY_BUFFER_START ((u8*) 0x91301c00)
 
+#define REPLAY_MENU_INSTANCE_MEMORY_POOL ((gfMemoryPool*) 0x92e90100)
 
 #include "Assembly.h"
 #include "Brawl/soModuleAccessor.h"

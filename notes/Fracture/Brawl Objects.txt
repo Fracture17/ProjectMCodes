@@ -75,16 +75,22 @@ PADStatus:
     804F67B0
 
 
+#This object probably has bad offsets
+#old info not matching up when checking again
 gfCollectionIO:
-    58: gfFileIOHandle
-    E4: buffer ptr
+    4C (5C?): gfFileIOHandle
+    60: seems to be _proccessSummary error code.  Defaults to -1, 0 if no errors
+    E4: collection data ptr
     E8: size (of file)
-    EC: seems to be data type (2 for replays)
-    F4: filesstem type (1 = SD, 0 = VF)
+    EC: seems to be data type (2 for replays) (Doesn't seem accurate, it was 5 for replay)
+
+    F0: Seems to be some other object starting here
+    F4: filesystem type (1 = SD, 0 = VF)
     F8: collection type (1 for pictures, 2 for replays)
-    Other nerby stuff might be how far along it is for reading everything
+    Other nearby stuff might be how far along it is for reading everything
     Look at requestListSD[gfCollectionIO] at 80039a04 for more info
     Also probably the other request lists
+
 
 gfFileIOHandle:
     0: gfFileIO*
@@ -93,11 +99,14 @@ gfFileIO:
     0: string* (filepath)
     4: file open options? (0 for write = "w", 1 for write = "a")
     8: file size
-    C: data*
+    C: source* (used when writing)
+    10: dest* (used when reading)
+    14: magic 0xC80
 
 gfFileIORequest:
     0: gfFileIO
-
+    18: params
+    1C: (half) CR16 hash
 
 soStatusModuleImpl:
     34: action state
