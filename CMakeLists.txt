@@ -50,5 +50,5 @@ add_subdirectory(Globals)
 
 
 add_custom_target(build ALL
-        COMMAND python ${buildSystemDirectory}/Build.py ${PROJECT_BINARY_DIR} ${PPC_BIN_DIRECTORY}
+        COMMAND ${builder} ${PROJECT_BINARY_DIR} ${PROJECT_BINARY_DIR}/IncludedCodes ${PPC_BIN_DIRECTORY} ${functionMapDirectory}
         DEPENDS codeBarrier)

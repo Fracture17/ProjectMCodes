@@ -2,12 +2,10 @@
 
 MEMHeapHandle mainHeap;
 
-//STARTUP("initMemory");
 
-extern "C" void initMemory() {
-	mainHeap = createExpHeap(MAIN_HEAP_ADDRESS, MAIN_HEAP_SIZE);
+extern "C" void _INITIALIZE_MEMORY_(void* heapAddress, u32 heapSize) {
+	mainHeap = createExpHeap(heapAddress, heapSize);
 }
-
 
 extern "C" void* memmove(void* dest, const void* source, size_t size) {
 	return _memmove(dest, source, size);

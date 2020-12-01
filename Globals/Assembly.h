@@ -106,6 +106,9 @@ asm(R"(.macro SETREG reg label
 .endm)");
 
 
+/*#define STATIC_OBJECT(name, type, address) \
+    extern type name;                      \
+    namespace __GLOBAL_OBJECT__ {type __ ## name ## __ ## type ## __ ## address;}*/
 
 
 static inline u32 read32(u32 addr) {
