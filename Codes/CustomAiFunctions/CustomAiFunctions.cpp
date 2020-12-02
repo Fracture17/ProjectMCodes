@@ -2,16 +2,16 @@
 // Created by dareb on 7/30/2020.
 //
 
-#include <Brawl/aiAct.h>
-#include <Brawl/ftManager.h>
+#include <Brawl/AI/aiAct.h>
+#include <Brawl/FT/ftManager.h>
 #include <Wii/MATH.h>
 #include <Containers/Vec3f.h>
 #include <Containers/vector.h>
-#include <Brawl/aiMgr.h>
+#include <Brawl/AI/aiMgr.h>
 #include <Graphics/Drawable.h>
 #include "Assembly.h"
-#include "Brawl/Fighter.h"
-#include "Brawl/aiStat.h"
+#include "Brawl/FT/Fighter.h"
+#include "Brawl/AI/aiStat.h"
 
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 

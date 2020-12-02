@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Wii/PADButtons.h"
+#include "Wii/PAD/PADButtons.h"
 
 enum controllerType {
     GAMECUBE,

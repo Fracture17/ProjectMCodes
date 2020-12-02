@@ -5,8 +5,8 @@
 #ifndef CSSCUSTOMCONTROLS_GAMEGLOBAL_H
 #define CSSCUSTOMCONTROLS_GAMEGLOBAL_H
 
-#include "PlayerTagSystem.h"
-#include "gmGlobalModeMelee.h"
+#include "../PlayerTagSystem.h"
+#include "../gmGlobalModeMelee.h"
 #include "GameFrame.h"
 
 

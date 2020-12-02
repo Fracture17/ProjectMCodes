@@ -6,7 +6,7 @@
 #define CSSCUSTOMCONTROLS_CSSTAGMENUSTATE_H
 
 
-#include "Brawl/MuSelctChrList.h"
+#include "Brawl/MU/MuSelctChrList.h"
 #include "CustomControlOffsets.h"
 #include "Brawl/PlayerTagSystem.h"
 

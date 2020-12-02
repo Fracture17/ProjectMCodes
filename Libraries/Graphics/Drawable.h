@@ -5,7 +5,7 @@
 #ifndef PROJECTMCODES_DRAWABLE_H
 #define PROJECTMCODES_DRAWABLE_H
 
-#include <Wii/GX.h>
+#include <Wii/GX/GX.h>
 
 struct Point {
     Point(int color, float x1, float y1, int thickness);

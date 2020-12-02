@@ -6,7 +6,7 @@
 #define PROJECTMCODES_RANDOM1TO1ALTS_H
 
 #include "Assembly.h"
-#include "Wii/FILE.h"
+#include "Wii/FILE/FILE.h"
 #include "StageInfo.h"
 #include "Containers/vector.h"
 #include "Debug.h"

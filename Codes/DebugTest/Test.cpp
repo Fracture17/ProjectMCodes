@@ -23,6 +23,7 @@ public:
 
 extern "C" void TEST() {
     B b;
+    int fff=4;
     A* x = &b;
     int y = x->test();
 }

@@ -7,10 +7,10 @@
 
 
 #include "stddef.h"
-#include "Brawl/gfCameraManager.h"
+#include "Brawl/GF/gfCameraManager.h"
 #include "Memory.h"
 #include "Assembly.h"
-#include "Wii/GX.h"
+#include "Wii/GX/GX.h"
 #include "Graphics/Draw.h"
 //TODO: relocate this
 enum HEAPTYPE {

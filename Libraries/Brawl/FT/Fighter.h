@@ -1,7 +1,7 @@
 #pragma once
 
-#include "StageObject.h"
-#include "soModuleAccessor.h"
+#include "Brawl/SO/StageObject.h"
+#include "Brawl/SO/soModuleAccessor.h"
 
 //A unique id given when loading the character
 typedef int entryID;

@@ -6,8 +6,8 @@
 #define PROJECTMCODES_FTMANAGER_H
 
 #include "Fighter.h"
-#include "Inputs.h"
-#include "aiAct.h"
+#include "Brawl/IP/Inputs.h"
+#include "Brawl/AI/aiAct.h"
 #include "ftOwner.h"
 #include "ftEntryManager.h"
 

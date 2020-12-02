@@ -5,9 +5,9 @@
 #ifndef PROJECTMCODES_DRAW_H
 #define PROJECTMCODES_DRAW_H
 
-#include "Brawl/gfCameraManager.h"
-#include "Wii/GX.h"
-#include "Brawl/gfDraw.h"
+#include "Brawl/GF/gfCameraManager.h"
+#include "Wii/GX/GX.h"
+#include "Brawl/GF/gfDraw.h"
 
 void start2DDraw();
 void startNormalDraw();

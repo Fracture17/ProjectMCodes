@@ -6,9 +6,9 @@
 #define PROJECTMCODES_FTCONTROLLERMODULEIMPL_H
 
 
-#include "soControllerModuleImpl.h"
-#include "soModuleAccessor.h"
-#include "soControllerImpl.h"
+#include "Brawl/SO/soControllerModuleImpl.h"
+#include "Brawl/SO/soModuleAccessor.h"
+#include "Brawl/SO/soControllerImpl.h"
 
 
 struct ftControllerModuleImpl: public soControllerModuleImpl {

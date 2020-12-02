@@ -15,8 +15,8 @@
 #include "soCollisionAttackModuleImpl.h"
 #include "soKineticModuleGenericImpl.h"
 #include "soGroundModuleImpl.h"
-#include "ftParamCustomizeModuleImpl.h"
-#include "ftStopModuleImpl.h"
+#include "../FT/ftParamCustomizeModuleImpl.h"
+#include "../FT/ftStopModuleImpl.h"
 #include "soColorBlendModule.h"
 
 

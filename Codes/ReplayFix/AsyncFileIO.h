@@ -6,12 +6,12 @@
 #define PROJECTMCODES_ASYNCFILEIO_H
 
 
-#include <Wii/FILE.h>
-#include "Wii/OSThread.h"
+#include <Wii/FILE/FILE.h>
+#include "Wii/OS/OSThread.h"
 #include "stddef.h"
 #include "Assembly.h"
 #include "CircularBuffer.h"
-#include "Wii/OSInterrupt.h"
+#include "Wii/OS/OSInterrupt.h"
 
 //Asyncrounus buffered reads and writes to file
 //No overflow checking, buffer must be big enough to account for delays and data size

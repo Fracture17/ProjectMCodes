@@ -5,7 +5,7 @@
 #ifndef PROJECTMCODES_REPLAYCOLLECTIONDATAHEADER_H
 #define PROJECTMCODES_REPLAYCOLLECTIONDATAHEADER_H
 
-#include "Wii/OSTime.h"
+#include <Wii/OSTime.h>
 
 //My name, may also apply to other collection types
 //This header goes before replay data, and must be correct or game will think replay is corrupted

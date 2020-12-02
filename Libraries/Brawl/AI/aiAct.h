@@ -5,7 +5,7 @@
 #ifndef PROJECTMCODES_AIACT_H
 #define PROJECTMCODES_AIACT_H
 
-#include "ftInput.h"
+#include "Brawl/FT/ftInput.h"
 #include "aiStat.h"
 
 struct aiAct {

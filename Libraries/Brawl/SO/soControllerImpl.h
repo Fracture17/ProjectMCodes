@@ -6,7 +6,7 @@
 #define PROJECTMCODES_SOCONTROLLERIMPL_H
 
 
-#include "Inputs.h"
+#include "../IP/Inputs.h"
 
 //An array of these is created when the soControllerModule is constructed
 //Ike has 10, but only seems to use 1?

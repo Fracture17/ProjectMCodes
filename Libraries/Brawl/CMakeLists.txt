@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.15)
 
-add_code(Brawl muSelCharPlayerArea.cpp MuSelCharHand.cpp muCollectionViewer.cpp gfFileIO.cpp ftManager.cpp aiMgr.cpp gfCamera.cpp Fighter.cpp soMotionModule.cpp soPostureModuleImpl.cpp
-        gfDraw.cpp Message.cpp ftOwner.cpp soGroundModuleImpl.cpp aiAct.cpp gfFileIOManager.cpp scMelee.cpp gfCryptoESP.cpp gfFileIOHandle.cpp gfCollectionIO.cpp
-        ReplayCollectionDataHeader.h gfMemoryPool.cpp ipKeyRecorder.cpp)
+add_code(Brawl MU/muSelCharPlayerArea.cpp MU/MuSelCharHand.cpp MU/muCollectionViewer.cpp GF/gfFileIO.cpp FT/ftManager.cpp AI/aiMgr.cpp GF/gfCamera.cpp FT/Fighter.cpp SO/soMotionModule.cpp SO/soPostureModuleImpl.cpp
+        GF/gfDraw.cpp Message.cpp FT/ftOwner.cpp SO/soGroundModuleImpl.cpp AI/aiAct.cpp GF/gfFileIOManager.cpp SC/scMelee.cpp GF/gfCryptoESP.cpp GF/gfFileIOHandle.cpp GF/gfCollectionIO.cpp
+        ReplayCollectionDataHeader.h GF/gfMemoryPool.cpp IP/ipKeyRecorder.cpp)

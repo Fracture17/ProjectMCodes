@@ -3,11 +3,11 @@
 //
 
 
-#include "Wii/EXI.h"
+#include "Wii/EXI/EXI.h"
 #include "Memory.h"
 #include "Assembly.h"
-#include "Wii/PADStatus.h"
-#include "Brawl/GameFrame.h"
+#include "Wii/PAD/PADStatus.h"
+#include "Brawl/GF/GameFrame.h"
 
 
 

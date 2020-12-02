@@ -6,7 +6,7 @@
 #define CSSCUSTOMCONTROLS_CONTROLLERMANAGER_H
 
 
-#include "Brawl/gfPadSystem.h"
+#include "Brawl/GF/gfPadSystem.h"
 #include "Memory.h"
 #include "General.h"
 

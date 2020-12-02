@@ -5,7 +5,7 @@
 #ifndef PROJECTMCODES_AIMGR_H
 #define PROJECTMCODES_AIMGR_H
 
-#include "Fighter.h"
+#include "Brawl/FT/Fighter.h"
 
 // size: 0x157
 struct aiManager {

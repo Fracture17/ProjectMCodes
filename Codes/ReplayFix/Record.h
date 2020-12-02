@@ -9,16 +9,16 @@
 #include "Assembly.h"
 #include "Memory.h"
 //#include "AsyncFileIO.h"
-#include "Brawl/ftManager.h"
+#include "Brawl/FT/ftManager.h"
 #include "Wii/mtRand.h"
 #include "Debug.h"
-#include "Brawl/gfFileIORequest.h"
+#include "Brawl/GF/gfFileIORequest.h"
 
 #include "Tests/test_ReplayFix.h"
 
 #include "ReplayRecorder.h"
 #include "Wii/Compression.h"
-#include "Brawl/gfCryptoESP.h"
+#include "Brawl/GF/gfCryptoESP.h"
 
 
 void recordGameStart(char* recordReplayPath);
@@ -45,21 +45,21 @@ void recordFighterInfo();
 
 
 #include "Assembly.h"
-#include "Brawl/soModuleAccessor.h"
-#include "Brawl/ftControllerModuleImpl.h"
-#include "Wii/SD.h"
+#include "Brawl/SO/soModuleAccessor.h"
+#include "Brawl/FT/ftControllerModuleImpl.h"
+#include "Wii/FILE/SD.h"
 #include "Brawl/gmGlobalModeMelee.h"
 #include "Memory.h"
-#include "Brawl/muReplayTask.h"
+#include "Brawl/MU/muReplayTask.h"
 #include "CLibs/cstring.h"
-#include "Brawl/gfFileIO.h"
-#include "Brawl/ipSwitch.h"
-#include "Wii/PADStatus.h"
-#include "Brawl/gfPadSystem.h"
-#include "Brawl/GameGlobal.h"
-#include "Brawl/gfApplication.h"
-#include "Wii/OSError.h"
-#include "Wii/OSThread.h"
-#include "Brawl/gfFileIOHandle.h"
+#include "Brawl/GF/gfFileIO.h"
+#include "Brawl/IP/ipSwitch.h"
+#include "Wii/PAD/PADStatus.h"
+#include "Brawl/GF/gfPadSystem.h"
+#include "Brawl/GF/GameGlobal.h"
+#include "Brawl/GF/gfApplication.h"
+#include "Wii/OS/OSError.h"
+#include "Wii/OS/OSThread.h"
+#include "Brawl/GF/gfFileIOHandle.h"
 
 #endif //PROJECTMCODES_RECORD_H

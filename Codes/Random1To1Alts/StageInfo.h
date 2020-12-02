@@ -6,7 +6,7 @@
 #define PROJECTMCODES_STAGEINFO_H
 
 #include "stddef.h"
-#include "Wii/PADButtons.h"
+#include "Wii/PAD/PADButtons.h"
 
 
 struct StageInfo {

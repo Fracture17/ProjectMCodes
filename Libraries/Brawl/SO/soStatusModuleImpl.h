@@ -6,7 +6,7 @@
 #define PROJECTMCODES_SOSTATUSMODULEIMPL_H
 
 
-#include <stddef.h>
+#include "../../../Globals/stddef.h"
 
 struct soStatusModuleImpl {
     char _spacer[0x06];

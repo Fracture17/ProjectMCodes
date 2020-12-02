@@ -1,7 +1,7 @@
 //
 // Created by dareb on 7/18/2020.
 //
-#include <Brawl/gfCameraManager.h>
+#include <Brawl/GF/gfCameraManager.h>
 #include "Assembly.h"
 
 INJECTION("incrementScale", 0x80018c30, R"(

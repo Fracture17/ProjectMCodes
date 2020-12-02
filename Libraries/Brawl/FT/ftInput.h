@@ -5,8 +5,8 @@
 #ifndef PROJECTMCODES_FTINPUT_H
 #define PROJECTMCODES_FTINPUT_H
 
-#include "Inputs.h"
-#include "aiAct.h"
+#include "Brawl/IP/Inputs.h"
+#include "../AI/aiAct.h"
 
 struct aiAct;
 

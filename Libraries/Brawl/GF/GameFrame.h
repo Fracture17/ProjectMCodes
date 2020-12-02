@@ -5,7 +5,7 @@
 #ifndef PROJECTMCODES_GAMEFRAME_H
 #define PROJECTMCODES_GAMEFRAME_H
 
-#include "stddef.h"
+#include "../../../Globals/stddef.h"
 
 struct GameFrame {
     char _spacer[4];

@@ -3,13 +3,13 @@
 //
 
 #include <Graphics/TextPrinter.h>
-#include <Wii/PADStatus.h>
+#include <Wii/PAD/PADStatus.h>
 #include "Assembly.h"
 #include "Memory.h"
 #include "Graphics/Drawable.h"
 
-#include "Brawl/ftManager.h"
-#include "Brawl/aiMgr.h"
+#include "Brawl/FT/ftManager.h"
+#include "Brawl/AI/aiMgr.h"
 
 #include "Graphics/Draw.h"
 #include "Brawl/Message.h"

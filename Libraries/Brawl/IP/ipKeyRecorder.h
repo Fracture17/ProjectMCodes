@@ -6,7 +6,7 @@
 #define PROJECTMCODES_IPKEYRECORDER_H
 
 
-#include "gmGlobalModeMelee.h"
+#include "Brawl/gmGlobalModeMelee.h"
 
 //Thing in begining of replay files that has match setup info
 struct ipKeyRecorder {

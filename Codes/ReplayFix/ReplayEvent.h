@@ -6,7 +6,7 @@
 #define PROJECTMCODES_REPLAYEVENT_H
 
 
-#include <Wii/PADButtons.h>
+#include <Wii/PAD/PADButtons.h>
 #include "stddef.h"
 #include "Brawl/gmGlobalModeMelee.h"
 

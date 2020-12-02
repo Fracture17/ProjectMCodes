@@ -7,7 +7,7 @@
 
 #include "stddef.h"
 #include "Memory.h"
-#include "Wii/OSCache.h"
+#include "Wii/OS/OSCache.h"
 
 //I don't understand the specifics of these yet, but I can just copy UnclePunch's transfer logic and it should work
 //Untested so far

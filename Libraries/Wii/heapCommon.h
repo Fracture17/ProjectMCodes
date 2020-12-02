@@ -1,7 +1,7 @@
 #pragma once
 
 #include "list.h"
-#include "OSMutex.h"
+#include "Wii/OS/OSMutex.h"
 
 // Header common among heaps
 struct MEMiHeapHead {

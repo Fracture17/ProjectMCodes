@@ -5,15 +5,15 @@
 #ifndef PROJECTMCODES_PLAY_H
 #define PROJECTMCODES_PLAY_H
 
-#include <Brawl/muReplayTask.h>
+#include <Brawl/MU/muReplayTask.h>
 #include "ReplayPlayer.h"
 #include "Wii/mtRand.h"
 #include "Debug.h"
-#include "Brawl/gfPadSystem.h"
-#include "Brawl/GameFrame.h"
+#include "Brawl/GF/gfPadSystem.h"
+#include "Brawl/GF/GameFrame.h"
 #include "PlaybackFileSyncer.h"
-#include "Brawl/ipSwitch.h"
-#include "Brawl/gfFileIOManager.h"
+#include "Brawl/IP/ipSwitch.h"
+#include "Brawl/GF/gfFileIOManager.h"
 
 
 

@@ -7,7 +7,7 @@
 
 
 #include <stddef.h>
-#include <Brawl/gfFileIORequest.h>
+#include <Brawl/GF/gfFileIORequest.h>
 #include "Containers/vector.h"
 #include "Debug.h"
 

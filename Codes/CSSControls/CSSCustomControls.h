@@ -6,16 +6,16 @@
 #define CSSCUSTOMCONTROLS_CSSCUSTOMCONTROLS_H
 
 
-#include "Brawl/gfPadSystem.h"
+#include "Brawl/GF/gfPadSystem.h"
 #include "Assembly.h"
 #include "CSSTagMenuState.h"
 #include "ControllerManager.h"
 #include "C++Stuff.h"
 #include "Containers/vector.h"
 #include "CustomControlOffsets.h"
-#include "Brawl/GameGlobal.h"
-#include "Brawl/muSelCharPlayerArea.h"
-#include "Brawl/MuSelCharHand.h"
+#include "Brawl/GF/GameGlobal.h"
+#include "Brawl/MU/muSelCharPlayerArea.h"
+#include "Brawl/MU/MuSelCharHand.h"
 
 
 class CSSButtonSetting {

@@ -5,7 +5,7 @@
 #ifndef PROJECTMCODES_AIINPUT_H
 #define PROJECTMCODES_AIINPUT_H
 
-#include "IpHuman.h"
+#include "../IP/IpHuman.h"
 
 struct aiInput: IpHuman {
     //won't work until IpHuman is correct size
