@@ -22,7 +22,7 @@ public:
     vector(std::initializer_list<T> list);
     ~vector<T>();
 
-    T& operator[](int index) const;
+    T& operator[](u32 index) const;
     bool operator==(const vector<T>& other);
     bool operator!=(const vector<T>& other);
     /*bool operator<(const vector<T>& other);
@@ -53,12 +53,7 @@ private:
 
 
 template<class T>
-T& vector<T>::operator[](int index) const {
-    if (index < 0) {
-        //crash, should get better exception handling in future
-        int x = *((int*) 0);
-        x++;
-    }
+T& vector<T>::operator[](u32 index) const {
     return Array[index];
 }
 
