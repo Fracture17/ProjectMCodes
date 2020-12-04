@@ -116,7 +116,7 @@ void vector<T>::erase(size_t index) {
     for (int i = index; i <= length; i++) {
         Array[i] = Array[i + 1];
     }
-    length --;
+    length--;
 }
 
 template<class T>
@@ -206,13 +206,6 @@ vector<T>::vector(std::initializer_list<T> list) {
         push(*x);
         x++;
     }
-}
-
-template<class T>
-void vector<T>::erase(size_t index) {
-    (Array + index)->~T();
-    memmove(Array + index, Array + index + 1, sizeof(T) * (length - index - 1));
-    length -= 1;
 }
 
 template<class T>

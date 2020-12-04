@@ -6,7 +6,7 @@
 #define PROJECTMCODES_FTENTRY_H
 
 
-#include "StageObject.h"
+#include "Brawl/SO/StageObject.h"
 #include "ftOwner.h"
 
 struct ftInput;

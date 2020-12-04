@@ -716,7 +716,7 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
 
 
 SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
-    for (int i = 0; i < 4; i++) {
+    //for (int i = 0; i < 4; i++) {
 //        vector<Drawable> * d;
 //        if (i == 0) d = (vector<Drawable>*) &renderables.points.tick;
 //        else if (i == 1) d = (vector<Drawable>*) &renderables.lines.tick;
@@ -737,7 +737,7 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
         renderables.updateTick();
 }
 
-INJECTION("CPUForceMd", g, R"(
+INJECTION("CPUForceMd", 0x80905204, R"(
     SAVE_REGS
     mr r3, r26
     mr r4, r27

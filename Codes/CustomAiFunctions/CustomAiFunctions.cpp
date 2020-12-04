@@ -9,7 +9,7 @@
 #include <Containers/vector.h>
 #include <Brawl/AI/aiMgr.h>
 #include <Graphics/Drawable.h>
-#include <Brawl/ftCommonDataAccessor.h>
+#include <Brawl/FT/ftCommonDataAccessor.h>
 #include "Assembly.h"
 #include "Brawl/FT/Fighter.h"
 #include "Brawl/AI/aiStat.h"
