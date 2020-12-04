@@ -5,46 +5,6 @@
 #include "Memory.h"
 
 
-//Insert debug info into threads
-
-//0 will be reserved for doesn't exist or something
-unsigned int nextThreadID = 1;
-
-char mainThreadName[] = "Main (GX)";
-
-//r31 is thread*
-//can use r3 and r11
-INJECTION("setThreadID", 0x801e0f4c, R"(
-    lis r11, nextThreadID@ha
-    lwzu r3, nextThreadID@l(r11)
-
-    #store thread ID in thread specific slot 1
-    #cheating a bit, since it's supposed to be a pointer to the number but whatever
-    stw r3, 0x310(r31)
-
-    #increment ID
-    addi r3, r3, 1
-    stw r3, 0(r11)
-
-    #replace instruction
-    li r3, 1
-)");
-
-//set first thread id, since it's not made with OSCreateThread
-STARTUP("setMainThreadInfo");
-
-extern "C" void setMainThreadInfo() {
-    auto mainThread = *CURRENT_THREAD;
-    mainThread->specific[0] = (void*) nextThreadID;
-    nextThreadID++;
-    mainThread->specific[1] = mainThreadName;
-}
-
-
-//set known thread names
-
-
-
 OSThread* getCurrentThread() {
 	return OSGetCurrentThread();
 }
