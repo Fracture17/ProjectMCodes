@@ -6,9 +6,11 @@
 #define PROJECTMCODES_FTINPUT_H
 
 #include "Brawl/IP/Inputs.h"
-#include "../AI/aiAct.h"
+#include "Brawl/AI/aiAct.h"
+#include "ftEntry.h"
 
 struct aiAct;
+struct ftEntry;
 
 // size: 0x274
 struct ftInput {
@@ -24,21 +26,31 @@ struct ftInput {
 
     // 0x2C
     int fighterId;
-    char _spacer4[0x44 - 0x2C - 4];
+    char _spacer4[0x42 - 0x2C - 4];
+
+    // 0x42
+    unsigned char cpuIdx;
+    char _spacer5[0x44 - 0x42 - 1];
 
     // 0x44
     aiAct* aiActPtr;
 
     // 0x48
     int aiMd;
-    char _spacer5[0x58 - 0x48 - 4];
+    char _spacer6[0x58 - 0x48 - 4];
 
     // 0x58
     short aiThing;
-    char _spacer6[0x110 - 0x58 - 2];
+    char _spacer7[0x110 - 0x58 - 2];
     // 0x110
-    int isPlayer;
+    char aiTarget;
+    char _spacer8[0x144 - 0x110 - 1];
+
+    // 0x144
+    ftEntry* ftEntryPtr;
 };
 
+
+static_assert(sizeof(ftInput) == 0x148);
 
 #endif //PROJECTMCODES_FTINPUT_H

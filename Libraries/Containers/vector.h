@@ -110,7 +110,14 @@ size_t vector<T>::size() const {
     return length;
 }
 
-
+template<class T>
+void vector<T>::erase(size_t index) {
+    (Array + index)->~T();
+    for (int i = index; i <= length; i++) {
+        Array[i] = Array[i + 1];
+    }
+    length --;
+}
 
 template<class T>
 void vector<T>::reallocate(size_t newSize) {

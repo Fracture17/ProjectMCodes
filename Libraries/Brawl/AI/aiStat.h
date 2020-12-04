@@ -8,6 +8,7 @@
 
 #include <Brawl/FT/ftInput.h>
 
+struct ftInput;
 struct aiStat {
     char _spacer[0x4C];
 
