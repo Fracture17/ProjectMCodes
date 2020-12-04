@@ -17,25 +17,39 @@ INJECTIONS* injections;
 
 
 //Changing this name requires changing the build system
-extern "C" void setup(MEMORY_HEAP_INFO* heapInfo) {
-    //Only first run passes non null
-    bool firstTime = heapInfo != nullptr;
+extern "C" void _INITIALIZE_(INITIALIZATION_INFO* initializationInfo) {
+    auto heapInfo = initializationInfo->memoryHeapInfo;
 
-    if(firstTime) {
-        injections = (INJECTIONS*) (heapInfo + 1);
+    _INITIALIZE_MEMORY_(heapInfo->heapAddress, heapInfo->heapSize);
 
-        _INITIALIZE_MEMORY_(heapInfo->heapAddress, heapInfo->heapSize);
+    auto startups = initializationInfo->startups;
+    for(int i = 0; i < startups->numStartups; i++) {
+        startups->startupFunctions[i]();
     }
 
+    auto stringWrites = initializationInfo->stringWrites;
+    for(int i = 0; i < stringWrites->numWrites; i++) {
+        auto write = stringWrites->writes[i];
+        memcpy(write.targetAddress, write.dataAddress, write.dataSize);
+    }
+
+    auto dataWrites = initializationInfo->dataWrites;
+    while(dataWrites->targetAddress != nullptr) {
+        for(int i = 0; i < dataWrites->repeats; i++) {
+            memcpy(dataWrites->targetAddress + (dataWrites->dataSize * i), dataWrites->data, dataWrites->dataSize);
+        }
+        int alignedDataSize = dataWrites->dataSize + 4 - dataWrites->dataSize % 4;
+        dataWrites = (DATA_WRITE*) (((char*) dataWrites) + alignedDataSize + 8);
+    }
+
+    injections = initializationInfo->injections;
+    setup(true);
+}
+
+
+extern "C" void setup(bool firstTime) {
     for(int i = 0; i < injections->numInjections; i++) {
         performInjection(injections->injections[i], firstTime);
-    }
-
-    auto startups = (STARTUPS*) (injections->injections + injections->numInjections);
-    if(firstTime) {
-        for(int i = 0; i < startups->numStartups; i++) {
-            startups->startupFunctions[i]();
-        }
     }
 }
 

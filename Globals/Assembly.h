@@ -68,8 +68,29 @@ asm(R"(
 		"\t.size " name "_STARTUP_, .-" name "_STARTUP_" \
 	)
 
+#define STRING_WRITE(address, string) \
+    asm(                              \
+    ".section .text._STRING_WRITE_" #address "\n" \
+    ".globl _STRING_WRITE_" #address "\n" \
+    ".type _STRING_WRITE_" #address ", @function\n" \
+    "_STRING_WRITE_" #address ":\n"       \
+    ".ascii " #string "\n"            \
+    ".size _STRING_WRITE_" #address ", .-_STRING_WRITE_" #address "\n" \
+    ".align 2\n"                                  \
+    )
 
 
+#define DATA_WRITE_REPEAT(address, data, repeat) \
+    asm(                              \
+    ".globl _DATA_WRITE_" #address "_" #data "_" #repeat "\n" \
+    ".type _DATA_WRITE_" #address "_" #data "_" #repeat ", @function\n" \
+    "_DATA_WRITE_" #address "_" #data "_" #repeat ":\n"                                  \
+    ".size _DATA_WRITE_" #address "_" #data "_" #repeat ", 4\n" \
+    )
+
+
+#define DATA_WRITE(address, data) \
+    DATA_WRITE_REPEAT(address, data, 1)
 
 
 //macro for calling saveRegs

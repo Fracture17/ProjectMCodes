@@ -38,8 +38,37 @@ struct STARTUPS {
 };
 
 
+struct STRING_WRITES {
+    struct _write {
+        void* targetAddress;
+        void* dataAddress;
+        u32 dataSize;
+    };
+
+    u32 numWrites;
+    _write writes[];
+};
+
+struct DATA_WRITE {
+    char* targetAddress;
+    u16 dataSize;
+    u16 repeats;
+    u8 data[];
+};
+
+static_assert(sizeof(DATA_WRITE) == 8);
 
 
+struct INITIALIZATION_INFO {
+    MEMORY_HEAP_INFO* memoryHeapInfo;
+    STARTUPS* startups;
+    STRING_WRITES* stringWrites;
+    DATA_WRITE* dataWrites;
+    INJECTIONS* injections;
+};
+
+
+extern "C" void setup(bool firstTime);
 
 void performInjection(INJECTIONS::_injection& injection, bool shouldInvalidate);
 
