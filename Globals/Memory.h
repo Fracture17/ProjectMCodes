@@ -53,3 +53,4 @@ extern "C" void* malloc(size_t size, int alignment = 4);
 extern "C" void free(void* ptr);
 
 
+#define FAKE_GF_POOL_ID (0xFF)

@@ -432,9 +432,7 @@ void setDamage(ftOwner * owner) {
     owner->setDamage(md_debugDamage, 0);
 }
 
-BASIC_INJECT("testPrint", 0x8001792c, "addi r3, r30, 280");
-
-extern "C" void testPrint() {
+SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
     printer.drawBoundingBoxes(0);
 
     startNormalDraw();
@@ -710,9 +708,7 @@ extern "C" void testPrint() {
 }
 
 
-BASIC_INJECT("updateUnpaused", 0x8082f140, "lwz r4, 0xc(r3)");
-
-extern "C" void updateUnpaused() {
+SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
     linesToDraw.clear();
     pointsToDraw.clear();
     rectOutlinesToDraw.clear();

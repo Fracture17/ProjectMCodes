@@ -68,11 +68,12 @@ enum class OS_THREAD_STATE: u16{
     OS_THREAD_STATE_MORIBUND = 8
 };
 
+
+///BE VERY CAREFUL WITH THESE!!!
 //Must be global or dynamically allocated
 //It will cause problems if it goes out of scope
-//BE VERY CAREFUL WITH THESE!!!
-//Any function that's passed to it must be referred to by a CODE function (Something required beyond initialization)
-//Otherwise the function will not exist and the code will break
+//Should not be constructed globally or in a startup function
+//The function given will be erased if it is only used during initialization
 struct OSThread {
     OSThread() = default;
 	OSThread(void* (*func)(void*), void* param, u32 stackSize, OSPriority priority, bool isDetached = false);

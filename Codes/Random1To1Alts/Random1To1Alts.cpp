@@ -24,8 +24,7 @@ extern "C" void loadStageFile() {
 
 
 //BASIC_INJECT("randomAlts", 0x806dd024, "li r6, 0");
-BASIC_INJECT("randomAlts", 0x8010f960, "stwu sp, -0x70(sp)");
-extern "C" void randomAlts() {
+SIMPLE_INJECTION(randomAlts, 0x8010f960, "stwu sp, -0x70(sp)") {
     if(*FLAG) {
         ASSERT(stages.size() > 0);
         u8 groupID = getGroupID();

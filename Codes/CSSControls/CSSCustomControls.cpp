@@ -45,7 +45,13 @@ extern "C" bool setMenuOpenFlag(muSelCharPlayerArea& area) {
     return result;
 }
 
-BASIC_INJECT("setMenuClosedFlag", 0x806a0714, "stwu sp, -0x10(sp)");
+INJECTION("setMenuClosedFlag", 0x806a0714, R"(
+    SAVE_REGS
+    #r3 has list
+    bl setMenuClosedFlag
+    RESTORE_REGS
+    stwu sp, -0x10(sp)
+)");
 
 extern "C" void setMenuClosedFlag(MuSelctChrList *list) {
     states[CSSTagMenuState::getPortFromList(list)].close();

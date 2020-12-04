@@ -49,21 +49,21 @@ struct STRING_WRITES {
     _write writes[];
 };
 
-struct DATA_WRITE {
+struct _DATA_WRITE {
     char* targetAddress;
     u16 dataSize;
     u16 repeats;
     u8 data[];
 };
 
-static_assert(sizeof(DATA_WRITE) == 8);
+static_assert(sizeof(_DATA_WRITE) == 8);
 
 
 struct INITIALIZATION_INFO {
     MEMORY_HEAP_INFO* memoryHeapInfo;
     STARTUPS* startups;
     STRING_WRITES* stringWrites;
-    DATA_WRITE* dataWrites;
+    _DATA_WRITE* dataWrites;
     INJECTIONS* injections;
 };
 

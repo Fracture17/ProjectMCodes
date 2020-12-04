@@ -42,9 +42,7 @@ extern "C" void sendInput(PADStatus* pad) {
 }
 
 
-BASIC_INJECT("setMatchSelections", 0x806c92d8, "lwz r0, 0x74(sp)");
-
-extern "C" void setMatchSelections() {
+SIMPLE_INJECTION(setMatchSelections, 0x806c92d8, "lwz r0, 0x74(sp)") {
     char buffer[0x30] = {};
 
     buffer[0] = 0xB5;
@@ -59,9 +57,7 @@ extern "C" void setMatchSelections() {
 }
 
 
-BASIC_INJECT("startConnection", 0x806b5c54, "li r0, 1");
-
-extern "C" void startConnection() {
+SIMPLE_INJECTION(startConnection, 0x806b5c54, "li r0, 1") {
     char buffer[0x30] = {};
 
     buffer[0] = 0xB4;
@@ -73,9 +69,7 @@ extern "C" void startConnection() {
 }
 
 
-BASIC_INJECT("getMatchState", 0x80017470, "lwz r0, 0xF8(r22)");
-
-extern "C" void getMatchState() {
+SIMPLE_INJECTION(getMatchState, 0x80017470, "lwz r0, 0xF8(r22)") {
     if(on3) {
         char buffer[0x300] = {};
 

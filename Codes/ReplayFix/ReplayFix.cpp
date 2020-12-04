@@ -35,10 +35,7 @@ bool isGamePaused() {
     return (GF_APPLICATION->_gameFlags & 0x01000000) != 0;
 }
 
-BASIC_INJECT("gameStart", 0x806cf140, "stwu sp, -0x70(sp)");
-
-
-extern "C" void gameStart() {
+SIMPLE_INJECTION(gameStart, 0x806cf140, "stwu sp, -0x70(sp)") {
     if(isInReplay) {
         playGameStart();
     }
@@ -63,9 +60,7 @@ extern "C" void gameStart() {
 }
 
 
-BASIC_INJECT("setBaseInfo", 0x8004b0f8, "blr");
-
-extern "C" void setBaseInfo() {
+SIMPLE_INJECTION(setBaseInfo, 0x8004b0f8, "blr") {
     if(isInReplay == false) {
         recordMeleeInfo();
     }
@@ -106,11 +101,7 @@ extern "C" void handlePlaybackFileLoads(gfFileIORequest* fileIoRequest) {
 }
 
 
-BASIC_INJECT("frameStart", 0x8001761c, "mflr r0");
-//BASIC_INJECT("frameStart", 0x800171b4, "li r25, 1");
-
-
-extern "C" void frameStart() {
+SIMPLE_INJECTION(frameStart, 0x8001761c, "mflr r0") {
     if(replayState == ReplayState::playing) {
         ASSERT(isInReplay);
 
@@ -164,9 +155,7 @@ extern "C" void frameStart() {
 //TODO: Check if the playing branches actually get run
 
 //sets should start recording flag, and stops Brawl start recording function
-BASIC_INJECT("startReplay", 0x8004b328, "blr");
-
-extern "C" void startReplay() {
+SIMPLE_INJECTION(startReplay, 0x8004b328, "blr") {
     if(isInReplay) {
         replayState = ReplayState::shouldStartPlaying;
     }
@@ -176,9 +165,7 @@ extern "C" void startReplay() {
 }
 
 
-BASIC_INJECT("stopReplay", 0x8004b5e4, "blr");
-
-extern "C" void stopReplay() {
+SIMPLE_INJECTION(stopReplay, 0x8004b5e4, "blr") {
     if(replayState == ReplayState::playing) {
         replayState = ReplayState::shouldStopPlaying;
     }
@@ -333,8 +320,12 @@ extern "C" bool loadReplayHeader(gfCollectionIO* collectionIo) {
     return false;
 }
 
-//r3 already has muReplayTask*
-BASIC_INJECT("setupReplay", 0x8119841c, "blr");
+
+INJECTION("setupReplay", 0x8119841c, R"(
+    #r3 already has muReplayTask*
+    #intentionally not bl
+    b setupReplay
+)");
 
 extern "C" void setupReplay(muReplayTask& replayTask) {
     setGameInfoForReplay(replayTask);
@@ -347,9 +338,7 @@ INJECTION("stopReplayButtonConfig", 0x8011051c, "mr r28, r29");
 
 
 //These might be duplicates
-BASIC_INJECT("setStartPlaybackFlag", 0x8004b608, "blr");
-
-extern "C" void setStartPlaybackFlag() {
+SIMPLE_INJECTION(setStartPlaybackFlag, 0x8004b608, "blr") {
     ASSERT(replayState == ReplayState::none);
     ASSERT(isInReplay);
 
@@ -358,10 +347,7 @@ extern "C" void setStartPlaybackFlag() {
 
 
 
-BASIC_INJECT("setStopPlaybackFlag", 0x8004b738, "blr");
-
-
-extern "C" void setStopPlaybackFlag() {
+SIMPLE_INJECTION(setStopPlaybackFlag, 0x8004b738, "blr") {
     if(replayState == ReplayState::playing) {
         replayState = ReplayState::shouldStopPlaying;
     }

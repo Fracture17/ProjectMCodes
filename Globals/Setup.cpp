@@ -39,7 +39,7 @@ extern "C" void _INITIALIZE_(INITIALIZATION_INFO* initializationInfo) {
             memcpy(dataWrites->targetAddress + (dataWrites->dataSize * i), dataWrites->data, dataWrites->dataSize);
         }
         int alignedDataSize = dataWrites->dataSize + 4 - dataWrites->dataSize % 4;
-        dataWrites = (DATA_WRITE*) (((char*) dataWrites) + alignedDataSize + 8);
+        dataWrites = (_DATA_WRITE*) (((char*) dataWrites) + alignedDataSize + 8);
     }
 
     injections = initializationInfo->injections;

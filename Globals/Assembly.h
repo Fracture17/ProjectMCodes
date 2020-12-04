@@ -47,13 +47,17 @@ asm(R"(
 		"\t.size " name "_INJECTION_" #address ", .-" name "_INJECTION_" #address \
 	)
 
-#define BASIC_INJECT(name, address, replacement) \
-	INJECTION(name, address, \
+
+#define SIMPLE_INJECTION(name, address, replacement) \
+    INJECTION(#name, address, \
 		"SAVE_REGS\n" \
-		"bl " name "\n" \
+		"bl " #name "\n" \
 		"RESTORE_REGS\n" \
 		replacement \
-	)
+	);                         \
+    extern "C" void name()
+
+
 
 #define STARTUP(name) \
 	asm( \
@@ -84,7 +88,7 @@ asm(R"(
     asm(                              \
     ".globl _DATA_WRITE_" #address "_" #data "_" #repeat "\n" \
     ".type _DATA_WRITE_" #address "_" #data "_" #repeat ", @function\n" \
-    "_DATA_WRITE_" #address "_" #data "_" #repeat ":\n"                                  \
+    "_DATA_WRITE_" #address "_" #data "_" #repeat ":\n"       \
     ".size _DATA_WRITE_" #address "_" #data "_" #repeat ", 4\n" \
     )
 
@@ -123,13 +127,20 @@ asm(R"(.macro POP reg
 
 asm(R"(.macro SETREG reg label
     lis \reg, \label@ha
-    ori \reg, \reg, \label@l
+    addi \reg, \reg, \label@l
+.endm)");
+
+
+asm(R"(.macro getCurrentAddress reg
+    bl 1f
+    1:
+    mflr \reg
 .endm)");
 
 
 /*#define STATIC_OBJECT(name, type, address) \
     extern type name;                      \
-    namespace __GLOBAL_OBJECT__ {type __ ## name ## __ ## type ## __ ## address;}*/
+    namespace __STATIC_OBJECT__ {type __ ## name ## __ ## type ## __ ## address;}*/
 
 
 static inline u32 read32(u32 addr) {

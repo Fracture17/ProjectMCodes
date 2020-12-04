@@ -12,6 +12,8 @@ struct gfThread {
     char _spacer[8];
     //0x8
     OSThread thread;
+
+
 };
 
 

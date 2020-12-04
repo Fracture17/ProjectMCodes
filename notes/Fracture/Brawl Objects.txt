@@ -367,7 +367,7 @@ gfHeapManager:
     @ 804220c0
 
 gfMemoryPool:
-    The heaps
+    Memory pools used by everything
     0: char* (name of heap)
     4: void* (beginign of heap)
     8: void* (end of heap)
