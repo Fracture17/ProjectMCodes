@@ -74,9 +74,6 @@ extern "C" void createCSSTagMenuStates(MuSelctChrList *list, int portNum) {
 }
 
 
-
-
-
 //INJECTION("controlMenuState", 0x80029738, R"(
 //    SAVE_REGS
 //    mr r3, r30
@@ -267,60 +264,6 @@ void controlPort(int port, CSSTagMenuState& state) {
         }
     }
 }
-
-
-////only used so togglePortColorForRumble can pass color across restore regs
-//unsigned int _port_rumble_color;
-//
-////r26 is location in list
-////4 == center
-////less than is above, otherwise below
-////r27 is list pos
-////r24 is MuSelctChrList ptr
-//INJECTION("togglePortColorForRumble", 0x8069fa20, R"(
-//    SAVE_REGS
-//    mr r3, r24
-//    mr r4, r27
-//    bl togglePortColorForRumble
-//    RESTORE_REGS
-//    lis r18, _port_rumble_color@ha
-//    lbz r20, _port_rumble_color@l(r18)
-//    lbz r19, _port_rumble_color@l + 1(r18)
-//    lbz r18, _port_rumble_color@l + 2(r18)
-//    lwz r3, 0x4C(r24)
-//)");
-//
-//
-////sets value in _port_rumble_color
-//extern "C" void togglePortColorForRumble(MuSelctChrList& tagList, int menuPos) {
-//    int port = CSSTagMenuState::getPortFromList(&tagList);
-//    auto state = states[port];
-//    if(state.isInTagSelect()) {
-//        //if "PLAYER #"
-//        if(menuPos == 0) {
-//            if(PORT_RUMBLE_SETTINGS[port]) {
-//                _port_rumble_color = 0x00909000;
-//            }
-//            else {
-//                _port_rumble_color = 0x50505000;
-//            }
-//        }
-//        else {
-//            int trueTagIndex = state.nameList->listIndex2TagIndex[menuPos];
-//            PlayerTag* tag = &PLAYER_TAG_SYSTEM->tags[trueTagIndex];
-//            if(tag->rumble) {
-//                _port_rumble_color = 0x00909000;
-//            }
-//            else {
-//                _port_rumble_color = 0x50505000;
-//            }
-//        }
-//    }
-//    else {
-//        _port_rumble_color = 0x50505000;
-//    }
-//}
-
 
 
 //r3 is MuSelctChrList
