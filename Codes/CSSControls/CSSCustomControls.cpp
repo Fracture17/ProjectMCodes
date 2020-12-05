@@ -11,8 +11,6 @@
 //}
 
 
-static const int TESTS = 4;
-
 /*BASIC_INJECT("setMenuOpenFlag", 0x8069b340, "stwu sp, -0x20(sp)");
 
 extern "C" void setMenuOpenFlag(muSelCharPlayerArea& area) {
