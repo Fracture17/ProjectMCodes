@@ -7,7 +7,7 @@ add_custom_target(MAKE_${folderName} ALL
 endfunction()
 
 function(conditionalAddSubdirectory directory condition)
-    if(DEFINED ${condition})
+    if(${condition} EQUAL 1)
         add_subdirectory(${directory})
-    endif(DEFINED ${condition})
+    endif(${condition} EQUAL 1)
 endfunction()

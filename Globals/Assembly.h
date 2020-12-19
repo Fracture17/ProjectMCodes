@@ -45,7 +45,7 @@ asm(R"(
 		code "\n" \
 		"\tnop\n\n" \
 		"\t.size " name "_INJECTION_" #address ", .-" name "_INJECTION_" #address \
-	)
+	);
 
 
 #define SIMPLE_INJECTION(name, address, replacement) \
