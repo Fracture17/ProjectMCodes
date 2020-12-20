@@ -2,7 +2,7 @@
 // Created by dareb on 7/30/2020.
 //
 
-#include <Brawl/AI/aiAct.h>
+#include <Brawl/AI/aiScriptData.h>
 #include <Brawl/FT/ftManager.h>
 #include <Wii/MATH.h>
 #include <Containers/Vec3f.h>
@@ -36,6 +36,12 @@ extern "C" void forceAiTauntRoutine(ftInput *aiInputInst) {
     change_md_aiInput(aiInputInst, 0x2, &dummy, 0x2080, 0);
 };
 
+
+// because fu**ck hardcoded inputs :)
+INJECTION("mdThreeFix", 0x80909b98, R"(
+    nop
+)");
+
 INJECTION("CUSTOM_AI_FUNCTIONS", 0x8091e104, R"(
     SAVE_REGS
     mr r4, r31
@@ -58,18 +64,19 @@ _CUSTOM_AI_FUNCTIONS_CONTINUE:
 )" );
 
 int fn_shouldReturnResult = 0;
-extern double md_customFnInjection;
+extern double md_customFnInjection[0xF];
+extern bool md_customFnInjectionToggle[0xF];
 
 extern "C" {
     double fn_result = 0;
-    void aiFunctionHandlers(float unk_f10, aiStat* targetAiStat, unsigned int switchCase, aiAct * selfAi, u32 sp, u32 rtoc) {
+    void aiFunctionHandlers(float unk_f10, aiStat* targetAiStat, unsigned int switchCase, aiScriptData* selfAi, u32 sp, u32 rtoc) {
         fn_shouldReturnResult = 0;
 
-        if (((switchCase - 0x1000) & 0xFF) == 0xFF) {
-            fn_result = md_customFnInjection;
-            fn_shouldReturnResult = 1;
-            return;
-        }
+        // if (((switchCase - 0x1000) & 0xFF) == 0xFF) {
+        //     fn_result = md_customFnInjection;
+        //     fn_shouldReturnResult = 1;
+        //     return;
+        // }
 
         ftEntry * targetFighterEntry;
         bool shouldGetAiTarget = (switchCase & 0x0100) >> 8;
@@ -139,12 +146,12 @@ extern "C" {
             fn_shouldReturnResult = 1;
         }
         if (switchCase == 0x51) {
-            auto entryID = targetFighterEntry->entryId;
-            fn_result = entryID & 0x0000FFFF;
+            fn_result = FIGHTER_MANAGER->getInput(targetFighterEntry->entryId)->aiMd;
             fn_shouldReturnResult = 1;
         }
         if (switchCase == 0x52) {
-            fn_result = FIGHTER_MANAGER->getInput(targetFighterEntry->entryId)->aiMd;
+            auto entryID = targetFighterEntry->entryId;
+            fn_result = entryID & 0x0000FFFF;
             fn_shouldReturnResult = 1;
         }
         if (switchCase == 0x53) {
@@ -158,6 +165,24 @@ extern "C" {
             }
             fn_shouldReturnResult = 1;
         }
+        if (switchCase == 0x54) {
+            fn_result = targetFighterEntry->ftStageObject->modules->groundModule->isPassableGround();
+            fn_shouldReturnResult = 1;
+        }
+
+//         if (switchCase == 0x55) {
+// //            OSReport("ftEntry Address: %08x\n", targetFighterEntry);
+// //            OSReport("ftSo Address: %08x\n", targetFighterEntry->ftStageObject);
+// //            OSReport("UnkFtPtr Address: %08x\n", targetFighterEntry->ftStageObject->modFnAccessor);
+// //            OSReport("Supposed cancelModule address: %08x\n", targetFighterEntry->ftStageObject->modFnAccessor->getFtCancelModule(targetFighterEntry->ftStageObject));
+//             fn_result = targetFighterEntry
+//                     ->ftStageObject
+//                     ->modFnAccessor
+//                     ->getFtCancelModule(targetFighterEntry->ftStageObject)
+//                     ->isEnableCancel();
+
+//             fn_shouldReturnResult = 1;
+//         }
     };
     void outputAiFunctionResult() {
         asm(R"(
@@ -179,17 +204,17 @@ INJECTION("CUSTOM_AI_COMMANDS", 0x80917450, R"(
     RESTORE_REGS
 )");
 
-#define _get_script_value_aiAct ((double (*)(aiAct * self, int soughtValue, int isPartOfVector)) 0x8091dfc4)
+#define _get_script_value_aiScriptData ((double (*)(aiScriptData * self, int soughtValue, int isPartOfVector)) 0x8091dfc4)
 #define _getButtonMask_soController ((unsigned int (*)(int btn)) 0x8076544c)
 #define _randf ((double (*)()) 0x8003fb64)
 extern "C" {
-    void aiCommandHandlers(aiAct* aiActInst, const int* args, unsigned int* buttons) {
+    void aiCommandHandlers(aiScriptData* aiActInst, const int* args, unsigned int* buttons) {
         int cmd = (args[0] & 0xFF000000) >> 24;
         if (cmd < 0x35) return;
         if (cmd <= 0x3A) {
             int varToMod = args[1];
-            double index = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-            bool shouldGetTarget = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
+            double index = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            bool shouldGetTarget = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
 
             soWorkManageModuleImpl* targetWorkModule;
             if (shouldGetTarget) {
@@ -226,8 +251,8 @@ extern "C" {
         // YDistFloor at Offset
         if (cmd == 0x3B) {
             int varToMod = args[1];
-            double offset = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-            bool shouldGetTarget = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
+            double offset = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            bool shouldGetTarget = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
 
             soGroundModuleImpl* targetGroundModule;
             if (shouldGetTarget) {
@@ -331,9 +356,45 @@ extern "C" {
             return;
         }
 
+        // calcYDistWithGravity
+        // if (cmd == 0x3F) {
+        //     int varToMod = args[1];
+        //     int frameCount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+        //     int shouldGetTarget = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+
+        //     float targetGravity;
+        //     float targetSpeed;
+        //     float targetMaxFallSpeed;
+        //     if (shouldGetTarget) {
+        //         auto targetPlayerNum = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->fighterId));
+        //         Fighter* target = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(targetPlayerNum));
+        //         if (target == nullptr) return;
+        //         targetGravity = target->modules->paramCustomizeModule->gravity;
+        //         targetMaxFallSpeed = target->modules->paramCustomizeModule->maxFallSpeed;
+        //         targetSpeed = target->modules->collisionAttackModule->knockbackSpeedY;
+        //     } else {
+        //         Fighter* target = FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId);
+        //         targetGravity = target->modules->paramCustomizeModule->gravity;
+        //         targetMaxFallSpeed = target->modules->paramCustomizeModule->maxFallSpeed;
+        //         targetSpeed = target->modules->collisionAttackModule->knockbackSpeedY;
+        //     }
+
+        //     targetMaxFallSpeed *= -1;
+
+        //     float yChange = 0;
+        //     for (int i = 0; i < frameCount; i++) {
+        //         yChange += targetSpeed;
+        //         targetSpeed -= targetGravity;
+        //         if (targetSpeed < targetMaxFallSpeed) targetSpeed = targetMaxFallSpeed;
+        //     }
+
+        //     aiActInst->variables[varToMod] = yChange;
+        //     return;
+        // }
+
             // Taunt command
         if (cmd == 0x40) {
-            int tauntInput = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
+            int tauntInput = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
             switch (tauntInput) {
                 case 1:
                     *buttons |= _getButtonMask_soController(6); // utaunt
@@ -349,8 +410,8 @@ extern "C" {
         }
 
         if (cmd == 0x41) {
-            int newMode = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
-            int newScript = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
+            int newMode = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            int newScript = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
 
             unsigned char dummy = 0xff;
             change_md_aiInput(aiActInst->ftInputPtr, newMode, &dummy, newScript, 0);
@@ -371,15 +432,19 @@ extern "C" {
             return;
         }
 
+        if (cmd < 0xD0 && cmd >= 0xC0) {
+            if (md_customFnInjection != nullptr && md_customFnInjectionToggle[cmd & 0xF]) aiActInst->variables[args[1]] = md_customFnInjection[cmd & 0xF];
+            return;
+        }
         if (cmd < 0xE0) {
             switch (cmd) {
                 case 0xD0: {
-                    double x1 = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
-                    double y1 = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-                    int red = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
-                    int green = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
-                    int blue = _get_script_value_aiAct(aiActInst, *(int *) &args[5], 0);
-                    int alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[6], 0);
+                    double x1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                    double y1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                    int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                    int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                    int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                    int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
                     if (alpha == 255) {
                         Point pt{
                                 0x000000FF,
@@ -403,14 +468,14 @@ extern "C" {
                     return;
                 }
                 case 0xD1: {
-                    double x1 = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
-                    double y1 = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-                    double x2 = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
-                    double y2 = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
-                    int red = _get_script_value_aiAct(aiActInst, *(int *) &args[5], 0);
-                    int green = _get_script_value_aiAct(aiActInst, *(int *) &args[6], 0);
-                    int blue = _get_script_value_aiAct(aiActInst, *(int *) &args[7], 0);
-                    int alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[8], 0);
+                    double x1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                    double y1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                    double x2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                    double y2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                    int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                    int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                    int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
+                    int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
                     if (alpha == 255) {
                         Line ln{
                                 0x000000FF,
@@ -438,14 +503,14 @@ extern "C" {
                     return;
                 }
                 case 0xD2: {
-                    double x = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
-                    double y = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-                    double width = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
-                    double height = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
-                    int red = _get_script_value_aiAct(aiActInst, *(int *) &args[5], 0);
-                    int green = _get_script_value_aiAct(aiActInst, *(int *) &args[6], 0);
-                    int blue = _get_script_value_aiAct(aiActInst, *(int *) &args[7], 0);
-                    int alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[8], 0);
+                    double x = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                    double y = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                    double width = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                    double height = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                    int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                    int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                    int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
+                    int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
                     if (alpha == 255) {
                         RectOutline ro{
                                 0x000000FF,
@@ -484,10 +549,10 @@ extern "C" {
                     colorModule->isEnabled = 0;
                     return;
                 case 0xE2:
-                    int red = _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0);
-                    int green = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-                    int blue = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
-                    int alpha = _get_script_value_aiAct(aiActInst, *(int *) &args[4], 0);
+                    int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                    int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                    int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                    int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
                     colorModule->red = red;
                     colorModule->green = green;
                     colorModule->blue = blue;
@@ -498,12 +563,12 @@ extern "C" {
         if (cmd < 0x100) {
             switch (cmd) {
                 case 0xF0:
-                    OSReport("LOGGED VALUE: %.3f\n", _get_script_value_aiAct(aiActInst, *(int *) &args[1], 0));
+                    OSReport("LOGGED VALUE: %.3f\n", _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0));
                     return;
                 case 0xF1:
                     OSReport("LOGGED STRING: ");
                     for (int i = 1; i <= 5; i++) {
-                        unsigned int toConvert = _get_script_value_aiAct(aiActInst, *(int *) &args[i], 0);
+                        unsigned int toConvert = _get_script_value_aiScriptData(aiActInst, *(int *) &args[i], 0);
                         OSReport("%c%c%c",
                                 (toConvert & 0xFF000000) >> 24,
                                 (toConvert & 0x00FF0000) >> 16,

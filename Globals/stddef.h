@@ -28,6 +28,11 @@ typedef volatile double vf64;
 
 typedef unsigned int size_t;
 
+struct Position2D {
+    f32 x;
+    f32 y;
+};
+
 struct Position3D {
     f32 x;
     f32 y;

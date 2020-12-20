@@ -41,6 +41,7 @@ struct unk1_soGroundModule {
 
 struct soGroundModuleImpl {
     double getDistanceFromUnderGrCol(double maxDistance, Vec3f * unk, bool unkBool);
+    unsigned int isPassableGround();
     void setCorrect(int mode);
 
     char _spacer[0x28];
@@ -58,5 +59,6 @@ struct soGroundModuleImpl {
 #define _getDistanceFromUnderGrCol_soGroundModuleImpl ((double (*)(double maxDistance, soGroundModuleImpl * self, Vec3f * position, bool unkBool)) 0x80734f8c)
 #define _setGrCollisisonMode ((void (*)(soGroundModuleImpl * self, int collisionMode)) 0x80730a04)
 #define _setCorrect_soGroundModuleImpl ((void (*)(soGroundModuleImpl * self, int mode, int unk)) 0x80731324)
+#define _isPassableGround_soGroundModuleImpl ((unsigned int (*)(soGroundModuleImpl * self)) 0x80731e44)
 
 #endif //PROJECTMCODES_SOGROUNDMODULEIMPL_H

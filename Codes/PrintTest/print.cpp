@@ -83,11 +83,17 @@ float TOP_PADDING = 69; // nice
 float LEFT_PADDING = 20;
 
 // global variables used by CustomAiFunctions
-double md_customFnInjection = 0;
+double md_customFnInjection[0xF] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+bool md_customFnInjectionToggle[0xF] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+unsigned char md_customFnModIdx;
 
 // global variables for the injection down-below
-int timer = 5;
+signed char timer = 5;
+signed char cmdDelay = 50;
 bool SpecialMode = false;
+unsigned char infoLevel = 1;
+unsigned char observePNum = 1;
+bool aiCanCall = true;
 int specialIdx = 0;
 int md_debugThreshold = 20;
 int md_debugTimer = 0;
@@ -102,6 +108,7 @@ const char *SpecialModes[] = {
 
 unsigned short AIRoutineList[] = {
 //region
+        0xFFFF,
         0x0000,
 
         0x8000,
@@ -378,11 +385,10 @@ unsigned short AIRoutineList[] = {
         0x700D,
         0x700E,
         0x700F,
-        0x7010,
-        0xFFFF
+        0x7010
 //endregion
 };
-int aiRoutineIdx = sizeof(AIRoutineList) / 2;
+int aiRoutineIdx = 0;
 
 
 int forcedAiMd = 0;
@@ -404,6 +410,26 @@ void ModAiRoutineIdx(int amount) {
     } else if (aiRoutineIdx <= 0) {
         aiRoutineIdx = sizeof(AIRoutineList) / 2;
     }
+}
+
+void ModCustomFnInjectIdx(int amount) {
+    md_customFnModIdx += amount;
+    if (md_customFnModIdx == 0xFF) md_customFnModIdx = 0xF;
+    else if (md_customFnModIdx > 0xF) md_customFnModIdx = 0;
+}
+
+void ModInfoLevel(int amount) {
+    infoLevel += amount;
+    OSReport("infoLevel: %d", infoLevel);
+    if (infoLevel == 255) infoLevel = 0;
+    else if (infoLevel > 4) infoLevel = 4;
+}
+
+void ModObservePNum(int amount) {
+    observePNum += amount;
+    OSReport("oPNum: %d", observePNum);
+    if (observePNum == 255) observePNum = 0;
+    else if (observePNum > 3) observePNum = 3;
 }
 
 float fighterXPos = 0;
@@ -505,44 +531,49 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
             printer.lineStart = xPos + 5;
 //            message->zPos = zPos;
 //
-            printer.startBoundingBox();
-//            auto target = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(id));
-//
-//            sprintf(buffer, TARGET, target);
-//            printer.printLine(buffer);
-//
-            sprintf(buffer, LSTICK, input->leftStickX, input->leftStickY);
-            printer.printLine(buffer);
-//
-//            sprintf(buffer, INPUTS_VALUE, input->buttons.bits);
-//            printer.printLine(buffer);
-//
-            sprintf(aiInputBuffer, "");
-            auto buttons = input->buttons;
-            if (buttons.attack == 1) { strcat(aiInputBuffer, INPUTS_NAMES[0]); }
-            if (buttons.special == 1) { strcat(aiInputBuffer, INPUTS_NAMES[1]); }
-            if (buttons.jump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[2]); }
-            if (buttons.shield == 1) { strcat(aiInputBuffer, INPUTS_NAMES[3]); }
-            if (buttons.cStick == 1) { strcat(aiInputBuffer, INPUTS_NAMES[4]); }
-            if (buttons.uTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[5]); }
-            if (buttons.sTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[6]); }
-            if (buttons.dTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[7]); }
-//            if (buttons.tapJump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[8]); }
+            if (infoLevel >= 3) {
+                printer.startBoundingBox();
+                if (infoLevel >= 4) {
+                    auto target = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(id));
 
-            sprintf(buffer, INPUTS, aiInputBuffer);
-            printer.printLine(buffer);
-//
-            sprintf(buffer, AI_SCRIPT, input->aiActPtr->aiScript);
-            printer.print(buffer);
-            printer.padToWidth(RENDER_X_SPACING / 5);
-            sprintf(buffer, AI_MD, input->aiMd);
-            printer.print(buffer);
-//
-//            sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
-//            printer.print(buffer);
-            printer.saveBoundingBox(0, 0x00000088, 2);
+                    sprintf(buffer, TARGET, target);
+                    printer.printLine(buffer);
+                }
+                //
+                sprintf(buffer, LSTICK, input->leftStickX, input->leftStickY);
+                printer.printLine(buffer);
+                //
+                //            sprintf(buffer, INPUTS_VALUE, input->buttons.bits);
+                //            printer.printLine(buffer);
+                //
+                sprintf(aiInputBuffer, "");
+                auto buttons = input->buttons;
+                if (buttons.attack == 1) { strcat(aiInputBuffer, INPUTS_NAMES[0]); }
+                if (buttons.special == 1) { strcat(aiInputBuffer, INPUTS_NAMES[1]); }
+                if (buttons.jump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[2]); }
+                if (buttons.shield == 1) { strcat(aiInputBuffer, INPUTS_NAMES[3]); }
+                if (buttons.cStick == 1) { strcat(aiInputBuffer, INPUTS_NAMES[4]); }
+                if (buttons.uTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[5]); }
+                if (buttons.sTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[6]); }
+                if (buttons.dTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[7]); }
+                //            if (buttons.tapJump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[8]); }
 
-            if (i == 1) {
+                sprintf(buffer, INPUTS, aiInputBuffer);
+                printer.printLine(buffer);
+                //
+                sprintf(buffer, AI_SCRIPT, input->aiActPtr->aiScript);
+                printer.print(buffer);
+                printer.padToWidth(RENDER_X_SPACING / 5);
+                sprintf(buffer, AI_MD, input->aiMd);
+                printer.print(buffer);
+                //
+                //            sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
+                //            printer.print(buffer);
+                printer.saveBoundingBox(0, 0x00000088, 2);
+            }
+
+            auto playerNum = FIGHTER_MANAGER->getPlayerNo(id);
+            if (playerNum == observePNum && infoLevel >= 1) {
                 printer.setup();
                 printer.start2D();
 
@@ -553,11 +584,20 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
                 message->yPos = TOP_PADDING;
 
                 printer.startBoundingBox();
+                sprintf(buffer, "[player: %d]", playerNum + 1);
+                printer.print(buffer);
+
+                if (infoLevel >= 2) {
+                    sprintf(buffer, "; AI Can Call?: %d", aiCanCall);
+                    printer.print(buffer);
+                }
+                printer.printLine("");
+
                 if (SpecialMode) { sprintf(buffer, "Selected Script: %s", SpecialModes[specialIdx]); }
                 else { sprintf(buffer, SELECTED_SCRIPT, AIRoutineList[aiRoutineIdx]); }
                 printer.printLine(buffer);
 
-                if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
+                if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0 && infoLevel >= 2) {
                     auto player0 = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryIdFromIndex(0));
                     auto LAVars = player0->modules->workModule->LAVariables;
                     auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
@@ -572,10 +612,15 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
                     sprintf(buffer, "timer (%d): %d", md_debugThreshold, md_debugTimer + remainingHitstun);
                     printer.printLine(buffer);
                     printer.setTextColor(0xffffffff);
+                }
 
+                if (infoLevel >= 2) {
                     printer.padToWidth(RENDER_X_SPACING / 2);
-                    sprintf(buffer, "custom value: %.3f", md_customFnInjection);
+                    if (!md_customFnInjectionToggle[md_customFnModIdx]) printer.setTextColor(0xffffff88);
+                    sprintf(buffer, "custom value [%d]: %.3f", md_customFnModIdx,
+                            md_customFnInjection[md_customFnModIdx]);
                     printer.printLine(buffer);
+                    printer.setTextColor(0xffffffff);
                 }
 
                 sprintf(buffer, AI_SCRIPT, input->aiActPtr->aiScript);
@@ -605,15 +650,17 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
                 sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
                 printer.printLine(buffer);
 
-                sprintf(buffer, VARIABLES);
-                printer.printLine(buffer);
+                if (infoLevel >= 4) {
+                    sprintf(buffer, VARIABLES);
+                    printer.printLine(buffer);
 
-                auto aiVars = input->aiActPtr->variables;
-                for (int j = 0; j < 24; j++) {
-                    printer.padToWidth(RENDER_X_SPACING);
-                    if (j % 7 == 0) { printer.newLine(); }
-                    sprintf(buffer, VARIABLE, j, aiVars[j]);
-                    printer.print(buffer);
+                    auto aiVars = input->aiActPtr->variables;
+                    for (int j = 0; j < 24; j++) {
+                        printer.padToWidth(RENDER_X_SPACING);
+                        if (j % 7 == 0) { printer.newLine(); }
+                        sprintf(buffer, VARIABLE, j, aiVars[j]);
+                        printer.print(buffer);
+                    }
                 }
 
                 printer.saveBoundingBox(0, 0x00000088, 2);
@@ -623,7 +670,39 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
 //        renderables.renderAll();
     }
 
-    if (PREVIOUS_PADS[0].button.Z) {
+    if (PREVIOUS_PADS[0].button.R && PREVIOUS_PADS[0].button.Z) {
+        if (PREVIOUS_PADS[0].button.A) {
+            timer -= 10;
+            if (timer <= 0) {
+                aiCanCall = !aiCanCall;
+            }
+        }
+        if (PREVIOUS_PADS[0].button.DownDPad) {
+            timer -= 10;
+            if (timer <= 0) {
+                ModInfoLevel(-1);
+            }
+        }
+        if (PREVIOUS_PADS[0].button.RightDPad) {
+            timer -= 10;
+            if (timer <= 0) {
+                ModObservePNum(1);
+            }
+        } else if (PREVIOUS_PADS[0].button.LeftDPad) {
+            timer -= 10;
+            if (timer <= 0) {
+                ModObservePNum(-1);
+            }
+        } else if (PREVIOUS_PADS[0].button.UpDPad) {
+            timer -= 10;
+            if (timer <= 0) {
+                ModInfoLevel(1);
+            }
+        } else {
+            cmdDelay = 0;
+        }
+    }
+    else if (PREVIOUS_PADS[0].button.Z) {
         if (PREVIOUS_PADS[0].button.DownDPad) {
             timer -= 10;
             if (timer <= 0) {
@@ -648,6 +727,67 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
                     ModAiRoutineIdx(-1);
                 }
             }
+        } else if (PREVIOUS_PADS[0].button.UpDPad) {
+            timer -= 10;
+            if (timer <= 0) {
+                if (SpecialMode) {
+                    ModSpecialIdx(-1);
+                } else {
+                    ModAiRoutineIdx(-1);
+                }
+            }
+        } else {
+            cmdDelay = 0;
+        }
+    } else if (PREVIOUS_PADS[0].button.A) {
+        if (PREVIOUS_PADS[0].button.UpDPad) {
+            timer -= 20;
+            if (timer <= 0) {
+                md_customFnInjection[md_customFnModIdx]++;
+            }
+        } else if (PREVIOUS_PADS[0].button.DownDPad) {
+            timer -= 20;
+            if (timer <= 0) {
+                md_customFnInjection[md_customFnModIdx]--;
+            }
+        } else if (PREVIOUS_PADS[0].button.LeftDPad) {
+            timer -= 20;
+            if (timer <= 0) {
+                md_customFnInjection[md_customFnModIdx] -= 0.05;
+            }
+        } else if (PREVIOUS_PADS[0].button.RightDPad) {
+            timer -= 20;
+            if (timer <= 0) {
+                md_customFnInjection[md_customFnModIdx] += 0.05;
+            }
+        } else {
+            cmdDelay = 0;
+        }
+    } else if (PREVIOUS_PADS[0].button.Y) {
+        if (PREVIOUS_PADS[0].button.UpDPad) {
+            timer -= 10;
+            if (timer <= 0) {
+                md_customFnInjectionToggle[md_customFnModIdx] = true;
+            }
+        } else if (PREVIOUS_PADS[0].button.DownDPad) {
+            timer -= 10;
+            if (timer <= 0) {
+                md_customFnInjectionToggle[md_customFnModIdx] = false;
+            }
+        } else if (PREVIOUS_PADS[0].button.LeftDPad) {
+            timer -= 20;
+            if (timer <= 0) {
+                ModCustomFnInjectIdx(-1);
+                OSReport("CustomFnIdx: %d\n", md_customFnModIdx);
+            }
+        } else if (PREVIOUS_PADS[0].button.RightDPad) {
+            timer -= 20;
+            if (timer <= 0) {
+                ModCustomFnInjectIdx(1);
+                OSReport("CustomFnIdx: %d\n", md_customFnModIdx);
+            }
+        } else {
+            cmdDelay = 0;
         }
     } else if (strcmp(SpecialModes[specialIdx], "MD") == 0) {
         if (PREVIOUS_PADS[0].button.LeftDPad) {
@@ -660,58 +800,50 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
             if (timer <= 0 && forcedAiMd < 0x20) {
                 forcedAiMd++;
             }
+        } else {
+            cmdDelay = 0;
         }
     } else if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
-        if (PREVIOUS_PADS[0].button.A) {
-            if (PREVIOUS_PADS[0].button.UpDPad) {
-                timer -= 20;
-                if (timer <= 0) {
-                    md_customFnInjection++;
-                }
-            } else if (PREVIOUS_PADS[0].button.DownDPad) {
-                timer -= 20;
-                if (timer <= 0) {
-                    md_customFnInjection--;
-                }
-            } else if (PREVIOUS_PADS[0].button.LeftDPad) {
-                timer -= 20;
-                if (timer <= 0) {
-                    md_customFnInjection -= 0.05;
-                }
-            } else if (PREVIOUS_PADS[0].button.RightDPad) {
-                timer -= 20;
-                if (timer <= 0) {
-                    md_customFnInjection += 0.05;
-                }
+        if (PREVIOUS_PADS[0].button.UpDPad) {
+            timer -= 20;
+            if (timer <= 0 && md_debugDamage < 999) {
+                md_debugDamage++;
             }
-        }
-        else {
-            if (PREVIOUS_PADS[0].button.UpDPad) {
-                timer -= 20;
-                if (timer <= 0 && md_debugDamage < 999) {
-                    md_debugDamage++;
-                }
-            } else if (PREVIOUS_PADS[0].button.DownDPad) {
-                timer -= 20;
-                if (timer <= 0 && md_debugDamage > 0) {
-                    md_debugDamage--;
-                }
-            } else if (PREVIOUS_PADS[0].button.LeftDPad) {
-                timer -= 10;
-                if (timer <= 0) {
-                    md_debugThreshold--;
-                }
-            } else if (PREVIOUS_PADS[0].button.RightDPad) {
-                timer -= 10;
-                if (timer <= 0) {
-                    md_debugThreshold++;
-                }
+        } else if (PREVIOUS_PADS[0].button.DownDPad) {
+            timer -= 20;
+            if (timer <= 0 && md_debugDamage > 0) {
+                md_debugDamage--;
             }
+        } else if (PREVIOUS_PADS[0].button.LeftDPad) {
+            timer -= 10;
+            if (timer <= 0) {
+                md_debugThreshold--;
+            }
+        } else if (PREVIOUS_PADS[0].button.RightDPad) {
+            timer -= 10;
+            if (timer <= 0) {
+                md_debugThreshold++;
+            }
+        } else if (PREVIOUS_PADS[0].button.RightDPad) {
+            timer -= 20;
+            OSReport("Timer: %d\n", timer);
+            if (timer <= 0) {
+                ModCustomFnInjectIdx(1);
+                OSReport("CustomFnIdx: %d\n", md_customFnModIdx);
+            }
+        } else {
+            cmdDelay = 0;
         }
     } else {
         timer = 50;
+        cmdDelay = 0;
     }
-    if (timer <= 0) timer = 50;
+    if (timer <= 0) {
+//        timer = 50;
+        timer = 50 - (cmdDelay - (5 - cmdDelay % 5));
+        cmdDelay += 1;
+        if (cmdDelay > 45) cmdDelay = 45;
+    }
 }
 
 
@@ -741,13 +873,22 @@ INJECTION("CPUForceMd", 0x80905204, R"(
     SAVE_REGS
     mr r3, r26
     mr r4, r27
+    mr r5, r28
     bl CPUForceMd
     RESTORE_REGS
 )");
 
-extern "C" void CPUForceMd(ftInput * aiInput, int intent) {
+extern "C" void CPUForceMd(ftInput * aiInput, int intent, int newAction) {
     if (forcedAiMd != 0 && AIRoutineList[aiRoutineIdx] != 0xFFFF) aiInput->aiMd = forcedAiMd;
-    else aiInput->aiMd = intent;
+    else {
+        OSReport("-- MD CHANGE --\n");
+        OSReport("current action: %04x; ", aiInput->aiActPtr->aiScript);
+        OSReport("new action?: %04x;\n", newAction);
+        OSReport("current md: %02x; ", aiInput->aiMd);
+        OSReport("new md: %02x\n", intent);
+
+        aiInput->aiMd = intent;
+    }
 }
 
 INJECTION("CPUForceBehavior", 0x809188B0, R"(
@@ -759,7 +900,7 @@ INJECTION("CPUForceBehavior", 0x809188B0, R"(
     sth r26, 120(r25)
     RESTORE_REGS
 )");
-extern "C" short CPUForceBehavior(int param1, aiAct * aiActPtr) {
+extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
     if (AIRoutineList[aiRoutineIdx] == 0xFFFF || strcmp(SpecialModes[specialIdx], "DEFAULT") == 0) {
         OSReport("intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
         OSReport("current: %04x; ", aiActPtr->aiScript);
@@ -768,5 +909,5 @@ extern "C" short CPUForceBehavior(int param1, aiAct * aiActPtr) {
         return param1; // normal routine
     }
     // forced routines
-    return (aiActPtr->intermediateNextAiScript != 0) ? param1 : AIRoutineList[aiRoutineIdx];
+    return (aiActPtr->intermediateNextAiScript != 0 && aiCanCall) ? param1 : AIRoutineList[aiRoutineIdx];
 }

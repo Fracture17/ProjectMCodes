@@ -9,7 +9,7 @@
 #include "aiStat.h"
 
 struct ftInput;
-struct aiAct {
+struct aiScriptData {
     // 0x00
     float variables[24];
     char _spacer[0x70 - 0x60];
