@@ -1,0 +1,8 @@
+{
+  "cmake.configureOnOpen": true,
+  "C_Cpp.intelliSenseEngineFallback": "Enabled",
+  "files.associations": {
+    "*.ksy": "yaml",
+    "vector": "cpp"
+  }
+}

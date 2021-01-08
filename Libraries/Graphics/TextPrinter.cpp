@@ -148,7 +148,7 @@ void TextPrinter::saveBoundingBox(int id, GXColor color, float boxPadding) {
     }
 
     int multiplier = (is2D) ? 1 : -1;
-    Rect r{
+    Rect * r = new Rect{
             0,
             1,
             color,
@@ -158,8 +158,8 @@ void TextPrinter::saveBoundingBox(int id, GXColor color, float boxPadding) {
             lineStart + maxWidth + boxPadding,
             is2D
     };
-//    OSReport("Rect in (t, b, l, r): %.3f, %.3f, %.3f, %.3f\n", r.top, r.bottom, r.left, r.right);
-    renderables.rects.frame.push(r);
+    // OSReport("Rect in (t, b, l, r): %.3f, %.3f, %.3f, %.3f\n", r.top, r.bottom, r.left, r.right);
+    renderables.items.frame.push(r);
     setup();
 }
 

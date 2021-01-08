@@ -446,25 +446,25 @@ extern "C" {
                     int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
                     int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
                     if (alpha == 255) {
-                        Point pt{
+                        Point * pt = new Point{
                                 0x000000FF,
                                 (float) x1,
                                 (float) y1,
                                 42,
                                 false
                         };
-                        pt.autoTimer = false;
-                        renderables.points.tick.push(pt);
+                        pt->autoTimer = false;
+                        renderables.items.tick.push(pt);
                     }
-                    Point pt{
+                    Point * pt = new Point{
                             (red << 24) | (green << 16) | (blue << 8) | alpha,
                             (float) x1,
                             (float) y1,
                             30,
                             false
                     };
-                    pt.autoTimer = false;
-                    renderables.points.tick.push(pt);
+                    pt->autoTimer = false;
+                    renderables.items.tick.push(pt);
                     return;
                 }
                 case 0xD1: {
@@ -477,7 +477,7 @@ extern "C" {
                     int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
                     int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
                     if (alpha == 255) {
-                        Line ln{
+                        Line * ln = new Line{
                                 0x000000FF,
                                 (float) x1,
                                 (float) y1,
@@ -486,10 +486,10 @@ extern "C" {
                                 42,
                                 false
                         };
-                        ln.autoTimer = false;
-                        renderables.lines.tick.push(ln);
+                        ln->autoTimer = false;
+                        renderables.items.tick.push(ln);
                     }
-                    Line ln{
+                    Line * ln = new Line{
                             (red << 24) | (green << 16) | (blue << 8) | alpha,
                             (float) x1,
                             (float) y1,
@@ -498,8 +498,8 @@ extern "C" {
                             30,
                             false
                     };
-                    ln.autoTimer = false;
-                    renderables.lines.tick.push(ln);
+                    ln->autoTimer = false;
+                    renderables.items.tick.push(ln);
                     return;
                 }
                 case 0xD2: {
@@ -512,7 +512,7 @@ extern "C" {
                     int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
                     int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
                     if (alpha == 255) {
-                        RectOutline ro{
+                        RectOutline * ro = new RectOutline{
                                 0x000000FF,
                                 (float) (y - height),
                                 (float) (y + height),
@@ -521,10 +521,10 @@ extern "C" {
                                 42,
                                 false
                         };
-                        ro.autoTimer = false;
-                        renderables.rectOutlines.tick.push(ro);
+                        ro->autoTimer = false;
+                        renderables.items.tick.push(ro);
                     }
-                    RectOutline ro{
+                    RectOutline * ro = new RectOutline{
                         (red << 24) | (green << 16) | (blue << 8) | alpha,
                         (float) (y - height),
                         (float) (y + height),
@@ -533,8 +533,8 @@ extern "C" {
                         30,
                         false
                     };
-                    ro.autoTimer = false;
-                    renderables.rectOutlines.tick.push(ro);
+                    ro->autoTimer = false;
+                    renderables.items.tick.push(ro);
                     return;
                 }
             }

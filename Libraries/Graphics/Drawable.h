@@ -11,7 +11,7 @@
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 
 struct Drawable {
-    void draw();
+    virtual void draw() = 0;
 
     GXColor color;
     unsigned int lifeTime = 1;
@@ -36,7 +36,7 @@ struct Point : Drawable {
         this->thickness = thickness;
     }
 
-    void _draw();
+    void draw();
     float x;
     float y;
     int thickness;
@@ -59,7 +59,7 @@ struct Line : Drawable {
         this->thickness = thickness;
     }
 
-    void _draw();
+    void draw();
     float x1;
     float y1;
     float x2;
@@ -84,7 +84,7 @@ struct RectOutline : Drawable {
         this->thickness = thickness;
     }
 
-    void _draw();
+    void draw();
     float top;
     float bottom;
     float left;
@@ -108,7 +108,7 @@ struct Rect : Drawable {
         this->right = right;
     }
 
-    void _draw();
+    void draw();
     float top;
     float bottom;
     float left;
@@ -125,10 +125,7 @@ struct Renderables {
     void renderAll();
     void updateTick();
 
-    RenderTimes<Point> points;
-    RenderTimes<Line> lines;
-    RenderTimes<RectOutline> rectOutlines;
-    RenderTimes<Rect> rects;
+    RenderTimes<Drawable *> items;
 };
 
 extern Renderables renderables;

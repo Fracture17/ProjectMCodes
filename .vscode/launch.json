@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "(gdb) Attach",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/IntermediateFiles/initFile",
+      "cwd": "${workspaceFolder}",
+      "miDebuggerPath": "C:\\devkitPro\\devkitPPC\\bin\\powerpc-eabi-gdb.exe",
+      "miDebuggerServerAddress": "tcp:localhost:55020",
+      "MIMode": "gdb",
+      // "symbolSearchPath": "",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          }
+      ]
+    }
+  ],
+  
+}

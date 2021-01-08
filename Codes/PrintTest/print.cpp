@@ -98,6 +98,7 @@ int specialIdx = 0;
 int md_debugThreshold = 20;
 int md_debugTimer = 0;
 double md_debugDamage = 0;
+int md_debugTarget = 0;
 const char *SpecialModes[] = {
         "OFF",
         "DEFAULT",
@@ -436,15 +437,14 @@ float fighterXPos = 0;
 float fighterYPos = 0;
 bool noClip = false;
 char airGroundState = 0;
-void setPosition(Fighter *fighter, ftInput *input) {
-    fighterXPos += input->leftStickX * 2;
+void setPosition(Fighter *fighter, ftInput *input, u8 numPlayers) {
+    if (PREVIOUS_PADS[0].stickX < -5 || 5 < PREVIOUS_PADS[0].stickX)
+        fighterXPos += (float) PREVIOUS_PADS[0].stickX * 3 / (float) (127 * numPlayers);
     airGroundState = fighter->modules->groundModule->unk1->unk1->airGroundState;
     if (airGroundState != 1) {
-        fighterYPos += input->leftStickY * 2;
+        if (PREVIOUS_PADS[0].stickY < -5 || 5 < PREVIOUS_PADS[0].stickY)
+            fighterYPos += (float) PREVIOUS_PADS[0].stickY * 3 / (float) (127 * numPlayers);
     }
-
-    input->leftStickX = 0;
-    input->leftStickY = 0;
 
     fighter->modules->postureModule->xPos = fighterXPos;
     fighter->modules->postureModule->yPos = fighterYPos;
@@ -492,32 +492,6 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
             auto input = FIGHTER_MANAGER->getInput(id);
 
             if (forcedAiMd != 0) input->aiMd = forcedAiMd;
-
-            if (i == 0) {
-                if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
-                    auto LAVars = fighter->modules->workModule->LAVariables;
-                    auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
-                    auto remainingHitstun = LABasicsArr[56];
-                    if (remainingHitstun == 0 || remainingHitstun + md_debugThreshold <= 0) {
-                        md_debugTimer--;
-                        if (md_debugTimer == 0) {
-                            noClip = true;
-                            fighter->modules->groundModule->setCorrect(0);
-                        }
-                        if (md_debugTimer <= 0) {
-                            if (noClip && md_debugTimer == -1) {
-                                noClip = false;
-                                fighter->modules->groundModule->setCorrect(5);
-                            }
-                            setPosition(fighter, input);
-                            setDamage(FIGHTER_MANAGER->getOwner(id));
-                            md_debugTimer = 0;
-                        }
-                    } else {
-                        md_debugTimer = md_debugThreshold;
-                    }
-                }
-            }
 
             auto xPos = fighter->modules->postureModule->xPos;
             auto yPos = fighter->modules->postureModule->yPos * -1;
@@ -866,7 +840,46 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
 //            }
 //        }
 //    }
-        renderables.updateTick();
+    renderables.updateTick();
+
+    auto scene = getScene();
+    if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
+        auto entryCount = FIGHTER_MANAGER->getEntryCount();
+
+        for (int i = 0; i < entryCount; i++) {
+            auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
+
+            auto fighter = FIGHTER_MANAGER->getFighter(id);
+            auto input = FIGHTER_MANAGER->getInput(id);
+
+            if (FIGHTER_MANAGER->getPlayerNo(id) == 0) {
+                if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
+                    auto LAVars = fighter->modules->workModule->LAVariables;
+                    auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
+                    auto remainingHitstun = LABasicsArr[56];
+                    if (remainingHitstun == 0 || remainingHitstun + md_debugThreshold <= 0) {
+                        md_debugTimer--;
+                        if (md_debugTimer == 0) {
+                            noClip = true;
+                            fighter->modules->groundModule->setCorrect(0);
+                        }
+                        if (md_debugTimer <= 0) {
+                            if (noClip && md_debugTimer == -1) {
+                                noClip = false;
+                                fighter->modules->groundModule->setCorrect(5);
+                            }
+                            setPosition(fighter, input, entryCount);
+                            setDamage(FIGHTER_MANAGER->getOwner(id));
+                            md_debugTimer = 0;
+                        }
+                    } else {
+                        md_debugTimer = md_debugThreshold;
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 INJECTION("CPUForceMd", 0x80905204, R"(

@@ -7,6 +7,7 @@ out/
 build/
 cmake-build*/
 ./.vscode/
+Dolphin/
 
 # User-specific files
 *.rsuser
