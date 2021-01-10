@@ -5,52 +5,23 @@ Heyooo - fudge here! Just so this project isn't lost to time, I've decided to wr
 ## Things you'll need:
 
 - A computer running Windows
-- [CLion](https://www.jetbrains.com/clion/)
-  - until someone figures out how to make this compile using vscode or something free :(
+- EITHER
+  - [CLion](https://www.jetbrains.com/clion/)
+    - arguably more powerful paid option
+  - [VSCode (the blue one)](https://code.visualstudio.com/)
+    - free but requires a bit more setup
 
 - [MinGW](https://osdn.net/projects/mingw/releases/)
   - install the `msys64` version
-
-- [devkitpro powerpc](https://github.com/devkitPro/installer/releases/download/v3.0.3/devkitProUpdater-3.0.3.exe)
-  - necessary to actually compile stuff
+  - this may become obsolete later idk
 
 ## Setting Up:
 
-Once you have the stuff linked above installed, the setup *should* be relatively simple.
+### - [VSCode](./Setup/VSCode.md)
 
-1. Open CLion
+### - [CLion](./Setup/CLion.md)
 
-2. Clone this repository in CLion 
-
-   1. make a new project
-   2. go to VCS (at the top bar) ==> Git ==> pull
-
-   <img src="C:\Users\dareb\OneDrive\Documents\Gekko-ppc-asm\fracture_pmcodes\notes\guides\README_Resources\VCS_Pull_Path.png" alt="VCS Pull Path"  />
-
-3. Go to File ==> Settings
-4. Setup the toolchain
-   1. go to "Toolchains"
-   2. Add a new toolchain and name it MinGW
-      1. technically the name doesn't matter it just makes things consistent
-   3. under "environment," browse for and select the MinGW installation:
-      1. for me, it's `C:\Program Files (x86)\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0\mingw32`
-   4. under "C Compiler," browse for and select the devkitpro powerpc C Compiler:
-      1. for me, it's `C:\devkitPro\devkitPPC\bin\powerpc-eabi-gcc.exe`
-   5. under "C++ Compiler," do the same as step 4 but for the C++ compiler
-      1. for me, it's `C:\devkitPro\devkitPPC\bin\powerpc-eabi-g++.exe`
-   6. in the end, it should look something like this:
-5. Configure CMake
-   1. if it doesn't already exist, make a new profile entitled "Debug-MinGW"
-   2. Set the build type to "Debug"
-   
-   
-   
-   1. for toolchains, Select your newly-made MinGW toolchain 
-   2. under CMake options, copy and paste the following:
-      1. `-DCMAKE_SYSTEM_NAME=Generic -DCMAKE_C_COMPILER_WORKS=1 -DCMAKE_CXX_COMPILER_WORKS=1`
-      2. this will just tell CMake that, yes, the compiler *does* work and *no* there shouldn't be any problems with it
-
-You should now have everything you need setup to start developing the codes. But how exactly do you do that? Continue reading to find out!
+After you follow the guide for your respective platform, you should now have everything you need setup to start developing the codes. But how exactly do you do that? Continue reading to find out!
 
 ## Developing Codes
 
@@ -65,7 +36,7 @@ There are two main folders in the root directory that you'll be interested in:
 
 ### Defining Native Brawl Functions
 
-To define brawl functions that are in known locations, we need to tell the program exactly where they are in memory. To do this, we can define macros that act as function definitions. Take a look at `ftManager.h` at `Libraries/Brawl/ftManager.h`:
+To define brawl functions that are in known locations, we need to tell the program exactly where they are in memory. To do this, we can define macros that act as function definitions. Take a look at `ftManager.h` at `Libraries/Brawl/FT/ftManager.h`:
 
 You can see some various macros created with `#define` statements, such as the following:
 
@@ -84,31 +55,47 @@ If you want more information about the function, you'll need to either reverse-e
 
 in the `Codes` folder, there are a bunch of codes that we've already created. To tell the compiler to add a code to the output, we use `CMakeLists.txt` and use the `add_subdirectory` command. Then when creating a new code, you'll need another `CMakeLists.txt` containing an `add_code` command that has the code name followed by all the files it depends on.
 
-#### INJECTION and BASIC_INJECT
+#### INJECTION and SIMPLE_INJECTION
 
-When in a code's cpp file, to inject code into Brawl we'll need to use the `BASIC_INJECT` and `INJECTION` macros that fracture has defined for us. For arguments they take:
+When in a code's cpp file, to inject code into Brawl we'll need to use the `SIMPLE_INJECTION` and `INJECTION` macros that fracture has defined for us. For arguments they take:
 
 1. the function name
 2. the offset
 3. the asm which we wish to inject at that location
 
-The main difference between `BASIC_INJECT` and `INJECTION` is that `BASIC_INJECT` will automatically surround the asm with the `SAVE_REGS` and `RESTORE_REGS` macros, which will save and restore the registers, respectively. It will also automatically create a branch to the function name that was given as an argument. For cases where you'll just be modifying the game's state, you'll often use `BASIC_INJECT`. For when you want to mess with specific registers or output particular things, you'll use `INJECTION`.
+The main difference between `SIMPLE_INJECTION` and `INJECTION` is that `SIMPLE_INJECTION` will automatically surround the asm with the `SAVE_REGS` and `RESTORE_REGS` macros, which will save and restore the registers, respectively. It will also automatically create a branch to the function name that was given as an argument. For cases where you'll just be modifying the game's state, you'll often use `SIMPLE_INJECTION`. For when you want to mess with specific registers or output particular things, you'll use `INJECTION`.
 
 It's important to know what line of code you're overwriting at that particular location so you can add it to the `asm` injection.
 
 #### Injecting with C++
 
-To actually write and execute C++ code you'll need to either preface the function definition with `extern "C"` or write it within an `extern "C" {...}` block. Once you do this, use a `bl` statement with the function name as the argument within your injected ASM to reference and execute it. 
+Writing and executing C++ code is relatively easy - there are five types of injections:
 
-`BASIC_INECT` example:
+- `SIMPLE_INJECTION(name, address, code)`
+  - for simple injections that call C++ code
+- `INJECTION(name, address, code)`
+  - for injections that may call C++ and ASM code
+- `STRING_WRITE(address, string)`
+  - writes an ASCII string once to a location in memory
+- `??? (currently unimplemented)`
+  - behaves like `STRING_WRITE` but called every frame
+- `DATA_WRITE(address, data)`
+  - writes hex to a location in memory at startup
+- `DATA_WRITE_REPEAT(address, data, repeatCount)`
+  - writes hex to a location in memory at startup repeated lengthwise a given amount of times
+- `STARTUP(name)`
+  - executes a function once when the game is starting up
+  - useful for doing things like changing global values
+
+`SIMPLE_INJECTION` example:
 
 ```c++
-BASIC_INJECT("renderInjection", 0x8001792c, "addi r3, r30, 280");
-
-extern "C" void renderInjection() {
-    ...
+SIMPLE_INJECTION("renderInjection", 0x8001792c, "addi r3, r30, 280") {
+   // code goes here
 }
 ```
+
+For a simple injection, there is no need for something like `extern "C"` - that's taken care of for you.
 
 `INJECTION` example:
 
@@ -121,9 +108,11 @@ INJECTION("renderInjection", 0x8001792c, R"(
 )");
 
 extern "C" void renderInjection() {
-    ...
+   // code goes here
 }
 ```
+
+To actually write and execute C++ code with an `INJECTION` you **do** need `extern "C"` to be able to call it from the injected asm code with a `bl` instruction.
 
 #### Arguments and Return Values
 
@@ -153,10 +142,6 @@ extern "C" void aiCommandHandlers(aiAct* aiActInst, const int* args) { ... }
 ```
 
 the `lbz r4, 0x00(r30)` is the code that was there before I injected it. The exclusion of this would cause `r30` to have an unexpected value. The two `mr` statements then move some data from registers `r26` and `r30` to `r3` and `r4`, respectively. In this case they're pointers to an `aiAct` instance and the "args" of the custom AI command. This allows us to access them in our custom `aiCommandHandlers` function as the first and second arguments, because they're in `r3` and `r4`.
-
-## Current Known Limitations:
-
-- struct inheritance involving **functions** that we create does *not* work.
 
 ## That's All Folks
 

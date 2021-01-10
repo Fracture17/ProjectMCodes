@@ -6,10 +6,10 @@
 #define PROJECTMCODES_FTINPUT_H
 
 #include "Brawl/IP/Inputs.h"
-#include "Brawl/AI/aiAct.h"
+#include "Brawl/AI/aiScriptData.h"
 #include "ftEntry.h"
 
-struct aiAct;
+struct aiScriptData;
 struct ftEntry;
 
 // size: 0x274
@@ -33,7 +33,7 @@ struct ftInput {
     char _spacer5[0x44 - 0x42 - 1];
 
     // 0x44
-    aiAct* aiActPtr;
+    aiScriptData* aiActPtr;
 
     // 0x48
     int aiMd;

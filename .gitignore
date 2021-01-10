@@ -4,7 +4,10 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 out/
+build/
 cmake-build*/
+./.vscode/
+Dolphin/
 
 # User-specific files
 *.rsuser

@@ -12,3 +12,7 @@ double soGroundModuleImpl::getDistanceFromUnderGrCol(double maxDistance, Vec3f *
 void soGroundModuleImpl::setCorrect(int collisionMode) {
     _setCorrect_soGroundModuleImpl(this, collisionMode, 0);
 }
+
+unsigned int soGroundModuleImpl::isPassableGround() {
+    return _isPassableGround_soGroundModuleImpl(this);
+}

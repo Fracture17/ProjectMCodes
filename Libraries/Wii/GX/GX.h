@@ -63,6 +63,49 @@ enum GXCullMode {
     GX_CULL_ALL = 3
 };
 
+enum GXAttr {
+    GX_VA_PTNMTXIDX = 0,
+    GX_VA_TEX0MTXIDX = 1,
+    GX_VA_TEX1MTXIDX = 2,
+    GX_VA_TEX2MTXIDX = 3,
+    GX_VA_TEX3MTXIDX = 4,
+    GX_VA_TEX4MTXIDX = 5,   
+    GX_VA_TEX5MTXIDX = 6,
+    GX_VA_TEX6MTXIDX = 7,
+    GX_VA_TEX7MTXIDX = 8,
+    // required for each index
+    GX_VA_POS = 9,
+    GX_VA_NRM = 10,
+    GX_VA_CLR0 = 11,
+    GX_VA_CLR1 = 12,
+    GX_VA_TEX0 = 13,
+    GX_VA_TEX1 = 14,
+    GX_VA_TEX2 = 15,
+    GX_VA_TEX3 = 16,
+    GX_VA_TEX4 = 17,
+    GX_VA_TEX5 = 18,
+    GX_VA_TEX6 = 19,
+    GX_VA_TEX7 = 20,
+    GX_POSMTXARRAY = 21,
+    GX_NRMMTXARRAY = 22,
+    GX_TEXMTXARRAY = 23,
+    GX_LIGHTARRAY = 24,
+    GX_VA_NBT = 25,
+    GX_VA_MAXATTR = 26,
+    GX_VA_NULL = 0xFF
+};
+
+enum GXAttrType {
+    // Input data is not used
+    GX_NONE = 0,
+    // Input data is set directly
+    GX_DIRECT = 1,
+    // Input data is set by a 8bit index
+    GX_INDEX8 = 2,
+    // Input data is set by a 16bit index
+    GX_INDEX16 = 3
+};
+
 //compare function to use
 enum GXCompare {
     //Never passes
@@ -151,5 +194,7 @@ enum GXLoType {
 #define _GXSetBlendMode ((void (*)(GXBlendType type, GXBlendControl src_fact, GXBlendControl dst_fact, GXLoType op)) 0x801f46cc)
 
 #define _GXBegin ((void (*)(GXPrimitive type, int format, u16 numVerts)) 0x801f1088)
+#define _GXSetVtxDesc ((void (*)(GXAttr attr, GXAttrType type)) 0x801ef280)
+#define _GXClearVtxDesc ((void (*)()) 0x801efb10)
 
 #endif //PROJECTMCODES_GX_H

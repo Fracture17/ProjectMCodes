@@ -7,7 +7,7 @@
 
 #include "Fighter.h"
 #include "Brawl/IP/Inputs.h"
-#include "Brawl/AI/aiAct.h"
+#include "Brawl/AI/aiScriptData.h"
 #include "ftOwner.h"
 #include "ftEntryManager.h"
 
