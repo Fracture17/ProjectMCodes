@@ -62,15 +62,18 @@ asm(R"(
 #define STARTUP(name) \
 	asm( \
 		".text\n" \
-		".globl " name "_STARTUP_\n" \
-		"\t.type " name "_STARTUP_, @function\n" \
-		name "_STARTUP_:\n" \
+		".globl " #name "_STARTUP_\n" \
+		"\t.type " #name "_STARTUP_, @function\n" \
+		#name "_STARTUP_:\n" \
 		"SAVE_REGS\n" \
-		"bl " name "\n" \
+		"bl " #name "\n" \
 		"RESTORE_REGS\n" \
 		"\tblr\n\n" \
-		"\t.size " name "_STARTUP_, .-" name "_STARTUP_" \
-	)
+		"\t.size " #name "_STARTUP_, .-" #name "_STARTUP_" \
+	);                   \
+    extern "C" void name()
+
+
 
 #define STRING_WRITE(address, string) \
     asm(                              \

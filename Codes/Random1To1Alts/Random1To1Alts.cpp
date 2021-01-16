@@ -8,8 +8,7 @@
 vector<StageInfo> stages;
 
 
-STARTUP("loadStageFile");
-extern "C" void loadStageFile() {
+STARTUP(loadStageFile) {
     char path[] = "/Project+/StageData/StageData";
     auto file = fopen(path);
     auto buffer = new StageInfo[0x400];
