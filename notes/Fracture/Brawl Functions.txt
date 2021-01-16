@@ -246,7 +246,7 @@ setData[nteFileDataReplay]:
     r3: nteFileDataReplay (small object, seems to be created just for this)
     r4: replay buffer start
     r5: size to save
-    return s nothing
+    returns nothing
 
 setMelee[muReplayTask]:
     @ 8119841c (not always loaded)
@@ -389,3 +389,12 @@ setSection[nteSection]:
     Checks to see if specific magic values are in the correct place, and then checks the CRC32
     sets the data* at nteSection* + 0
     returns true if correct
+
+requestLoadSD[gfCollectionIO]:
+    @ 800397b0
+    r3: gfCollectionIO*
+    r4: collection type (2 for replays, 1 for photos, maybe more)
+    r5: char* file name (just name, not path)
+    Makes a thread that loads collection file and checks if it is valid
+    Sets gfCollectionIO.isFinished when done
+    Sets gfCollectionIO.summaryErrorCode if it encounters error

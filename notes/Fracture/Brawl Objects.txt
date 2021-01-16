@@ -444,6 +444,8 @@ itManager:
 gfSceneManager:
     @ 805b8ba0
     228: scene? 1 if in game, 2 causes exit[scMelee] to be called
+    #the 228 might be the same as 288, and just a typo.  288 is definitly correct
+    288: (byte) sceneState? 1 if scene is running, 2 causes exit method of scene to be called
 
 nteSection:
     0: data* (unkown type, but defintly not just void*)
