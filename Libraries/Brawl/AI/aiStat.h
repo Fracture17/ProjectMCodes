@@ -17,7 +17,7 @@ struct aiStat {
     char _spacer2[0xAC - 0x4C - 4];
 
     // 0xAC
-    int unkValue;
+    int opponentCharacter;
 };
 
 

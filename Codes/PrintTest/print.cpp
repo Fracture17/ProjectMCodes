@@ -83,8 +83,8 @@ float TOP_PADDING = 69; // nice
 float LEFT_PADDING = 20;
 
 // global variables used by CustomAiFunctions
-double md_customFnInjection[0xF] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-bool md_customFnInjectionToggle[0xF] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+double md_customFnInjection[0x10] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+bool md_customFnInjectionToggle[0x10] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 unsigned char md_customFnModIdx;
 
 // global variables for the injection down-below
@@ -94,7 +94,7 @@ bool SpecialMode = false;
 unsigned char infoLevel = 1;
 unsigned char observePNum = 1;
 bool aiCanCall = true;
-int specialIdx = 0;
+int modeIdx = 0;
 int md_debugThreshold = 20;
 int md_debugTimer = 0;
 double md_debugDamage = 0;
@@ -396,11 +396,11 @@ int forcedAiMd = 0;
 
 // we need to do this manually for char-based ones :C
 void ModSpecialIdx(int amount) {
-    specialIdx += amount;
-    if (specialIdx >= 4) {
-        specialIdx = 0;
-    } else if (specialIdx < 0) {
-        specialIdx = 3;
+    modeIdx += amount;
+    if (modeIdx >= 4) {
+        modeIdx = 0;
+    } else if (modeIdx < 0) {
+        modeIdx = 3;
     }
 }
 
@@ -567,11 +567,11 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
                 }
                 printer.printLine("");
 
-                if (SpecialMode) { sprintf(buffer, "Selected Script: %s", SpecialModes[specialIdx]); }
+                if (SpecialMode) { sprintf(buffer, "Selected Script: %s", SpecialModes[modeIdx]); }
                 else { sprintf(buffer, SELECTED_SCRIPT, AIRoutineList[aiRoutineIdx]); }
                 printer.printLine(buffer);
 
-                if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0 && infoLevel >= 2) {
+                if (strcmp(SpecialModes[modeIdx], "DEBUG") == 0 && infoLevel >= 2) {
                     auto player0 = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryIdFromIndex(0));
                     auto LAVars = player0->modules->workModule->LAVariables;
                     auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
@@ -595,6 +595,28 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
                             md_customFnInjection[md_customFnModIdx]);
                     printer.printLine(buffer);
                     printer.setTextColor(0xffffffff);
+
+                    sprintf(buffer, "Injected:");
+                    printer.printLine(buffer);
+
+                    int printedCount = 0;
+                    for (int j = 0; j < 0x10; j++) {
+                        if (md_customFnInjectionToggle[j]) {
+                            printedCount += 1;
+                            if (printedCount % 7 == 0) { printer.newLine(); }
+                            sprintf(buffer, "[%1x]: %.3f", j, md_customFnInjection[j]);
+                            if (j == md_customFnModIdx) {
+                                printer.setTextColor(0xffff00ff);
+                                printer.print(buffer);
+                                printer.setTextColor(0xffffffff);
+                            } else {
+                                printer.print(buffer);
+                            }
+                            printer.padToWidth(RENDER_X_SPACING);
+                        }
+                    }
+                    printer.newLine();
+                    printer.newLine();
                 }
 
                 sprintf(buffer, AI_SCRIPT, input->aiActPtr->aiScript);
@@ -625,15 +647,16 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
                 printer.printLine(buffer);
 
                 if (infoLevel >= 4) {
+                    printer.newLine();
                     sprintf(buffer, VARIABLES);
                     printer.printLine(buffer);
 
                     auto aiVars = input->aiActPtr->variables;
                     for (int j = 0; j < 24; j++) {
-                        printer.padToWidth(RENDER_X_SPACING);
-                        if (j % 7 == 0) { printer.newLine(); }
+                        if ((j+1) % 7 == 0) { printer.newLine(); }
                         sprintf(buffer, VARIABLE, j, aiVars[j]);
                         printer.print(buffer);
+                        printer.padToWidth(RENDER_X_SPACING);
                     }
                 }
 
@@ -642,6 +665,7 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
         }
 
 //        renderables.renderAll();
+        startNormalDraw();
     }
 
     if (PREVIOUS_PADS[0].button.R && PREVIOUS_PADS[0].button.Z) {
@@ -763,7 +787,7 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
         } else {
             cmdDelay = 0;
         }
-    } else if (strcmp(SpecialModes[specialIdx], "MD") == 0) {
+    } else if (strcmp(SpecialModes[modeIdx], "MD") == 0) {
         if (PREVIOUS_PADS[0].button.LeftDPad) {
             timer -= 8;
             if (timer <= 0 && 0 < forcedAiMd) {
@@ -777,7 +801,7 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
         } else {
             cmdDelay = 0;
         }
-    } else if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
+    } else if (strcmp(SpecialModes[modeIdx], "DEBUG") == 0) {
         if (PREVIOUS_PADS[0].button.UpDPad) {
             timer -= 20;
             if (timer <= 0 && md_debugDamage < 999) {
@@ -853,7 +877,7 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
             auto input = FIGHTER_MANAGER->getInput(id);
 
             if (FIGHTER_MANAGER->getPlayerNo(id) == 0) {
-                if (strcmp(SpecialModes[specialIdx], "DEBUG") == 0) {
+                if (strcmp(SpecialModes[modeIdx], "DEBUG") == 0) {
                     auto LAVars = fighter->modules->workModule->LAVariables;
                     auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
                     auto remainingHitstun = LABasicsArr[56];
@@ -882,28 +906,6 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
 
 }
 
-INJECTION("CPUForceMd", 0x80905204, R"(
-    SAVE_REGS
-    mr r3, r26
-    mr r4, r27
-    mr r5, r28
-    bl CPUForceMd
-    RESTORE_REGS
-)");
-
-extern "C" void CPUForceMd(ftInput * aiInput, int intent, int newAction) {
-    if (forcedAiMd != 0 && AIRoutineList[aiRoutineIdx] != 0xFFFF) aiInput->aiMd = forcedAiMd;
-    else {
-        OSReport("-- MD CHANGE --\n");
-        OSReport("current action: %04x; ", aiInput->aiActPtr->aiScript);
-        OSReport("new action?: %04x;\n", newAction);
-        OSReport("current md: %02x; ", aiInput->aiMd);
-        OSReport("new md: %02x\n", intent);
-
-        aiInput->aiMd = intent;
-    }
-}
-
 INJECTION("CPUForceBehavior", 0x809188B0, R"(
     SAVE_REGS
     mr r3, r26
@@ -914,7 +916,7 @@ INJECTION("CPUForceBehavior", 0x809188B0, R"(
     RESTORE_REGS
 )");
 extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
-    if (AIRoutineList[aiRoutineIdx] == 0xFFFF || strcmp(SpecialModes[specialIdx], "DEFAULT") == 0) {
+    if (AIRoutineList[aiRoutineIdx] == 0xFFFF || strcmp(SpecialModes[modeIdx], "DEFAULT") == 0) {
         OSReport("intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
         OSReport("current: %04x; ", aiActPtr->aiScript);
         OSReport("next: %04x\n", param1);

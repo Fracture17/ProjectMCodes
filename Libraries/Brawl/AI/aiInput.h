@@ -7,6 +7,7 @@
 
 #include "../IP/IpHuman.h"
 
+// TODO: fix this and ftInput
 struct aiInput: IpHuman {
     //won't work until IpHuman is correct size
     char _spacer[0x90 - sizeof(IpHuman)];

@@ -8,9 +8,12 @@
 
 #include "Brawl/SO/StageObject.h"
 #include "ftOwner.h"
+#include "Fighter.h"
 
 struct ftInput;
 struct ftOwner;
+struct Fighter;
+// size: 0x244
 struct ftEntry {
     unsigned int getTeam( );
     char _spacer[0x4];
@@ -30,7 +33,7 @@ struct ftEntry {
 
     char _spacer3[0x34 - 0x2C - 4];
     // 0x34
-    StageObject* ftStageObject;
+    Fighter* ftStageObject;
     char _spacer4[0x58 - 0x34 - 4];
 
     //TODO determine which playernum is correct
@@ -42,6 +45,9 @@ struct ftEntry {
     //0x70
     //0 based, + 0x10 for replays
     //int playerNum;
+    
+    // fills the rest of the space (array compatibility)
+    char _spacer5[0x244 - 0x5D - 1];
 };
 
 #define _getTeam_ftEntry ((unsigned int (*)(ftEntry* self, )) 0x80821974)

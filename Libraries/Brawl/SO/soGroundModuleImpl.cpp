@@ -13,6 +13,10 @@ void soGroundModuleImpl::setCorrect(int collisionMode) {
     _setCorrect_soGroundModuleImpl(this, collisionMode, 0);
 }
 
-unsigned int soGroundModuleImpl::isPassableGround() {
-    return _isPassableGround_soGroundModuleImpl(this);
+unsigned int soGroundModuleImpl::isPassableGround(int unk) {
+    return _isPassableGround_soGroundModuleImpl(this, unk);
+}
+
+unsigned int soGroundModuleImpl::isPassableCheck(int unk) {
+    return _isPassableCheck_soGroundModuleImpl(this, unk);
 }

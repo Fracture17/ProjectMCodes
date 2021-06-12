@@ -23,8 +23,8 @@ void RectOutline::draw() {
 }
 
 void Rect::draw() {
-    OSReport("addr: %08x\n", this);
-    OSReport("rect draw: (col, t, b, l, r): %08x, %.3f, %.3f, %.3f, %.3f\n", color.value, top, bottom, left, right);
+    // OSReport("addr: %08x\n", this);
+    // OSReport("rect draw: (col, t, b, l, r): %08x, %.3f, %.3f, %.3f, %.3f\n", color.value, top, bottom, left, right);
     draw2DRectangle(color, top, bottom, left, right);
 }
 

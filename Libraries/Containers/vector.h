@@ -101,7 +101,7 @@ void vector<T>::push(const T& val) {
 
 template<class T>
 void vector<T>::pop_back() {
-    (Array + length)->~T();
+    delete Array[length];
     length--;
 }
 
@@ -112,7 +112,7 @@ size_t vector<T>::size() const {
 
 template<class T>
 void vector<T>::erase(size_t index) {
-    (Array + index)->~T();
+    delete Array[index];
     for (int i = index; i <= length; i++) {
         Array[i] = Array[i + 1];
     }
@@ -158,7 +158,7 @@ size_t vector<T>::findIf(bool (*condition)(const T& x)) {
 template<class T>
 void vector<T>::clear() {
     for(int i = 0; i < length; i++) {
-        (Array + i)->~T();
+        delete Array[i];
     }
     length = 0;
 }

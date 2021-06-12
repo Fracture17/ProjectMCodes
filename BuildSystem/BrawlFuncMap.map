@@ -6239,6 +6239,11 @@
 807a1700 00000020 807a1700 0 getActiveNum/[soGenerateArticleManageModuleImpl]/so_gener
 807a1720 00000014 807a1720 0 getGenerateMaxNum/[soGenerateArticleManageModuleImpl]/so_
 807a1734 0000006c 807a1734 0 getGenerateRestNum/[soGenerateArticleManageModuleImpl]/so
+812865ac
+81288578
+
+812865ac
+
 807a17a0 000000e0 807a17a0 0 getArticle/[soGenerateArticleManageModuleImpl]/so_generat
 807a1880 000000ec 807a1880 0 getArticleFromNo/[soGenerateArticleManageModuleImpl]/so_g
 807a196c 0000028c 807a196c 0 getArticleList/[soGenerateArticleManageModuleImpl]/so_gen

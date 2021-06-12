@@ -7,6 +7,7 @@
 
 #include "Brawl/IP/Inputs.h"
 #include "Brawl/AI/aiScriptData.h"
+#include "Brawl/AI/aiParam.h"
 #include "ftEntry.h"
 
 struct aiScriptData;
@@ -41,10 +42,19 @@ struct ftInput {
 
     // 0x58
     short aiThing;
-    char _spacer7[0x110 - 0x58 - 2];
+    char _spacer7[0x84 - 0x58 - 2];
+
+    // 0x84
+    int aiItemTarget;
+
+    char _spacer8[0x90 - 0x84 - 4];
+    // 0x90
+    aiParam aiParamPtr;
+
+    char _spacer9[0x110 - 0x90 - sizeof(aiParam)];
     // 0x110
     char aiTarget;
-    char _spacer8[0x144 - 0x110 - 1];
+    char _spacer10[0x144 - 0x110 - 1];
 
     // 0x144
     ftEntry* ftEntryPtr;

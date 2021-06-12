@@ -6,7 +6,7 @@
 #define PROJECTMCODES_SOMODULEACCESSOR_H
 
 
-#include "StageObject.h"
+#include "Brawl/SO/StageObject.h"
 #include "soControllerModuleImpl.h"
 #include "soWorkManageModuleImpl.h"
 #include "soPostureModuleImpl.h"
@@ -15,12 +15,14 @@
 #include "soCollisionAttackModuleImpl.h"
 #include "soKineticModuleGenericImpl.h"
 #include "soGroundModuleImpl.h"
+#include "soGenerateArticleManageModuleImpl.h"
 #include "../FT/ftParamCustomizeModuleImpl.h"
 #include "../FT/ftStopModuleImpl.h"
 #include "soColorBlendModule.h"
 
 
 struct StageObject;
+struct soGenerateArticleManageModuleImpl;
 
 //Contains references to all modules in a StageObject
 //The "so" prefix is the base module class
@@ -58,15 +60,21 @@ struct soModuleAccessor {
     char _spacer7[0x7C - 0x70 - 4];
     //0x70 + 0xC = 0x7C
     soStatusModuleImpl* statusModule;
-    char _spacer8[0x88 - 0x7C - 4];
+    char _spacer8[0x80 - 0x7C - 4];
     //0x7C + 0xC = 0x88
     soKineticModuleGenericImpl* kineticModule;
-    char _spacer9[0xB8 - 0x88 - 4];
+    char _spacer9[0xC];
+    //0x84 + 0xC = 0x90
+    soGenerateArticleManageModuleImpl* generateArticleManageModule;
+    char _spacer10[0xB8 - 0x90 - 4];
     //0xAC + 0xC = 0xB8
     soColorBlendModule* colorBlendModule;
-    char _spacer10[0xD0 - 0xB8 - 4];
+    char _spacer11[0xD0 - 0xB8 - 4];
     //0xC4 + 0xC = 0xD0
     ftParamCustomizeModuleImpl* paramCustomizeModule;
+
+    char _spacer12[4];
+    soModuleAccessor * moduleEnumeration;
 };
 
 
