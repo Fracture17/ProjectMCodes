@@ -7,6 +7,7 @@
 
 #include "Brawl/FT/Fighter.h"
 #include "aiWeaponMgr.h"
+#include "AICEPac.h"
 
 struct ATKDEntry {
     short moveID;
@@ -19,6 +20,15 @@ struct ATKDEntry {
     float yMaxRange;
 };
 
+struct aiReferParEntry {
+    char _spacer[0x20];
+};
+
+struct aiReferParEntryArray {
+    aiReferParEntry entries[0x35];
+};
+
+struct AICEPac;
 // size: 0x157
 struct aiManager {
     entryID getAiCpuTarget(entryID fighter);
@@ -27,6 +37,17 @@ struct aiManager {
 
     // 0xFC
     aiWeaponManager* weaponManager;
+    char _spacer2[0x134 - 0xFC - 4];
+
+    // 0x134
+    AICEPac* aiCommonCE;
+    // 0x138
+    // aiReferPar
+    aiReferParEntryArray* aiCommonMiscData0;
+    // 0x13C
+    // aiSystemPar
+    int* aiCommonMiscData1;
+
 };
 
 // vBrawl: 0x80b89a20

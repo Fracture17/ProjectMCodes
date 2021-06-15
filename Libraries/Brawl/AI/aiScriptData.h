@@ -7,12 +7,16 @@
 
 #include "Brawl/FT/ftInput.h"
 #include "aiStat.h"
+#include "AICEPac.h"
 
 struct ftInput;
+struct AICEPac;
 struct aiScriptData {
     // 0x00
     float variables[24];
-    char _spacer[0x70 - 0x60];
+    // 0x60
+    AICEPac* AIScriptPac;
+    char _spacer[0x70 - 0x64];
 
     // 0x70
     ftInput* ftInputPtr;
