@@ -7,10 +7,9 @@
       "request": "launch",
       "program": "${workspaceFolder}/build/IntermediateFiles/initFile",
       "cwd": "${workspaceFolder}",
-      "miDebuggerPath": "C:\\devkitPro\\devkitPPC\\bin\\powerpc-eabi-gdb.exe",
-      "miDebuggerServerAddress": "tcp:localhost:55020",
       "MIMode": "gdb",
-      // "symbolSearchPath": "",
+      "miDebuggerServerAddress": "tcp:localhost:55020",
+      "miDebuggerPath": "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/bin/gdb.exe",
       "setupCommands": [
           {
               "description": "Enable pretty-printing for gdb",
@@ -18,6 +17,24 @@
               "ignoreFailures": true
           }
       ]
+    },
+    {
+      "name": "other thing?",
+      "type": "gdb",
+      "request": "attach",
+      "executable": "${workspaceFolder}/build/IntermediateFiles/initFile",
+      "cwd": "${workspaceFolder}",
+      "gdbpath": "C:\\devkitPro\\devkitPPC\\bin\\powerpc-eabi-gdb.exe",
+      "target": "tcp:localhost:55020",
+      "remote": true,
+      // "symbolSearchPath": "",
+      // "autorun": [
+      //     {
+      //         "description": "Enable pretty-printing for gdb",
+      //         "text": "-enable-pretty-printing",
+      //         "ignoreFailures": true
+      //     }
+      // ]
     }
   ],
   

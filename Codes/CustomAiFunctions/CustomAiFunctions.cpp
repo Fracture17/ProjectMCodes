@@ -30,8 +30,8 @@ INJECTION("FORCE_AI_TAUNT_ROUTINE", 0x809112cc, R"(
     bctr
 )");
 
-#define change_md_aiInput ((void (*)(ftInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5)) 0x809049d0)
-extern "C" void forceAiTauntRoutine(ftInput *aiInputInst) {
+#define change_md_aiInput ((void (*)(aiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5)) 0x809049d0)
+extern "C" void forceAiTauntRoutine(aiInput *aiInputInst) {
     unsigned char dummy = 0xff;
     // setting it to md 0x1 will make it alternate between md 0x1 and md 0x14, and we don't want that.
     // therefor, we set it to 0x2 where this problem doesn't exist while still giving us control over
@@ -121,7 +121,7 @@ INJECTION("CPUForceMd", 0x80905204, R"(
     RESTORE_REGS
 )");
 
-extern "C" void CPUForceMd(ftInput * aiInput, unsigned int intent, int newAction) {
+extern "C" void CPUForceMd(aiInput * aiInput, unsigned int intent, int newAction) {
     OSReport("-- MD CHANGE --\n");
     OSReport("current action: %04x; ", aiInput->aiActPtr->aiScript);
     OSReport("new action?: %04x;\n", newAction);
@@ -137,7 +137,7 @@ extern "C" void CPUForceMd(ftInput * aiInput, unsigned int intent, int newAction
 bool autoDefend[4] = {true, true, true, true};
 INJECTION("PREVENT_AUTO_DEFEND", 0x80900c60, "bl preventAutoDefend");
 
-extern "C" void preventAutoDefend(ftInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5) {
+extern "C" void preventAutoDefend(aiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5) {
     if (autoDefend[FIGHTER_MANAGER->getPlayerNo(aiInputInst->ftEntryPtr->entryId)] || newOrOldAction == 0x30E0) {
         change_md_aiInput(aiInputInst, newMode, param_3, newOrOldAction, param_5);
     }
@@ -206,8 +206,8 @@ _CUSTOM_AI_FUNCTIONS_CONTINUE:
 )" );
 
 int fn_shouldReturnResult = 0;
-extern double md_customFnInjection[0xF];
-extern bool md_customFnInjectionToggle[0xF];
+extern float ai_customFnInjection[0x10];
+extern bool ai_customFnInjectionToggle[0x10];
 
 PatternManager rpsManagers[0x10] = {
     PatternManager(),
@@ -376,6 +376,10 @@ extern "C" {
         if (switchCase == 0x59) {
             fn_result = targetFighterEntry->ftStageObject->modules->motionModule->getEndFrame();
             fn_shouldReturnResult = 1;
+        }
+
+        if (switchCase == 0x60) {
+            fn_result = FIGHTER_MANAGER->getPlayerNo(selfAi->ftInputPtr->ftEntryPtr->entryId)
         }
     };
     void outputAiFunctionResult() {
@@ -931,11 +935,11 @@ extern "C" {
         // }
 
         if (cmd < 0xC0 && cmd >= 0xB0) {
-            if (md_customFnInjection != nullptr && !md_customFnInjectionToggle[cmd & 0xF]) md_customFnInjection[cmd & 0xF] = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            if (ai_customFnInjection != nullptr && !ai_customFnInjectionToggle[cmd & 0xF]) ai_customFnInjection[cmd & 0xF] = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
             return;
         }
         if (cmd < 0xD0 && cmd >= 0xC0) {
-            if (md_customFnInjection != nullptr && md_customFnInjectionToggle[cmd & 0xF]) aiActInst->variables[args[1]] = md_customFnInjection[cmd & 0xF];
+            if (ai_customFnInjection != nullptr && ai_customFnInjectionToggle[cmd & 0xF]) aiActInst->variables[args[1]] = ai_customFnInjection[cmd & 0xF];
             return;
         }
         if (cmd < 0xE0) {

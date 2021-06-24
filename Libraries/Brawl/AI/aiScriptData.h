@@ -5,11 +5,11 @@
 #ifndef PROJECTMCODES_AIACT_H
 #define PROJECTMCODES_AIACT_H
 
-#include "Brawl/FT/ftInput.h"
+#include "Brawl/AI/aiInput.h"
 #include "aiStat.h"
 #include "AICEPac.h"
 
-struct ftInput;
+struct aiInput;
 struct AICEPac;
 struct aiScriptData {
     // 0x00
@@ -19,7 +19,7 @@ struct aiScriptData {
     char _spacer[0x70 - 0x64];
 
     // 0x70
-    ftInput* ftInputPtr;
+    aiInput* ftInputPtr;
 
     // 0x74
     aiStat* scriptValues;

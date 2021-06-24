@@ -41,6 +41,7 @@
     },
     "cmakeSettings": {
       "CMAKE_CXX_COMPILER_WORKS": 1,
+      "CMAKE_BUILD_TYPE": "Debug",
       "PRINT_GET_PARAMS": 0,
       "CUSTOM_AI_FUNCTIONS": 0,
       "PRINT_TEST": 0,

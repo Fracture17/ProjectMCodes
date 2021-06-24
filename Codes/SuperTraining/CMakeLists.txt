@@ -1,4 +1,4 @@
 cmake_minimum_required (VERSION 3.15)
 
 
-add_code(SUPER_TRAINING menu.cpp FudgeMenu.cpp print.cpp)
+add_code(SUPER_TRAINING menu.cpp FudgeMenu.cpp print.cpp CustomAiFunctions.cpp)

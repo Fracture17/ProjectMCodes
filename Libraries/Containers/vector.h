@@ -38,6 +38,7 @@ public:
     //destroys elements from start, up to (but not including) end
     //void erase(size_t start, size_t end);
     void clear();
+    void clearNoDelete();
     bool empty();
 
     T* allocate(size_t newSize);
@@ -119,6 +120,7 @@ void vector<T>::erase(size_t index) {
     length--;
 }
 
+
 template<class T>
 void vector<T>::reallocate(size_t newSize) {
     T* temp = allocate(newSize);
@@ -188,8 +190,11 @@ vector<T>::vector(size_t size, const T &val) {
     }
 }
 
+#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
+
 template<class T>
 vector<T>::vector(const vector<T> &other) {
+    OSReport("========== CREATING NEW VECTOR ==========\n");
     maxLength = other.size();
     length = other.size();
     Array = allocate(maxLength);

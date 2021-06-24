@@ -6,14 +6,14 @@
 #define PROJECTMCODES_AISTAT_H
 
 
-#include <Brawl/FT/ftInput.h>
+#include <Brawl/AI/aiInput.h>
 
-struct ftInput;
+struct aiInput;
 struct aiStat {
     char _spacer[0x4C];
 
     // 0x4C
-    ftInput * input;
+    aiInput * input;
     char _spacer2[0xAC - 0x4C - 4];
 
     // 0xAC

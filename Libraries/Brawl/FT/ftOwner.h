@@ -5,8 +5,8 @@
 #ifndef PROJECTMCODES_FTOWNER_H
 #define PROJECTMCODES_FTOWNER_H
 
+#include "Brawl/AI/aiInput.h"
 #include "Fighter.h"
-#include "ftInput.h"
 
 struct staleMoveEntry {
     unsigned int num;
@@ -37,18 +37,19 @@ struct ftOwnerData {
     staleMoveEntry staleMoveQueue[9];
 };
 
-struct ftInput;
+struct aiInput;
 struct ftOwner {
     double getDamage();
     void setDamage(double newValue, int shouldLog);
+    bool isCpu();
 
     // 0x0
     ftOwnerData* ownerDataPtr;
     // 0x4
-    ftInput* ftInputPtr;
+    aiInput* ftInputPtr;
 };
 
 #define _getDamage_ftOwner ((double (*)(ftOwner * owner)) 0x8081c264)
 #define _setDamage_ftOwner ((void (*)(double newValue, ftOwner * owner, int shouldLog)) 0x8081bdcc)
-
+#define _isOperationCpu_ftOwner ((bool (*)(ftOwner * self)) 0x8081bdb0)
 #endif //PROJECTMCODES_FTOWNER_H

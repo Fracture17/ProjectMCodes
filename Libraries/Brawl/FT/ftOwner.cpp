@@ -11,3 +11,7 @@ double ftOwner::getDamage() {
 void ftOwner::setDamage(double newValue, int shouldLog) {
     _setDamage_ftOwner(newValue, this, shouldLog);
 }
+
+bool ftOwner::isCpu() {
+    return _isOperationCpu_ftOwner(this);
+}
