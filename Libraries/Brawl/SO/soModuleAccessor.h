@@ -19,6 +19,7 @@
 #include "../FT/ftParamCustomizeModuleImpl.h"
 #include "../FT/ftStopModuleImpl.h"
 #include "soColorBlendModule.h"
+#include "soAnimCmdModuleImpl.h"
 
 
 struct StageObject;
@@ -57,23 +58,26 @@ struct soModuleAccessor {
     char _spacer6[0x70 - 0x68 - 4];
     //0x64 + 0xC = 0x70
     soWorkManageModuleImpl* workModule;
-    char _spacer7[0x7C - 0x70 - 4];
+    char _spacer7[0x78 - 0x70 - 4];
+    // 0x6C + 0xC = 0x78
+    soAnimCmdModuleImpl* animCmdModule;
+    char _spacer8[0x7C - 0x78 - 4];
     //0x70 + 0xC = 0x7C
     soStatusModuleImpl* statusModule;
-    char _spacer8[0x80 - 0x7C - 4];
+    char _spacer9[0x80 - 0x7C - 4];
     //0x7C + 0xC = 0x88
     soKineticModuleGenericImpl* kineticModule;
-    char _spacer9[0xC];
+    char _spacer10[0xC];
     //0x84 + 0xC = 0x90
     soGenerateArticleManageModuleImpl* generateArticleManageModule;
-    char _spacer10[0xB8 - 0x90 - 4];
+    char _spacer11[0xB8 - 0x90 - 4];
     //0xAC + 0xC = 0xB8
     soColorBlendModule* colorBlendModule;
-    char _spacer11[0xD0 - 0xB8 - 4];
+    char _spacer12[0xD0 - 0xB8 - 4];
     //0xC4 + 0xC = 0xD0
     ftParamCustomizeModuleImpl* paramCustomizeModule;
-
-    char _spacer12[4];
+    char _spacer13[4];
+    // 0xCC + 0xC = 0xD8
     soModuleAccessor * moduleEnumeration;
 };
 

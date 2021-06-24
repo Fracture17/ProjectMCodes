@@ -12,15 +12,15 @@ struct soStatusModuleImpl {
     char _spacer[0x06];
 
     // 0x06
-    u32 previousAction;
+    u16 previousAction;
 
     char _spacer2[0x34 - 0x06 - 4];
 
     // 0x34
     u32 action;
 
-    char _spacer3[0x7F - 0x34 - 4];
-
+    char _spacer3[0x78 - 0x34 - 4];
+    
     // 0x7F
     bool attackHasConnected;
 };

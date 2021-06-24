@@ -28,7 +28,7 @@ unsigned int ftManager::getFighterCount(entryID entry) {
     return _getFighterCount_ftManager(this, entry);
 }
 
-ftInput* ftManager::getInput(entryID entry) {
+aiInput* ftManager::getInput(entryID entry) {
     return _getInput_ftManager(this, entry);
 }
 
@@ -38,4 +38,8 @@ int ftManager::getEntryCount() {
 
 void ftManager::setSlow(int excludeTeam, int unknown, int slowStrength, int durationInFrames) {
     return _setSlow_ftManager(this, excludeTeam, unknown, slowStrength, durationInFrames);
+}
+
+bool ftManager::isCpuActive(entryID entry) {
+    return _isCpuActive_ftManager(this, entry);
 }

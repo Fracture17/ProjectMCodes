@@ -108,6 +108,18 @@ struct Rect : Drawable {
         this->right = right;
     }
 
+    Rect(float x, float y, float width, float height, bool is2D, GXColor color) {
+        drawKind = 3;
+        this->delay = 0;
+        this->lifeTime = 1;
+        this->color = color;
+        this->top = y + (height / 2);
+        this->bottom = y - (height / 2);
+        this->left = x - (width / 2);
+        this->right = x + (width / 2);
+        this->is2D = is2D;
+    }
+
     void draw();
     float top;
     float bottom;

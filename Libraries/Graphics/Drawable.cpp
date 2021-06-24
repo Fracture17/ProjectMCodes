@@ -39,11 +39,12 @@ void drawItem(Drawable * item) {
 }
 
 void Renderables::renderAll() {
-    for (int i = 0; i < items.frame.size(); i++) { 
+    for (int i = 0; i < items.frame.size(); i++) {
         drawItem(items.frame[i]);
         if (items.frame[i]->lifeTime == 0) {
             // delete items.frame[i];
             items.frame.erase(i); 
+            i -= 1;
         }
     }
     for (int i = 0; i < items.tick.size(); i++) { 
@@ -51,6 +52,7 @@ void Renderables::renderAll() {
         if (items.tick[i]->lifeTime == 0) {
             // delete items.tick[i];
             items.tick.erase(i); 
+            i -= 1;
         }
     }
 }

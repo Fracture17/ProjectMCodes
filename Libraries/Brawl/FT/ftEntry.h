@@ -10,7 +10,7 @@
 #include "ftOwner.h"
 #include "Fighter.h"
 
-struct ftInput;
+struct aiInput;
 struct ftOwner;
 struct Fighter;
 // size: 0x244
@@ -29,7 +29,7 @@ struct ftEntry {
     // 0x28
     ftOwner* owner;
     // 0x2C
-    ftInput* input;
+    aiInput* input;
 
     char _spacer3[0x34 - 0x2C - 4];
     // 0x34

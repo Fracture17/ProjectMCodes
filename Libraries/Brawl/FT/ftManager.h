@@ -9,6 +9,7 @@
 #include "Brawl/IP/Inputs.h"
 #include "Brawl/AI/aiScriptData.h"
 #include "ftOwner.h"
+#include "brawl/AI/aiInput.h"
 #include "ftEntryManager.h"
 
 //the port of the fighter
@@ -21,9 +22,10 @@ struct ftManager {
     entryID getEntryIdFromIndex(int index);
     Fighter* getFighter(entryID entry, bool getFollower=false);
     unsigned int getFighterCount(entryID entry);
-    ftInput* getInput(entryID entry);
+    aiInput* getInput(entryID entry);
     void setSlow(int excludeTeam, int unknown, int slowStrength, int durationInFrames);
     int getEntryCount();
+    bool isCpuActive(entryID entry);
 
     char _spacer[0x154];
     ftEntryManager* entryManager;
@@ -45,11 +47,13 @@ struct ftManager {
 //gets the number of fighters attached to the given fighter entryid (ex. ice climbers = 1)
 #define _getFighterCount_ftManager ((unsigned int (*)(ftManager * self, entryID entry)) 0x80814ec4)
 
-#define _getInput_ftManager ((ftInput* (*)(ftManager * self, entryID entry)) 0x80815a38)
+#define _getInput_ftManager ((aiInput* (*)(ftManager * self, entryID entry)) 0x80815a38)
 
 //gets the number of fighters in a match
 #define _getEntryCount_ftManager ((int (*)(ftManager * self)) 0x80815be4)
 
 #define _setSlow_ftManager ((void (*)(ftManager * self, int excludeTeam, int unknown, int slowStrength, int durationInFrames)) 0x80817c48)
+
+#define _isCpuActive_ftManager ((bool (*)(ftManager * self, entryID entry)) 0x80814e5c)
 
 #endif //PROJECTMCODES_FTMANAGER_H
