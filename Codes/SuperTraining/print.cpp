@@ -22,8 +22,13 @@
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
 #define strcmp ((int (*)(const char* str1, const char* str2)) 0x803fa3fc)
-#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
+#define atof ((float (*)(const char* buffer)) 0x803fbbf8)
 
+extern float ai_customFnInjection[0x10];
+extern bool ai_customFnInjectionToggle[0x10];
+extern TrainingData playerTrainingData[];
+extern char selectedPlayer;
+extern Menu* fudgeMenu;
 
 char CAMERA_SCALE[] = "cam scale: %.3f";
 char TARGET[] = "Target Idx: %d";
@@ -79,11 +84,6 @@ bool isUnPaused() {
     return (*(char*)0x805B50C5) & 0x01;
 }
 
-// global variables used by CustomAiFunctions
-double md_customFnInjection[0x10] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-bool md_customFnInjectionToggle[0x10] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-unsigned char md_customFnModIdx;
-
 // global variables for the injection down-below
 signed char timer = 5;
 signed char cmdDelay = 50;
@@ -95,12 +95,8 @@ bool visible = false;
 bool paused = false;
 
 int modeIdx = 0;
-int md_debugThreshold = 20;
 double md_debugDamage = 0;
 int md_debugTarget = 0;
-
-
-
 
 // we need to do this manually for char-based ones :C
 void ModSpecialIdx(int amount) {
@@ -110,12 +106,6 @@ void ModSpecialIdx(int amount) {
     } else if (modeIdx < 0) {
         modeIdx = 2;
     }
-}
-
-void ModCustomFnInjectIdx(int amount) {
-    md_customFnModIdx += amount;
-    if (md_customFnModIdx == 0xFF) md_customFnModIdx = 0xF;
-    else if (md_customFnModIdx > 0xF) md_customFnModIdx = 0;
 }
 
 void ModInfoLevel(int amount) {
@@ -132,13 +122,15 @@ void ModObservePNum(int amount) {
     else if (observePNum > 3) observePNum = 3;
 }
 
-void setPosition(TrainingData& data, Fighter *fighter, ftInput *input, u8 numPlayers) {
-    if (PREVIOUS_PADS[0].stickX < -5 || 5 < PREVIOUS_PADS[0].stickX)
-        data.debug.xPos += (float) PREVIOUS_PADS[0].stickX * 3 / (float) (127 * numPlayers);
-    data.debug.airGroundState = fighter->modules->groundModule->unk1->unk1->airGroundState;
-    if (data.debug.airGroundState != 1) {
-        if (PREVIOUS_PADS[0].stickY < -5 || 5 < PREVIOUS_PADS[0].stickY)
-            data.debug.yPos += (float) PREVIOUS_PADS[0].stickY * 3 / (float) (127 * numPlayers);
+void setPosition(TrainingData& data, Fighter *fighter, aiInput *input, u8 numPlayers) {
+    if (data.debug.settingPosition) {
+        if (PREVIOUS_PADS[0].stickX < -5 || 5 < PREVIOUS_PADS[0].stickX)
+            data.debug.xPos += (float) PREVIOUS_PADS[0].stickX * 3 / (float) (127 * numPlayers);
+        data.debug.airGroundState = fighter->modules->groundModule->unk1->unk1->airGroundState;
+        if (data.debug.airGroundState != 1) {
+            if (PREVIOUS_PADS[0].stickY < -5 || 5 < PREVIOUS_PADS[0].stickY)
+                data.debug.yPos += (float) PREVIOUS_PADS[0].stickY * 3 / (float) (127 * numPlayers);
+        }
     }
 
     fighter->modules->postureModule->xPos = data.debug.xPos;
@@ -153,41 +145,204 @@ INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
     stb r0, 0x0011 (r31)
 )");
 
+// const char* STR_DEFAULT = "DEFAULT"; 
 extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
     auto AIData = fighterEntry->owner->ftInputPtr->aiActPtr->AIScriptPac;
     int numEntries = AIData->numEntries;
     int pNum = FIGHTER_MANAGER->getPlayerNo(fighterEntry->entryId);
-    playerTrainingData[pNum].trainingScripts.clear();
-    for (int i = 0; i < numEntries; i++) {
-        int strCount = AIData->getStringCount(i);
-        if (strCount > 0 && strcmp(AIData->getStringEntry(i, 0), "*") == 0) {
-            aiTrainingScriptData* data = new aiTrainingScriptData {
-                AIData->getCEEntry(i)->ID,
-                AIData->getStringEntry(i, 1)
-            };
-            OSReport("FOUND SCRIPT ID: %s\n", data->name);
-            playerTrainingData[pNum].trainingScripts.push(data);
+    if (fighterEntry->owner->ftInputPtr->fighterId != playerTrainingData[pNum].aiData.fighterID) {
+        playerTrainingData[pNum].aiData.fighterID = fighterEntry->owner->ftInputPtr->fighterId;
+        playerTrainingData[pNum].aiData.trainingScripts->clearOptions();
+        playerTrainingData[pNum].aiData.trainingScripts->addOption(new AITrainingScriptOption(
+            0xFFFF,
+            "DEFAULT",
+            pNum
+        ));
+        for (int i = 0; i < numEntries; i++) {
+            int strCount = AIData->getStringCount(i);
+            if (strCount == 2 && strcmp(AIData->getStringEntry(i, 0), "*") == 0) {
+                AITrainingScriptOption* data = new AITrainingScriptOption(
+                    AIData->getCEEntry(i)->ID,
+                    AIData->getStringEntry(i, 1),
+                    pNum
+                );
+                OSReport("FOUND SCRIPT ID: %s\n", data->name);
+                playerTrainingData[pNum].aiData.trainingScripts->addOption(data);
+            } else if (strCount > 2 && strcmp(AIData->getStringEntry(i, 0), "*") == 0) {
+                AITrainingScriptSubmenu* data = new AITrainingScriptSubmenu(
+                    AIData->getCEEntry(i)->ID,
+                    AIData->getStringEntry(i, 1),
+                    pNum,
+                    strCount - 2
+                );
+                data->addOption(new BoolOption("pause", fudgeMenu->paused));
+                signed char varIdx = 0;
+                for (int j = 2; j < strCount; j++) {
+                    if (AIData->getStringEntry(i, j)[0] != ':') {
+                        data->addOption(new FloatOption(AIData->getStringEntry(i, j), ai_customFnInjection[varIdx]));
+                        if (j+1 != strCount && AIData->getStringEntry(i, j + 1)[0] == ':') {
+                            data->addDefault(new AITrainingDefaultVal{ varIdx, atof(AIData->getStringEntry(i, j + 1) + 1) });
+                            j += 1;
+                        }
+                        varIdx ++;
+                    }
+                }
+                playerTrainingData[pNum].aiData.trainingScripts->addOption(data);
+            }
         }
-    }
+    } 
 }
 
 INJECTION("TOGGLE_PAUSE", 0x8002E5B0, R"(
-    SAVE_REGS
     mr r3, r25
-    bl checkMenuPaused
-    RESTORE_REGS
+    bl checkMenuPaused 
     lwz r3, 0 (r25)
 )");
 
 extern "C" void checkMenuPaused(char* gfTaskSchedulerInst) {
-    if (visible && paused) {
-        gfTaskSchedulerInst[0xB] |= 0x4;
-    } else {
-        gfTaskSchedulerInst[0xB] &= ~0x4;
+    // OSReport("Visible: %s, paused: %s\n", visible ? "T" : "F", paused ? "T" : "F");
+    if (paused && visible) { gfTaskSchedulerInst[0xB] |= 0x8; }
+    else { gfTaskSchedulerInst[0xB] &= ~0x8; }
+}
+
+// INJECTION("priorityCheck")
+
+void collectData(Fighter* fighter, int pNum) {
+    auto& currData = playerTrainingData[pNum];
+    auto& anmData = fighter->modules->motionModule->mainAnimationData;
+    
+    currData.debug.psaData.currentEndFrame = (anmData.resPtr == nullptr) ? -1 : anmData.resPtr->CHR0Ptr->animLength;
+    sprintf(currData.debug.psaData.currSubactionName, "%.19s", (anmData.resPtr == nullptr) ? "" : anmData.resPtr->CHR0Ptr->getString());
+    currData.debug.psaData.currentFrame = anmData.animFrame;
+    currData.debug.psaData.frameSpeedModifier = anmData.frameSpeedModifier;
+    currData.debug.psaData.action = fighter->modules->statusModule->action;
+    currData.debug.psaData.prevAction = fighter->modules->statusModule->previousAction;
+    currData.debug.psaData.subaction = fighter->modules->motionModule->subAction;
+
+    // OSReport("%s: %d\n", __FILE__, __LINE__);
+    // OSReport("Free Size: %08x\n", getFreeSize(mainHeap));
+    currData.debug.psaData.fullScript->reallocate(0);
+    currData.debug.psaData.fullScript->reallocate(1);
+    auto* threads = &fighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector;
+    auto* thread = &threads->threadUnion.asArray[currData.debug.psaData.threadIdx];
+    if (thread != nullptr) {
+        soAnimCmd* currCommand = thread->getCommand(0);
+        int commandIdx = 0;
+        currData.debug.psaData.scriptLocation = -1;
+        while (currCommand != nullptr && !(currCommand->_module == 0 && currCommand->code == 0) && !(currCommand->_module == 0xFF && currCommand->code == 0xFF)) {
+            if (currCommand->_module != 0xFA && currCommand->_module != 0xFF) {
+                currData.debug.psaData.fullScript->push(currCommand);
+                // OSReport("Idx: %d; psaVecSize: %d\n", commandIdx, currData.debug.psaData.fullScript->size());
+            } else {
+                break;
+            }
+            currCommand = thread->getCommand(++commandIdx);
+            if (currCommand == thread->cmdInterpreter->currCommand) {
+                currData.debug.psaData.scriptLocation = commandIdx;
+            }
+        }
+    }
+    // OSReport("%s: %d\n", __FILE__, __LINE__);
+    auto& aiInput = fighter->getOwner()->ftInputPtr;
+    
+    currData.aiData.md = aiInput->aiMd;
+    currData.aiData.target = aiInput->aiTarget;
+    auto btn = aiInput->buttons;
+    sprintf(currData.aiData.buttons, "");
+    if (btn.attack == 1) strcat(currData.aiData.buttons, "A; "); 
+    if (btn.special == 1) strcat(currData.aiData.buttons, "B; "); 
+    if (btn.jump == 1) strcat(currData.aiData.buttons, "X; "); 
+    if (btn.shield == 1) strcat(currData.aiData.buttons, "R; "); 
+    if (btn.dTaunt == 1) strcat(currData.aiData.buttons, "DT; "); 
+    if (btn.uTaunt == 1) strcat(currData.aiData.buttons, "UT; "); 
+    if (btn.sTaunt == 1) strcat(currData.aiData.buttons, "ST; "); 
+    currData.aiData.lstickX = aiInput->leftStickX;
+    currData.aiData.lstickY = aiInput->leftStickY;
+    currData.aiData.currentScript = aiInput->aiActPtr->aiScript;
+    currData.aiData.frameCount = aiInput->aiActPtr->framesSinceScriptChanged;
+
+    auto workModule = fighter->modules->workModule;
+    if (workModule != nullptr) {
+        auto RABasicsArr = (*(int (*)[workModule->RAVariables->basicsSize])workModule->RAVariables->basics);
+        auto LAFloatArr = (*(float (*)[workModule->LAVariables->floatsSize])workModule->LAVariables->floats);
+        currData.debug.shieldValue = LAFloatArr[0x3];
+
+        currData.debug.prevFrameShieldstun = currData.debug.shieldstun;
+        currData.debug.shieldstun = RABasicsArr[0x5];
+        if (currData.debug.shieldstun != currData.debug.prevFrameShieldstun - 1 && currData.debug.shieldstun != 0) {
+            currData.debug.maxShieldstun = RABasicsArr[0x5];
+        }
+
+        auto LABasicsArr = (*(int (*)[workModule->LAVariables->basicsSize])workModule->LAVariables->basics);
+        auto remainingHitstun = LABasicsArr[56];
+        currData.debug.prevFrameHitstun = currData.debug.hitstun;
+        currData.debug.hitstun = remainingHitstun;
+        if (currData.debug.hitstun != currData.debug.prevFrameHitstun - 1 && currData.debug.hitstun != 0) {
+            currData.debug.maxHitstun = remainingHitstun;
+        }
     }
 }
 
-SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
+// INJECTION("ALT_COLOR", 0x8016c3fc, R"(
+//     nop
+// )");
+
+// struct Color {
+//     unsigned char red;
+//     unsigned char green;
+//     unsigned char blue;
+// };
+
+// extern "C" Color* changeColor() {
+//     Color col = Color {
+//         0xFF,
+//         0x00,
+//         0xFF
+//     };
+//     return &col;
+// } 
+// INJECTION("PROCESS_ONLY_WITH_Z", 0x8002e614, R"(
+//     bl stopProcess
+// )");
+
+// char procDelay = 0;
+// int procTimer = 5;
+// bool procInstant = true;
+// extern "C" void stopProcess(char** currTask, int kind) {
+//     if (kind == 0) {
+//         OSReport("task kind: %s\n", *currTask);
+//     }
+//     if (strcmp(*currTask, "FALCO") != 0 && strcmp(*currTask, "GroundCollision") != 0) {
+//         ((void (*)(char** task, int processKind)) 0x8002dc74)(currTask, kind);
+//         return;
+//     }
+//     // OSReport("taskKind: %08x\n", kind);
+//     if (PREVIOUS_PADS[0].button.Z) {
+//         if (procInstant || procTimer <= 0) {
+//             // process/[gfTask]
+//             ((void (*)(char** task, int processKind)) 0x8002dc74)(currTask, kind);    
+//             procInstant = false;
+//         }
+//     } else {
+//         procInstant = true;
+//     }
+// }
+
+INJECTION("forceVisMemPool", 0x80025dc8, R"(
+    cmpwi r3, 69
+)");
+
+INJECTION("frameUpdate", 0x8001792c, R"(
+    bl updateOnFrame
+    addi r3, r30, 280
+)");
+
+extern "C" void updateOnFrame() {
+    // if (procTimer <= 0) {
+    //     procTimer = 50;
+    // }
+    // OSReport("size: %d (%08x)\n", sizeof(MEMiHeapHead), sizeof(MEMiHeapHead));
+
     printer.setup();
     printer.drawBoundingBoxes(0);
 
@@ -211,19 +366,19 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
     if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
         if (fudgeMenu == nullptr) {
             fudgeMenu = new Menu();
-            Page* mainPage = new Page();
+            Page* mainPage = new Page(fudgeMenu);
             mainPage->setTitle("main");
 
-            PlayerPage* p1Page = new PlayerPage(0);
+            PlayerPage* p1Page = new PlayerPage(fudgeMenu, 0);
             PageLink* p1PageLink = new PageLink("Player 1", p1Page);
 
-            PlayerPage* p2Page = new PlayerPage(1);
+            PlayerPage* p2Page = new PlayerPage(fudgeMenu, 1);
             PageLink* p2PageLink = new PageLink("Player 2", p2Page);
 
-            PlayerPage* p3Page = new PlayerPage(2);
+            PlayerPage* p3Page = new PlayerPage(fudgeMenu, 2);
             PageLink* p3PageLink = new PageLink("Player 3", p3Page);
 
-            PlayerPage* p4Page = new PlayerPage(3);
+            PlayerPage* p4Page = new PlayerPage(fudgeMenu, 3);
             PageLink* p4PageLink = new PageLink("Player 4", p4Page);
             
             mainPage->addOption(p1PageLink);
@@ -237,22 +392,7 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
         setupDrawPrimitives();
 
-        renderables.renderAll();
-
-        if (infoLevel >= 1 && visible) {
-            printer.setup();
-            printer.start2D();
-
-            message->fontScaleY = RENDER_SCALE_Y;
-            message->fontScaleX = RENDER_SCALE_X;
-            printer.lineHeight = 20 * message->fontScaleY;
-            message->xPos = LEFT_PADDING;
-            message->yPos = TOP_PADDING;
-
-            fudgeMenu->render(&printer, buffer);
-        }
-        
-        auto btn = PREVIOUS_PADS[0].button;
+        auto btn = PREVIOUS_PADS[0].button; //*(PADButtons*)(PREVIOUS_PADS[0].button.bits | PREVIOUS_PADS[1].button.bits | PREVIOUS_PADS[2].button.bits | PREVIOUS_PADS[3].button.bits);
         auto cData = playerTrainingData[observePNum];
         paused = fudgeMenu->paused;
         visible = fudgeMenu->visible;
@@ -262,33 +402,25 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
                 fudgeMenu->toggle();
                 instantResponse = false;
             }
-        } else if (visible && (paused || (btn.Z && btn.L) || selected)) {
+        } else if (btn.L && btn.R && btn.DownDPad) {
+            if (instantResponse) {
+                if (selected) fudgeMenu->deselect();
+                fudgeMenu->visible = false;
+                fudgeMenu->paused = false;
+                instantResponse = false;
+            }
+        } else if (visible) {
             if (btn.B && fudgeMenu->path.size() <= 1 && !selected) {
                 if (instantResponse) {
                     fudgeMenu->toggle();
                     instantResponse = false;
                 }
-            } else if (btn.B && !paused) {
-                if (instantResponse) {
-                    fudgeMenu->paused = true;
-                    instantResponse = false;
-                }
-            } else if (btn.R && btn.LeftDPad) {
-                timer -= 15;
-                if (timer <= 0 || instantResponse) {
-                    ModObservePNum(-1);
-                }
-            } else if (btn.R && btn.RightDPad) {
-                timer -= 15;
-                if (timer <= 0 || instantResponse) {
-                    ModObservePNum(1);
-                }
-            } else if (btn.A) {
+            } else if (btn.A && paused) {
                 if (instantResponse) {
                     fudgeMenu->select();
                     instantResponse = false;
                 }
-            } else if (btn.B) {
+            } else if (btn.B && paused) {
                 if (instantResponse) {
                     fudgeMenu->deselect();
                     instantResponse = false;
@@ -296,27 +428,31 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
             } else if (btn.DownDPad) {
                 timer -= 10;
                 if (timer < 0 || instantResponse) {
-                    if (selected) fudgeMenu->modify(btn.Z ? -10 : -1);
-                    else fudgeMenu->down();
+                    fudgeMenu->down();
+                    instantResponse = false;
+                }
+            } else if (btn.UpDPad && selected && !paused) {
+                if (instantResponse) {
+                    fudgeMenu->modify(-1);
+                    fudgeMenu->deselect();
                     instantResponse = false;
                 }
             } else if (btn.UpDPad) {
                 timer -= 10;
                 if (timer < 0 || instantResponse) {
-                    if (selected) fudgeMenu->modify(btn.Z ? 10 : 1);
-                    else fudgeMenu->up();
+                    fudgeMenu->up();
                     instantResponse = false;
                 }
             } else if (btn.LeftDPad) {
                 timer -= 10;
                 if (timer < 0 || instantResponse) {
-                    fudgeMenu->modify(btn.Z ? -10 : -1);
+                    fudgeMenu->modify(btn.Y ? -10 : -(btn.X ? 0.1 : 1));
                     instantResponse = false;
                 }
             } else if (btn.RightDPad) {
                 timer -= 10;
                 if (timer < 0 || instantResponse) {
-                    fudgeMenu->modify(btn.Z ? 10 : 1);
+                    fudgeMenu->modify(btn.Y ? 10 : (btn.X ? 0.1 : 1));
                     instantResponse = false;
                 }
             } else {
@@ -331,24 +467,37 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
             timer = 100;
             cmdDelay = 0;
         }
-
+        // if (btn.Z) {
+        //     procTimer -= 10;
+        // } else {
+        //     procInstant = true;
+        //     procTimer = 100;
+        // }
         for (int i = 0; i < entryCount; i++) {
             auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
 
             auto fighter = FIGHTER_MANAGER->getFighter(id);
             auto input = FIGHTER_MANAGER->getInput(id);
             auto playerNum = FIGHTER_MANAGER->getPlayerNo(id);
+
+            if (fighter == nullptr) continue;
+
+            if (selectedPlayer == playerNum) {
+                collectData(fighter, playerNum);
+            }
+
             auto action = fighter->modules->statusModule->action;
             auto& currData = playerTrainingData[playerNum];
             if (currData.actionableOverlay) {
                 auto CBM = fighter->modules->colorBlendModule;
+                auto SMM = fighter->modules->motionModule;
                 if (fighter->getCancelModule()->isEnableCancel() == 1) {
                     CBM->isEnabled = true;
-                    CBM->red = 0xFF;
-                    CBM->green = 0xFF;
+                    CBM->red = 0x00;
+                    CBM->green = 0x88;
                     CBM->blue = 0x00;
                     CBM->alpha = 0x88;
-                } else if (action == 0x0 || action == 0x12 || action == 0x49) {
+                } else if (action == 0x0 || action == 0x1 || action == 0x12 || action == 0x49 || ((action == 0x16 || action == 0x17) && SMM->mainAnimationData.animFrame > 4)) {
                     CBM->isEnabled = true;
                     CBM->red = 0x00;
                     CBM->green = 0xFF;
@@ -364,291 +513,223 @@ SIMPLE_INJECTION(testPrint, 0x8001792c, "addi r3, r30, 280") {
                     CBM->isEnabled = false;
                 }
             }
+            auto xPos = (playerNum + 0.5) * (640 / 4);
+            auto yPos = 75;
+            #define IP_DISPLAY_SCALE 3
+            if (currData.inputDisplay) {
+                auto isHuman = !fighter->getOwner()->isCpu();
+                auto& ipbtn = input->buttons;
+                renderables.items.frame.push(new Rect (
+                    xPos + (2) * IP_DISPLAY_SCALE,
+                    yPos - (7.5) * IP_DISPLAY_SCALE,
+                    (30) * IP_DISPLAY_SCALE,
+                    (20) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor(0x000000AA)
+                ));
+                renderables.items.frame.push(new Rect (
+                    xPos + (5) * IP_DISPLAY_SCALE,
+                    yPos - (10) * IP_DISPLAY_SCALE,
+                    (5) * IP_DISPLAY_SCALE,
+                    (5) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.A : ipbtn.attack) ? 0x00FF00FF : 0x007700FF)
+                ));
+                renderables.items.frame.push(new Rect (
+                    xPos + (0) * IP_DISPLAY_SCALE,
+                    yPos - (8) * IP_DISPLAY_SCALE,
+                    (2.5) * IP_DISPLAY_SCALE,
+                    (2.5) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.B : ipbtn.special) ? 0xFF0000FF : 0x770000FF)
+                ));
+                renderables.items.frame.push(new Rect (
+                    xPos + (5) * IP_DISPLAY_SCALE,
+                    yPos - (15) * IP_DISPLAY_SCALE,
+                    (5) * IP_DISPLAY_SCALE,
+                    (2.5) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.Y : ipbtn.jump) ? 0xFFFFFFFF : 0x777777FF)
+                ));
+                
+                renderables.items.frame.push(new Rect (
+                    xPos + (10) * IP_DISPLAY_SCALE,
+                    yPos - (10) * IP_DISPLAY_SCALE,
+                    (2.5) * IP_DISPLAY_SCALE,
+                    (5) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.X : ipbtn.jump) ? 0xFFFFFFFF : 0x777777FF)
+                ));
 
-            if (currData.debug.enabled) {
-                fighter->getOwner()->setDamage(currData.debug.damage, 0);
-                if (currData.debug.settingPosition) {
-                    fudgeMenu->unpause();
-                    setPosition(currData, fighter, input, entryCount);
+                renderables.items.frame.push(new Rect (
+                    xPos + (10) * IP_DISPLAY_SCALE,
+                    yPos - (15) * IP_DISPLAY_SCALE,
+                    (2.5) * IP_DISPLAY_SCALE,
+                    (2.5) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.Z : (ipbtn.attack && ipbtn.shield)) ? 0x8800FFFF : 0x770077FF)
+                ));
+
+                renderables.items.frame.push(new Rect (
+                    xPos - (5) * IP_DISPLAY_SCALE,
+                    yPos - (10) * IP_DISPLAY_SCALE,
+                    (5) * IP_DISPLAY_SCALE,
+                    (5) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor(0x777777FF)
+                ));
+
+                renderables.items.frame.push(new Rect (
+                    xPos - (5 - 2 * input->leftStickX) * IP_DISPLAY_SCALE,
+                    yPos - (10 + 2 * input->leftStickY) * IP_DISPLAY_SCALE,
+                    (1.5) * IP_DISPLAY_SCALE,
+                    (1.5) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor(0xFFFFFFFF)
+                ));
+
+                if (isHuman) {
+                    renderables.items.frame.push(new Rect (
+                        xPos + (5) * IP_DISPLAY_SCALE,
+                        yPos - (2) * IP_DISPLAY_SCALE,
+                        (3) * IP_DISPLAY_SCALE,
+                        (3) * IP_DISPLAY_SCALE,
+                        true,
+                        GXColor(0x777700FF)
+                    ));
+
+                    renderables.items.frame.push(new Rect (
+                        xPos + (5 + 2 * PREVIOUS_PADS[playerNum].substickX / 100) * IP_DISPLAY_SCALE,
+                        yPos - (2 + 2 * PREVIOUS_PADS[playerNum].substickY / 100) * IP_DISPLAY_SCALE,
+                        (1.5) * IP_DISPLAY_SCALE,
+                        (1.5) * IP_DISPLAY_SCALE,
+                        true,
+                        GXColor(0xFFDD00FF)
+                    ));
+
+
+                    renderables.items.frame.push(new Rect (
+                        xPos - (10) * IP_DISPLAY_SCALE,
+                        yPos - (12) * IP_DISPLAY_SCALE,
+                        (2.5) * IP_DISPLAY_SCALE,
+                        (9) * IP_DISPLAY_SCALE,
+                        true,
+                        GXColor(0x333333FF)
+                    ));
+                    float LTrigger = (float) PREVIOUS_PADS[playerNum].triggerLeft / 200;
+                    renderables.items.frame.push(new Rect (
+                        xPos - (10) * IP_DISPLAY_SCALE,
+                        yPos - (7.5 + 4 * LTrigger) * IP_DISPLAY_SCALE,
+                        (2.5) * IP_DISPLAY_SCALE,
+                        (8 * LTrigger) * IP_DISPLAY_SCALE,
+                        true,
+                        GXColor(PREVIOUS_PADS[playerNum].button.L ? 0xFFFFFFFF : 0x888888FF)
+                    ));
+
+                    renderables.items.frame.push(new Rect (
+                        xPos + (13.5) * IP_DISPLAY_SCALE,
+                        yPos - (12) * IP_DISPLAY_SCALE,
+                        (2.5) * IP_DISPLAY_SCALE,
+                        (9) * IP_DISPLAY_SCALE,
+                        true,
+                        GXColor(0x333333FF)
+                    ));
+
+                    float RTrigger = (float) PREVIOUS_PADS[playerNum].triggerRight / 200;
+                    renderables.items.frame.push(new Rect (
+                        xPos + (13.5) * IP_DISPLAY_SCALE,
+                        yPos - (7.5 + 4 * RTrigger) * IP_DISPLAY_SCALE,
+                        (2.5) * IP_DISPLAY_SCALE,
+                        (8 * RTrigger) * IP_DISPLAY_SCALE,
+                        true,
+                        GXColor(PREVIOUS_PADS[playerNum].button.R ? 0xFFFFFFFF : 0x888888FF)
+                    ));
+                } else {
+                    renderables.items.frame.push(new Rect (
+                        xPos + (5) * IP_DISPLAY_SCALE,
+                        yPos - (2) * IP_DISPLAY_SCALE,
+                        (2.5) * IP_DISPLAY_SCALE,
+                        (2.5) * IP_DISPLAY_SCALE,
+                        true,
+                        GXColor(ipbtn.cStick ? 0xFFDD00FF : 0x777700FF)
+                    ));
+
+                    renderables.items.frame.push(new Rect (
+                        xPos - (10) * IP_DISPLAY_SCALE,
+                        yPos - (12) * IP_DISPLAY_SCALE,
+                        (2.5) * IP_DISPLAY_SCALE,
+                        (9) * IP_DISPLAY_SCALE,
+                        true,
+                        GXColor(ipbtn.shield ? 0xFFFFFFFF : 0x777777FF)
+                    ));
+
+                    renderables.items.frame.push(new Rect (
+                        xPos + (13.5) * IP_DISPLAY_SCALE,
+                        yPos - (12) * IP_DISPLAY_SCALE,
+                        (2.5) * IP_DISPLAY_SCALE,
+                        (9) * IP_DISPLAY_SCALE,
+                        true,
+                        GXColor(ipbtn.shield ? 0xFFFFFFFF : 0x777777FF)
+                    ));
                 }
+                
+                renderables.items.frame.push(new Rect (
+                    xPos - (5) * IP_DISPLAY_SCALE,
+                    yPos - (2) * IP_DISPLAY_SCALE,
+                    (6) * IP_DISPLAY_SCALE,
+                    (2) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor(ipbtn.sTaunt ? 0xFFFFFFFF : 0x777777FF)
+                ));
+
+                renderables.items.frame.push(new Rect (
+                    xPos - (5) * IP_DISPLAY_SCALE,
+                    yPos - (4) * IP_DISPLAY_SCALE,
+                    (2) * IP_DISPLAY_SCALE,
+                    (2) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor(ipbtn.uTaunt ? 0xFFFFFFFF : 0x777777FF)
+                ));
+
+                renderables.items.frame.push(new Rect (
+                    xPos - (5) * IP_DISPLAY_SCALE,
+                    yPos - (0) * IP_DISPLAY_SCALE,
+                    (2) * IP_DISPLAY_SCALE,
+                    (2) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor(ipbtn.dTaunt ? 0xFFFFFFFF : 0x777777FF)
+                ));
+
+                
             }
         }
 
-        // for(int i = 0; i < entryCount; i++) {
-        //     printer.setup();
-        //     printer.startNormal();
-        //     _GXLoadPosMtxImm(&CAMERA_MANAGER->cameras[0].modelView, 0);
-        //     auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
+        renderables.renderAll();
+        if (infoLevel >= 1 && visible) {
+            printer.setup();
+            printer.start2D();
 
-        //     auto fighter = FIGHTER_MANAGER->getFighter(id);
-        //     auto input = FIGHTER_MANAGER->getInput(id);
+            message->fontScaleY = RENDER_SCALE_Y;
+            message->fontScaleX = RENDER_SCALE_X;
+            printer.lineHeight = 20 * message->fontScaleY;
+            message->xPos = LEFT_PADDING;
+            message->yPos = TOP_PADDING;
+            fudgeMenu->render(&printer, buffer);
+        }
 
-        //     auto xPos = fighter->modules->postureModule->xPos;
-        //     auto yPos = fighter->modules->postureModule->yPos * -1;
-        //     auto zPos = fighter->modules->postureModule->zPos;
-
-        //     printer.lineHeight = 20 * 0.1;
-        //     message->xPos = xPos + 5;
-        //     message->yPos = yPos - printer.lineHeight * 6;
-        //     message->fontScaleX = 0.1;
-        //     message->fontScaleY = 0.1;
-        //     printer.lineStart = xPos + 5;
-
-        //     if (infoLevel >= 2) {
-        //         printer.startBoundingBox();
-        //         auto target = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(id));
-
-        //         sprintf(buffer, TARGET, target);
-        //         printer.printLine(buffer);
-
-        //         sprintf(buffer, LSTICK, input->leftStickX, input->leftStickY);
-        //         printer.printLine(buffer);
-
-        //         sprintf(aiInputBuffer, "");
-        //         auto buttons = input->buttons;
-        //         if (buttons.attack == 1) { strcat(aiInputBuffer, INPUTS_NAMES[0]); }
-        //         if (buttons.special == 1) { strcat(aiInputBuffer, INPUTS_NAMES[1]); }
-        //         if (buttons.jump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[2]); }
-        //         if (buttons.shield == 1) { strcat(aiInputBuffer, INPUTS_NAMES[3]); }
-        //         if (buttons.cStick == 1) { strcat(aiInputBuffer, INPUTS_NAMES[4]); }
-        //         if (buttons.uTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[5]); }
-        //         if (buttons.sTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[6]); }
-        //         if (buttons.dTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[7]); }
-
-        //         sprintf(buffer, INPUTS, aiInputBuffer);
-        //         printer.printLine(buffer);
-        //         sprintf(buffer, AI_SCRIPT, input->aiActPtr->aiScript);
-        //         printer.print(buffer);
-        //         printer.padToWidth(RENDER_X_SPACING / 5);
-        //         sprintf(buffer, AI_MD, input->aiMd);
-        //         printer.print(buffer);
-        //         //
-        //         //            sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
-        //         //            printer.print(buffer);
-        //         printer.saveBoundingBox(0, 0x00000088, 2);
-        //     }
-
-        //     auto playerNum = FIGHTER_MANAGER->getPlayerNo(id);
-        //     if (playerNum == observePNum && infoLevel >= 1) {
-        //         printer.setup();
-        //         printer.start2D();
-
-        //         message->fontScaleY = RENDER_SCALE_Y;
-        //         message->fontScaleX = RENDER_SCALE_X;
-        //         printer.lineHeight = 20 * message->fontScaleY;
-        //         message->xPos = LEFT_PADDING;
-        //         message->yPos = TOP_PADDING;
-
-        //         printer.startBoundingBox();
-        //         sprintf(buffer, "[player: %d]", playerNum + 1);
-        //         printer.print(buffer);
-
-        //         sprintf(buffer, " Mode: %s", modes[playerTrainingData[playerNum].modeSelection]); 
-        //         printer.printLine(buffer);
-
-                
-
-        //         // if (infoLevel >= 2) {
-        //         //     printer.padToWidth(RENDER_X_SPACING / 2);
-        //         //     if (!md_customFnInjectionToggle[md_customFnModIdx]) printer.setTextColor(0xffffff88);
-        //         //     sprintf(buffer, "custom value [%d]: %.3f", md_customFnModIdx,
-        //         //             md_customFnInjection[md_customFnModIdx]);
-        //         //     printer.printLine(buffer);
-        //         //     printer.setTextColor(0xffffffff);
-
-        //         //     sprintf(buffer, "Injected:");
-        //         //     printer.printLine(buffer);
-
-        //         //     int printedCount = 0;
-        //         //     for (int j = 0; j < 0x10; j++) {
-        //         //         if (md_customFnInjectionToggle[j]) {
-        //         //             printedCount += 1;
-        //         //             if (printedCount % 7 == 0) { printer.newLine(); }
-        //         //             sprintf(buffer, "[%1x]: %.3f", j, md_customFnInjection[j]);
-        //         //             if (j == md_customFnModIdx) {
-        //         //                 printer.setTextColor(0xffff00ff);
-        //         //                 printer.print(buffer);
-        //         //                 printer.setTextColor(0xffffffff);
-        //         //             } else {
-        //         //                 printer.print(buffer);
-        //         //             }
-        //         //             printer.padToWidth(RENDER_X_SPACING);
-        //         //         }
-        //         //     }
-        //         //     printer.newLine();
-        //         //     printer.newLine();
-        //         // }
-
-        //         sprintf(buffer, AI_SCRIPT, input->aiActPtr->aiScript);
-        //         printer.print(buffer);
-        //         printer.padToWidth(RENDER_X_SPACING + 10);
-        //         sprintf(buffer, AI_MD, input->aiMd);
-        //         printer.printLine(buffer);
-
-        //         sprintf(aiInputBuffer, "");
-        //         auto buttons = input->buttons;
-        //         if (buttons.attack == 1) { strcat(aiInputBuffer, INPUTS_NAMES[0]); }
-        //         if (buttons.special == 1) { strcat(aiInputBuffer, INPUTS_NAMES[1]); }
-        //         if (buttons.jump == 1) { strcat(aiInputBuffer, INPUTS_NAMES[2]); }
-        //         if (buttons.shield == 1) { strcat(aiInputBuffer, INPUTS_NAMES[3]); }
-        //         if (buttons.cStick == 1) { strcat(aiInputBuffer, INPUTS_NAMES[4]); }
-        //         if (buttons.uTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[5]); }
-        //         if (buttons.sTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[6]); }
-        //         if (buttons.dTaunt == 1) { strcat(aiInputBuffer, INPUTS_NAMES[7]); }
-
-        //         sprintf(buffer, INPUTS, aiInputBuffer);
-        //         printer.print(buffer);
-
-        //         printer.padToWidth(RENDER_X_SPACING + 10);
-        //         sprintf(buffer, LSTICK, input->leftStickX, input->leftStickY);
-        //         printer.printLine(buffer);
-
-        //         sprintf(buffer, LAST_SCRIPT_CHANGE, input->aiActPtr->framesSinceScriptChanged);
-        //         printer.printLine(buffer);
-
-        //         printer.saveBoundingBox(0, 0x00000088, 2);
-        //     }
-        // }
-
-//        renderables.renderAll();
         startNormalDraw();
     }
 
-    // if (btn.R && btn.Z) {
-    //     if (btn.A) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             aiCanCall = !aiCanCall;
-    //         }
-    //     }
-    //     if (btn.DownDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             ModInfoLevel(-1);
-    //         }
-    //     }
-    //     if (btn.RightDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             ModObservePNum(1);
-    //         }
-    //     } else if (btn.LeftDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             ModObservePNum(-1);
-    //         }
-    //     } else if (btn.UpDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             ModInfoLevel(1);
-    //         }
-    //     } else {
-    //         cmdDelay = 0;
-    //     }
-    // }
-    // else if (btn.Z) {
-    //     if (btn.RightDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             ModSpecialIdx(1);
-    //         }
-    //     } else if (btn.LeftDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             ModSpecialIdx(-1);
-    //         }
-    //     } else {
-    //         cmdDelay = 0;
-    //     }
-    // } else if (btn.A) {
-    //     if (btn.UpDPad) {
-    //         timer -= 20;
-    //         if (timer <= 0) {
-    //             md_customFnInjection[md_customFnModIdx]++;
-    //         }
-    //     } else if (btn.DownDPad) {
-    //         timer -= 20;
-    //         if (timer <= 0) {
-    //             md_customFnInjection[md_customFnModIdx]--;
-    //         }
-    //     } else if (btn.LeftDPad) {
-    //         timer -= 20;
-    //         if (timer <= 0) {
-    //             md_customFnInjection[md_customFnModIdx] -= 0.05;
-    //         }
-    //     } else if (btn.RightDPad) {
-    //         timer -= 20;
-    //         if (timer <= 0) {
-    //             md_customFnInjection[md_customFnModIdx] += 0.05;
-    //         }
-    //     } else {
-    //         cmdDelay = 0;
-    //     }
-    // } else if (btn.Y) {
-    //     if (btn.UpDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             md_customFnInjectionToggle[md_customFnModIdx] = true;
-    //         }
-    //     } else if (btn.DownDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             md_customFnInjectionToggle[md_customFnModIdx] = false;
-    //         }
-    //     } else if (btn.LeftDPad) {
-    //         timer -= 20;
-    //         if (timer <= 0) {
-    //             ModCustomFnInjectIdx(-1);
-    //             OSReport("CustomFnIdx: %d\n", md_customFnModIdx);
-    //         }
-    //     } else if (btn.RightDPad) {
-    //         timer -= 20;
-    //         if (timer <= 0) {
-    //             ModCustomFnInjectIdx(1);
-    //             OSReport("CustomFnIdx: %d\n", md_customFnModIdx);
-    //         }
-    //     } else {
-    //         cmdDelay = 0;
-    //     }
-    // } else if (strcmp(modes[modeIdx], "DEBUG") == 0) {
-    //     if (btn.UpDPad) {
-    //         timer -= 20;
-    //         if (timer <= 0 && md_debugDamage < 999) {
-    //             md_debugDamage++;
-    //         }
-    //     } else if (btn.DownDPad) {
-    //         timer -= 20;
-    //         if (timer <= 0 && md_debugDamage > 0) {
-    //             md_debugDamage--;
-    //         }
-    //     } else if (btn.LeftDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             md_debugThreshold--;
-    //         }
-    //     } else if (btn.RightDPad) {
-    //         timer -= 10;
-    //         if (timer <= 0) {
-    //             md_debugThreshold++;
-    //         }
-    //     } else {
-    //         cmdDelay = 0;
-    //     }
-    // } else {
-    //     timer = 50;
-    //     cmdDelay = 0;
-    // }
     if (timer <= 0) {
         timer = 50 - (cmdDelay - (5 - cmdDelay % 5));
         cmdDelay += 1;
-        if (cmdDelay > 45) cmdDelay = 45;
+        // if (cmdDelay > 45) cmdDelay = 45;
     }
 }
 
-
 SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
     renderables.updateTick();
-
+    
     auto scene = getScene();
     if (scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
@@ -659,28 +740,49 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
             auto fighter = FIGHTER_MANAGER->getFighter(id);
             auto input = FIGHTER_MANAGER->getInput(id);
             auto pNum = FIGHTER_MANAGER->getPlayerNo(id);
-            if (playerTrainingData[pNum].modeSelection == MODES::DEBUG) {
+            
+            auto& currData = playerTrainingData[pNum];
+
+            // [0] = snapback enabled
+            // [1] = leniency
+            if (currData.aiData.scriptID == 0x8201 && ai_customFnInjection[0] > 0) {
+                if (fighter->modules->statusModule->action == 0x1D) {
+                    currData.aiData.snapbackShieldtimer = ai_customFnInjection[1];
+                } else {
+                    if (currData.aiData.snapbackShieldtimer <= 0) {
+                        auto LAVars = fighter->modules->workModule->LAVariables;
+                        auto LAFloatArr = (*(float (*)[LAVars->floatsSize])LAVars->floats);
+                        LAFloatArr[0x3] = 50;
+                    } else { 
+                        currData.aiData.snapbackShieldtimer --; 
+                    }
+                }
+            }
+            
+            if (currData.debug.enabled && (currData.debug.fixPosition || currData.debug.settingPosition)) {
                 auto LAVars = fighter->modules->workModule->LAVariables;
                 auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
                 auto remainingHitstun = LABasicsArr[56];
-                if (remainingHitstun == 0 || remainingHitstun + md_debugThreshold <= 0) {
-                    playerTrainingData[pNum].debug.comboTimer--;
-                    if (playerTrainingData[pNum].debug.comboTimer == 0) {
-                        playerTrainingData[pNum].debug.noclip = true;
+                if (remainingHitstun == 0 || remainingHitstun + currData.debug.comboTimerAdjustment <= 0) {
+                    currData.debug.comboTimer--;
+                    if (currData.debug.comboTimer == 0) {
+                        currData.debug.noclip = true;
                         fighter->modules->groundModule->setCorrect(0);
                     }
-                    if (playerTrainingData[pNum].debug.comboTimer <= 0) {
-                        if (playerTrainingData[pNum].debug.noclip && playerTrainingData[pNum].debug.comboTimer == -1) {
-                            playerTrainingData[pNum].debug.noclip = false;
+                    if (currData.debug.comboTimer <= 0) {
+                        if (currData.debug.noclip && currData.debug.comboTimer == -1) {
+                            currData.debug.noclip = false;
                             fighter->modules->groundModule->setCorrect(5);
                         }
-                        setPosition(playerTrainingData[pNum], fighter, input, entryCount);
-                        FIGHTER_MANAGER->getOwner(id)->setDamage(playerTrainingData[pNum].debug.damage, 0);
-                        playerTrainingData[pNum].debug.comboTimer = 0;
+                        setPosition(currData, fighter, input, entryCount);
+                        FIGHTER_MANAGER->getOwner(id)->setDamage(currData.debug.damage, 0);
+                        currData.debug.comboTimer = 0;
                     }
                 } else {
-                    playerTrainingData[pNum].debug.comboTimer = playerTrainingData[pNum].debug.comboTimerAdjustment;
+                    currData.debug.comboTimer = remainingHitstun + currData.debug.comboTimerAdjustment;
                 }
+            } else if (currData.debug.enabled && currData.debug.damage != 0) {
+                FIGHTER_MANAGER->getOwner(id)->setDamage(currData.debug.damage, 0);
             }
         }
     }
@@ -697,11 +799,16 @@ INJECTION("CPUForceBehavior", 0x809188B0, R"(
     RESTORE_REGS
 )");
 extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
-    if (true || strcmp(modes[modeIdx], "NORMAL") == 0) {
+    char pNum = FIGHTER_MANAGER->getPlayerNo(aiActPtr->ftInputPtr->ftEntryPtr->entryId);
+    if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {
         OSReport("intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
         OSReport("current: %04x; ", aiActPtr->aiScript);
         OSReport("next: %04x\n", param1);
 
         return param1; // normal routine
     }
+
+    auto action = aiActPtr->ftInputPtr->ftEntryPtr->ftStageObject->modules->statusModule->action;
+
+    return (aiActPtr->intermediateNextAiScript != 0 || (action >= 0x34 && action <= 0x3B) || action == 0x4D || (action >= 0x74 && action <= 0x7C)) ? param1 : playerTrainingData[pNum].aiData.scriptID;
 }
