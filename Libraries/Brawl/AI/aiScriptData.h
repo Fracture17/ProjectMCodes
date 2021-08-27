@@ -11,12 +11,18 @@
 
 struct aiInput;
 struct AICEPac;
+struct aiStat;
 struct aiScriptData {
     // 0x00
     float variables[24];
     // 0x60
     AICEPac* AIScriptPac;
-    char _spacer[0x70 - 0x64];
+    char _spacer[0x68 - 0x60 - 4];
+
+    // 0x68
+    int* currentInstruction;
+
+    char _spacer2[0x70 - 0x68 - 4];
 
     // 0x70
     aiInput* ftInputPtr;
@@ -32,7 +38,7 @@ struct aiScriptData {
     unsigned short intermediateCurrentAiScript;
     // 0x7E
     unsigned short intermediateNextAiScript;
-    char _spacer2[0xAC - 0x7E - 2];
+    char _spacer3[0xAC - 0x7E - 2];
 
     // 0xAC
     unsigned int framesSinceScriptChanged;

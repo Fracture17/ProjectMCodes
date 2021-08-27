@@ -10,6 +10,9 @@
 
 struct aiInput;
 struct aiStat {
+    double calcArrivePosX(double time);
+    double calcArrivePosY(double time);
+
     char _spacer[0x4C];
 
     // 0x4C
@@ -20,5 +23,7 @@ struct aiStat {
     int opponentCharacter;
 };
 
+#define _calcArraivePosX_aiStat ((double (*)(double time, aiStat * stat)) 0x80916884)
+#define _calcArraivePosY_aiStat ((double (*)(double time, aiStat * stat)) 0x809168c8)
 
 #endif //PROJECTMCODES_AISTAT_H

@@ -7,6 +7,14 @@
 
 #include <Containers/Vec3f.h>
 
+union xyDouble {
+    double asDouble;
+    struct {
+        float xPos;
+        float yPos;
+    };
+};
+
 struct unk3_soGroundModule {
     char _spacer[0x14];
 
@@ -44,6 +52,11 @@ struct soGroundModuleImpl {
     unsigned int isPassableCheck(int unk);
     unsigned int isPassableGround(int unk);
     void setCorrect(int mode);
+    xyDouble getLeftPos();
+    xyDouble getRightPos();
+    xyDouble getUpPos();
+    xyDouble getDownPos();
+    
 
     char _spacer[0x28];
 
@@ -63,4 +76,8 @@ struct soGroundModuleImpl {
 #define _isPassableGround_soGroundModuleImpl ((unsigned int (*)(soGroundModuleImpl * self, int unk)) 0x80731e44)
 #define _isPassableCheck_soGroundModuleImpl ((unsigned int (*)(soGroundModuleImpl * self, int unk)) 0x80731b1c)
 
+#define _getLeftPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80733f9c)
+#define _getRightPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80733fe0)
+#define _getUpPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80733f14)
+#define _getDownPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80733f58)
 #endif //PROJECTMCODES_SOGROUNDMODULEIMPL_H

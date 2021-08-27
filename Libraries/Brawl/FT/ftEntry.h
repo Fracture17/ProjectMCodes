@@ -15,7 +15,7 @@ struct ftOwner;
 struct Fighter;
 // size: 0x244
 struct ftEntry {
-    unsigned int getTeam( );
+    // unsigned int getTeam();
     char _spacer[0x4];
     // 0x04
     int entryId;

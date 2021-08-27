@@ -28,7 +28,8 @@
       "PRINT_GET_PARAMS": 1,
       "CUSTOM_AI_FUNCTIONS": 0,
       "PRINT_TEST": 0,
-      "SUPER_TRAINING": 0
+      "SUPER_TRAINING": 0,
+      "RANDOM_1_TO_1_ALTS": 0
     }
   },
   {
@@ -45,7 +46,26 @@
       "PRINT_GET_PARAMS": 0,
       "CUSTOM_AI_FUNCTIONS": 0,
       "PRINT_TEST": 0,
-      "SUPER_TRAINING": 1
+      "SUPER_TRAINING": 1,
+      "RANDOM_1_TO_1_ALTS": 0
+    }
+  },
+  {
+    "name": "TP",
+    "compilers": {
+      "CXX": "${workspaceFolder}/BuildSystem/Compiler/bin/powerpc-eabi-g++.exe"
+    },
+    "preferredGenerator": {
+      "name": "MinGW Makefiles"
+    },
+    "cmakeSettings": {
+      "CMAKE_CXX_COMPILER_WORKS": 1,
+      "CMAKE_BUILD_TYPE": "Debug",
+      "PRINT_GET_PARAMS": 0,
+      "CUSTOM_AI_FUNCTIONS": 0,
+      "PRINT_TEST": 0,
+      "SUPER_TRAINING": 1,
+      "RANDOM_1_TO_1_ALTS": 1
     }
   }
 ]

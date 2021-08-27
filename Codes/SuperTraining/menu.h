@@ -29,6 +29,7 @@ struct OptionType {
   virtual void down() = 0;
   virtual void up() = 0;
   virtual void setParentPage(Page* p) = 0;
+  virtual ~OptionType() {};
   char name[20];
   Page* parent;
   SubpageOption* subParent = nullptr;
@@ -39,6 +40,7 @@ struct StandardOption : public OptionType {
   void up() { modify(1); }
   void down() { modify(-1); }
   void setParentPage(Page* p) { this->parent = p; }
+  virtual ~StandardOption() {}
 };
 
 struct Page {
@@ -51,6 +53,7 @@ struct Page {
   void down();
   void modify(float amount);
   void render(TextPrinter* printer, char* buffer);
+  virtual ~Page() {}
 
   char title[20];
   vector<OptionType*> options;
@@ -153,6 +156,8 @@ public:
   void select();
   void deselect();
   void render(TextPrinter* printer, char* buffer);
+
+  ~FloatOption() {}
 
 private:
   float& value;
@@ -275,44 +280,6 @@ public:
     this->collapsible = collapsible;
   }
 
-  // SubpageOption(char* name, vector<OptionType *>& options) : options(options) {
-  //   sprintf(this->name, "%.19s", name);
-  // }
-  // SubpageOption(char* name, vector<OptionType *>& options, int height, int depth) : options(options) {
-  //   sprintf(this->name, "%.19s", name);
-  //   this->height = height;
-  //   this->depth = depth;
-  // }
-  // SubpageOption(char* name, vector<OptionType *>& options, bool collapsible) : options(options) {
-  //   sprintf(this->name, "%.19s", name);
-  //   this->collapsible = collapsible;
-  // }
-  // SubpageOption(char* name, vector<OptionType *>& options, int height, int depth, bool collapsible) : options(options) {
-  //   sprintf(this->name, "%.19s", name);
-  //   this->height = height;
-  //   this->depth = depth;
-  //   this->collapsible = collapsible;
-  // }
-
-  // SubpageOption(char* name, vector<OptionType *>& options, int& index) : options(options), currentOption(index) {
-  //   sprintf(this->name, "%.19s", name);
-  // }
-  // SubpageOption(char* name, vector<OptionType *>& options, int& index, int height, int depth) : options(options), currentOption(index) {
-  //   sprintf(this->name, "%.19s", name);
-  //   this->height = height;
-  //   this->depth = depth;
-  // }
-  // SubpageOption(char* name, vector<OptionType *>& options, int& index, bool collapsible) : options(options), currentOption(index) {
-  //   sprintf(this->name, "%.19s", name);
-  //   this->collapsible = collapsible;
-  // }
-  // SubpageOption(char* name, vector<OptionType *>& options, int& index, int height, int depth, bool collapsible) : options(options), currentOption(index) {
-  //   sprintf(this->name, "%.19s", name);
-  //   this->height = height;
-  //   this->depth = depth;
-  //   this->collapsible = collapsible;
-  // }
-
   void modify(float amount);
   void select();
   void deselect();
@@ -325,6 +292,10 @@ public:
   void clearOptions();
   void removeOptions();
   int getOptionCount();
+
+  virtual ~SubpageOption() {
+    options.clear();
+  }
 
   vector<OptionType *> options = vector<OptionType *>();
   int& currentOption = this->_index;

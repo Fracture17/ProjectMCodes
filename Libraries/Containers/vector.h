@@ -38,7 +38,6 @@ public:
     //destroys elements from start, up to (but not including) end
     //void erase(size_t start, size_t end);
     void clear();
-    void clearNoDelete();
     bool empty();
 
     T* allocate(size_t newSize);

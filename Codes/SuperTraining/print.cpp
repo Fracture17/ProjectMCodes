@@ -12,6 +12,7 @@
 #include "Brawl/FT/ftManager.h"
 #include "Brawl/AI/aiMgr.h"
 #include "Brawl/AI/aiScriptData.h"
+#include "Brawl/sndSystem.h"
 
 #include "Graphics/Draw.h"
 #include "Brawl/Message.h"
@@ -122,6 +123,51 @@ void ModObservePNum(int amount) {
     else if (observePNum > 3) observePNum = 3;
 }
 
+#define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
+#define _randf ((double (*)()) 0x8003fb64)
+void getRandSafePosition(Vec3f* pos, bool onGround) {
+    float xRand;
+    float yRand;
+
+    for (int i = 0; i < 100; i++) {
+        xRand = _randf() * 300 - 150;
+        yRand = _randf() * 150;
+
+        Vec3f startPos {
+            (float) xRand,
+            (float) yRand,
+            0
+        };
+
+        Vec3f destPos {
+            (float) xRand,
+            (float) yRand - 80,
+            0
+        };
+
+        Vec3f ret1 {-1,-1,-1};
+        Vec3f ret2 {-1,-1,-1};
+
+        _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+        // OSReport("OUTSIDE: %.3f, %.3f\n", ret1.f1, ret1.f2);
+        if (ret1.f1 != -1 && ret1.f2 != -1) {
+            if (onGround) yRand = ret1.f2;
+            Vec3f destPos {
+                (float) xRand,
+                (float) yRand + 150,
+                0
+            };
+            Vec3f ret1 {-1,-1,-1};
+            _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            // OSReport("INSIDE: %.3f, %.3f\n", ret1.f1, ret1.f2);
+            if (ret1.f1 == -1 && ret1.f2 == -1) { break; }
+        }
+    }
+    
+    pos->f1 = xRand;
+    pos->f2 = yRand;
+}
+
 void setPosition(TrainingData& data, Fighter *fighter, aiInput *input, u8 numPlayers) {
     if (data.debug.settingPosition) {
         if (PREVIOUS_PADS[0].stickX < -5 || 5 < PREVIOUS_PADS[0].stickX)
@@ -133,8 +179,13 @@ void setPosition(TrainingData& data, Fighter *fighter, aiInput *input, u8 numPla
         }
     }
 
-    fighter->modules->postureModule->xPos = data.debug.xPos;
-    fighter->modules->postureModule->yPos = data.debug.yPos;
+    if (data.debug.randomizePosition) {
+        fighter->modules->postureModule->xPos = data.debug.randXPos;
+        fighter->modules->postureModule->yPos = data.debug.randYPos;
+    } else {
+        fighter->modules->postureModule->xPos = data.debug.xPos;
+        fighter->modules->postureModule->yPos = data.debug.yPos;
+    }
 }
 
 INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
@@ -150,6 +201,7 @@ extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
     auto AIData = fighterEntry->owner->ftInputPtr->aiActPtr->AIScriptPac;
     int numEntries = AIData->numEntries;
     int pNum = FIGHTER_MANAGER->getPlayerNo(fighterEntry->entryId);
+    if (pNum > 3) return;
     if (fighterEntry->owner->ftInputPtr->fighterId != playerTrainingData[pNum].aiData.fighterID) {
         playerTrainingData[pNum].aiData.fighterID = fighterEntry->owner->ftInputPtr->fighterId;
         playerTrainingData[pNum].aiData.trainingScripts->clearOptions();
@@ -166,7 +218,7 @@ extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
                     AIData->getStringEntry(i, 1),
                     pNum
                 );
-                OSReport("FOUND SCRIPT ID: %s\n", data->name);
+                // OSReport("FOUND SCRIPT ID: %s\n", data->name);
                 playerTrainingData[pNum].aiData.trainingScripts->addOption(data);
             } else if (strCount > 2 && strcmp(AIData->getStringEntry(i, 0), "*") == 0) {
                 AITrainingScriptSubmenu* data = new AITrainingScriptSubmenu(
@@ -215,8 +267,12 @@ void collectData(Fighter* fighter, int pNum) {
     sprintf(currData.debug.psaData.currSubactionName, "%.19s", (anmData.resPtr == nullptr) ? "" : anmData.resPtr->CHR0Ptr->getString());
     currData.debug.psaData.currentFrame = anmData.animFrame;
     currData.debug.psaData.frameSpeedModifier = anmData.frameSpeedModifier;
+    auto prevAction = fighter->modules->statusModule->previousAction;
+    if (currData.debug.psaData.action == prevAction) {
+        currData.hasPlayedSE = false;
+    }
+    currData.debug.psaData.prevAction = prevAction;
     currData.debug.psaData.action = fighter->modules->statusModule->action;
-    currData.debug.psaData.prevAction = fighter->modules->statusModule->previousAction;
     currData.debug.psaData.subaction = fighter->modules->motionModule->subAction;
 
     // OSReport("%s: %d\n", __FILE__, __LINE__);
@@ -225,7 +281,7 @@ void collectData(Fighter* fighter, int pNum) {
     currData.debug.psaData.fullScript->reallocate(1);
     auto* threads = &fighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector;
     auto* thread = &threads->threadUnion.asArray[currData.debug.psaData.threadIdx];
-    if (thread != nullptr) {
+    if (thread != nullptr && thread->cmdInterpreter->currCommand != nullptr) {
         soAnimCmd* currCommand = thread->getCommand(0);
         int commandIdx = 0;
         currData.debug.psaData.scriptLocation = -1;
@@ -244,20 +300,7 @@ void collectData(Fighter* fighter, int pNum) {
     }
     // OSReport("%s: %d\n", __FILE__, __LINE__);
     auto& aiInput = fighter->getOwner()->ftInputPtr;
-    
-    currData.aiData.md = aiInput->aiMd;
-    currData.aiData.target = aiInput->aiTarget;
-    auto btn = aiInput->buttons;
-    sprintf(currData.aiData.buttons, "");
-    if (btn.attack == 1) strcat(currData.aiData.buttons, "A; "); 
-    if (btn.special == 1) strcat(currData.aiData.buttons, "B; "); 
-    if (btn.jump == 1) strcat(currData.aiData.buttons, "X; "); 
-    if (btn.shield == 1) strcat(currData.aiData.buttons, "R; "); 
-    if (btn.dTaunt == 1) strcat(currData.aiData.buttons, "DT; "); 
-    if (btn.uTaunt == 1) strcat(currData.aiData.buttons, "UT; "); 
-    if (btn.sTaunt == 1) strcat(currData.aiData.buttons, "ST; "); 
-    currData.aiData.lstickX = aiInput->leftStickX;
-    currData.aiData.lstickY = aiInput->leftStickY;
+
     currData.aiData.currentScript = aiInput->aiActPtr->aiScript;
     currData.aiData.frameCount = aiInput->aiActPtr->framesSinceScriptChanged;
 
@@ -305,6 +348,7 @@ void collectData(Fighter* fighter, int pNum) {
 //     bl stopProcess
 // )");
 
+// unsigned short shouldAdvance = 0;
 // char procDelay = 0;
 // int procTimer = 5;
 // bool procInstant = true;
@@ -312,25 +356,75 @@ void collectData(Fighter* fighter, int pNum) {
 //     if (kind == 0) {
 //         OSReport("task kind: %s\n", *currTask);
 //     }
-//     if (strcmp(*currTask, "FALCO") != 0 && strcmp(*currTask, "GroundCollision") != 0) {
+//     if (strcmp(*currTask, "FALCO") != 0) {
 //         ((void (*)(char** task, int processKind)) 0x8002dc74)(currTask, kind);
 //         return;
 //     }
 //     // OSReport("taskKind: %08x\n", kind);
 //     if (PREVIOUS_PADS[0].button.Z) {
-//         if (procInstant || procTimer <= 0) {
+//         if (procTimer <= 0) {
 //             // process/[gfTask]
 //             ((void (*)(char** task, int processKind)) 0x8002dc74)(currTask, kind);    
 //             procInstant = false;
 //         }
-//     } else {
-//         procInstant = true;
 //     }
 // }
 
-INJECTION("forceVisMemPool", 0x80025dc8, R"(
-    cmpwi r3, 69
-)");
+// INJECTION("CMD_STEPPER", 0x8077be0c, R"(
+//     bl stepCommand
+//     cmpwi r12, 0
+//     bne _CMD_STEPPER_CONTINUE
+//     lis r12, 0x8077
+//     ori r12, r12, 0xBEA4
+//     mtctr r12
+//     bctr
+
+// _CMD_STEPPER_CONTINUE:
+//     lha r0, 0(r5)
+// )");
+
+// extern "C" void stepCommand() {
+//     asm("mr r12, %0"
+//         :
+//         : "r" (shouldAdvance));
+//     shouldAdvance ++;
+//     if (shouldAdvance >= 2) {
+//         shouldAdvance = 0;
+//     }
+// }
+
+
+// INJECTION("forceVisMemPool", 0x80025dc8, R"(
+//     cmpwi r3, 69
+// )");
+
+// struct HeapData {
+//     int id;
+//     char* heapName;
+//     unsigned int heapSize;
+//     unsigned int heapOffset;
+// };
+// vector<HeapData*> collectedHeapData;
+// INJECTION("GET_HEAP_DATA", 0x80024560, R"(
+//     SAVE_REGS
+//     bl getHeapData
+//     RESTORE_REGS
+//     cmpwi r5, 1
+// )");
+// extern "C" void getHeapData(int heapID, char* heapName, int memArenaID, unsigned int heapSize) {
+//     collectedHeapData.push(new HeapData {heapID, heapName, heapSize});
+// }
+// int frame = 0;
+
+// INJECTION("GET_HEAP_OFFSET", 0x800246ec, R"(
+//     SAVE_REGS
+//     bl getHeapOffset
+//     RESTORE_REGS
+//     li r0, 1
+// )");
+// extern "C" void getHeapOffset(unsigned int heapOffset) {
+//     collectedHeapData[collectedHeapData.size() - 1]->heapOffset = heapOffset;
+// }
 
 INJECTION("frameUpdate", 0x8001792c, R"(
     bl updateOnFrame
@@ -338,6 +432,40 @@ INJECTION("frameUpdate", 0x8001792c, R"(
 )");
 
 extern "C" void updateOnFrame() {
+    // if (collectedHeapData.size() > 0) {
+    //     if (frame % collectedHeapData.size() == 0) {
+    //         OSReport("========== HEAP INFOS ==========\n");
+    //     }
+    //     HeapData* d = collectedHeapData[frame % collectedHeapData.size()];
+    //     OSReport("%s (%d): %08x @ %08x\n", d->heapName, d->id, d->heapSize, d->heapOffset);
+    //     frame++;
+    // }
+    if (fudgeMenu == nullptr) {
+        fudgeMenu = new Menu();
+        Page* mainPage = new Page(fudgeMenu);
+        mainPage->setTitle("main");
+
+        PlayerPage* p1Page = new PlayerPage(fudgeMenu, 0);
+        PageLink* p1PageLink = new PageLink("Player 1", p1Page);
+
+        PlayerPage* p2Page = new PlayerPage(fudgeMenu, 1);
+        PageLink* p2PageLink = new PageLink("Player 2", p2Page);
+
+        PlayerPage* p3Page = new PlayerPage(fudgeMenu, 2);
+        PageLink* p3PageLink = new PageLink("Player 3", p3Page);
+
+        PlayerPage* p4Page = new PlayerPage(fudgeMenu, 3);
+        PageLink* p4PageLink = new PageLink("Player 4", p4Page);
+        
+        mainPage->addOption(p1PageLink);
+        mainPage->addOption(p2PageLink);
+        mainPage->addOption(p3PageLink);
+        mainPage->addOption(p4PageLink);
+        // mainPage->addOption(new PageLink("Items", new ItemPage(fudgeMenu)));
+        
+        fudgeMenu->nextPage(mainPage);
+    }
+    
     // if (procTimer <= 0) {
     //     procTimer = 50;
     // }
@@ -363,36 +491,12 @@ extern "C" void updateOnFrame() {
     message->yPos = 1;
     message->zPos = 0;
 
-    if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
-        if (fudgeMenu == nullptr) {
-            fudgeMenu = new Menu();
-            Page* mainPage = new Page(fudgeMenu);
-            mainPage->setTitle("main");
-
-            PlayerPage* p1Page = new PlayerPage(fudgeMenu, 0);
-            PageLink* p1PageLink = new PageLink("Player 1", p1Page);
-
-            PlayerPage* p2Page = new PlayerPage(fudgeMenu, 1);
-            PageLink* p2PageLink = new PageLink("Player 2", p2Page);
-
-            PlayerPage* p3Page = new PlayerPage(fudgeMenu, 2);
-            PageLink* p3PageLink = new PageLink("Player 3", p3Page);
-
-            PlayerPage* p4Page = new PlayerPage(fudgeMenu, 3);
-            PageLink* p4PageLink = new PageLink("Player 4", p4Page);
-            
-            mainPage->addOption(p1PageLink);
-            mainPage->addOption(p2PageLink);
-            mainPage->addOption(p3PageLink);
-            mainPage->addOption(p4PageLink);
-            
-            fudgeMenu->nextPage(mainPage);
-        }
-        
+    if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {        
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
         setupDrawPrimitives();
 
-        auto btn = PREVIOUS_PADS[0].button; //*(PADButtons*)(PREVIOUS_PADS[0].button.bits | PREVIOUS_PADS[1].button.bits | PREVIOUS_PADS[2].button.bits | PREVIOUS_PADS[3].button.bits);
+        PADButtons btn;
+        btn.bits = PREVIOUS_PADS[0].button.bits | PREVIOUS_PADS[1].button.bits | PREVIOUS_PADS[2].button.bits | PREVIOUS_PADS[3].button.bits;
         auto cData = playerTrainingData[observePNum];
         paused = fudgeMenu->paused;
         visible = fudgeMenu->visible;
@@ -401,6 +505,7 @@ extern "C" void updateOnFrame() {
             if (instantResponse) {
                 fudgeMenu->toggle();
                 instantResponse = false;
+                SOUND_SYSTEM->playSE(34);
             }
         } else if (btn.L && btn.R && btn.DownDPad) {
             if (instantResponse) {
@@ -414,46 +519,54 @@ extern "C" void updateOnFrame() {
                 if (instantResponse) {
                     fudgeMenu->toggle();
                     instantResponse = false;
+                    SOUND_SYSTEM->playSE(34);
                 }
             } else if (btn.A && paused) {
                 if (instantResponse) {
                     fudgeMenu->select();
                     instantResponse = false;
+                    SOUND_SYSTEM->playSE(1);
                 }
             } else if (btn.B && paused) {
                 if (instantResponse) {
                     fudgeMenu->deselect();
                     instantResponse = false;
+                    SOUND_SYSTEM->playSE(2);
                 }
             } else if (btn.DownDPad) {
                 timer -= 10;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->down();
                     instantResponse = false;
+                    SOUND_SYSTEM->playSE(0);
                 }
-            } else if (btn.UpDPad && selected && !paused) {
+            } else if (btn.UpDPad && btn.L && selected && !paused) {
                 if (instantResponse) {
                     fudgeMenu->modify(-1);
                     fudgeMenu->deselect();
                     instantResponse = false;
+                    SOUND_SYSTEM->playSE(34);
                 }
             } else if (btn.UpDPad) {
                 timer -= 10;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->up();
                     instantResponse = false;
+                    SOUND_SYSTEM->playSE(0);
                 }
             } else if (btn.LeftDPad) {
                 timer -= 10;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->modify(btn.Y ? -10 : -(btn.X ? 0.1 : 1));
                     instantResponse = false;
+                    SOUND_SYSTEM->playSE(37);
                 }
             } else if (btn.RightDPad) {
                 timer -= 10;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->modify(btn.Y ? 10 : (btn.X ? 0.1 : 1));
                     instantResponse = false;
+                    SOUND_SYSTEM->playSE(37);
                 }
             } else {
                 instantResponse = true;
@@ -467,12 +580,6 @@ extern "C" void updateOnFrame() {
             timer = 100;
             cmdDelay = 0;
         }
-        // if (btn.Z) {
-        //     procTimer -= 10;
-        // } else {
-        //     procInstant = true;
-        //     procTimer = 100;
-        // }
         for (int i = 0; i < entryCount; i++) {
             auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
 
@@ -487,28 +594,40 @@ extern "C" void updateOnFrame() {
             }
 
             auto action = fighter->modules->statusModule->action;
+            auto prevAction = fighter->modules->statusModule->previousAction;
             auto& currData = playerTrainingData[playerNum];
             if (currData.actionableOverlay) {
                 auto CBM = fighter->modules->colorBlendModule;
                 auto SMM = fighter->modules->motionModule;
+
+                if (selectedPlayer != playerNum) {
+                    if (currData.debug.psaData.action == prevAction) {
+                        currData.hasPlayedSE = false;
+                    }
+                    currData.debug.psaData.prevAction = prevAction;
+                    currData.debug.psaData.action = action;
+                }
+
                 if (fighter->getCancelModule()->isEnableCancel() == 1) {
                     CBM->isEnabled = true;
                     CBM->red = 0x00;
                     CBM->green = 0x88;
                     CBM->blue = 0x00;
                     CBM->alpha = 0x88;
+                    if (currData.actionableSE != -1 && !currData.hasPlayedSE) {
+                        SOUND_SYSTEM->playSE(currData.actionableSE);
+                        currData.hasPlayedSE = true;
+                    }
                 } else if (action == 0x0 || action == 0x1 || action == 0x12 || action == 0x49 || ((action == 0x16 || action == 0x17) && SMM->mainAnimationData.animFrame > 4)) {
                     CBM->isEnabled = true;
                     CBM->red = 0x00;
                     CBM->green = 0xFF;
                     CBM->blue = 0x00;
                     CBM->alpha = 0x88;
-                } else if (action == 0xA || action == 0x1D || action == 0x74) {
-                    CBM->isEnabled = true;
-                    CBM->red = 0xFF;
-                    CBM->green = 0x00;
-                    CBM->blue = 0x00;
-                    CBM->alpha = 0x88;
+                    if (currData.actionableSE != -1 && !currData.hasPlayedSE) {
+                        SOUND_SYSTEM->playSE(currData.actionableSE);
+                        currData.hasPlayedSE = true;
+                    }
                 } else {
                     CBM->isEnabled = false;
                 }
@@ -518,7 +637,7 @@ extern "C" void updateOnFrame() {
             #define IP_DISPLAY_SCALE 3
             if (currData.inputDisplay) {
                 auto isHuman = !fighter->getOwner()->isCpu();
-                auto& ipbtn = input->buttons;
+                auto& ipbtn = currData.aiData.aiButtons;
                 renderables.items.frame.push(new Rect (
                     xPos + (2) * IP_DISPLAY_SCALE,
                     yPos - (7.5) * IP_DISPLAY_SCALE,
@@ -533,7 +652,7 @@ extern "C" void updateOnFrame() {
                     (5) * IP_DISPLAY_SCALE,
                     (5) * IP_DISPLAY_SCALE,
                     true,
-                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.A : ipbtn.attack) ? 0x00FF00FF : 0x007700FF)
+                    GXColor((isHuman ? currData.playerInputs.button.A : ipbtn.attack) ? 0x00FF00FF : 0x007700FF)
                 ));
                 renderables.items.frame.push(new Rect (
                     xPos + (0) * IP_DISPLAY_SCALE,
@@ -541,7 +660,7 @@ extern "C" void updateOnFrame() {
                     (2.5) * IP_DISPLAY_SCALE,
                     (2.5) * IP_DISPLAY_SCALE,
                     true,
-                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.B : ipbtn.special) ? 0xFF0000FF : 0x770000FF)
+                    GXColor((isHuman ? currData.playerInputs.button.B : ipbtn.special) ? 0xFF0000FF : 0x770000FF)
                 ));
                 renderables.items.frame.push(new Rect (
                     xPos + (5) * IP_DISPLAY_SCALE,
@@ -549,7 +668,7 @@ extern "C" void updateOnFrame() {
                     (5) * IP_DISPLAY_SCALE,
                     (2.5) * IP_DISPLAY_SCALE,
                     true,
-                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.Y : ipbtn.jump) ? 0xFFFFFFFF : 0x777777FF)
+                    GXColor((isHuman ? currData.playerInputs.button.Y : ipbtn.jump) ? 0xFFFFFFFF : 0x777777FF)
                 ));
                 
                 renderables.items.frame.push(new Rect (
@@ -558,7 +677,7 @@ extern "C" void updateOnFrame() {
                     (2.5) * IP_DISPLAY_SCALE,
                     (5) * IP_DISPLAY_SCALE,
                     true,
-                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.X : ipbtn.jump) ? 0xFFFFFFFF : 0x777777FF)
+                    GXColor((isHuman ? currData.playerInputs.button.X : ipbtn.jump) ? 0xFFFFFFFF : 0x777777FF)
                 ));
 
                 renderables.items.frame.push(new Rect (
@@ -567,7 +686,7 @@ extern "C" void updateOnFrame() {
                     (2.5) * IP_DISPLAY_SCALE,
                     (2.5) * IP_DISPLAY_SCALE,
                     true,
-                    GXColor((isHuman ? PREVIOUS_PADS[playerNum].button.Z : (ipbtn.attack && ipbtn.shield)) ? 0x8800FFFF : 0x770077FF)
+                    GXColor((isHuman ? currData.playerInputs.button.Z : (ipbtn.attack && ipbtn.shield)) ? 0x8800FFFF : 0x770077FF)
                 ));
 
                 renderables.items.frame.push(new Rect (
@@ -599,8 +718,8 @@ extern "C" void updateOnFrame() {
                     ));
 
                     renderables.items.frame.push(new Rect (
-                        xPos + (5 + 2 * PREVIOUS_PADS[playerNum].substickX / 100) * IP_DISPLAY_SCALE,
-                        yPos - (2 + 2 * PREVIOUS_PADS[playerNum].substickY / 100) * IP_DISPLAY_SCALE,
+                        xPos + (5 + 2 * currData.playerInputs.substickX / 100) * IP_DISPLAY_SCALE,
+                        yPos - (2 + 2 * currData.playerInputs.substickY / 100) * IP_DISPLAY_SCALE,
                         (1.5) * IP_DISPLAY_SCALE,
                         (1.5) * IP_DISPLAY_SCALE,
                         true,
@@ -616,14 +735,14 @@ extern "C" void updateOnFrame() {
                         true,
                         GXColor(0x333333FF)
                     ));
-                    float LTrigger = (float) PREVIOUS_PADS[playerNum].triggerLeft / 200;
+                    float LTrigger = (float) currData.playerInputs.triggerLeft / 200;
                     renderables.items.frame.push(new Rect (
                         xPos - (10) * IP_DISPLAY_SCALE,
-                        yPos - (7.5 + 4 * LTrigger) * IP_DISPLAY_SCALE,
+                        yPos - ((currData.playerInputs.button.L) ? 12 : (7.5 + 4 * LTrigger)) * IP_DISPLAY_SCALE,
                         (2.5) * IP_DISPLAY_SCALE,
                         (8 * LTrigger) * IP_DISPLAY_SCALE,
                         true,
-                        GXColor(PREVIOUS_PADS[playerNum].button.L ? 0xFFFFFFFF : 0x888888FF)
+                        GXColor(currData.playerInputs.button.L ? 0xFFFFFFFF : 0x888888FF)
                     ));
 
                     renderables.items.frame.push(new Rect (
@@ -635,14 +754,14 @@ extern "C" void updateOnFrame() {
                         GXColor(0x333333FF)
                     ));
 
-                    float RTrigger = (float) PREVIOUS_PADS[playerNum].triggerRight / 200;
+                    float RTrigger = (float) currData.playerInputs.triggerRight / 200;
                     renderables.items.frame.push(new Rect (
                         xPos + (13.5) * IP_DISPLAY_SCALE,
-                        yPos - (7.5 + 4 * RTrigger) * IP_DISPLAY_SCALE,
+                        yPos - ((currData.playerInputs.button.R) ? 12 : (7.5 + 4 * RTrigger)) * IP_DISPLAY_SCALE,
                         (2.5) * IP_DISPLAY_SCALE,
                         (8 * RTrigger) * IP_DISPLAY_SCALE,
                         true,
-                        GXColor(PREVIOUS_PADS[playerNum].button.R ? 0xFFFFFFFF : 0x888888FF)
+                        GXColor(currData.playerInputs.button.R ? 0xFFFFFFFF : 0x888888FF)
                     ));
                 } else {
                     renderables.items.frame.push(new Rect (
@@ -699,8 +818,42 @@ extern "C" void updateOnFrame() {
                     true,
                     GXColor(ipbtn.dTaunt ? 0xFFFFFFFF : 0x777777FF)
                 ));
-
-                
+            }
+            if (currData.trajectoryOpts.active && fighter->modules->motionModule->mainAnimationData.animFrame >= 3) {
+                GXColor playerColor;
+                switch(playerNum) {
+                    case 0: playerColor.value = 0xFF0000DD; break;
+                    case 1: playerColor.value = 0x0000FFDD; break;
+                    case 2: playerColor.value = 0x00FF00DD; break;
+                    case 3: playerColor.value = 0xFFFF00DD; break;
+                    default: playerColor.value = 0x222222DD; break;
+                }
+                auto sv = fighter->getOwner()->ftInputPtr->aiActPtr->scriptValues;
+                auto fgm = fighter->modules->groundModule;
+                float prevPosX = fgm->unk1->unk1->unk1->landingCollisionBottomXPos;
+                float prevPosY = fgm->unk1->unk1->unk1->landingCollisionBottomYPos;
+                float calcPosX;
+                float calcPosY;
+                int time = currData.trajectoryOpts.segmentLength;
+                int opacityChange = (int)(255 / currData.trajectoryOpts.segments);
+                float offset = (fgm->getUpPos().yPos - fgm->getDownPos().yPos) / 2;
+                for (int seg = 0; seg < currData.trajectoryOpts.segments; seg++) {
+                    calcPosX = sv->calcArrivePosX(time);
+                    calcPosY = sv->calcArrivePosY(time);
+                    renderables.items.frame.push(new Line{
+                            playerColor,
+                            prevPosX,
+                            prevPosY + offset,
+                            calcPosX,
+                            calcPosY + offset,
+                            21 * currData.trajectoryOpts.thickness,
+                            false
+                    });
+                    playerColor.alpha -= opacityChange; 
+                    prevPosX = calcPosX;
+                    prevPosY = calcPosY;
+                    time += currData.trajectoryOpts.segmentLength;
+                }
             }
         }
 
@@ -738,10 +891,31 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
             auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
 
             auto fighter = FIGHTER_MANAGER->getFighter(id);
+
+            if (fighter == nullptr) continue;
+
             auto input = FIGHTER_MANAGER->getInput(id);
             auto pNum = FIGHTER_MANAGER->getPlayerNo(id);
-            
+
             auto& currData = playerTrainingData[pNum];
+            currData.playerInputs = PREVIOUS_PADS[pNum];
+
+            auto& aiInput = fighter->getOwner()->ftInputPtr;
+    
+            currData.aiData.md = aiInput->aiMd;
+            currData.aiData.target = aiInput->aiTarget;
+            auto btn = aiInput->buttons;
+            sprintf(currData.aiData.buttons, "");
+            if (btn.attack == 1) strcat(currData.aiData.buttons, "A; "); 
+            if (btn.special == 1) strcat(currData.aiData.buttons, "B; "); 
+            if (btn.jump == 1) strcat(currData.aiData.buttons, "X; "); 
+            if (btn.shield == 1) strcat(currData.aiData.buttons, "R; "); 
+            if (btn.dTaunt == 1) strcat(currData.aiData.buttons, "DT; "); 
+            if (btn.uTaunt == 1) strcat(currData.aiData.buttons, "UT; "); 
+            if (btn.sTaunt == 1) strcat(currData.aiData.buttons, "ST; "); 
+            currData.aiData.aiButtons = aiInput->buttons;
+            currData.aiData.lstickX = aiInput->leftStickX;
+            currData.aiData.lstickY = aiInput->leftStickY;
 
             // [0] = snapback enabled
             // [1] = leniency
@@ -764,19 +938,33 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
                 auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
                 auto remainingHitstun = LABasicsArr[56];
                 if (remainingHitstun == 0 || remainingHitstun + currData.debug.comboTimerAdjustment <= 0) {
-                    currData.debug.comboTimer--;
-                    if (currData.debug.comboTimer == 0) {
-                        currData.debug.noclip = true;
+                    auto action = fighter->modules->statusModule->action;
+                    if (currData.debug.noclip) { 
+                        currData.debug.noclipInternal = true; 
                         fighter->modules->groundModule->setCorrect(0);
                     }
-                    if (currData.debug.comboTimer <= 0) {
-                        if (currData.debug.noclip && currData.debug.comboTimer == -1) {
-                            currData.debug.noclip = false;
-                            fighter->modules->groundModule->setCorrect(5);
+                    if (!((action >= 0x4E && action <= 0x64) || (action >= 0x3D && action <= 0x42))) {    
+                        currData.debug.comboTimer--;
+                        if (currData.debug.comboTimer == 0) {
+                            currData.debug.noclipInternal = true;
+                            fighter->modules->groundModule->setCorrect(0);
+                            if (currData.debug.randomizeDamage) { currData.debug.randDmg = ((int)(_randf() * 100)); }
+                            if (currData.debug.randomizePosition) { 
+                                Vec3f pos;
+                                getRandSafePosition(&pos, currData.debug.randOnGround);
+                                currData.debug.randXPos = pos.f1;
+                                currData.debug.randYPos = pos.f2;
+                            }
                         }
-                        setPosition(currData, fighter, input, entryCount);
-                        FIGHTER_MANAGER->getOwner(id)->setDamage(currData.debug.damage, 0);
-                        currData.debug.comboTimer = 0;
+                        if (currData.debug.comboTimer <= 0) {
+                            setPosition(currData, fighter, input, entryCount);
+                            FIGHTER_MANAGER->getOwner(id)->setDamage(currData.debug.randomizeDamage ? currData.debug.randDmg : currData.debug.damage, 0);
+                            currData.debug.comboTimer = 0;
+                            if (!currData.debug.noclip && currData.debug.noclipInternal && currData.debug.comboTimer == -1) {
+                                currData.debug.noclipInternal = false;
+                                fighter->modules->groundModule->setCorrect(5);
+                            }
+                        }
                     }
                 } else {
                     currData.debug.comboTimer = remainingHitstun + currData.debug.comboTimerAdjustment;
@@ -789,6 +977,18 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
 
 }
 
+int intendedScript = 0;
+INJECTION("CPUStoreIntentionASM", 0x80918570, R"(
+    SAVE_REGS
+    mr r3, r4
+    bl CPUStoreIntention
+    RESTORE_REGS
+    lhz r0, 0x78(r3)
+)");
+extern "C" void CPUStoreIntention(int intended) { 
+    // OSReport("INTENDED: %08x\n", intended);
+    intendedScript = intended; 
+}
 INJECTION("CPUForceBehavior", 0x809188B0, R"(
     SAVE_REGS
     mr r3, r26
@@ -798,12 +998,13 @@ INJECTION("CPUForceBehavior", 0x809188B0, R"(
     sth r26, 120(r25)
     RESTORE_REGS
 )");
+#define _GetPlayerNo_aiChrIdx ((int (*)(char* chrIdx)) 0x808fd68c)
 extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
-    char pNum = FIGHTER_MANAGER->getPlayerNo(aiActPtr->ftInputPtr->ftEntryPtr->entryId);
+    char pNum = _GetPlayerNo_aiChrIdx(&aiActPtr->ftInputPtr->cpuIdx);
     if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {
         OSReport("intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
         OSReport("current: %04x; ", aiActPtr->aiScript);
-        OSReport("next: %04x\n", param1);
+        OSReport("next: %04x\n", intendedScript);
 
         return param1; // normal routine
     }

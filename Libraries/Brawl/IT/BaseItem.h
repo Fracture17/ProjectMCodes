@@ -191,7 +191,17 @@ enum itemIdName {
     Unknown5 = 0x7D5
 };
 
-struct BaseItem : public StageObject{
+struct BaseItem : public StageObject {
+    void warp(Vec3f* location);
+    void throwAttack(Vec3f* speeds);
+    int getParamI(int paramIdx);
+    float getParamF(int paramIdx);
 };
+
+#define _warp_BaseItem ((void (*)(BaseItem * self, Vec3f* location)) 0x80998814)
+#define _throwAttack_BaseItem ((void (*)(BaseItem * self, Vec3f* speeds)) 0x80998b1c)
+
+#define _fGetParam_BaseItem ((float (*)(BaseItem * self, int paramIdx)) 0x80997248)
+#define _iGetParam_BaseItem ((int (*)(BaseItem * self, int paramIdx)) 0x80997270)
 
 #endif //PROJECTMCODES_BASEITEM_H

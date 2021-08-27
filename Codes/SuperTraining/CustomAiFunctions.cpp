@@ -16,9 +16,11 @@
 #include "Brawl/AI/aiStat.h"
 #include "Brawl/Weapon.h"
 #include "PatternManager.h"
+#include "MovementTracker.h"
 #include "FudgeMenu.h"
 
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
+#define _randf ((double (*)()) 0x8003fb64)
 
 INJECTION("FORCE_AI_TAUNT_ROUTINE", 0x809112cc, R"(
     SAVE_REGS
@@ -37,7 +39,7 @@ extern "C" void forceAiTauntRoutine(aiInput *aiInputInst) {
     // setting it to md 0x1 will make it alternate between md 0x1 and md 0x14, and we don't want that.
     // therefor, we set it to 0x2 where this problem doesn't exist while still giving us control over
     // our scripts
-    change_md_aiInput(aiInputInst, 0x2, &dummy, 0x2080, 0);
+    change_md_aiInput(aiInputInst, 0x2, &dummy, 0x8000, 0);
 };
 
 
@@ -111,6 +113,14 @@ STRING_WRITE(0x80902f7c, "\x60\x00\x00\x00");
 // FORCED_INPUT_FIX21
 STRING_WRITE(0x80903018, "\x60\x00\x00\x00");
 
+// SELF_TARGET_CHANGE_FIX1
+STRING_WRITE(0x808fe5f8, "\x60\x00\x00\x00");
+// SELF_TARGET_CHANGE_FIX2
+STRING_WRITE(0x809073dc, "\x60\x00\x00\x00");
+// SELF_TARGET_CHANGE_FIX3
+STRING_WRITE(0x809188e0, "\x60\x00\x00\x00");
+// SELF_TARGET_CHANGE_FIX4
+STRING_WRITE(0x80900cb8, "\x60\x00\x00\x00");
 
 signed char disabledMd[4] = {-1, -1, -1, -1};
 INJECTION("CPUForceMd", 0x80905204, R"(
@@ -122,24 +132,51 @@ INJECTION("CPUForceMd", 0x80905204, R"(
     RESTORE_REGS
 )");
 
+#define _GetPlayerNo_aiChrIdx ((int (*)(char* chrIdx)) 0x808fd68c)
 extern "C" void CPUForceMd(aiInput * aiInput, unsigned int intent, int newAction) {
-    OSReport("-- MD CHANGE --\n");
-    OSReport("current action: %04x; ", aiInput->aiActPtr->aiScript);
-    OSReport("new action?: %04x;\n", newAction);
-    OSReport("current md: %02x; ", aiInput->aiMd);
-    OSReport("new md: %02x\n", intent);
+    // OSReport("ADDR: %08x\n", aiInput);
+    if (aiInput->charId == 0x10) aiInput->aiMd = intent;
+    else if (aiInput->ftEntryPtr != nullptr) {
+        OSReport("-- MD CHANGE --\n");
+        OSReport("current action: %04x; ", aiInput->aiActPtr->aiScript);
+        OSReport("new action?: %04x;\n", newAction);
+        OSReport("current md: %02x; ", aiInput->aiMd);
+        OSReport("new md: %02x\n", intent);
 
-    // OSReport("DISABLED MD: %02x, INTENT: %02x", disabledMd[FIGHTER_MANAGER->getPlayerNo(aiInput->ftEntryPtr->entryId)], intent);
-    if (intent <= 0xFFFF && intent != disabledMd[FIGHTER_MANAGER->getPlayerNo(aiInput->ftEntryPtr->entryId)]) {
-        aiInput->aiMd = intent;
+        char pNum = _GetPlayerNo_aiChrIdx(&aiInput->cpuIdx);
+        if (intent <= 0xFFFF && pNum != -1 && intent != disabledMd[pNum]) {
+            aiInput->aiMd = intent;
+        }
     }
+}
+
+bool disabledSwitch[4] = {false, false, false, false};
+bool debugSwitch[4] = {true, true, true, true};
+INJECTION("PREVENT_AUTO_CALL1", 0x80900ff8, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL2", 0x80900eb4, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL3", 0x808fe638, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL4", 0x80901084, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL5", 0x80900d38, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL6", 0x80900e54, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL7", 0x80900f60, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL8", 0x80900fa4, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL9", 0x80900fd4, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL10", 0x8090137c, "bl filterMDCall");
+INJECTION("PREVENT_AUTO_CALL11", 0x808feb2c, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL12", 0x80907b18, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL13", 0x80907b18, "bl filterMDCall");
+extern "C" void filterMDCall(aiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5) {
+    if (!disabledSwitch[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)]) {
+        change_md_aiInput(aiInputInst, newMode, param_3, newOrOldAction, param_5);
+    }
+    return;
 }
 
 bool autoDefend[4] = {true, true, true, true};
 INJECTION("PREVENT_AUTO_DEFEND", 0x80900c60, "bl preventAutoDefend");
 
 extern "C" void preventAutoDefend(aiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5) {
-    if (autoDefend[FIGHTER_MANAGER->getPlayerNo(aiInputInst->ftEntryPtr->entryId)] || newOrOldAction == 0x30E0) {
+    if (autoDefend[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)] || newOrOldAction == 0x30E0) {
         change_md_aiInput(aiInputInst, newMode, param_3, newOrOldAction, param_5);
     }
     return;
@@ -230,21 +267,46 @@ PatternManager rpsManagers[0x10] = {
     PatternManager()
 };
 
-// vector<char> viableMoveList[4] = {
-//     vector<char>(),
-//     vector<char>(),
-//     vector<char>(),
-//     vector<char>()
-// };
+MovementTracker movementTrackers[4] = {
+    MovementTracker(),
+    MovementTracker(),
+    MovementTracker(),
+    MovementTracker()
+};
 
 SIMPLE_INJECTION(clearPredictions, 0x800dc590, "li r9, 2") {
-    for (int i = 0; i < 0xF; i++) {
+    for (int i = 0; i < 0x10; i++) {
+        if (i < 4) {
+            movementTrackers[i].reset();
+            disabledSwitch[i] = false;
+            disabledMd[i] = -1;
+            autoDefend[i] = true;
+            debugSwitch[i] = true;
+        }
         rpsManagers[i].clearAll();
     }
-}
+};
+
+INJECTION("TRACK_ACTION", 0x8077f9d8, R"(
+    SAVE_REGS
+    mr r3, r4
+    mr r4, r5
+    bl trackActionChange
+    RESTORE_REGS
+    cmpwi r4, -1
+)")
 
 extern "C" {
     double fn_result = 0;
+    void trackActionChange(int action, soModuleAccessor * accesser) {
+        if (action == -1) return;
+        // HOPEFULLY only actual fighters have a "controller" module implementation
+        // 0x80AEB140 = controllerModuleNull
+        if (***((void****)accesser->paramCustomizeModule) != (void*)0x80b0ad44) return;
+        auto pNum = _GetPlayerNo_aiChrIdx(&((Fighter*) accesser->owner)->getOwner()->ftInputPtr->cpuIdx);
+        if (pNum >= 4) return;
+        movementTrackers[pNum].trackAction(action);
+    }
     void aiFunctionHandlers(float unk_f10, aiStat* targetAiStat, unsigned int switchCase, aiScriptData* selfAi, u32 sp, u32 rtoc) {
         fn_shouldReturnResult = 0;
 
@@ -321,14 +383,14 @@ extern "C" {
                 : "r" (&fn_result));
             fn_shouldReturnResult = 1;
         }
+
         if (switchCase == 0x51) {
             fn_result = FIGHTER_MANAGER->getInput(targetFighterEntry->entryId)->aiMd;
             fn_shouldReturnResult = 1;
         }
         if (switchCase == 0x52) {
             auto entryID = targetFighterEntry->entryId;
-            fn_result = entryID & 0x0000FFFF;
-            fn_shouldReturnResult = 1;
+            fn_result = _GetPlayerNo_aiChrIdx(&targetFighterEntry->input->cpuIdx);
         }
         if (switchCase == 0x53) {
             fn_result = 0;
@@ -376,12 +438,14 @@ extern "C" {
         }
         // endframe
         if (switchCase == 0x59) {
+            // MIGHT BE CAUSING CRASHES -- NEEDS A FIX
+            // HAPPENS WHEN ANIMATION DOESN'T EXIST FOR TARGET
             fn_result = targetFighterEntry->ftStageObject->modules->motionModule->getEndFrame();
             fn_shouldReturnResult = 1;
         }
 
         if (switchCase == 0x60) {
-            fn_result = playerTrainingData[FIGHTER_MANAGER->getPlayerNo(selfAi->ftInputPtr->ftEntryPtr->entryId)].aiData.scriptID;
+            fn_result = playerTrainingData[_GetPlayerNo_aiChrIdx(&selfAi->ftInputPtr->cpuIdx)].aiData.scriptID;
             fn_shouldReturnResult = 1;
         }
     };
@@ -395,7 +459,8 @@ extern "C" {
     };
 }
 
-int gotoCmdStack[5] = {0, 0, 0, 0, 0}; 
+int* gotoCmdStack[5] = {0, 0, 0, 0, 0}; 
+int gotoCmdScripts[5] = {0, 0, 0, 0, 0};
 int gotoCmdStackPtr = 0;
 INJECTION("AI_GOTO_WITH_STACK_PUSH", 0x80917620, R"(
     SAVE_REGS
@@ -405,11 +470,13 @@ INJECTION("AI_GOTO_WITH_STACK_PUSH", 0x80917620, R"(
     mr r29, r30
 )");
 INJECTION("AI_GOTO_WITH_STACK_POP", 0x809174c4, R"(
+    mr r3, r26
     bl aiGotoPop
     mr r29, r3
     mr r30, r29
 )");
 INJECTION("AI_GOTO_WITH_STACK_FIX1", 0x80917548, R"(
+    mr r3, r26
     bl clearGotoStack
     lhz r0, 0x2(r30)
 )");
@@ -429,15 +496,49 @@ INJECTION("AI_GOTO_WITH_STACK_FIX5", 0x80918148, R"(
     bl clearGotoStack
     lhz r4,0x7a(r26)
 )");
+INJECTION("CLEAR_DYNAMIC_DICE", 0x80918500, R"(
+    mr r3, r26
+    bl clearDynamicDice
+    lfd f31, 0x100(r1)
+)")
 
+vector<const void*> NoRepeatInstructions = vector<const void*>();
+vector<int> dynamicDice = vector<int>();
+#define _target_check_aiInput ((void (*)(aiInput* self)) 0x80907ba4)
+#define _getEntity_ftEntryManager ((ftEntry* (*)(ftEntryManager* self, entryID entryid)) 0x80823b24)
+SIMPLE_INJECTION(clearNoRepeatInstruction, 0x8082f144l, "cmpwi r4, 0") {
+    NoRepeatInstructions.reallocate(0);
+    NoRepeatInstructions.reallocate(1);
+    dynamicDice.reallocate(0);
+    dynamicDice.reallocate(1);
+}
+
+int* forcedNextInstruction = nullptr;
+int forcedNextScript = 0;
+#define _act_change ((void (*)(aiScriptData * self, unsigned int nextScript, char* unk1, int unk2, int unk3)) 0x80918554)
 extern "C" {
-    void aiGotoPush(int nextPlace) {
+    void clearDynamicDice(aiScriptData* aiActInst) { 
+        dynamicDice.reallocate(0);
+        dynamicDice.reallocate(1);
+    }
+    void aiGotoPush(int* nextPlace) {
         gotoCmdStack[gotoCmdStackPtr] = nextPlace;
+        gotoCmdScripts[gotoCmdStackPtr] = 0;
         gotoCmdStackPtr += 1;
     };
-    int aiGotoPop() {
+    void aiXGotoPush(aiScriptData* aiActInst, int* nextPlace) {
+        gotoCmdStack[gotoCmdStackPtr] = nextPlace;
+        gotoCmdScripts[gotoCmdStackPtr] = aiActInst->aiScript;
+        gotoCmdStackPtr += 1;
+    };
+    char dummy = 0xFF;
+    int* aiGotoPop(aiScriptData* aiActInst) {
         if (gotoCmdStackPtr > 0) {
             gotoCmdStackPtr -= 1;
+            if (gotoCmdScripts[gotoCmdStackPtr] != 0) {
+                aiActInst->aiScript = 0;
+                _act_change(aiActInst, gotoCmdScripts[gotoCmdStackPtr], &dummy, 0, 0);
+            }
             return gotoCmdStack[gotoCmdStackPtr];
         }
         return 0;
@@ -447,6 +548,7 @@ extern "C" {
     };
 }
 
+bool forcedReturnStatement = false;
 INJECTION("CUSTOM_AI_COMMANDS", 0x80917450, R"(
     lbz r4, 0x00(r30)
     SAVE_REGS
@@ -455,13 +557,29 @@ INJECTION("CUSTOM_AI_COMMANDS", 0x80917450, R"(
     mr r5, r28
     bl aiCommandHandlers
     RESTORE_REGS
+    bl RELOCATE_INSTRUCTION
+    bl FORCE_RETURN
 )");
 
 #define _get_script_value_aiScriptData ((double (*)(aiScriptData * self, int soughtValue, int isPartOfVector)) 0x8091dfc4)
 #define _getButtonMask_soController ((unsigned int (*)(int btn)) 0x8076544c)
-#define _randf ((double (*)()) 0x8003fb64)
 extern "C" {
+    void RELOCATE_INSTRUCTION() {
+        if (forcedNextInstruction != nullptr) {
+            asm("mr r30, %0"
+                :
+                : "r" (forcedNextInstruction));
+        }
+    }
+    void FORCE_RETURN() {
+        if (forcedReturnStatement) {
+            forcedReturnStatement = false;
+            asm("li r4, 0x4");
+        }
+    }
     void aiCommandHandlers(aiScriptData* aiActInst, const int* args, unsigned int* buttons) {
+        forcedNextInstruction = nullptr;
+        // char targetChrIdx = (aiActInst) ? : ;
         int cmd = (args[0] & 0xFF000000) >> 24;
         if (cmd < 0x35) return;
         if (cmd <= 0x3A) {
@@ -471,7 +589,7 @@ extern "C" {
 
             soWorkManageModuleImpl* targetWorkModule;
             if (shouldGetTarget) {
-                auto targetPlayerNum = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->fighterId));
+                auto targetPlayerNum = AI_MANAGER->getAiCpuTarget(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx));
                 Fighter* target = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(targetPlayerNum));
                 if (target == nullptr) return;
                 targetWorkModule = target->modules->workModule;
@@ -510,7 +628,7 @@ extern "C" {
 
             soGroundModuleImpl* targetGroundModule;
             if (shouldGetTarget) {
-                auto targetPlayerNum = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->fighterId));
+                auto targetPlayerNum = AI_MANAGER->getAiCpuTarget(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx));
                 Fighter* target = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(targetPlayerNum));
                 if (target == nullptr) return;
                 targetGroundModule = target->modules->groundModule;
@@ -540,44 +658,32 @@ extern "C" {
         }
 
         // staleMoveFrequency
-        // maybe i'll come back to this at some point? seems kinda unnecessary...
-//        if (cmd == 0x3D) {
-//            int varToMod = args[1];
-//            int actionToFind = _get_script_value_aiAct(aiActInst, *(int *) &args[2], 0);
-//            bool shouldGetTarget = _get_script_value_aiAct(aiActInst, *(int *) &args[3], 0);
-//
-//            int targetFighterId;
-//            staleMoveEntry* targetStaleQueue;
-//            if (shouldGetTarget) {
-//                auto targetPlayerNum = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->fighterId));
-//                Fighter* target = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(targetPlayerNum));
-//                if (target == nullptr) return;
-//                targetFighterId = target->ftKind;
-//                targetStaleQueue = target->staleMoveQueue;
-//            } else {
-//                Fighter * target = FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId, 0);
-//                targetFighterId = target->ftKind;
-//                targetStaleQueue = target->staleMoveQueue;
-//            }
-//
-//            unsigned int valueToFind = *FIGHTER_COMMON_DATA_ACCESSOR->getFtStatusData(targetFighterId, actionToFind);
-//            if (valueToFind & 0xff == 0x40) {
-//                switch (actionToFind) {
-//                    case 0x76:
-//                        valueToFind =
-//                }
-//            } else {
-//                valueToFind = valueToFind >> 10 & 0xff;
-//
-//            }
-//
-//            // 80fb2f0c
-//
-//            // 8128ba7c -- queue
-//            // 805b4a90 -- locals where stuff is loaded
-//            // 91ab6d20 -> 20000040 (fAir part 1)
-//            // 91ab6be8 -> 14000001 (fAir part 2)
-//        }
+        // YDistFloor Absolute
+        if (cmd == 0x3C) {
+            int varToMod = args[1];
+            double xPos = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            double yPos = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+
+            double res;
+
+            Vec3f targetPos {
+                    (float) xPos,
+                    (float) yPos,
+                    0
+            };
+
+            FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId)->modules->groundModule->getDistanceFromUnderGrCol(
+                    150,
+                    &targetPos,
+                    true
+            );
+
+            asm("stfd f1, 0x00(%0)"
+            :
+            : "r" (&res));
+            aiActInst->variables[varToMod] = (float) res;
+            return;
+        }
 
         // isTeammateCloser
         if (cmd == 0x3E) {
@@ -609,6 +715,20 @@ extern "C" {
                     }
                 }
             }
+            return;
+        }
+        if (cmd == 0x3F) {
+            int varToMod = args[1];
+            int attributeIndex = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            bool fromTarget = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+
+            Fighter* targetFighter;
+            if (fromTarget) {
+                targetFighter = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx)));
+            } else {
+                targetFighter = FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId);
+            }
+            aiActInst->variables[varToMod] = *(float*)((int)&targetFighter->modules->paramCustomizeModule->walkInitVel + attributeIndex * 0x4);
             return;
         }
 
@@ -695,17 +815,23 @@ extern "C" {
         // prevent auto defend
         if (cmd == 0x45) {
             bool onOff = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-            autoDefend[FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->ftEntryPtr->entryId)] = onOff;
+            autoDefend[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx)] = onOff;
             return;
         }
         // disable md
         if (cmd == 0x46) {
             int mdValue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-            disabledMd[FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->ftEntryPtr->entryId)] = mdValue;
+            disabledMd[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx)] = mdValue;
+            return;
+        }
+        // disable force switch md altogether
+        if (cmd == 0x47) {
+            bool onOff = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            disabledSwitch[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx)] = onOff;
             return;
         }
         // getDynamicAtkData
-        if (cmd == 0x47) {
+        if (cmd == 0x48) {
             int unkVar = args[1];
             int startVar = args[2];
             int endVar = args[3];
@@ -738,11 +864,63 @@ extern "C" {
             return;
         }
 
+        #define _calcArraivePosX_aiStat ((double (*)(double time, aiStat * stat)) 0x80916884)
+        #define _calcArraivePosY_aiStat ((double (*)(double time, aiStat * stat)) 0x809168c8)
+        if (cmd == 0x49 || cmd == 0x4A) {
+            double time = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            
+            double result;
+            if (cmd == 0x49) result = _calcArraivePosX_aiStat(time, aiActInst->scriptValues);
+            else result = _calcArraivePosY_aiStat(time, aiActInst->scriptValues);
+
+            aiActInst->variables[args[1]] = (float) result;
+            return;
+        }
+
+        #define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
+        // #define _stRayCheck_vec3f ((void (*)(Vec3f* start, Vec3f* dest, float* unk, Vec3f* collisionPoint, Vec3f* normalVec, int unk0, int unk0_1, int unk1)) 0x809327ec)
+        if (cmd == 0x4B || cmd == 0x4C) {
+            int retX = args[1];
+            int retY = args[2];
+            // int grTypeTarget = args[2];
+            double xPos = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+            double yPos = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+            double xDest = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+            double yDest = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+            bool detectPlats = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
+
+            Vec3f startPos {
+                    (float) xPos,
+                    (float) yPos,
+                    0
+            };
+
+            Vec3f destPos {
+                (float) ((cmd == 0x4B) ? (xDest - xPos) : xDest),
+                (float) ((cmd == 0x4B) ? (yDest - yPos) : yDest),
+                0
+            };
+
+            Vec3f ret1 {-1,-1,-1};
+            Vec3f ret2 {-1,-1,-1};
+
+            _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, detectPlats, 0, 1, 1);
+            aiActInst->variables[retX] = (float) ret1.f1;
+            aiActInst->variables[retY] = (float) ret1.f2;
+            return;
+        }
+
+        if (cmd == 0x4D) {
+            bool value = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            debugSwitch[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx)] = value;
+            return;
+        }
+
         // Push to Trackers
         if (cmd == 0x50) {
             int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
             if (0 <= managerNum && managerNum < 0x10) {
-                rpsManagers[managerNum].pushNew(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->ftEntryPtr->entryId), (int) _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0));
+                rpsManagers[managerNum].pushNew(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx), (int) _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0));
             }
             return;
         }
@@ -751,7 +929,7 @@ extern "C" {
             int varToMod = args[1];
             int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
             int lookAmount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0) / 20;
-            aiActInst->variables[varToMod] = rpsManagers[managerNum].calcOption(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->ftEntryPtr->entryId), lookAmount);
+            aiActInst->variables[varToMod] = rpsManagers[managerNum].calcOption(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx), lookAmount);
             return;
         }
         // calcOptionConfidence
@@ -759,7 +937,7 @@ extern "C" {
             int varToMod = args[1];
             int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
             int lookAmount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0) / 20;
-            aiActInst->variables[varToMod] = rpsManagers[managerNum].calcOptionConfidence(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->ftEntryPtr->entryId), lookAmount);
+            aiActInst->variables[varToMod] = rpsManagers[managerNum].calcOptionConfidence(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx), lookAmount);
             return;
         }
         // calcAverage
@@ -767,20 +945,27 @@ extern "C" {
             int varToMod = args[1];
             int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
             int lookAmount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0) / 20;
-            aiActInst->variables[varToMod] = rpsManagers[managerNum].average(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->ftEntryPtr->entryId), lookAmount);
+            aiActInst->variables[varToMod] = rpsManagers[managerNum].average(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx), lookAmount);
             return;
         }
         // increment
         if (cmd == 0x54) {
             int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-            rpsManagers[managerNum].plusOne(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->ftEntryPtr->entryId));
+            rpsManagers[managerNum].plusOne(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx));
             return;
         }
         // getCurrent
         if (cmd == 0x55) {
             int varToMod = args[1];
             int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-            aiActInst->variables[varToMod] = rpsManagers[managerNum].get(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->ftEntryPtr->entryId));
+            aiActInst->variables[varToMod] = rpsManagers[managerNum].get(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx));
+            return;
+        }
+        // approximateAction
+        if (cmd == 0x58) {
+            int varToMod = args[1];
+            int levelValue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            aiActInst->variables[varToMod] = movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->aiTarget)].approxChance((float) levelValue);
             return;
         }
 
@@ -865,7 +1050,7 @@ extern "C" {
 
             Fighter * target;
             if (shouldGetTarget) {
-                auto targetPlayerNum = AI_MANAGER->getAiCpuTarget(FIGHTER_MANAGER->getPlayerNo(aiActInst->ftInputPtr->fighterId));
+                auto targetPlayerNum = AI_MANAGER->getAiCpuTarget(_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx));
                 target = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(targetPlayerNum));
                 if (target == nullptr) {
                     aiActInst->variables[xPosDest] = 0;
@@ -939,6 +1124,72 @@ extern "C" {
         //     return;
         // }
 
+        // CallI
+        if (cmd == 0x80) {
+            unsigned int nextScript = args[1] & 0xffff;
+            char dummy = 0xff;
+            _act_change(aiActInst, nextScript, &dummy, 0, 0);
+            // force change current instruction in memory
+            clearGotoStack();
+            aiActInst->framesSinceScriptChanged = -1;
+            forcedNextInstruction = (int*)((int) aiActInst->currentInstruction + 0x0);
+            OSReport("FNInst (1): %08x\n", forcedNextInstruction);
+
+            // aiActInst
+            return;
+        }
+        // XGoto
+        if (cmd == 0x81) {
+            unsigned int nextScript = args[1] & 0xffff;
+            char dummy = 0xff;
+            aiXGotoPush(aiActInst, (int*)((int) args + 0x8));
+            auto currScr = aiActInst->aiScript;
+            _act_change(aiActInst, nextScript, &dummy, 0, 0);
+            aiActInst->aiScript = currScr;
+            // OSReport("TARGET SCRIPT: %04x\n", nextScript);
+            // OSReport("NEW SCRIPT: %04x\n", aiActInst->aiScript);
+            // force change current instruction in memory
+            aiActInst->framesSinceScriptChanged = -1;
+            forcedNextInstruction = (int*)((int) aiActInst->currentInstruction + 0x0);
+            OSReport("FNInst (2): %08x\n", forcedNextInstruction);
+            return;
+        }
+        // NoRepeat
+        if (cmd == 0x82) {
+            OSReport("ARGS0 ADDR: %08x\n", &args[0]);
+            for (int i = 0; i < NoRepeatInstructions.size(); i++) {
+                OSReport("RepInst[%d]: %08x\n", i, NoRepeatInstructions[i]);
+                if (NoRepeatInstructions[i] == &args[0]) {
+                    forcedNextInstruction = aiGotoPop(aiActInst);
+                    if (forcedNextInstruction == nullptr) {
+                        forcedReturnStatement = true;
+                    }
+                    return;
+                }
+            }
+            NoRepeatInstructions.push(&args[0]);
+            return;
+        }
+
+        if (cmd == 0x84) {
+            dynamicDice.push((int) _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0));
+            return;
+        }
+        if (cmd == 0x85) {
+            int varToMod = args[1];
+            if (dynamicDice.size() == 0) {
+                aiActInst->variables[varToMod] = -1;
+                return;
+            }
+            aiActInst->variables[varToMod] = dynamicDice[(int) (_randf() * dynamicDice.size())];
+            return;
+        }
+        if (cmd == 0x86) {
+            dynamicDice.reallocate(0);
+            dynamicDice.reallocate(1);
+            return;
+        }
+
         if (cmd < 0xC0 && cmd >= 0xB0) {
             if (ai_customFnInjection != nullptr && !ai_customFnInjectionToggle[cmd & 0xF]) ai_customFnInjection[cmd & 0xF] = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
             return;
@@ -947,128 +1198,131 @@ extern "C" {
             if (ai_customFnInjection != nullptr && ai_customFnInjectionToggle[cmd & 0xF]) aiActInst->variables[args[1]] = ai_customFnInjection[cmd & 0xF];
             return;
         }
-        if (cmd < 0xE0) {
-            switch (cmd) {
-                case 0xD0: {
-                    double x1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-                    double y1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                    int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                    int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
-                    int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
-                    int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
-                    if (alpha == 255) {
+        int pNum = _GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx);
+        if (pNum < 4 && debugSwitch[pNum]) {
+            if (cmd < 0xE0) {
+                switch (cmd) {
+                    case 0xD0: {
+                        double x1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                        double y1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                        int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                        int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                        int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                        int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                        if (alpha == 255) {
+                            Point * pt = new Point{
+                                    0x000000FF,
+                                    (float) x1,
+                                    (float) y1,
+                                    42,
+                                    false
+                            };
+                            pt->autoTimer = false;
+                            renderables.items.tick.push(pt);
+                        }
                         Point * pt = new Point{
-                                0x000000FF,
+                                (red << 24) | (green << 16) | (blue << 8) | alpha,
                                 (float) x1,
                                 (float) y1,
-                                42,
+                                30,
                                 false
                         };
                         pt->autoTimer = false;
                         renderables.items.tick.push(pt);
+                        return;
                     }
-                    Point * pt = new Point{
-                            (red << 24) | (green << 16) | (blue << 8) | alpha,
-                            (float) x1,
-                            (float) y1,
-                            30,
-                            false
-                    };
-                    pt->autoTimer = false;
-                    renderables.items.tick.push(pt);
-                    return;
-                }
-                case 0xD1: {
-                    double x1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-                    double y1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                    double x2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                    double y2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
-                    int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
-                    int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
-                    int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
-                    int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
-                    if (alpha == 255) {
+                    case 0xD1: {
+                        double x1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                        double y1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                        double x2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                        double y2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                        int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                        int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                        int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
+                        int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
+                        if (alpha == 255) {
+                            Line * ln = new Line{
+                                    0x000000FF,
+                                    (float) x1,
+                                    (float) y1,
+                                    (float) x2,
+                                    (float) y2,
+                                    42,
+                                    false
+                            };
+                            ln->autoTimer = false;
+                            renderables.items.tick.push(ln);
+                        }
                         Line * ln = new Line{
-                                0x000000FF,
+                                (red << 24) | (green << 16) | (blue << 8) | alpha,
                                 (float) x1,
                                 (float) y1,
                                 (float) x2,
                                 (float) y2,
-                                42,
+                                30,
                                 false
                         };
                         ln->autoTimer = false;
                         renderables.items.tick.push(ln);
+                        return;
                     }
-                    Line * ln = new Line{
+                    case 0xD2: {
+                        double x = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                        double y = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                        double width = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                        double height = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                        int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                        int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                        int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
+                        int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
+                        if (alpha == 255) {
+                            RectOutline * ro = new RectOutline{
+                                    0x000000FF,
+                                    (float) (y - height),
+                                    (float) (y + height),
+                                    (float) (x - width),
+                                    (float) (x + width),
+                                    42,
+                                    false
+                            };
+                            ro->autoTimer = false;
+                            renderables.items.tick.push(ro);
+                        }
+                        RectOutline * ro = new RectOutline{
                             (red << 24) | (green << 16) | (blue << 8) | alpha,
-                            (float) x1,
-                            (float) y1,
-                            (float) x2,
-                            (float) y2,
+                            (float) (y - height),
+                            (float) (y + height),
+                            (float) (x - width),
+                            (float) (x + width),
                             30,
                             false
-                    };
-                    ln->autoTimer = false;
-                    renderables.items.tick.push(ln);
-                    return;
-                }
-                case 0xD2: {
-                    double x = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-                    double y = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                    double width = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                    double height = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
-                    int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
-                    int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
-                    int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
-                    int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
-                    if (alpha == 255) {
-                        RectOutline * ro = new RectOutline{
-                                0x000000FF,
-                                (float) (y - height),
-                                (float) (y + height),
-                                (float) (x - width),
-                                (float) (x + width),
-                                42,
-                                false
                         };
                         ro->autoTimer = false;
                         renderables.items.tick.push(ro);
+                        return;
                     }
-                    RectOutline * ro = new RectOutline{
-                        (red << 24) | (green << 16) | (blue << 8) | alpha,
-                        (float) (y - height),
-                        (float) (y + height),
-                        (float) (x - width),
-                        (float) (x + width),
-                        30,
-                        false
-                    };
-                    ro->autoTimer = false;
-                    renderables.items.tick.push(ro);
-                    return;
                 }
             }
-        }
-        if (cmd < 0xF0) {
-            auto colorModule = FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId)->modules->colorBlendModule;
-            switch (cmd) {
-                case 0xE0:
-                    colorModule->isEnabled = 1;
-                    return;
-                case 0xE1:
-                    colorModule->isEnabled = 0;
-                    return;
-                case 0xE2:
-                    int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-                    int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                    int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                    int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
-                    colorModule->red = red;
-                    colorModule->green = green;
-                    colorModule->blue = blue;
-                    colorModule->alpha = alpha;
-                    return;
+            if (cmd < 0xF0) {
+                auto colorModule = FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId)->modules->colorBlendModule;
+                switch (cmd) {
+                    case 0xE0:
+                        colorModule->isEnabled = 1;
+                        return;
+                    case 0xE1:
+                        colorModule->isEnabled = 0;
+                        return;
+                    case 0xE2:
+                        int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                        int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                        int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                        int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                        colorModule->red = red;
+                        colorModule->green = green;
+                        colorModule->blue = blue;
+                        colorModule->alpha = alpha;
+                        return;
+                }
             }
         }
         if (cmd < 0x100) {

@@ -68,9 +68,9 @@ struct ftParamCustomizeModuleImpl {
     float itemThrowStrength;
     char unk9[0xC];
     float projectileItemMoveSpeed;
-    float projectileItemMoveSpeedDashF;        
-    float projectileItemMoveSpeedDashB;   
-    char unk10[0x4];    
+    float projectileItemMoveSpeedDashF;
+    float projectileItemMoveSpeedDashB;
+    char unk10[0x4];
     float lightLandingLag;
     float normalLandingLag;
     float nairLandingLag;

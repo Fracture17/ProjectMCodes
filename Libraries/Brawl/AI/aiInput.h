@@ -27,10 +27,18 @@ struct aiInput {
 
     // 0x2C
     int fighterId;
-    char _spacer4[0x42 - 0x2C - 4];
+    // 0x30
+    int charId;
+    // 0x34
+    aiInput* childAi;
 
+    char _spacer4[0x40 - 0x34 - 4];
+    // 0x40
+    char swingChkByte1;
+    // 0x41
+    char swingChkByte2;
     // 0x42
-    unsigned char cpuIdx;
+    char cpuIdx;
     char _spacer5[0x44 - 0x42 - 1];
 
     // 0x44

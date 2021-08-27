@@ -6,6 +6,8 @@
 #include "Containers/vector.h"
 #include "Brawl/FT/Fighter.h"
 #include "Brawl/SO/soAnimCmdModuleImpl.h"
+#include "Brawl/IT/BaseItem.h"
+#include "Wii/PAD/PADStatus.h"
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
@@ -64,8 +66,16 @@ struct PSAData {
 struct debugData {
   bool enabled = false;
   bool noclip = false;
+  bool noclipInternal = false;
   bool settingPosition = false;
   bool fixPosition = false;
+  bool randomizePosition = false;
+  bool randOnGround = false;
+  bool randomizeDamage = false;
+  float randXPos = 0;
+  float randYPos = 0;
+  float randDmg = 0;
+
   char airGroundState = 0;
   float xPos = 0;
   float yPos = 0;
@@ -96,16 +106,28 @@ struct AIData {
   int frameCount = -1;
   unsigned int md = -1;
   char buttons[25] = {};
+  Inputs aiButtons;
   float lstickX = 0;
   float lstickY = 0;
 
   float snapbackShieldtimer = 0;
 };
 
+struct TrajectoryOptions {
+  bool active = false;
+  int thickness = 2;
+  int segments = 5;
+  int segmentLength = 10;
+};
+
 struct TrainingData {
   AIData aiData;
+  PADStatus playerInputs;
   bool actionableOverlay = false; 
+  int actionableSE = -1;
   bool inputDisplay = false;
+  bool hasPlayedSE = false;
+  TrajectoryOptions trajectoryOpts;
   debugData debug;
 };
 
@@ -117,6 +139,7 @@ public:
   void deselect() {}
   void render(TextPrinter* printer, char* buffer);
 
+  virtual ~AITrainingScriptOption() {}
 private:
   unsigned int id;
   char playerNum;
@@ -125,6 +148,7 @@ private:
 struct AITrainingDefaultVal {
   char index;
   float value;
+  ~AITrainingDefaultVal() {}
 };
 
 class AITrainingScriptSubmenu : public SubpageOption {
@@ -135,6 +159,10 @@ public:
   void render(TextPrinter* printer, char* buffer);
   void addDefault(AITrainingDefaultVal* defVal);
   
+  virtual ~AITrainingScriptSubmenu() { 
+    defaultValues.clear();
+  }
+
 private:
   unsigned int id;
   char playerNum;
@@ -147,6 +175,41 @@ struct PlayerPage : public Page {
   void deselect();
   TrainingData* data;
   char playerNum;
+};
+
+struct CurrentItemParams {
+  itemIdName id = itemIdName::Banana_Peel;
+  short variant = 0;
+};
+
+class ItemSelectOption : public StandardOption {
+public:
+  ItemSelectOption(short id, char* name);
+  void modify(float) {}
+  void select();
+  void deselect() {}
+  void render(TextPrinter* printer, char* buffer);
+
+  virtual ~ItemSelectOption() {}
+private:
+  short id;
+};
+
+class ItemSpawnOption : public StandardOption {
+public:
+  ItemSpawnOption(char* name);
+  void modify(float) {}
+  void select();
+  void deselect() {}
+  void render(TextPrinter* printer, char* buffer);
+
+  virtual ~ItemSpawnOption() {}
+private:
+  unsigned int id;
+};
+
+struct ItemPage : public Page {
+  ItemPage(Menu* myMenu);  
 };
 
 #endif // PROJECTMCODES_FUDGEMENU_H

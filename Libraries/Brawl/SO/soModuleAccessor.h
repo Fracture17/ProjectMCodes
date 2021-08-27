@@ -20,10 +20,12 @@
 #include "../FT/ftStopModuleImpl.h"
 #include "soColorBlendModule.h"
 #include "soAnimCmdModuleImpl.h"
+#include "soResourceModuleImpl.h"
 
 
 struct StageObject;
 struct soGenerateArticleManageModuleImpl;
+struct soStatusModuleImpl;
 
 //Contains references to all modules in a StageObject
 //The "so" prefix is the base module class
@@ -33,7 +35,9 @@ struct soModuleAccessor {
     //0x8
     StageObject* owner;
     //There should be an soModuleEnummeration class here, but I'm just going to list the modules directly for now
-    char _spacer2[0x14 - 0x8 - 4];
+    //0x0 + 0xC = 0xC
+    soResourceModuleImpl* resourceModule;
+    char _spacer2[0x14 - 0xC - 4];
 
     //0x8 + 0xC = 0x14
     soMotionModule* motionModule;

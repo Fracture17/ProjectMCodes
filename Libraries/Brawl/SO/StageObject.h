@@ -14,7 +14,7 @@ struct gfTask {
 
 
 typedef int entryID;
-// struct soModuleAccessor;
+struct soModuleAccessor;
 
 struct StageObject : public gfTask {
     //a bunch of arguments

@@ -20,3 +20,19 @@ unsigned int soGroundModuleImpl::isPassableGround(int unk) {
 unsigned int soGroundModuleImpl::isPassableCheck(int unk) {
     return _isPassableCheck_soGroundModuleImpl(this, unk);
 }
+
+xyDouble soGroundModuleImpl::getLeftPos() {
+    return _getLeftPos_soGroundModuleImpl(this, 0);
+}
+
+xyDouble soGroundModuleImpl::getRightPos() {
+    return _getRightPos_soGroundModuleImpl(this, 0);
+}
+
+xyDouble soGroundModuleImpl::getUpPos() {
+    return _getUpPos_soGroundModuleImpl(this, 0);
+}
+
+xyDouble soGroundModuleImpl::getDownPos() {
+    return _getDownPos_soGroundModuleImpl(this, 0);
+}
