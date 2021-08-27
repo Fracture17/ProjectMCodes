@@ -31,29 +31,7 @@ extern TrainingData playerTrainingData[];
 extern char selectedPlayer;
 extern Menu* fudgeMenu;
 
-char CAMERA_SCALE[] = "cam scale: %.3f";
-char TARGET[] = "Target Idx: %d";
-char LSTICK[] = "lstick: %.3f; %.3f";
-char INPUTS_VALUE[] = "Inputs Value: %04x";
-char INPUTS[] = "Inputs: %s";
-char INPUTS_NAMES[][9] = {
-        "attack ",
-        "special ",
-        "jump ",
-        "shield ",
-        "cstick ",
-        "uTaunt ",
-        "sTaunt ",
-        "dTaunt ",
-        "tapJump "
-};
-char AI_SCRIPT[] = "AI Script: %04x";
-char AI_MD[] = "AI Md: %02x";
-char SELECTED_SCRIPT[] = "Selected Script: %04x";
-char LAST_SCRIPT_CHANGE[] = "script active for: %04d frames";
-
 //unsigned int BASE_SCALE = CAMERA_MANAGER->cameras[0].scale;
-
 
 //hacky way to check if in game
 enum SCENE_TYPE {

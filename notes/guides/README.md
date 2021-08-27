@@ -11,15 +11,16 @@ Heyooo - fudge here! Just so this project isn't lost to time, I've decided to wr
   - [VSCode (the blue one)](https://code.visualstudio.com/)
     - free but requires a bit more setup
 
-- [MinGW](https://osdn.net/projects/mingw/releases/)
-  - install the `msys64` version
-  - this may become obsolete later idk
+- [MinGW](http://mingw-w64.org/doku.php/download)
+  - install `MinGW-W64-builds` and change the architecture to `x86_64` and `Msys2`
 
 ## Setting Up:
 
 ### - [VSCode](./Setup/VSCode.md)
 
 ### - [CLion](./Setup/CLion.md)
+
+### - [MinGW](./Setup/MinGW.md)
 
 After you follow the guide for your respective platform, you should now have everything you need setup to start developing the codes. But how exactly do you do that? Continue reading to find out!
 
