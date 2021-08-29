@@ -138,6 +138,13 @@ PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   trajectoryLinePage->addOption(new IntOption("segment length", data->trajectoryOpts.segmentLength, 1, 20));
   this->addOption(new PageLink("Trajectory Line", trajectoryLinePage));
 
+  Page* heatmapPage = new Page(fudgeMenu);
+  heatmapPage->addOption(new BoolOption("enabled", data->heatmapOpts.active));
+  heatmapPage->addOption(new IntOption("lifetime", data->heatmapOpts.lifetime, 0, 0x7FFFFFFF));
+  heatmapPage->addOption(new IntOption("opacity", data->heatmapOpts.opacity, 0, 255));
+  heatmapPage->addOption(new IntOption("color change frame", data->heatmapOpts.colorChangeFrame, 0, 255));
+  this->addOption(new PageLink("Heatmap Options", heatmapPage));
+
   Page* AIPage = new Page(fudgeMenu);
   AIPage->setTitle("AI Training");
 

@@ -8,6 +8,7 @@
 #include "Brawl/SO/soAnimCmdModuleImpl.h"
 #include "Brawl/IT/BaseItem.h"
 #include "Wii/PAD/PADStatus.h"
+#include "./hitboxHeatmap.h"
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
@@ -120,6 +121,15 @@ struct TrajectoryOptions {
   int segmentLength = 10;
 };
 
+struct HeatmapOptions {
+  bool active = false;
+  int lifetime = 0;
+  int opacity = 0x80;
+  int colorChangeFrame = 25;
+  int bubbleLimit = 150;
+  vector<HitboxDataFrame*>* data = new vector<HitboxDataFrame*>();
+};
+
 struct TrainingData {
   AIData aiData;
   PADStatus playerInputs;
@@ -128,6 +138,7 @@ struct TrainingData {
   bool inputDisplay = false;
   bool hasPlayedSE = false;
   TrajectoryOptions trajectoryOpts;
+  HeatmapOptions heatmapOpts;
   debugData debug;
 };
 

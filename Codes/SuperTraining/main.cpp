@@ -19,6 +19,7 @@
 
 #include "./menu.h"
 #include "./FudgeMenu.h"
+#include "./hitboxHeatmap.h"
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
@@ -76,30 +77,6 @@ bool paused = false;
 int modeIdx = 0;
 double md_debugDamage = 0;
 int md_debugTarget = 0;
-
-// we need to do this manually for char-based ones :C
-void ModSpecialIdx(int amount) {
-    modeIdx += amount;
-    if (modeIdx >= 3) {
-        modeIdx = 0;
-    } else if (modeIdx < 0) {
-        modeIdx = 2;
-    }
-}
-
-void ModInfoLevel(int amount) {
-    infoLevel += amount;
-    OSReport("infoLevel: %d", infoLevel);
-    if (infoLevel == 255) infoLevel = 0;
-    else if (infoLevel > 4) infoLevel = 4;
-}
-
-void ModObservePNum(int amount) {
-    observePNum += amount;
-    OSReport("oPNum: %d", observePNum);
-    if (observePNum == 255) observePNum = 0;
-    else if (observePNum > 3) observePNum = 3;
-}
 
 #define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
 #define _randf ((double (*)()) 0x8003fb64)
@@ -836,6 +813,7 @@ extern "C" void updateOnFrame() {
         }
 
         renderables.renderAll();
+        renderAllStoredHitboxes();
         if (infoLevel >= 1 && visible) {
             printer.setup();
             printer.start2D();
@@ -860,6 +838,7 @@ extern "C" void updateOnFrame() {
 
 SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
     renderables.updateTick();
+    storedHitboxTick();
     
     auto scene = getScene();
     if (scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
