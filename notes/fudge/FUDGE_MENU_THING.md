@@ -32,8 +32,8 @@ Here's a list of all the options for each player:
   - damage: 0
   - combo adjust: 30
   - fix position: on
-  - randomize position: on
   - set on ground: off
+  - randomize position: on
   - randomize damage: on
 
 ## TRAJECTORY LINE
@@ -48,7 +48,7 @@ Here's a list of all the options for each player:
   - default everything else
 
 ## AI TRAINING
-  - MIGHT CRASH THE GAME IDK MAYBE AVOID THIS FOR NOW CUZ IT'S UNFINISHED; mainly used for debugging my custom AI for now
+  - unfinished lmao don't use this
 
 ## ACTIONABLE OVERLAY:
   - turns the character green when they're in an actionable state + a darker shade of green when in IASA frames

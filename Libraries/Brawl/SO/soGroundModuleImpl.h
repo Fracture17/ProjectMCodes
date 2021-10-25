@@ -56,9 +56,9 @@ struct soGroundModuleImpl {
     xyDouble getRightPos();
     xyDouble getUpPos();
     xyDouble getDownPos();
-    
+    // xyDouble getDownCorrectPos();
 
-    char _spacer[0x28];
+    char _spacer2[0x28];
 
     // 0x28
     unk1_soGroundModule * unk1;
@@ -80,4 +80,6 @@ struct soGroundModuleImpl {
 #define _getRightPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80733fe0)
 #define _getUpPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80733f14)
 #define _getDownPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80733f58)
+// #define _getDownCorrectPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80734184)
+
 #endif //PROJECTMCODES_SOGROUNDMODULEIMPL_H

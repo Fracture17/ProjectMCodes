@@ -29,10 +29,10 @@ public:
     bool operator>(const vector<T>& other);
     bool operator<=(const vector<T>& other);
     bool operator>=(const vector<T>& other);*/
-    void push(const T& val);
+    bool push(const T& val);
     void pop_back();
     size_t size() const;
-    void reallocate(size_t newSize);
+    bool reallocate(size_t newSize);
     //void insert(size_t index, const T& val);
     void erase(size_t index);
     //destroys elements from start, up to (but not including) end
@@ -90,13 +90,18 @@ bool vector<T>::operator<=(const vector<T>& other);
 bool vector<T>::operator>=(const vector<T>& other);*/
 
 
+#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
+
 template<class T>
-void vector<T>::push(const T& val) {
+bool vector<T>::push(const T& val) {
     if (length >= maxLength) {
-        reallocate(maxLength * 2);
+        if (!reallocate(maxLength * 2)) {
+            return false;
+        };
     }
     Array[length] = val;
     length++;
+    return true;
 }
 
 template<class T>
@@ -121,8 +126,10 @@ void vector<T>::erase(size_t index) {
 
 
 template<class T>
-void vector<T>::reallocate(size_t newSize) {
+bool vector<T>::reallocate(size_t newSize) {
     T* temp = allocate(newSize);
+    if (temp == nullptr) { return false; }
+
     if(newSize < length) {
         length = newSize;
     }
@@ -132,6 +139,7 @@ void vector<T>::reallocate(size_t newSize) {
     delete[] Array;
     Array = temp;
     maxLength = newSize;
+    return true;
 }
 
 
@@ -189,11 +197,8 @@ vector<T>::vector(size_t size, const T &val) {
     }
 }
 
-#define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
-
 template<class T>
 vector<T>::vector(const vector<T> &other) {
-    OSReport("========== CREATING NEW VECTOR ==========\n");
     maxLength = other.size();
     length = other.size();
     Array = allocate(maxLength);

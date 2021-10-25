@@ -152,11 +152,14 @@ INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
 )");
 
 // const char* STR_DEFAULT = "DEFAULT"; 
+#define _GetPlayerNo_aiChrIdx ((int (*)(char* chrIdx)) 0x808fd68c)
 extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
     auto AIData = fighterEntry->owner->ftInputPtr->aiActPtr->AIScriptPac;
+    if (AIData == nullptr) return;
     int numEntries = AIData->numEntries;
-    int pNum = FIGHTER_MANAGER->getPlayerNo(fighterEntry->entryId);
+    int pNum = _GetPlayerNo_aiChrIdx(&fighterEntry->input->cpuIdx);
     if (pNum > 3) return;
+
     if (fighterEntry->owner->ftInputPtr->fighterId != playerTrainingData[pNum].aiData.fighterID) {
         playerTrainingData[pNum].aiData.fighterID = fighterEntry->owner->ftInputPtr->fighterId;
         playerTrainingData[pNum].aiData.trainingScripts->clearOptions();
@@ -349,9 +352,9 @@ void collectData(Fighter* fighter, int pNum) {
 // }
 
 
-// INJECTION("forceVisMemPool", 0x80025dc8, R"(
-//     cmpwi r3, 69
-// )");
+INJECTION("forceVisMemPool", 0x80025dc8, R"(
+    cmpwi r3, 69
+)");
 
 // struct HeapData {
 //     int id;
@@ -446,95 +449,95 @@ extern "C" void updateOnFrame() {
     message->yPos = 1;
     message->zPos = 0;
 
-    if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {        
-        auto entryCount = FIGHTER_MANAGER->getEntryCount();
-        setupDrawPrimitives();
+    setupDrawPrimitives();
 
-        PADButtons btn;
-        btn.bits = PREVIOUS_PADS[0].button.bits | PREVIOUS_PADS[1].button.bits | PREVIOUS_PADS[2].button.bits | PREVIOUS_PADS[3].button.bits;
-        auto cData = playerTrainingData[observePNum];
-        paused = fudgeMenu->paused;
-        visible = fudgeMenu->visible;
-        bool selected = fudgeMenu->selected;
-        if (btn.L && btn.R && btn.UpDPad) {
+    PADButtons btn;
+    btn.bits = PREVIOUS_PADS[0].button.bits | PREVIOUS_PADS[1].button.bits | PREVIOUS_PADS[2].button.bits | PREVIOUS_PADS[3].button.bits;
+    auto cData = playerTrainingData[observePNum];
+    paused = fudgeMenu->paused;
+    visible = fudgeMenu->visible;
+    bool selected = fudgeMenu->selected;
+    if (btn.L && btn.R && btn.UpDPad && btn.B) {
+        if (instantResponse) {
+            fudgeMenu->toggle();
+            instantResponse = false;
+            SOUND_SYSTEM->playSE(34);
+        }
+    } else if (btn.L && btn.R && btn.DownDPad) {
+        if (instantResponse) {
+            if (selected) fudgeMenu->deselect();
+            fudgeMenu->visible = false;
+            fudgeMenu->paused = false;
+            instantResponse = false;
+        }
+    } else if (visible) {
+        if (btn.B && fudgeMenu->path.size() <= 1 && !selected) {
             if (instantResponse) {
                 fudgeMenu->toggle();
                 instantResponse = false;
                 SOUND_SYSTEM->playSE(34);
             }
-        } else if (btn.L && btn.R && btn.DownDPad) {
+        } else if (btn.A && paused) {
             if (instantResponse) {
-                if (selected) fudgeMenu->deselect();
-                fudgeMenu->visible = false;
-                fudgeMenu->paused = false;
+                fudgeMenu->select();
                 instantResponse = false;
+                SOUND_SYSTEM->playSE(1);
             }
-        } else if (visible) {
-            if (btn.B && fudgeMenu->path.size() <= 1 && !selected) {
-                if (instantResponse) {
-                    fudgeMenu->toggle();
-                    instantResponse = false;
-                    SOUND_SYSTEM->playSE(34);
-                }
-            } else if (btn.A && paused) {
-                if (instantResponse) {
-                    fudgeMenu->select();
-                    instantResponse = false;
-                    SOUND_SYSTEM->playSE(1);
-                }
-            } else if (btn.B && paused) {
-                if (instantResponse) {
-                    fudgeMenu->deselect();
-                    instantResponse = false;
-                    SOUND_SYSTEM->playSE(2);
-                }
-            } else if (btn.DownDPad) {
-                timer -= 10;
-                if (timer < 0 || instantResponse) {
-                    fudgeMenu->down();
-                    instantResponse = false;
-                    SOUND_SYSTEM->playSE(0);
-                }
-            } else if (btn.UpDPad && btn.L && selected && !paused) {
-                if (instantResponse) {
-                    fudgeMenu->modify(-1);
-                    fudgeMenu->deselect();
-                    instantResponse = false;
-                    SOUND_SYSTEM->playSE(34);
-                }
-            } else if (btn.UpDPad) {
-                timer -= 10;
-                if (timer < 0 || instantResponse) {
-                    fudgeMenu->up();
-                    instantResponse = false;
-                    SOUND_SYSTEM->playSE(0);
-                }
-            } else if (btn.LeftDPad) {
-                timer -= 10;
-                if (timer < 0 || instantResponse) {
-                    fudgeMenu->modify(btn.Y ? -10 : -(btn.X ? 0.1 : 1));
-                    instantResponse = false;
-                    SOUND_SYSTEM->playSE(37);
-                }
-            } else if (btn.RightDPad) {
-                timer -= 10;
-                if (timer < 0 || instantResponse) {
-                    fudgeMenu->modify(btn.Y ? 10 : (btn.X ? 0.1 : 1));
-                    instantResponse = false;
-                    SOUND_SYSTEM->playSE(37);
-                }
-            } else {
-                instantResponse = true;
-                timer = 100;
-                cmdDelay = 0;
+        } else if (btn.B && paused) {
+            if (instantResponse) {
+                fudgeMenu->deselect();
+                instantResponse = false;
+                SOUND_SYSTEM->playSE(2);
             }
-        } else if (paused && btn.B) {
-            paused = false;
+        } else if (btn.DownDPad) {
+            timer -= 10;
+            if (timer < 0 || instantResponse) {
+                fudgeMenu->down();
+                instantResponse = false;
+                SOUND_SYSTEM->playSE(0);
+            }
+        } else if (btn.UpDPad && btn.L && selected && !paused) {
+            if (instantResponse) {
+                fudgeMenu->modify(-1);
+                fudgeMenu->deselect();
+                instantResponse = false;
+                SOUND_SYSTEM->playSE(34);
+            }
+        } else if (btn.UpDPad) {
+            timer -= 10;
+            if (timer < 0 || instantResponse) {
+                fudgeMenu->up();
+                instantResponse = false;
+                SOUND_SYSTEM->playSE(0);
+            }
+        } else if (btn.LeftDPad) {
+            timer -= 10;
+            if (timer < 0 || instantResponse) {
+                fudgeMenu->modify(btn.Y ? -10 : -(btn.X ? 0.1 : 1));
+                instantResponse = false;
+                SOUND_SYSTEM->playSE(37);
+            }
+        } else if (btn.RightDPad) {
+            timer -= 10;
+            if (timer < 0 || instantResponse) {
+                fudgeMenu->modify(btn.Y ? 10 : (btn.X ? 0.1 : 1));
+                instantResponse = false;
+                SOUND_SYSTEM->playSE(37);
+            }
         } else {
             instantResponse = true;
-            timer = 100;
+            timer = 80;
             cmdDelay = 0;
         }
+    } else if (paused && btn.B) {
+        paused = false;
+    } else {
+        instantResponse = true;
+        timer = 80;
+        cmdDelay = 0;
+    }
+    if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {        
+        auto entryCount = FIGHTER_MANAGER->getEntryCount();
         for (int i = 0; i < entryCount; i++) {
             auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
 
@@ -592,7 +595,7 @@ extern "C" void updateOnFrame() {
             #define IP_DISPLAY_SCALE 3
             if (currData.inputDisplay) {
                 auto isHuman = !fighter->getOwner()->isCpu();
-                auto& ipbtn = currData.aiData.aiButtons;
+                auto& ipbtn = input->buttons;
                 renderables.items.frame.push(new Rect (
                     xPos + (2) * IP_DISPLAY_SCALE,
                     yPos - (7.5) * IP_DISPLAY_SCALE,
@@ -811,26 +814,29 @@ extern "C" void updateOnFrame() {
                 }
             }
         }
-
-        renderables.renderAll();
-        renderAllStoredHitboxes();
-        if (infoLevel >= 1 && visible) {
-            printer.setup();
-            printer.start2D();
-
-            message->fontScaleY = RENDER_SCALE_Y;
-            message->fontScaleX = RENDER_SCALE_X;
-            printer.lineHeight = 20 * message->fontScaleY;
-            message->xPos = LEFT_PADDING;
-            message->yPos = TOP_PADDING;
-            fudgeMenu->render(&printer, buffer);
-        }
-
+        
         startNormalDraw();
+        renderAllStoredHitboxes();
     }
 
+    renderables.renderAll();
+    startNormalDraw();
+    if (infoLevel >= 1 && visible) {
+        printer.setup();
+        printer.start2D();
+
+        message->fontScaleY = RENDER_SCALE_Y;
+        message->fontScaleX = RENDER_SCALE_X;
+        printer.lineHeight = 20 * message->fontScaleY;
+        message->xPos = LEFT_PADDING;
+        message->yPos = TOP_PADDING;
+        fudgeMenu->render(&printer, buffer);
+    }
+
+    startNormalDraw();
+
     if (timer <= 0) {
-        timer = 50 - (cmdDelay - (5 - cmdDelay % 5));
+        timer = 40 - (cmdDelay - (5 - cmdDelay % 5));
         cmdDelay += 1;
         // if (cmdDelay > 45) cmdDelay = 45;
     }
@@ -915,6 +921,9 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
                         }
                         if (currData.debug.comboTimer <= 0) {
                             setPosition(currData, fighter, input, entryCount);
+                            if (fighter->modules->statusModule->action == 0x10) {
+                                fighter->modules->statusModule->changeStatusForce(0xE, fighter->modules);
+                            }
                             FIGHTER_MANAGER->getOwner(id)->setDamage(currData.debug.randomizeDamage ? currData.debug.randDmg : currData.debug.damage, 0);
                             currData.debug.comboTimer = 0;
                             if (!currData.debug.noclip && currData.debug.noclipInternal && currData.debug.comboTimer == -1) {
@@ -955,7 +964,6 @@ INJECTION("CPUForceBehavior", 0x809188B0, R"(
     sth r26, 120(r25)
     RESTORE_REGS
 )");
-#define _GetPlayerNo_aiChrIdx ((int (*)(char* chrIdx)) 0x808fd68c)
 extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
     char pNum = _GetPlayerNo_aiChrIdx(&aiActPtr->ftInputPtr->cpuIdx);
     if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {

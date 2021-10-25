@@ -8,7 +8,7 @@ enum RPS {
     Defend = 0x3
 };
 
-#define PATTERN_MAN_LENGTH 5
+#define PATTERN_MAN_LENGTH 15
 #define PATTERN_MAN_MAX_IDX 4
 
 class PatternManager {
@@ -26,10 +26,10 @@ public:
     float get(int player);
 private:
     char playerRPS[4][PATTERN_MAN_LENGTH] = {
-        {0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0}
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
     };
     signed char indexes[4] = {0, 0, 0, 0};
     void runCalc(int * attackChance, int * grabChance, int * defendChance, int player, int lookAmount);

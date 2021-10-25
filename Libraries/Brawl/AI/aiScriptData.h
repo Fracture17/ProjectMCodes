@@ -17,7 +17,9 @@ struct aiScriptData {
     float variables[24];
     // 0x60
     AICEPac* AIScriptPac;
-    char _spacer[0x68 - 0x60 - 4];
+    
+    // 0x64
+    int* constPtr;
 
     // 0x68
     int* currentInstruction;

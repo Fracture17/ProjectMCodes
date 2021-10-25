@@ -66,7 +66,7 @@ void MovementTracker::reset() {
 unsigned char actionToMov(int action) {
   if (0x24 <= action && action <= 0x33) return MOV_ATTACK;
   switch (action) {
-    case 0x0: return MOV_IDLE;
+    // case 0x0: return MOV_IDLE;
     case 0x1: return MOV_WALK;
     case 0x4: return MOV_RUN;
     case 0x3: return MOV_DASH;

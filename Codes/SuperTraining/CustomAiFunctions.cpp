@@ -19,6 +19,8 @@
 #include "MovementTracker.h"
 #include "FudgeMenu.h"
 
+#define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
+#define _length_vec3f ((double (*)(Vec3f* vector)) 0x8070b94c)
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 #define _randf ((double (*)()) 0x8003fb64)
 
@@ -317,46 +319,51 @@ extern "C" {
         // }
 
         ftEntry * targetFighterEntry;
+        Fighter * targetFighter;
+        char targetPlayerNo = -1;
         bool shouldGetAiTarget = (switchCase & 0x0100) >> 8;
         if (shouldGetAiTarget) {
             switchCase -= 0x100;
             targetFighterEntry = targetAiStat->input->ftEntryPtr;
+            bool getChild = targetFighterEntry == nullptr;
+            targetPlayerNo = _GetPlayerNo_aiChrIdx(&targetAiStat->input->cpuIdx);
+            targetFighter = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(targetPlayerNo), getChild);
         } else {
             targetFighterEntry = selfAi->ftInputPtr->ftEntryPtr;
+            targetPlayerNo = _GetPlayerNo_aiChrIdx(&selfAi->ftInputPtr->cpuIdx);
+            bool getChild = targetFighterEntry == nullptr;
+            targetFighter = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(targetPlayerNo), getChild);
         }
 
         switchCase -= 0x1000;
         if (switchCase == 0x4C) { // IsOnStage
             fn_shouldReturnResult = 1;
-            Vec3f targetPos {
-                    targetFighterEntry->ftStageObject->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos + (float) 0.1,
-                    targetFighterEntry->ftStageObject->modules->postureModule->yPos,
-                    targetFighterEntry->ftStageObject->modules->postureModule->zPos
+
+            auto groundModule = targetFighter->modules->groundModule->unk1->unk1->unk1;
+            Vec3f startPos {
+                    groundModule->landingCollisionBottomXPos,
+                    groundModule->landingCollisionBottomYPos,
+                    targetFighter->modules->postureModule->zPos
             };
 
-            targetFighterEntry->ftStageObject->modules->groundModule->getDistanceFromUnderGrCol(
-                    150,
-                    &targetPos,
-                    true
-            );
+            Vec3f destPos {
+                startPos.f1,
+                startPos.f2 - 150,
+                0
+            };
 
-            asm("stfd f1, 0x00(%0)"
-            :
-            : "r" (&fn_result));
-            if (fn_result != -1) {
-                fn_result = 1;
-                return;
+            Vec3f ret1 {-1,-1,-1};
+            Vec3f ret2 {-1,-1,-1};
+
+            _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            
+            fn_result = -1;
+            if (ret1.f3 != -1) {
+                startPos.f1 -= ret1.f1;
+                startPos.f2 -= ret1.f2;
+                fn_result = _length_vec3f(&startPos);
             }
 
-            targetPos.f1 -= 0.2;
-            targetFighterEntry->ftStageObject->modules->groundModule->getDistanceFromUnderGrCol(
-                    150,
-                    &targetPos,
-                    true
-            );
-            asm("stfd f1, 0x00(%0)"
-            :
-            : "r" (&fn_result));
             if (fn_result != -1) {
                 fn_result = 1;
                 return;
@@ -367,20 +374,26 @@ extern "C" {
         }
 
         if (switchCase == 0x4B) {
-            Vec3f targetPos {
-                    targetFighterEntry->ftStageObject->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos,
-                    targetFighterEntry->ftStageObject->modules->postureModule->yPos,
-                    targetFighterEntry->ftStageObject->modules->postureModule->zPos
+            auto groundModule = targetFighter->modules->groundModule->unk1->unk1->unk1;
+            
+            Vec3f startPos {
+                    groundModule->landingCollisionBottomXPos,
+                    targetFighter->modules->postureModule->yPos,
+                    targetFighter->modules->postureModule->zPos
             };
 
-            targetFighterEntry->ftStageObject->modules->groundModule->getDistanceFromUnderGrCol(
-                    150,
-                    &targetPos,
-                    true
-            );
-            asm("stfd f1, 0x00(%0)"
-                :
-                : "r" (&fn_result));
+            Vec3f destPos {
+                startPos.f1,
+                startPos.f2 - 150,
+                0
+            };
+
+            Vec3f ret1 {-1,-1,-1};
+            Vec3f ret2 {-1,-1,-1};
+
+            _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            
+            fn_result = (double) (ret1.f1 != destPos.f1 || ret1.f2 != destPos.f2);
             fn_shouldReturnResult = 1;
         }
 
@@ -389,32 +402,34 @@ extern "C" {
             fn_shouldReturnResult = 1;
         }
         if (switchCase == 0x52) {
-            auto entryID = targetFighterEntry->entryId;
-            fn_result = _GetPlayerNo_aiChrIdx(&targetFighterEntry->input->cpuIdx);
+            fn_result = targetPlayerNo;
         }
         if (switchCase == 0x53) {
-            fn_result = 0;
-//            OSReport("move id: %08x\n", targetFighterEntry->owner->ownerDataPtr->currStaleQueueNum);
-            for (int i = 0; i < 9; i++) {
-//                OSReport("i: %d; moveNum: %08x\n", i, targetFighterEntry->owner->ownerDataPtr->staleMoveQueue[i].attack);
-                if (targetFighterEntry->owner->ownerDataPtr->staleMoveQueue[i].attack == targetFighterEntry->owner->ownerDataPtr->currStaleQueueNum) {
-                    fn_result++;
+            if (targetFighterEntry == nullptr) {
+                fn_result = -1;
+            } else {
+                fn_result = 0;
+    //            OSReport("move id: %08x\n", targetFighterEntry->owner->ownerDataPtr->currStaleQueueNum);
+                for (int i = 0; i < 9; i++) {
+    //                OSReport("i: %d; moveNum: %08x\n", i, targetFighterEntry->owner->ownerDataPtr->staleMoveQueue[i].attack);
+                    if (targetFighterEntry->owner->ownerDataPtr->staleMoveQueue[i].attack == targetFighterEntry->owner->ownerDataPtr->currStaleQueueNum) {
+                        fn_result++;
+                    }
                 }
             }
             fn_shouldReturnResult = 1;
         }
         if (switchCase == 0x54) {
-            fn_result = targetFighterEntry->ftStageObject->modules->groundModule->isPassableGround(0);
+            fn_result = targetFighter->modules->groundModule->isPassableGround(0);
             fn_shouldReturnResult = 1;
         }
 
         if (switchCase == 0x55) {
 //            OSReport("ftEntry Address: %08x\n", targetFighterEntry);
-//            OSReport("ftSo Address: %08x\n", targetFighterEntry->ftStageObject);
-//            OSReport("UnkFtPtr Address: %08x\n", targetFighterEntry->ftStageObject->modFnAccessor);
-//            OSReport("Supposed cancelModule address: %08x\n", targetFighterEntry->ftStageObject->modFnAccessor->getFtCancelModule(targetFighterEntry->ftStageObject));
-            fn_result = targetFighterEntry
-                    ->ftStageObject
+//            OSReport("ftSo Address: %08x\n", targetFighter);
+//            OSReport("UnkFtPtr Address: %08x\n", targetFighter->modFnAccessor);
+//            OSReport("Supposed cancelModule address: %08x\n", targetFighter->modFnAccessor->getFtCancelModule(targetFighter));
+            fn_result = targetFighter
                     ->getCancelModule()
                     ->isEnableCancel();
 
@@ -423,29 +438,30 @@ extern "C" {
 
         // weight
         if (switchCase == 0x56) {
-            fn_result = targetFighterEntry->ftStageObject->modules->paramCustomizeModule->weight;
+            fn_result = targetFighter->modules->paramCustomizeModule->weight;
             fn_shouldReturnResult = 1;
         }
         // gravity
         if (switchCase == 0x57) {
-            fn_result = targetFighterEntry->ftStageObject->modules->paramCustomizeModule->gravity;
+            fn_result = targetFighter->modules->paramCustomizeModule->gravity;
             fn_shouldReturnResult = 1;
         }
         // fastfallspeed
         if (switchCase == 0x58) {
-            fn_result = targetFighterEntry->ftStageObject->modules->paramCustomizeModule->fastFallSpeed;
+            fn_result = targetFighter->modules->paramCustomizeModule->fastFallSpeed;
             fn_shouldReturnResult = 1;
         }
         // endframe
         if (switchCase == 0x59) {
-            // MIGHT BE CAUSING CRASHES -- NEEDS A FIX
-            // HAPPENS WHEN ANIMATION DOESN'T EXIST FOR TARGET
-            fn_result = targetFighterEntry->ftStageObject->modules->motionModule->getEndFrame();
-            fn_shouldReturnResult = 1;
+            auto motionModule = targetFighter->modules->motionModule;
+            if (motionModule->mainAnimationData.resPtr != nullptr) {
+                fn_result = motionModule->getEndFrame();
+                fn_shouldReturnResult = 1;
+            }
         }
 
         if (switchCase == 0x60) {
-            fn_result = playerTrainingData[_GetPlayerNo_aiChrIdx(&selfAi->ftInputPtr->cpuIdx)].aiData.scriptID;
+            fn_result = playerTrainingData[targetPlayerNo].aiData.scriptID;
             fn_shouldReturnResult = 1;
         }
     };
@@ -459,8 +475,9 @@ extern "C" {
     };
 }
 
-int* gotoCmdStack[5] = {0, 0, 0, 0, 0}; 
-int gotoCmdScripts[5] = {0, 0, 0, 0, 0};
+int* gotoCmdStack[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
+int gotoCmdScripts[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int* gotoCmdScriptHeads[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int gotoCmdStackPtr = 0;
 INJECTION("AI_GOTO_WITH_STACK_PUSH", 0x80917620, R"(
     SAVE_REGS
@@ -481,18 +498,22 @@ INJECTION("AI_GOTO_WITH_STACK_FIX1", 0x80917548, R"(
     lhz r0, 0x2(r30)
 )");
 INJECTION("AI_GOTO_WITH_STACK_FIX2", 0x80917470, R"(
+    mr r3, r26
     bl clearGotoStack
     lhz r0, 0x7e(r26)
 )");
 INJECTION("AI_GOTO_WITH_STACK_FIX3", 0x80917604, R"(
+    mr r3, r26
     bl clearGotoStack
     stw r6, 0xa8(r26)
 )");
 INJECTION("AI_GOTO_WITH_STACK_FIX4", 0x80917c34, R"(
+    mr r3, r26
     bl clearGotoStack
     lbz r0,0x1(r30)
 )");
 INJECTION("AI_GOTO_WITH_STACK_FIX5", 0x80918148, R"(
+    mr r3, r26
     bl clearGotoStack
     lhz r4,0x7a(r26)
 )");
@@ -502,11 +523,16 @@ INJECTION("CLEAR_DYNAMIC_DICE", 0x80918500, R"(
     lfd f31, 0x100(r1)
 )")
 
+// THIS TAKES PLACE IN IF_CHK ON THE REQUIREMENT SIDE OF THINGS
+INJECTION("CUSTOM_AI_XGOTO_REQ_FIX", 0x8091ea68, R"(
+    bl aiReqCalledAsFix
+)");
+
 vector<const void*> NoRepeatInstructions = vector<const void*>();
 vector<int> dynamicDice = vector<int>();
 #define _target_check_aiInput ((void (*)(aiInput* self)) 0x80907ba4)
 #define _getEntity_ftEntryManager ((ftEntry* (*)(ftEntryManager* self, entryID entryid)) 0x80823b24)
-SIMPLE_INJECTION(clearNoRepeatInstruction, 0x8082f144l, "cmpwi r4, 0") {
+SIMPLE_INJECTION(clearNoRepeatInstruction, 0x809171f4, "li r31, 0x0") {
     NoRepeatInstructions.reallocate(0);
     NoRepeatInstructions.reallocate(1);
     dynamicDice.reallocate(0);
@@ -515,8 +541,19 @@ SIMPLE_INJECTION(clearNoRepeatInstruction, 0x8082f144l, "cmpwi r4, 0") {
 
 int* forcedNextInstruction = nullptr;
 int forcedNextScript = 0;
+int originScript = 0;
 #define _act_change ((void (*)(aiScriptData * self, unsigned int nextScript, char* unk1, int unk2, int unk3)) 0x80918554)
 extern "C" {
+    void aiReqCalledAsFix() {
+        if (originScript != 0) {
+            asm("mr r0, %0"
+                :
+                : "r" (originScript));
+        } else {
+            // otherwise use the default code
+            asm("lhz r0,0x78(r23)");
+        }
+    }
     void clearDynamicDice(aiScriptData* aiActInst) { 
         dynamicDice.reallocate(0);
         dynamicDice.reallocate(1);
@@ -524,11 +561,15 @@ extern "C" {
     void aiGotoPush(int* nextPlace) {
         gotoCmdStack[gotoCmdStackPtr] = nextPlace;
         gotoCmdScripts[gotoCmdStackPtr] = 0;
+        gotoCmdScriptHeads[gotoCmdStackPtr] = 0;
         gotoCmdStackPtr += 1;
     };
-    void aiXGotoPush(aiScriptData* aiActInst, int* nextPlace) {
+    void aiXGotoPush(aiScriptData* aiActInst, int* nextPlace, int nextScript) {
+        if (originScript == 0) originScript = aiActInst->aiScript;
         gotoCmdStack[gotoCmdStackPtr] = nextPlace;
         gotoCmdScripts[gotoCmdStackPtr] = aiActInst->aiScript;
+        gotoCmdScriptHeads[gotoCmdStackPtr] = aiActInst->constPtr;
+        OSReport("(%08x) ==> %d: %08x\n", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
         gotoCmdStackPtr += 1;
     };
     char dummy = 0xFF;
@@ -538,15 +579,26 @@ extern "C" {
             if (gotoCmdScripts[gotoCmdStackPtr] != 0) {
                 aiActInst->aiScript = 0;
                 _act_change(aiActInst, gotoCmdScripts[gotoCmdStackPtr], &dummy, 0, 0);
+                aiActInst->constPtr = gotoCmdScriptHeads[gotoCmdStackPtr];
+                OSReport("(%08x) <== %d: %08x\n", gotoCmdScripts[gotoCmdStackPtr], gotoCmdStackPtr, aiActInst->constPtr);
             }
+            if (gotoCmdStackPtr == 0) originScript = 0;
             return gotoCmdStack[gotoCmdStackPtr];
         }
+        if (gotoCmdStackPtr == 0) originScript = 0;
         return 0;
     };
-    void clearGotoStack() {
+    void clearGotoStack(aiScriptData* aiActInst) {
+        asm("SAVE_REGS");
+        OSReport("CLEARED GOTO STACK\n");
+        aiActInst->aiScript = aiActInst->intermediateCurrentAiScript;
+        asm("RESTORE_REGS");
         gotoCmdStackPtr = 0;
+        originScript = 0;
     };
 }
+
+
 
 bool forcedReturnStatement = false;
 INJECTION("CUSTOM_AI_COMMANDS", 0x80917450, R"(
@@ -636,23 +688,33 @@ extern "C" {
                 targetGroundModule = FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId)->modules->groundModule;
             }
 
-            double res;
-
-            Vec3f targetPos {
+            Vec3f startPos {
                     targetGroundModule->unk1->unk1->unk1->landingCollisionBottomXPos + (float) xOffset,
                     targetGroundModule->unk1->unk1->unk1->landingCollisionBottomYPos + (float) yOffset,
                     0
             };
 
-            targetGroundModule->getDistanceFromUnderGrCol(
-                    150,
-                    &targetPos,
-                    true
-            );
+            Vec3f destPos {
+                startPos.f1,
+                startPos.f2 - 150,
+                0
+            };
 
-            asm("stfd f1, 0x00(%0)"
-            :
-            : "r" (&res));
+            Vec3f ret1 {-1,-1,-1};
+            Vec3f ret2 {-1,-1,-1};
+
+            _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            OSReport("YDISTFLOOR OFFSET RESULT: %.3f, %.3f\n", ret1.f1, ret1.f2);
+            OSReport("YDISTFLOOR OFFSET RET2: %.3f, %.3f\n", ret2.f1, ret2.f2);
+
+            float res = -1;
+            if (ret1.f3 != -1) {
+                startPos.f1 -= ret1.f1;
+                startPos.f2 -= ret1.f2;
+                res = _length_vec3f(&startPos);
+                OSReport("NORMALIZED RESULT: %.3f\n", res);
+            }
+
             aiActInst->variables[varToMod] = (float) res;
             return;
         }
@@ -664,23 +726,31 @@ extern "C" {
             double xPos = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
             double yPos = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
 
-            double res;
+            double res = -1;
 
-            Vec3f targetPos {
+            Vec3f startPos {
                     (float) xPos,
                     (float) yPos,
                     0
             };
 
-            FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId)->modules->groundModule->getDistanceFromUnderGrCol(
-                    150,
-                    &targetPos,
-                    true
-            );
+            Vec3f destPos {
+                startPos.f1,
+                startPos.f2 - 150,
+                0
+            };
 
-            asm("stfd f1, 0x00(%0)"
-            :
-            : "r" (&res));
+            Vec3f ret1 {-1,-1,-1};
+            Vec3f ret2 {-1,-1,-1};
+
+            _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            
+            if (ret1.f3 != -1) {
+                startPos.f1 -= ret1.f1;
+                startPos.f2 -= ret1.f2;
+                res = _length_vec3f(&startPos);
+            }
+
             aiActInst->variables[varToMod] = (float) res;
             return;
         }
@@ -877,7 +947,6 @@ extern "C" {
             return;
         }
 
-        #define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
         // #define _stRayCheck_vec3f ((void (*)(Vec3f* start, Vec3f* dest, float* unk, Vec3f* collisionPoint, Vec3f* normalVec, int unk0, int unk0_1, int unk1)) 0x809327ec)
         if (cmd == 0x4B || cmd == 0x4C) {
             int retX = args[1];
@@ -1128,9 +1197,10 @@ extern "C" {
         if (cmd == 0x80) {
             unsigned int nextScript = args[1] & 0xffff;
             char dummy = 0xff;
+            aiActInst->aiScript = 0;
             _act_change(aiActInst, nextScript, &dummy, 0, 0);
             // force change current instruction in memory
-            clearGotoStack();
+            clearGotoStack(aiActInst);
             aiActInst->framesSinceScriptChanged = -1;
             forcedNextInstruction = (int*)((int) aiActInst->currentInstruction + 0x0);
             OSReport("FNInst (1): %08x\n", forcedNextInstruction);
@@ -1142,10 +1212,13 @@ extern "C" {
         if (cmd == 0x81) {
             unsigned int nextScript = args[1] & 0xffff;
             char dummy = 0xff;
-            aiXGotoPush(aiActInst, (int*)((int) args + 0x8));
-            auto currScr = aiActInst->aiScript;
+            aiXGotoPush(aiActInst, (int*)((int) args + 0x8), nextScript);
+            // auto currScr = aiActInst->aiScript;
+            // OSReport("BEFORE CHANGE: %08x\n", aiActInst->constPtr);
+            aiActInst->aiScript = 0;
             _act_change(aiActInst, nextScript, &dummy, 0, 0);
-            aiActInst->aiScript = currScr;
+            // OSReport("AFTER CHANGE: %08x\n", aiActInst->constPtr);
+            // aiActInst->aiScript = currScr;
             // OSReport("TARGET SCRIPT: %04x\n", nextScript);
             // OSReport("NEW SCRIPT: %04x\n", aiActInst->aiScript);
             // force change current instruction in memory
@@ -1157,7 +1230,7 @@ extern "C" {
         // NoRepeat
         if (cmd == 0x82) {
             OSReport("ARGS0 ADDR: %08x\n", &args[0]);
-            for (int i = 0; i < NoRepeatInstructions.size(); i++) {
+            for (int i = 0; i < (int) NoRepeatInstructions.size(); i++) {
                 OSReport("RepInst[%d]: %08x\n", i, NoRepeatInstructions[i]);
                 if (NoRepeatInstructions[i] == &args[0]) {
                     forcedNextInstruction = aiGotoPop(aiActInst);
@@ -1334,6 +1407,7 @@ extern "C" {
                     OSReport("LOGGED STRING: ");
                     for (int i = 1; i <= 5; i++) {
                         unsigned int toConvert = _get_script_value_aiScriptData(aiActInst, *(int *) &args[i], 0);
+                        // OSReport("%08x", toConvert);
                         OSReport("%c%c%c",
                                 (toConvert & 0xFF000000) >> 24,
                                 (toConvert & 0x00FF0000) >> 16,

@@ -2,18 +2,21 @@
 #include "Memory.h"
 #include "Brawl/FT/Fighter.h"
 #include "Containers/vector.h"
+#include "Graphics/Drawable.h"
 
 #include "./hitboxHeatmap.h"
 #include "./FudgeMenu.h"
 
 int currPlayerNum = -1;
-int currPlayerAnimFrame = -1;
 int currPlayerAction = -1;
+float currPlayerAnimFrame = -1;
 char framesAfterActionableGround[4] = { 0, 0, 0, 0 };
 bool playersProcessed[4] = { false, false, false, false };
 
-#define BUBBLE_MAX 50
-char bubbleCount = 0;
+FudgeAIHitbox fudgeAI;
+
+// #define BUBBLE_MAX 50
+// char bubbleCount = 0;
 INJECTION("getFighterPlayerNum", 0x80839214, R"(
   SAVE_REGS
   bl storePlayerData
@@ -149,27 +152,123 @@ INJECTION("display_clSphere", 0x8070de4c, R"(
 extern TrainingData playerTrainingData[];
 #define displayBubble ((void (*)(double radius, float scaleMatrix[3][4], float pos1[3], float pos2[3], unsigned int* colour1, unsigned int* colour2, float viewingMatrix[3][4])) 0x80541fa0)
 
+// void initializeAITargetingData(int currPlayerAction, soPostureModuleImpl* postureModule) {
+//   if (((currPlayerAction >= 0x24 && currPlayerAction <= 0x38) || currPlayerAction >= 0x112)) {
+//     if (fudgeAI.overwrite) {
+//       if (fudgeAI.xMin != 0) {
+//         renderables.items.tick.push(new RectOutline(
+//           0,
+//           60,
+//           GXColor(0xFFFF0088),
+//           fudgeAI.yMax,
+//           fudgeAI.yMin,
+//           fudgeAI.xMin,
+//           fudgeAI.xMax,
+//           42,
+//           false
+//         ));
+//       }
+
+//       OSReport("xPos, yPos: %.3f; %.3f\n", postureModule->xPos, postureModule->yPos);
+//       fudgeAI.xMin = 500;
+//       fudgeAI.yMin = 500;
+//       fudgeAI.xMax = -500;
+//       fudgeAI.yMax = -500;
+//       fudgeAI.xOrigin = postureModule->xPos;
+//       fudgeAI.yOrigin = postureModule->yPos;
+//       fudgeAI.overwrite = false;
+//     }
+//   } else {
+//     fudgeAI.overwrite = true;
+//   }
+// }
+// void collectAITargetingData(double radius, float pos1[3], float pos2[3], unsigned int* colour) {
+//   if (currPlayerNum == 0 && !playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].heatmapOpts.active && (*colour == hitboxColour || *colour == grabboxColour)) {
+//     OSReport("R: %.3f; XOffs: %.3f; YOffs: %.3f; ZOffs: %.3f\n", radius, pos1[0] - fudgeAI.xOrigin, pos1[1] - fudgeAI.yOrigin, pos1[2]);
+//     if (-radius < pos1[2] && pos1[2] < radius) {
+//       if (pos1[0] - radius < fudgeAI.xMin) fudgeAI.xMin = pos1[0] - radius;
+//       if (pos1[0] + radius > fudgeAI.xMax) fudgeAI.xMax = pos1[0] + radius;
+//       if (pos1[1] - radius < fudgeAI.yMin) fudgeAI.yMin = pos1[1] - radius;
+//       if (pos1[1] + radius > fudgeAI.yMax) fudgeAI.yMax = pos1[1] + radius;
+//     }
+//     if (-radius < pos2[2] && pos2[2] < radius) {
+//       if (pos2[0] - radius < fudgeAI.xMin) fudgeAI.xMin = pos2[0] - radius;
+//       if (pos2[0] + radius > fudgeAI.xMax) fudgeAI.xMax = pos2[0] + radius;
+//       if (pos2[1] - radius < fudgeAI.yMin) fudgeAI.yMin = pos2[1] - radius;
+//       if (pos2[1] + radius > fudgeAI.yMax) fudgeAI.yMax = pos2[1] + radius;
+//     }
+//     fudgeAI.trueXMin = fudgeAI.xMin - fudgeAI.xOrigin;
+//     fudgeAI.trueYMin = (fudgeAI.yMin - fudgeAI.yOrigin) * -1;
+//     fudgeAI.width = (fudgeAI.xMax - fudgeAI.xMin) / 2;
+//     fudgeAI.height = (fudgeAI.yMax - fudgeAI.yMin) / 2;
+//   }
+// }
+void displayFudgeAIData() {
+  auto ro = new RectOutline(
+    0,
+    1,
+    fudgeAI.color,
+    fudgeAI.yMax,
+    fudgeAI.yMin,
+    fudgeAI.xMin,
+    fudgeAI.xMax,
+    42,
+    false
+  );
+  ro->autoTimer = false;
+  renderables.items.tick.push(ro);
+}
+
 extern "C" {
   void storePlayerData(Fighter* fighter) {
     currPlayerNum = _GetPlayerNo_aiChrIdx(&fighter->getOwner()->ftInputPtr->cpuIdx);
     playersProcessed[currPlayerNum] = false;
     currPlayerAction = fighter->modules->statusModule->action;
-    if (currPlayerAction == 0x0 || currPlayerAction == 0x1 || currPlayerAction == 0x12 || currPlayerAction == 0x1B) {
+    currPlayerAnimFrame = fighter->modules->motionModule->mainAnimationData.animFrame;
+    if (currPlayerAction == 0x0 || currPlayerAction == 0x1 || currPlayerAction == 0x12 || currPlayerAction == 0x1B || currPlayerAction == 0x49 || ((currPlayerAction == 0x16 || currPlayerAction == 0x17) && currPlayerAnimFrame > 4)) {
       framesAfterActionableGround[currPlayerNum] = 0;
+      fudgeAI.overwrite = true;
     } else if (framesAfterActionableGround[currPlayerNum] < 255) {
       framesAfterActionableGround[currPlayerNum] += 1;
     }
+    // if (currPlayerNum == 0) {
+    //   displayFudgeAIData();
+    //   initializeAITargetingData(currPlayerAction, fighter->modules->postureModule);
+    // }
   }
   void storeRenderingData(double radius, float scaleMatrix[3][4], float pos1[3], float pos2[3], unsigned int* colour1, unsigned int* colour2, float viewingMatrix[3][4]) {
+    // collectAITargetingData(radius, pos1, pos2, colour1);
+    
     if (!playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].heatmapOpts.active && *colour1 == hitboxColour) {
       auto opts = playerTrainingData[currPlayerNum].heatmapOpts;
       auto currData = ((*opts.data).size() == 0) ? nullptr : (*opts.data)[(*opts.data).size() - 1];
       if (currData == nullptr || currData->frame < framesAfterActionableGround[currPlayerNum]) {
-        (*opts.data).push(new HitboxDataFrame {
-          vector<HitboxData *>(),
-          framesAfterActionableGround[currPlayerNum],
-          opts.lifetime
-        });
+        // this process of manually allocating data is done to test to see if we ARE able to do so in the first place
+        // without it, we might end up crashing the game by calling a constructor and trying to write to a location
+        // that is already occupied by something else.
+        //
+        // we test with more space than necessary to reduce the risk that there is too much data for an un-"tested"
+        // function to allocate data
+        void* test = malloc((sizeof(HitboxDataFrame) + sizeof(HitboxData) * 4) * 8);
+
+        while (test == nullptr && (*opts.data).size() > 0) {
+          // bubbleCount -= (*opts.data)[0]->hitboxes.size();
+          (*opts.data)[0]->hitboxes.clear();
+          (*opts.data).erase(0);
+          test = malloc(sizeof(HitboxDataFrame) + sizeof(HitboxData));
+        } 
+        
+        if (test != nullptr) {
+          free(test);
+          (*opts.data).push(new HitboxDataFrame {
+            vector<HitboxData *>(),
+            framesAfterActionableGround[currPlayerNum],
+            opts.lifetime
+          });
+        } else {
+          free(test);
+          return;
+        }
         currData = (*opts.data)[(*opts.data).size() - 1];
       }
       else if (currData->hitboxes[0]->pos1[0] == pos1[0] && currData->hitboxes[0]->pos1[1] == pos1[1]) {
@@ -179,25 +278,34 @@ extern "C" {
 
       currData->life = opts.lifetime;
       currData->frame = framesAfterActionableGround[currPlayerNum];
-      currData->hitboxes.push(new HitboxData(
-        radius,
-        scaleMatrix,
-        pos1,
-        pos2,
-        *colour1,
-        *colour2,
-        viewingMatrix
-      ));
-      OSReport("bubble count: %d\n", bubbleCount);
-      if (++bubbleCount >= BUBBLE_MAX) {
-        bubbleCount -= (*opts.data)[0]->hitboxes.size();
+
+      HitboxData* hbd = (HitboxData*) malloc(sizeof(HitboxData));
+      
+      // OSReport("bubble count: %d\n", bubbleCount);
+      while (hbd == nullptr && (*opts.data).size() > 0) {
+        // bubbleCount -= (*opts.data)[0]->hitboxes.size();
+        (*opts.data)[0]->hitboxes.clear();
         (*opts.data).erase(0);
+        hbd = (HitboxData*) malloc(sizeof(HitboxData));
+      } 
+      
+      if (hbd != nullptr) {
+        hbd->fillInData(
+          radius,
+          scaleMatrix,
+          pos1,
+          pos2,
+          *colour1,
+          *colour2
+        );
+        currData->hitboxes.push(hbd);
       }
     }
   }
 };
 
 void renderAllStoredHitboxes() {
+  startNormalDraw();
   for (int i = 0; i < 4; i++) {
     if (!playerTrainingData[i].heatmapOpts.active) continue;
     auto heatmapOpts = playerTrainingData[i].heatmapOpts;
@@ -214,8 +322,14 @@ void renderAllStoredHitboxes() {
         else colour.red -= changeAmount;
         if ((int) colour.blue + changeAmount > 255) { colour.blue = 255; }
         else colour.blue += changeAmount;
-        colour.alpha = (u8) heatmapOpts.opacity;
+
         displayBubble(hb->radius, hb->scaleMatrix, hb->pos1, hb->pos2, &colour.value, &colour.value, CAMERA_MANAGER->cameras[0].modelView);
+
+
+        // Assists fudge with AI stuff
+        if (i == 0) {
+          
+        }
       }
     }
   }
@@ -228,7 +342,7 @@ void storedHitboxTick() {
     for (int j = size - 1; j >= 0; j--) {
       auto currData = (*heatmapOpts.data)[j];
       if (!playerTrainingData[i].heatmapOpts.active || -- currData->life <= 0) {
-        bubbleCount -= currData->hitboxes.size();
+        // bubbleCount -= currData->hitboxes.size();
         currData->hitboxes.clear();
         (*heatmapOpts.data).erase(j);
       }

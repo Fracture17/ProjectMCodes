@@ -11,7 +11,7 @@ Heyooo - fudge here! Just so this project isn't lost to time, I've decided to wr
   - [VSCode (the blue one)](https://code.visualstudio.com/)
     - free but requires a bit more setup
 
-- [MinGW](http://mingw-w64.org/doku.php/download)
+- [MinGW](https://www.mingw-w64.org/downloads/)
   - install `MinGW-W64-builds` and change the architecture to `x86_64` and `Msys2`
 
 ## Setting Up:

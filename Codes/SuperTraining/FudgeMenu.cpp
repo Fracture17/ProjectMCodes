@@ -4,6 +4,7 @@
 #include "Brawl/IT/BaseItem.h"
 #include "Brawl/IT/itManager.h"
 #include "Brawl/FT/ftManager.h"
+#include "./hitboxHeatmap.h"
 
 Menu* fudgeMenu;
 
@@ -108,6 +109,24 @@ PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   sprintf(this->title, "Player %d", pNum + 1);
   data = &playerTrainingData[pNum];
 
+  // if (pNum == 0) {
+  //   Page* AIRangePage = new Page(fudgeMenu);
+  //   AIRangePage->setTitle("AIRangeFinder");
+  //   AIRangePage->addOption(new BoolOption("HM ON", data->heatmapOpts.active));
+
+  //   AIRangePage->addOption(new BoolOption("enabled", data->debug.enabled));
+  //   AIRangePage->addOption(new BoolOption("fix position", data->debug.fixPosition));
+  //   AIRangePage->addOption(new ControlOption("set position", data->debug.settingPosition));
+
+  //   AIRangePage->addOption(new FloatOption("xmin", fudgeAI.trueXMin, false));
+  //   AIRangePage->addOption(new FloatOption("ymin", fudgeAI.trueYMin, false));
+  //   AIRangePage->addOption(new FloatOption("width", fudgeAI.width, false));
+  //   AIRangePage->addOption(new FloatOption("height", fudgeAI.height, false));
+
+  //   AIRangePage->addOption(new ResetFudgeAIOption());
+  //   this->addOption(new PageLink("AIRangeFinder", AIRangePage));
+  // }
+
   Page* comboTrainerPage = new Page(fudgeMenu);
   comboTrainerPage->setTitle("Combo Trainer");
 
@@ -139,6 +158,7 @@ PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   this->addOption(new PageLink("Trajectory Line", trajectoryLinePage));
 
   Page* heatmapPage = new Page(fudgeMenu);
+  heatmapPage->setTitle("Heatmap Options");
   heatmapPage->addOption(new BoolOption("enabled", data->heatmapOpts.active));
   heatmapPage->addOption(new IntOption("lifetime", data->heatmapOpts.lifetime, 0, 0x7FFFFFFF));
   heatmapPage->addOption(new IntOption("opacity", data->heatmapOpts.opacity, 0, 255));

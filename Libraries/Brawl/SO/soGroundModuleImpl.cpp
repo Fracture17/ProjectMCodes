@@ -36,3 +36,7 @@ xyDouble soGroundModuleImpl::getUpPos() {
 xyDouble soGroundModuleImpl::getDownPos() {
     return _getDownPos_soGroundModuleImpl(this, 0);
 }
+
+// xyDouble soGroundModuleImpl::getDownCorrectPos() {
+//     return _getDownCorrectPos_soGroundModuleImpl(this, 0);
+// }
