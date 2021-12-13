@@ -3278,4 +3278,4 @@ op b 0x10 @ $80078E14
 * 046CADE8 48000298
 
 .include Source/LoadFiles.asm               # Load C++ codes
-#.include Source/Project+/MultiGCT.asm		# MAKE SURE THIS IS AT THE VERY BOTTOM OF THIS CODESET!!!
+.include Source/Project+/MultiGCT.asm		# MAKE SURE THIS IS AT THE VERY BOTTOM OF THIS CODESET!!!
