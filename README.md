@@ -1,7 +1,7 @@
 # Project+ Codes
 Repo for Building the C++ Binaries, GCT and Virtual SD Card (sd.raw)
 
-This repo comes with both a vBrawl and Project+ code setup and uses DukeItOut's GCTRM to assemble ASM files into a GCT and Bird's MakeSD to assemble the sd.raw used to load files such as codes and modified assets.
+This repo comes with both a vBrawl and Project+ code setup and uses Fracture's C++ framework to compile C++ codes, DukeItOut's GCTRM to assemble ASM files into a GCT and Bird's MakeSD to assemble the sd.raw used to load files such as codes and modified assets.
 
 ASM source is found in *SDCard/GCTRM*. The ASM used in each setup is defined in a RSBE01.txt and a BOOST.txt (for extra codes that don't fit the RSBE01.txt).
 
