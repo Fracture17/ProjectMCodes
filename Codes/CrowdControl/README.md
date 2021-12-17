@@ -3,7 +3,7 @@
 This WIP project is designed to interact with the [Crowd Control](https://crowdcontrol.live/) Twitch extension which allows 
 viewers to affect the game in exchange for channel points or bits.
 
-[Demo](https://cdn.discordapp.com/attachments/357272146457657348/920953940093325352/2021-12-16_03-14-03.mp4)
+[Demo](https://streamable.com/6mkjce)
 
 ## Setup for Developing
 
