@@ -5,6 +5,8 @@
 #include "CrowdControl.h"
 #include "EXIPacket.h"
 #include "EffectItemHandler.h"
+#include "EffectStatusHandler.h"
+#include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
 
@@ -27,9 +29,11 @@ namespace FrameLogic {
         EXIStatus exiStatus = STATUS_UNKNOWN;
 
         switch(effectRequest[0]){
-            case EFFECT_SPAWN_ITEM_REGULAR:
+            case EFFECT_ITEM_SPAWN_REGULAR:
                 exiStatus = effectItemSpawn(effectRequest[1], effectRequest[2]);
                 break;
+            case EFFECT_STATUS_METAL:
+                exiStatus = effectStatusGiveMetal(effectRequest[1]);
             case EFFECT_NOT_CONNECTED:
             case EFFECT_NONE:
             case EFFECT_UNKNOWN:
@@ -43,6 +47,16 @@ namespace FrameLogic {
             EXIPacket responsePckt = EXIPacket(exiStatus, nullptr, 0);
             responsePckt.Send();
         }
+
+        // for testing effects
+        gfPadSystem* padSystem = PAD_SYSTEM;
+        if (padSystem->pads[0].buttons.RightDPad) {
+
+        }
+
+
+
+
     }
 
     // called at the end of the game logic in a frame

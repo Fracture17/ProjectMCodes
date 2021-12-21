@@ -255,14 +255,22 @@ public class PPlus : SimpleTCPPack
 		createEffect("Assist", "items_spawn_assist", 8, new[]{"items_assist", "#assist"}, "items_spawn"),
 		
 		/// TODO: Item rain selection
-	
+
+		// Status Effects
+
+		//createEffectFolder("Status", "status");
+
+		//createEffect("Curry", "status_metal", 9, "status");
+		//createEffect("Curry", "status_curry", 10, "status");
+
 		// Dropdown List Selections
 		
 		/// Players
-		createEffectSubItem("Player 1", "player", 1, "players"),
-		createEffectSubItem("Player 2", "player", 2, "players"),
-		createEffectSubItem("Player 3", "player", 3, "players"),
-		createEffectSubItem("Player 4", "player", 4, "players"),
+		createEffectSubItem("Player 1", "player", 0, "players"),
+		createEffectSubItem("Player 2", "player", 1, "players"),
+		createEffectSubItem("Player 3", "player", 2, "players"),
+		createEffectSubItem("Player 4", "player", 3, "players"),
+		createEffectSubItem("Player All", "player_all", 4, "players"),
 		
 		/// Regular Items
 		createEffectSubItem("Assist Trophy", "item_reg", (int)ItemIds.Assist_Trophy, "items_reg"),
