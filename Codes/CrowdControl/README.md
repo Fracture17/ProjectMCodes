@@ -25,3 +25,6 @@ in CrowdControl.cpp.
 [FaultyPine](https://github.com/FaultyPine/brawlback-asm) for sending/receiving data to/from Dolphin using Exi
 
 [fudgepop01](https://github.com/Fracture17/ProjectMCodes/tree/master/Codes/SuperTraining) for the item spawning code
+
+[Sammi Husky](https://github.com/Sammi-Husky) for managing and hosting the Ghidra server
+
