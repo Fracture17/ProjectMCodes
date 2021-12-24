@@ -9,7 +9,7 @@ viewers to affect the game in exchange for channel points or bits.
 
 Follow the root of this repo for instructions on how to build.
 
-Please use the included Dolphin ([Source](https://github.com/ilazoja/dolphin) in case needs to be modified or built for
+Please use the included Dolphin ([Source](https://github.com/ilazoja/dolphin/tree/crowd-control) in case needs to be modified or built for
 other platforms) as it is used to communicate with the game as well as interact with Crowd Control.
 
 Download the [Crowd Control SDK](https://forum.warp.world/t/how-to-setup-and-use-the-crowd-control-sdk/5121) and 
