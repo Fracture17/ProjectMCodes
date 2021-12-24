@@ -211,6 +211,16 @@ public class PPlus : SimpleTCPPack
 	{
 		return new Effect(name, code + "_" + codeID.ToString(), parameters, parent);
 	}
+
+	private Effect createEffect(string name, string code, int codeID)
+    {
+        return new Effect(name, code + "_" + codeID.ToString());
+    }
+
+	private Effect createEffect(string name, string code, int codeID, string parent)
+    {
+    	return new Effect(name, code + "_" + codeID.ToString(), parent);
+    }
 	
 	private Effect createEffectSubItem(string name, string code, int codeID, string parent)
 	{
@@ -258,10 +268,19 @@ public class PPlus : SimpleTCPPack
 
 		// Status Effects
 
-		//createEffectFolder("Status", "status");
+		createEffectFolder("Status", "status");
 
-		//createEffect("Curry", "status_metal", 9, "status");
-		//createEffect("Curry", "status_curry", 10, "status");
+		createEffect("Metal", "status_metal", 9, new[]{"players", "%percent"}, "status");
+		createEffect("Curry", "status_curry", 10, new[]{"players"}, "status");
+		createEffect("Hammer", "status_hammer", 11, new[]{"players", "set"}, "status");
+		createEffect("SuperStar", "status_superstar", 12, new[]{"players"}, "status");
+		createEffect("Flower", "status_flower", 13, new[]{"players", "flower_rate", "flower_size"}, "status");
+		createEffect("Heart", "status_heart", 14, new[]{"players", "players"}, "status");
+		createEffect("Slow", "status_slow", 15, new[]{"players", "slow_duration"}, "status");
+		createEffect("Mushroom", "status_mushroom", 16, new[]{"players", "mushroom"}, "status");
+		createEffect("Bunny Hood", "status_bunnyhood", 17, new[]{"players"}, "status");
+		createEffect("Franklin Badge", "status_franklinbadge", 18, new[]{"players"}, "status");
+		createEffect("Screw Attack", "status_screwattack", 19, new[]{"players"}, "status");
 
 		// Dropdown List Selections
 		
@@ -270,7 +289,16 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Player 2", "player", 1, "players"),
 		createEffectSubItem("Player 3", "player", 2, "players"),
 		createEffectSubItem("Player 4", "player", 3, "players"),
-		createEffectSubItem("Player All", "player_all", 4, "players"),
+		createEffectSubItem("Player Random", "player_random", 4, "players"),
+		createEffectSubItem("Player All", "player_all", 5, "players"),
+
+		/// Set
+		createEffectSubItem("False", "set_0", 0, "set"),
+		createEffectSubItem("True", "set_1", 1, "set"),
+
+		/// Mushroom
+        createEffectSubItem("Super", "mushroom_0", 0, "mushroom"),
+        createEffectSubItem("Poison", "mushroom_1", 1, "mushroom"),
 		
 		/// Regular Items
 		createEffectSubItem("Assist Trophy", "item_reg", (int)ItemIds.Assist_Trophy, "items_reg"),
@@ -476,11 +504,16 @@ public class PPlus : SimpleTCPPack
 		new ItemType("#Items", "#items", ItemType.Subtype.Slider, "{\"min\":1,\"max\":5}"),
 		new ItemType("#Pkmn", "#pkmn", ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
 		new ItemType("#Assist", "#assist", ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
-		
+		new ItemType("Flower Rate", "flower_rate", ItemType.Subtype.Slider, "{\"min\":1,\"max\":1000}"),
+		new ItemType("Flower Size", "flower_size", ItemType.Subtype.Slider, "{\"min\":1,\"max\":10}"),
+		new ItemType("Slow Duration", "slow_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":720}"),
+
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Regular Items", "items_reg", ItemType.Subtype.ItemList),
 		//new ItemType("Special Items", "items_sp", ItemType.Subtype.ItemList),
 		new ItemType("Pokemon", "items_pkmn", ItemType.Subtype.ItemList),
-		new ItemType("Assist", "items_assist", ItemType.Subtype.ItemList)
+		new ItemType("Assist", "items_assist", ItemType.Subtype.ItemList),
+		new ItemType("Set", "set", ItemType.Subtype.ItemList),
+		new ItemType("Mushroom", "mushroom", ItemType.Subtype.ItemList)
     });
 }

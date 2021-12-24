@@ -12,6 +12,8 @@
 #include "Memory.h"
 #include "Wii/PAD/PADStatus.h"
 #include "Brawl/GF/GameFrame.h"
+#include "Brawl/FT/Fighter.h"
+#include <Brawl/FT/ftManager.h>
 
 enum CCEffect
 {
@@ -25,6 +27,28 @@ enum CCEffect
     EFFECT_ITEM_SPAWN_POKEMON = 7,
     EFFECT_ITEM_SPAWN_ASSIST = 8,
     EFFECT_STATUS_METAL = 9,
+    EFFECT_STATUS_CURRY = 10,
+    EFFECT_STATUS_HAMMER = 11,
+    EFFECT_STATUS_SUPERSTAR = 12,
+    EFFECT_STATUS_FLOWER = 13,
+    EFFECT_STATUS_HEART = 14,
+    EFFECT_STATUS_SLOW = 15,
+    EFFECT_STATUS_MUSHROOM = 16,
+    EFFECT_STATUS_BUNNYHOOD = 17,
+    EFFECT_STATUS_FRANKLINBADGE = 18,
+    EFFECT_STATUS_SCREWATTACK = 19,
+};
+
+//hacky way to check if in game
+enum SCENE_TYPE {
+    SCENE_MAIN_MENU = 0x1,
+    SCENE_HRC_CSS = 0x2,
+    SCENE_DIFFICULTY_TRAINING_CSS = 0x4,
+    SCENE_CSS_HRC = 0x5,
+    SCENE_DIFFICULTY_TRAINING_SSS_EVT_CSS = 0x6,
+    SCENE_SSS_BTT = 0x7,
+    SCENE_TRAINING_MODE_MMS = 0x8,
+    SCENE_VS = 0xA
 };
 
 #endif //PROJECTMCODES_CROWDCONTROL_H
