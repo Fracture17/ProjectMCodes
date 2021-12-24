@@ -268,19 +268,17 @@ public class PPlus : SimpleTCPPack
 
 		// Status Effects
 
-		createEffectFolder("Status", "status");
+		createEffectFolder("Status", "status"),
 
-		createEffect("Metal", "status_metal", 9, new[]{"players", "%percent"}, "status");
-		createEffect("Curry", "status_curry", 10, new[]{"players"}, "status");
-		createEffect("Hammer", "status_hammer", 11, new[]{"players", "set"}, "status");
-		createEffect("SuperStar", "status_superstar", 12, new[]{"players"}, "status");
-		createEffect("Flower", "status_flower", 13, new[]{"players", "flower_rate", "flower_size"}, "status");
-		createEffect("Heart", "status_heart", 14, new[]{"players", "players"}, "status");
-		createEffect("Slow", "status_slow", 15, new[]{"players", "slow_duration"}, "status");
-		createEffect("Mushroom", "status_mushroom", 16, new[]{"players", "mushroom"}, "status");
-		createEffect("Bunny Hood", "status_bunnyhood", 17, new[]{"players"}, "status");
-		createEffect("Franklin Badge", "status_franklinbadge", 18, new[]{"players"}, "status");
-		createEffect("Screw Attack", "status_screwattack", 19, new[]{"players"}, "status");
+		createEffect("Metal", "status_metal", 9, new[]{"players", "%percent"}, "status"),
+		createEffect("Curry", "status_curry", 10, new[]{"players"}, "status"),
+		createEffect("Hammer", "status_hammer", 11, new[]{"players", "set"}, "status"),
+		createEffect("SuperStar", "status_superstar", 12, new[]{"players"}, "status"),
+		createEffect("Flower", "status_flower", 13, new[]{"players", "flower_rate", "flower_size"}, "status"),
+		createEffect("Heart", "status_heart", 14, new[]{"players", "players"}, "status"),
+		createEffect("Slow", "status_slow", 15, new[]{"players", "slow_duration"}, "status"),
+		createEffect("Mushroom", "status_mushroom", 16, new[]{"players", "mushroom"}, "status"),
+		createEffect("Equip", "status_equip", 17, new[]{"players", "items_equip"}, "status"),
 
 		// Dropdown List Selections
 		
@@ -372,6 +370,10 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Bunny Hood", "item_reg", (int)ItemIds.Bunny_Hood, "items_reg"),
 		createEffectSubItem("Warpstar", "item_reg", (int)ItemIds.Warpstar, "items_reg"),
 		createEffectSubItem("Random", "item_reg", (int)ItemIds.Random, "items_reg"),
+
+		createEffectSubItem("Bunny Hood", "item_equip", (int)ItemIds.Bunny_Hood, "items_equip"),
+		createEffectSubItem("Franklin Badge", "item_equip", (int)ItemIds.Franklin_Badge, "items_equip"),
+		createEffectSubItem("Screw Attack", "item_equip", (int)ItemIds.Screw_Attack, "items_equip"),
 		
 		/// Special Items
 		//createEffectSubItem("Trophy SSE", "item_sp", (int)ItemIds.Trophy_SSE, "items_sp"),
@@ -510,6 +512,7 @@ public class PPlus : SimpleTCPPack
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Regular Items", "items_reg", ItemType.Subtype.ItemList),
+		new ItemType("Equippable Items", "items_equip", ItemType.Subtype.ItemList),
 		//new ItemType("Special Items", "items_sp", ItemType.Subtype.ItemList),
 		new ItemType("Pokemon", "items_pkmn", ItemType.Subtype.ItemList),
 		new ItemType("Assist", "items_assist", ItemType.Subtype.ItemList),

@@ -18,9 +18,7 @@ EXIStatus effectStatusGiveFlower(int numPlayers, u16 targetPlayer, int setEffect
 EXIStatus effectStatusGiveHeart(int numPlayers, u16 targetPlayer, u16 givingPlayer, int setEffect);
 EXIStatus effectStatusGiveSlow(int numPlayers, u16 targetPlayer, int setEffect, int duration);
 EXIStatus effectStatusGiveMushroom(int numPlayers, u16 targetPlayer, int setEffect, int isPoison);
-EXIStatus effectStatusGiveBunnyHood(int numPlayers, u16 targetPlayer);
-EXIStatus effectStatusGiveFranklinBadge(int numPlayers, u16 targetPlayer);
-EXIStatus effectStatusGiveScrewAttack(int numPlayers, u16 targetPlayer);
+EXIStatus effectStatusGiveEquip(int numPlayers, u16 targetPlayer, int itemId);
 
 //EXIStatus effectStatusGiveBury(int numPlayers, u16 targetPlayer, int setEffect);
 

@@ -218,7 +218,7 @@ EXIStatus effectStatusGiveMushroom(int numPlayers, u16 targetPlayer, int setEffe
     return RESULT_EFFECT_SUCCESS;
 }
 
-EXIStatus effectStatusGiveBunnyHood(int numPlayers, u16 targetPlayer){
+EXIStatus effectStatusGiveEquip(int numPlayers, u16 targetPlayer, int itemId){
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
@@ -227,58 +227,14 @@ EXIStatus effectStatusGiveBunnyHood(int numPlayers, u16 targetPlayer){
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players slow
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            attachItem(getSoItemManagerModuleImplPtr(targetPlayer), 0x44, 0, 1);
+            attachItem(getSoItemManagerModuleImplPtr(targetPlayer), itemId, 0, 1);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        attachItem(getSoItemManagerModuleImplPtr(targetPlayer), 0x44, 0, 1);
-    }
-
-    return RESULT_EFFECT_SUCCESS;
-}
-
-EXIStatus effectStatusGiveFranklinBadge(int numPlayers, u16 targetPlayer){
-
-    if (targetPlayer == MAX_PLAYERS) {
-        targetPlayer = randi(numPlayers);
-    }
-
-    if (targetPlayer == MAX_PLAYERS + 1) {
-        // give all players slow
-        for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            attachItem(getSoItemManagerModuleImplPtr(targetPlayer), 0x1, 0, 1);
-        }
-    }
-    else if (targetPlayer >= numPlayers) {
-        return RESULT_EFFECT_UNAVAILABLE;
-    }
-    else {
-        attachItem(getSoItemManagerModuleImplPtr(targetPlayer), 0x1, 0, 1);
-    }
-
-    return RESULT_EFFECT_SUCCESS;
-}
-
-EXIStatus effectStatusGiveScrewAttack(int numPlayers, u16 targetPlayer){
-
-    if (targetPlayer == MAX_PLAYERS) {
-        targetPlayer = randi(numPlayers);
-    }
-
-    if (targetPlayer == MAX_PLAYERS + 1) {
-        // give all players slow
-        for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            attachItem(getSoItemManagerModuleImplPtr(targetPlayer), 0x32, 0, 1);
-        }
-    }
-    else if (targetPlayer >= numPlayers) {
-        return RESULT_EFFECT_UNAVAILABLE;
-    }
-    else {
-        attachItem(getSoItemManagerModuleImplPtr(targetPlayer), 0x32, 0, 1);
+        attachItem(getSoItemManagerModuleImplPtr(targetPlayer), itemId, 0, 1);
     }
 
     return RESULT_EFFECT_SUCCESS;

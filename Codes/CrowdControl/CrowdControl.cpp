@@ -75,14 +75,8 @@ namespace FrameLogic {
                 case EFFECT_STATUS_MUSHROOM:
                     exiStatus = effectStatusGiveMushroom(numPlayers, effectRequest[1], 1, effectRequest[2]);
                     break;
-                case EFFECT_STATUS_BUNNYHOOD:
-                    exiStatus = effectStatusGiveBunnyHood(numPlayers, effectRequest[1]);
-                    break;
-                case EFFECT_STATUS_FRANKLINBADGE:
-                    exiStatus = effectStatusGiveFranklinBadge(numPlayers, effectRequest[1]);
-                    break;
-                case EFFECT_STATUS_SCREWATTACK:
-                    exiStatus = effectStatusGiveScrewAttack(numPlayers, effectRequest[1]);
+                case EFFECT_STATUS_EQUIP:
+                    exiStatus = effectStatusGiveEquip(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
