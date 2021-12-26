@@ -4,8 +4,6 @@
 
 #include "EffectStatusHandler.h"
 
-const int MAX_PLAYERS = 4;
-
 #define setMetal ((void (*)(double health, int fighterNameAddr, int setEffect, int unk3)) 0x80843110)
 #define setCurry ((void (*)(int fighterNameAddr, int setEffect, int unk3)) 0x80843314)
 #define setHammer ((void (*)(int fighterNameAddr, int setEffect, int unk3)) 0x808436d0)
@@ -28,11 +26,6 @@ int* getSoItemManagerModuleImplPtr(u16 targetPlayer) {
 
     int iVar5 = *(int *)(*fighterOwnerPtr + 0x60);
     return *(int **)(*(int *)(iVar5 + 0xd8) + 0xa8);
-}
-
-//Does not update random seed, so multiple uses at once return same value
-int randi(int max) {
-    return DEFAULT_MT_RAND->seed % max;
 }
 
 // TODO: Check if player is KO'ed / effect can be applied
@@ -225,7 +218,7 @@ EXIStatus effectStatusGiveEquip(int numPlayers, u16 targetPlayer, int itemId){
     }
 
     if (targetPlayer == MAX_PLAYERS + 1) {
-        // give all players slow
+        // give all players equipment
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
             attachItem(getSoItemManagerModuleImplPtr(targetPlayer), itemId, 0, 1);
         }

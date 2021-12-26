@@ -35,6 +35,7 @@ enum CCEffect
     EFFECT_STATUS_SLOW = 15,
     EFFECT_STATUS_MUSHROOM = 16,
     EFFECT_STATUS_EQUIP = 17,
+    EFFECT_STATUS_ACTION = 18,
 };
 
 //hacky way to check if in game

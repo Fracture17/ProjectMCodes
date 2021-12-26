@@ -7,8 +7,8 @@
 
 #include "Brawl/FT/Fighter.h"
 #include <Brawl/FT/ftManager.h>
-#include "Wii/mtRand.h"
 #include "EXIPacket.h"
+#include "Utilities.h"
 
 EXIStatus effectStatusGiveMetal(int numPlayers, u16 targetPlayer, int setEffect, double health);
 EXIStatus effectStatusGiveCurry(int numPlayers, u16 targetPlayer, int setEffect);

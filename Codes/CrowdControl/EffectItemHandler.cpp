@@ -10,6 +10,8 @@
 EXIStatus effectItemSpawn(int itemId, int amount) {
 
     // TODO: Check if item can be spawned in
+    // TODO: Better spawning (maybe check if item is over a pit)
+    // TODO: Give subvariants its own id
 
     for (int i = 0; i < amount; i++) {
         auto freshItem = ITEM_MANAGER->createItem((itemIdName) itemId, 0);

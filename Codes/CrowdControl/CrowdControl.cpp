@@ -6,6 +6,7 @@
 #include "EXIPacket.h"
 #include "EffectItemHandler.h"
 #include "EffectStatusHandler.h"
+#include "EffectActionHandler.h"
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
@@ -78,6 +79,8 @@ namespace FrameLogic {
                 case EFFECT_STATUS_EQUIP:
                     exiStatus = effectStatusGiveEquip(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
+                case EFFECT_STATUS_ACTION:
+                    exiStatus = effectActionForce(numPlayers, effectRequest[1], effectRequest[2]);
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -92,14 +95,16 @@ namespace FrameLogic {
 
             if (padSystem->pads[0].buttons.LeftDPad) {
                 //effectStatusGiveCurry(numPlayers, 0, 0);
-                effectStatusGiveMushroom(numPlayers, 0, 1, 1);
+                //effectStatusGiveMushroom(numPlayers, 0, 1, 1);
+                //effectActionForce(numPlayers, 0, 0x10C);
             }
             else if (padSystem->pads[0].buttons.RightDPad) {
                 //effectStatusGiveCurry(numPlayers, 0, 1);
                 //effectItemSpawn(0x0, 1); //0x78, 1); // 0x2A - Pokeball
                 //effectStatusGiveBury(numPlayers, 0, 1);
                 //effectStatusGiveScrewAttack(numPlayers, 0);
-                effectStatusGiveMushroom(numPlayers, 0, 1, 0);
+                //effectStatusGiveMushroom(numPlayers, 0, 1, 0);
+                //effectActionForce(numPlayers, 0, 0xC7);
             }
 
         }
