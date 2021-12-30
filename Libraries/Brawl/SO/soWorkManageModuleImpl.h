@@ -21,5 +21,6 @@ public:
 };
 
 #define _getInt_soWorkManageModuleImpl ((int (*)(void* self, unsigned int identifier)) 0x807ac9e0)
+#define _isFlag_soWorkManageModuleImpl ((bool (*)(void* self, unsigned int identifier)) 0x807accdc)
 
 #endif //PROJECTMCODES_SOWORKMANAGEMODULEIMPL_H

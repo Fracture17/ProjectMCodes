@@ -46,6 +46,7 @@
       "PRINT_GET_PARAMS": 0,
       "CUSTOM_AI_FUNCTIONS": 0,
       "PRINT_TEST": 0,
+      "FUDGE_MENU": 0,
       "SUPER_TRAINING": 1,
       "RANDOM_1_TO_1_ALTS": 0,
       "DRAW_A_RECTANGLE": 0
@@ -65,7 +66,8 @@
       "PRINT_GET_PARAMS": 0,
       "CUSTOM_AI_FUNCTIONS": 0,
       "PRINT_TEST": 0,
-      "SUPER_TRAINING": 1,
+      "SUPER_TRAINING": 0,
+      "FUDGE_MENU": 1,
       "RANDOM_1_TO_1_ALTS": 1
     }
   },
@@ -84,6 +86,7 @@
       "CUSTOM_AI_FUNCTIONS": 0,
       "PRINT_TEST": 0,
       "SUPER_TRAINING": 0,
+      "FUDGE_MENU": 0,
       "RANDOM_1_TO_1_ALTS": 0,
       "DRAW_A_RECTANGLE": 1
     }

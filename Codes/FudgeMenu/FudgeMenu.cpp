@@ -33,76 +33,6 @@ const char* threadNames[] = {
   "Action Hidden"
 };
 
-float ai_customFnInjection[0x10] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-bool ai_customFnInjectionToggle[0x10] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
-AITrainingScriptOption::AITrainingScriptOption(unsigned int id, char* name, char playerNum) {
-  sprintf(this->name, "%.19s", name);
-  this->id = id;
-  this->playerNum = playerNum;
-}
-
-void AITrainingScriptOption::select() { 
-  playerTrainingData[playerNum].aiData.scriptID = id;
-  for (int i = 0; i < 0x10; i++) ai_customFnInjectionToggle[i] = false;
-}
-
-void AITrainingScriptOption::render(TextPrinter* printer, char* buffer) {
-  sprintf(buffer, "%04x: %s", id, name);
-  if (playerTrainingData[playerNum].aiData.scriptID == id) printer->setTextColor(0x00AA00FF);
-  printer->printLine(buffer);
-}
-
-AITrainingScriptSubmenu::AITrainingScriptSubmenu(unsigned int id, char* name, char playerNum, char height) : SubpageOption(name, height, 2, true) {
-  this->id = id;
-  this->playerNum = playerNum;
-}
-
-void AITrainingScriptSubmenu::select() { 
-  if (playerTrainingData[playerNum].aiData.scriptID != id) {
-    playerTrainingData[playerNum].aiData.scriptID = id; 
-    int len = options.size();
-    for (int i = 0; i < 0x10; i++) ai_customFnInjectionToggle[i] = false;
-    int defLen = defaultValues.size();
-    for (int i = 0; i < defLen; i++) ai_customFnInjection[defaultValues[i]->index] = defaultValues[i]->value;
-    for (int i = 0; i < len; i++) ai_customFnInjectionToggle[i] = true;
-  }
-    
-  SubpageOption::select();
-}
-
-void AITrainingScriptSubmenu::render(TextPrinter* printer, char* buffer) {
-  int len = options.size();
-
-  if (scrollIdx > (len - height)) scrollIdx = len - height;
-  if (scrollIdx < 0) scrollIdx = 0;
-  if (currentOption >= len) currentOption = len - 1;
-  char tempBuffer[40] = {};
-
-  sprintf(tempBuffer, "%04x: %s", id, name);
-  if (playerTrainingData[playerNum].aiData.scriptID == id) printer->setTextColor(0x00AA00FF);
-  sprintf(buffer, (collapsible) ? ((isSelected) ? "v %s" : "> %s") : "%s:", tempBuffer);
-  printer->printLine(buffer);
-  if (collapsible && isSelected || !(collapsible)) {
-    for (int i = scrollIdx; i < (scrollIdx + height); i++) {
-      if (i >= len) {
-        printer->printLine("");
-      } else {
-        if (!options[i]->canModify) printer->setTextColor(0xFFAAAADD);
-        else if (i == currentOption && hasSelection) printer->setTextColor(0xFFFF00FF);
-        else if (i == currentOption) printer->setTextColor(0x88FF88FF);
-        else printer->setTextColor(0xFFFFFF88);
-        printer->padToWidth((RENDER_X_SPACING / 5 * (depth + 1)));
-        options[i]->render(printer, buffer);
-      }
-    }
-  }
-}
-
-void AITrainingScriptSubmenu::addDefault(AITrainingDefaultVal* defVal) { 
-  defaultValues.push(defVal); 
-}
-
 PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   char tempTitle[9] = {};
   this->playerNum = pNum;
@@ -126,33 +56,6 @@ PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   //   AIRangePage->addOption(new ResetFudgeAIOption());
   //   this->addOption(new PageLink("AIRangeFinder", AIRangePage));
   // }
-
-  Page* positionalDataPage = new Page(fudgeMenu);
-  positionalDataPage->setTitle("Position Data");
-
-  positionalDataPage->addOption(new FloatOption("X Pos", data->posData.xPos, false));
-  positionalDataPage->addOption(new FloatOption("Y Pos", data->posData.yPos, false));
-  // positionalDataPage->addOption(new FloatOption("Chr X Vel", data->posData.CHRXVel, false));
-  // positionalDataPage->addOption(new FloatOption("Chr Y Vel", data->posData.CHRYVel, false));
-  // positionalDataPage->addOption(new FloatOption("KB X Vel", data->posData.KBXVel, false));
-  // positionalDataPage->addOption(new FloatOption("KB Y Vel", data->posData.KBYVel, false));
-  positionalDataPage->addOption(new FloatOption("Total X Vel", data->posData.totalXVel, false));
-  positionalDataPage->addOption(new FloatOption("Total Y Vel", data->posData.totalYVel, false));
-
-  SubpageOption* collisionSubpage = new SubpageOption("ECB Data");
-
-  collisionSubpage->addOption(new FloatOption("L ECB X", data->posData.ECBLX, false));
-  collisionSubpage->addOption(new FloatOption("L ECB Y", data->posData.ECBLY, false));
-  collisionSubpage->addOption(new FloatOption("T ECB X", data->posData.ECBTX, false));
-  collisionSubpage->addOption(new FloatOption("T ECB Y", data->posData.ECBTY, false));
-  collisionSubpage->addOption(new FloatOption("R ECB X", data->posData.ECBRX, false));
-  collisionSubpage->addOption(new FloatOption("R ECB Y", data->posData.ECBRY, false));
-  collisionSubpage->addOption(new FloatOption("B ECB X", data->posData.ECBBX, false));
-  collisionSubpage->addOption(new FloatOption("B ECB Y", data->posData.ECBBY, false));
-
-  positionalDataPage->addOption(collisionSubpage);
-
-  this->addOption(new PageLink("Position Data", positionalDataPage));
 
   Page* comboTrainerPage = new Page(fudgeMenu);
   comboTrainerPage->setTitle("Combo Trainer");
@@ -191,27 +94,6 @@ PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   heatmapPage->addOption(new IntOption("opacity", data->heatmapOpts.opacity, 0, 255));
   heatmapPage->addOption(new IntOption("color change frame", data->heatmapOpts.colorChangeFrame, 0, 255));
   this->addOption(new PageLink("Heatmap Options", heatmapPage));
-
-  // Page* AIPage = new Page(fudgeMenu);
-  // AIPage->setTitle("AI Training");
-
-  // data->aiData.trainingScripts = new SubpageOption("Scripts", 5, 1);
-  // AIPage->addOption(data->aiData.trainingScripts);
-
-  // SubpageOption* AIDebugSubpage = new SubpageOption("Debug", 10, 1, true);
-
-  // AIDebugSubpage->addOption(new ControlOption("unpause", menu->paused));
-  // AIDebugSubpage->addOption(new HexObserver("Current Script", data->aiData.currentScript, HexSize::SHORT));
-  // AIDebugSubpage->addOption(new StringOption("Buttons", data->aiData.buttons));
-  // AIDebugSubpage->addOption(new FloatOption("Stick X", data->aiData.lstickX, false));
-  // AIDebugSubpage->addOption(new FloatOption("Stick Y", data->aiData.lstickY, false));
-  // AIDebugSubpage->addOption(new HexObserver("MD Value", data->aiData.md, HexSize::CHAR));
-  // AIDebugSubpage->addOption(new IntOption("NumFrames", data->aiData.frameCount, false));
-  // AIDebugSubpage->addOption(new IntOption("Target", data->aiData.target, false));
-  
-  // AIPage->addOption(AIDebugSubpage);
-
-  // this->addOption(new PageLink("AI Training", AIPage));
 
   this->addOption(new BoolOption("actionable overlay", data->actionableOverlay));
   this->addOption(new IntOption("actionable sound", data->actionableSE, -1, 0xFF));
@@ -258,6 +140,29 @@ PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   controllerInfo->addOption(new FloatOption("LStickY", data->aiData.lstickY, false));
   controllerInfo->addOption(new BoolOption("cStick", data->controllerData.cStick, false));
   this->addOption(new PageLink("Controller Info", controllerInfo));
+
+  Page* positionalDataPage = new Page(fudgeMenu);
+  positionalDataPage->setTitle("Position Data");
+
+  positionalDataPage->addOption(new FloatOption("X Pos", data->posData.xPos, false));
+  positionalDataPage->addOption(new FloatOption("Y Pos", data->posData.yPos, false));
+  positionalDataPage->addOption(new FloatOption("Total X Vel", data->posData.totalXVel, false));
+  positionalDataPage->addOption(new FloatOption("Total Y Vel", data->posData.totalYVel, false));
+
+  SubpageOption* collisionSubpage = new SubpageOption("ECB Data");
+
+  collisionSubpage->addOption(new FloatOption("L ECB X", data->posData.ECBLX, false));
+  collisionSubpage->addOption(new FloatOption("L ECB Y", data->posData.ECBLY, false));
+  collisionSubpage->addOption(new FloatOption("T ECB X", data->posData.ECBTX, false));
+  collisionSubpage->addOption(new FloatOption("T ECB Y", data->posData.ECBTY, false));
+  collisionSubpage->addOption(new FloatOption("R ECB X", data->posData.ECBRX, false));
+  collisionSubpage->addOption(new FloatOption("R ECB Y", data->posData.ECBRY, false));
+  collisionSubpage->addOption(new FloatOption("B ECB X", data->posData.ECBBX, false));
+  collisionSubpage->addOption(new FloatOption("B ECB Y", data->posData.ECBBY, false));
+
+  positionalDataPage->addOption(collisionSubpage);
+
+  this->addOption(new PageLink("Position Data", positionalDataPage));
 }
 
 void PlayerPage::select() { 

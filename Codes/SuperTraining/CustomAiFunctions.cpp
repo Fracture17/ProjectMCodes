@@ -249,6 +249,7 @@ int fn_shouldReturnResult = 0;
 extern float ai_customFnInjection[0x10];
 extern bool ai_customFnInjectionToggle[0x10];
 extern TrainingData playerTrainingData[];
+extern Menu* fudgeMenu;
 
 PatternManager rpsManagers[0x10] = {
     PatternManager(),
@@ -348,7 +349,7 @@ extern "C" {
 
             Vec3f destPos {
                 startPos.f1,
-                startPos.f2 - 150,
+                startPos.f2 - 500,
                 0
             };
 
@@ -373,7 +374,7 @@ extern "C" {
             return;
         }
 
-        if (switchCase == 0x4B) {
+        if (switchCase == 0x4B) { // YDistFloor
             auto groundModule = targetFighter->modules->groundModule->unk1->unk1->unk1;
             
             Vec3f startPos {
@@ -384,7 +385,7 @@ extern "C" {
 
             Vec3f destPos {
                 startPos.f1,
-                startPos.f2 - 150,
+                startPos.f2 - 500,
                 0
             };
 
@@ -393,7 +394,14 @@ extern "C" {
 
             _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
             
-            fn_result = (double) (ret1.f1 != destPos.f1 || ret1.f2 != destPos.f2);
+            fn_result = -1;
+            if (ret1.f3 != -1) {
+                startPos.f1 -= ret1.f1;
+                startPos.f2 -= ret1.f2;
+                fn_result = _length_vec3f(&startPos);
+                // OSReport("NORMALIZED RESULT: %.3f\n", res);
+            }
+
             fn_shouldReturnResult = 1;
         }
 
@@ -458,6 +466,24 @@ extern "C" {
                 fn_result = motionModule->getEndFrame();
                 fn_shouldReturnResult = 1;
             }
+        }
+        // width
+        if (switchCase == 0x5A) {
+            auto groundModule = targetFighter->modules->groundModule;
+            fn_result = groundModule->getRightPos().xPos - groundModule->getLeftPos().xPos;
+            fn_shouldReturnResult = 1;
+        }
+        // ECB Center X
+        if (switchCase == 0x5B) {
+            auto groundModule = targetFighter->modules->groundModule;
+            fn_result = (groundModule->getRightPos().xPos + groundModule->getLeftPos().xPos) / 2;
+            fn_shouldReturnResult = 1;
+        }
+        // ECB Center Y
+        if (switchCase == 0x5C) {
+            auto groundModule = targetFighter->modules->groundModule;
+            fn_result = (groundModule->getUpPos().yPos + groundModule->getDownPos().yPos) / 2;
+            fn_shouldReturnResult = 1;
         }
 
         if (switchCase == 0x60) {
@@ -537,6 +563,7 @@ SIMPLE_INJECTION(clearNoRepeatInstruction, 0x809171f4, "li r31, 0x0") {
     NoRepeatInstructions.reallocate(1);
     dynamicDice.reallocate(0);
     dynamicDice.reallocate(1);
+
 }
 
 int* forcedNextInstruction = nullptr;
@@ -651,7 +678,7 @@ extern "C" {
 
             switch (cmd) {
                 case 0x35:
-                    aiActInst->variables[varToMod] = (float) (*(bool (*)[targetWorkModule->RAVariables->bitsSize]) (targetWorkModule->RAVariables->bitVariables))[(int) index];
+                    aiActInst->variables[varToMod] = _isFlag_soWorkManageModuleImpl(targetWorkModule, 0x20000000 | 0x02000000 |((int) index)) ? 1 : 0;
                     return;
                 case 0x36:
                     aiActInst->variables[varToMod] = (float) (*(int (*)[targetWorkModule->RAVariables->basicsSize]) (targetWorkModule->RAVariables->basics))[(int) index];
@@ -660,7 +687,7 @@ extern "C" {
                     aiActInst->variables[varToMod] = (float) (*(int (*)[targetWorkModule->RAVariables->floatsSize]) (targetWorkModule->RAVariables->floats))[(int) index];
                     return;
                 case 0x38:
-                    aiActInst->variables[varToMod] = (float) (*(bool (*)[targetWorkModule->LAVariables->bitsSize]) (targetWorkModule->LAVariables->bitVariables))[(int) index];
+                    aiActInst->variables[varToMod] = _isFlag_soWorkManageModuleImpl(targetWorkModule, 0x10000000 | 0x02000000 |((int) index)) ? 1 : 0;
                     return;
                 case 0x39:
                     aiActInst->variables[varToMod] = (float) (*(int (*)[targetWorkModule->LAVariables->basicsSize]) (targetWorkModule->LAVariables->basics))[(int) index];
@@ -696,7 +723,7 @@ extern "C" {
 
             Vec3f destPos {
                 startPos.f1,
-                startPos.f2 - 150,
+                startPos.f2 - 500,
                 0
             };
 
@@ -704,15 +731,15 @@ extern "C" {
             Vec3f ret2 {-1,-1,-1};
 
             _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
-            OSReport("YDISTFLOOR OFFSET RESULT: %.3f, %.3f\n", ret1.f1, ret1.f2);
-            OSReport("YDISTFLOOR OFFSET RET2: %.3f, %.3f\n", ret2.f1, ret2.f2);
+            // OSReport("YDISTFLOOR OFFSET RESULT: %.3f, %.3f\n", ret1.f1, ret1.f2);
+            // OSReport("YDISTFLOOR OFFSET RET2: %.3f, %.3f\n", ret2.f1, ret2.f2);
 
             float res = -1;
             if (ret1.f3 != -1) {
                 startPos.f1 -= ret1.f1;
                 startPos.f2 -= ret1.f2;
                 res = _length_vec3f(&startPos);
-                OSReport("NORMALIZED RESULT: %.3f\n", res);
+                // OSReport("NORMALIZED RESULT: %.3f\n", res);
             }
 
             aiActInst->variables[varToMod] = (float) res;
@@ -736,7 +763,7 @@ extern "C" {
 
             Vec3f destPos {
                 startPos.f1,
-                startPos.f2 - 150,
+                startPos.f2 - 500,
                 0
             };
 
@@ -798,7 +825,7 @@ extern "C" {
             } else {
                 targetFighter = FIGHTER_MANAGER->getFighter(aiActInst->ftInputPtr->fighterId);
             }
-            aiActInst->variables[varToMod] = *(float*)((int)&targetFighter->modules->paramCustomizeModule->walkInitVel + attributeIndex * 0x4);
+            aiActInst->variables[varToMod] = *(float*)((int)&targetFighter->modules->paramCustomizeModule->walkInitVel + (attributeIndex - 0x18));
             return;
         }
 
@@ -831,13 +858,16 @@ extern "C" {
         // SwitchTarget
         if (cmd == 0x42) {
             auto entryCount = FIGHTER_MANAGER->getEntryCount();
-            int newTargetId;
-            for (int i = 0; i < entryCount; i++) {
-                newTargetId = FIGHTER_MANAGER->getEntryIdFromIndex(i);
-                if (FIGHTER_MANAGER->getOwner(newTargetId)->ownerDataPtr->team != aiActInst->ftInputPtr->ftEntryPtr->owner->ownerDataPtr->team) {
-                    break;
+            int newTargetId = FIGHTER_MANAGER->getEntryIdFromIndex(0);
+            
+            if (entryCount > 1) {
+                int i = 0;
+                while (i < 10 && FIGHTER_MANAGER->getOwner(newTargetId)->ownerDataPtr->team == aiActInst->ftInputPtr->ftEntryPtr->owner->ownerDataPtr->team) {
+                    newTargetId = FIGHTER_MANAGER->getEntryIdFromIndex((int)((float) entryCount * _randf()));
+                    i++;
                 }
             }
+
             aiActInst->ftInputPtr->aiTarget = FIGHTER_MANAGER->getPlayerNo(newTargetId);
             return;
         }
@@ -846,18 +876,19 @@ extern "C" {
         #define _floor ((float (*)(float value)) 0x804005ac)
         if (cmd == 0x43) {
             int varToMod = args[1];
-            float damage = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-            float atkDamage = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+            float percent = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            float damage = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
             float bkb = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
             float kbg = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
             float weight = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
             int isWeightDependent = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
 
             if (isWeightDependent == 1) {
-                damage = 0;
-                atkDamage = 0;
+                aiActInst->variables[varToMod] = ((((bkb * 10 / 20) + 1) * 1.4 * (200 / (weight + 100)) + 18) * (kbg / 100)) + 0;
+            } else {
+                aiActInst->variables[varToMod] = ((0.01 * kbg) * ((1.4 * (((0.05 * (damage * (damage + _floor(percent)))) + (damage + _floor(percent)) * 0.1) * (2.0 - (2.0 * (weight * 0.01)) / (1.0 + (weight * 0.01))))) + 18) + bkb);
             }
-            aiActInst->variables[varToMod] = (kbg / 100) * (1.4 * (((atkDamage + 2) * ((atkDamage - atkDamage * 0.2) + _floor(damage)))/20) * (2 - ((2 * weight) / (weight + 1))) + 18) + bkb;
+            // aiActInst->variables[varToMod] = (((((percent / 10) + ((percent * damage) / 20)) * (200 / (weight + 100)) * 1.4) + 18) * (kbg / 100)) + bkb;
             return;
         }
 
@@ -871,11 +902,14 @@ extern "C" {
             float fastFallSpeed = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
             bool fastFallImmediate = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
             
+            OSReport("fastFallSpeed: %.3f\n", fastFallSpeed);
+            OSReport("fastFallImmediate: %.3f\n", fastFallImmediate ? "true" : "false");
             float accumulator = 0;
             float tracker = ySpeed;
             for (int i = 0; i < frameCount; i++) {
                 accumulator += tracker;
                 tracker += gravity;
+                OSReport("ACCUMULATOR: %.3f; TRACKER: %.3f\n;", accumulator, tracker);
                 if (tracker > fastFallSpeed || (tracker >= 0 && fastFallImmediate)) tracker = fastFallSpeed;
                 else if (tracker > maxFallSpeed) tracker = maxFallSpeed;
             }
@@ -1111,7 +1145,7 @@ extern "C" {
             aiActInst->variables[yPosDest] = it->modules->postureModule->yPos;
             return;
         }
-        if (cmd == 0x71) {
+        if (cmd == 0x71 || cmd == 0x72) {
             int xPosDest = args[1];
             int yPosDest = args[2];
             int articleKind = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
@@ -1139,7 +1173,6 @@ extern "C" {
 
             OSReport("article: %08x\n", article);
             // 812865ac | 812865ac
-
             // 81286524 | 81286524
             asm(R"(
                 mr r3, %1
@@ -1163,35 +1196,17 @@ extern "C" {
             // OSReport("article module addr: %08x\n", article->modules);
             // OSReport("article module posture addr: %08x\n", article->modules->groundModule);
             // OSReport("article module posture xpos addr: %08x\n", article->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos);
-        
 
-            aiActInst->variables[xPosDest] = article->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos;
-            aiActInst->variables[yPosDest] = article->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomYPos;
+            if (cmd == 0x71) {
+                aiActInst->variables[xPosDest] = article->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos;
+                aiActInst->variables[yPosDest] = article->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomYPos;
+            } else {
+                auto postureModule = article->modules->postureModule;
+                aiActInst->variables[xPosDest] = postureModule->xPos - postureModule->prevXPos;
+                aiActInst->variables[yPosDest] = postureModule->yPos - postureModule->prevYPos;
+            }
             return;
         }
-        // if (cmd == 0x72) {
-        //     int xPosDest = args[1];
-        //     int yPosDest = args[2];
-        //     int articleKind = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-
-        //     Weapon* weapon = _search_aiWeaponManager(AI_MANAGER->weaponManager, 0, articleKind);
-        //     if (weapon == nullptr) {
-        //         aiActInst->variables[xPosDest] = 0;
-        //         aiActInst->variables[yPosDest] = 0;
-        //         return;
-        //     }      
-
-        //     OSReport("weapon address: %08x\n", &weapon);
-        //     OSReport("weapon: %08x\n", weapon);
-        //     OSReport("weapon module addr: %08x\n", weapon->modules);
-        //     OSReport("weapon module posture addr: %08x\n", weapon->modules->groundModule);
-        //     OSReport("weapon module posture xpos addr: %08x\n", weapon->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos);
-      
-
-        //     aiActInst->variables[xPosDest] = weapon->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos;
-        //     aiActInst->variables[yPosDest] = weapon->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomYPos;
-        //     return;
-        // }
 
         // CallI
         if (cmd == 0x80) {
@@ -1203,7 +1218,7 @@ extern "C" {
             clearGotoStack(aiActInst);
             aiActInst->framesSinceScriptChanged = -1;
             forcedNextInstruction = (int*)((int) aiActInst->currentInstruction + 0x0);
-            OSReport("FNInst (1): %08x\n", forcedNextInstruction);
+            // OSReport("FNInst (1): %08x\n", forcedNextInstruction);
 
             // aiActInst
             return;
@@ -1224,14 +1239,14 @@ extern "C" {
             // force change current instruction in memory
             aiActInst->framesSinceScriptChanged = -1;
             forcedNextInstruction = (int*)((int) aiActInst->currentInstruction + 0x0);
-            OSReport("FNInst (2): %08x\n", forcedNextInstruction);
+            // OSReport("FNInst (2): %08x\n", forcedNextInstruction);
             return;
         }
         // NoRepeat
         if (cmd == 0x82) {
-            OSReport("ARGS0 ADDR: %08x\n", &args[0]);
+            // OSReport("ARGS0 ADDR: %08x\n", &args[0]);
             for (int i = 0; i < (int) NoRepeatInstructions.size(); i++) {
-                OSReport("RepInst[%d]: %08x\n", i, NoRepeatInstructions[i]);
+                // OSReport("RepInst[%d]: %08x\n", i, NoRepeatInstructions[i]);
                 if (NoRepeatInstructions[i] == &args[0]) {
                     forcedNextInstruction = aiGotoPop(aiActInst);
                     if (forcedNextInstruction == nullptr) {
@@ -1414,6 +1429,28 @@ extern "C" {
                                 (toConvert & 0x0000FF00) >> 8);
                     }
                     OSReport("\n");
+                    return;
+                case 0xF2:
+                    OSReport("; %.3f ", _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0));
+                    return;
+                case 0xF3:
+                    OSReport("; ");
+                    for (int i = 1; i <= 5; i++) {
+                        unsigned int toConvert = _get_script_value_aiScriptData(aiActInst, *(int *) &args[i], 0);
+                        // OSReport("%08x", toConvert);
+                        OSReport("%c%c%c",
+                                (toConvert & 0xFF000000) >> 24,
+                                (toConvert & 0x00FF0000) >> 16,
+                                (toConvert & 0x0000FF00) >> 8);
+                    }
+                    return;
+                case 0xF4:
+                    OSReport("\n");
+                    return;
+                case 0xF5:
+                    fudgeMenu->visible = true;
+                    fudgeMenu->paused = true;
+                    return;
             }
         }
     }
