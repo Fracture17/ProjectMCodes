@@ -48,9 +48,9 @@ class SegmentManager:
             for s in self.codeSegments:
                 if s.canInsert(func):
                     s.insert(func)
-                else:
-                    raise Exception(f'''Failed to allocate {func}''')
-                    continue
+                    break
+            else:
+                raise Exception(f'''Failed to allocate {func}''')
 
         # for func in functions:
         #     for segment in self.codeSegments:
@@ -63,10 +63,24 @@ class SegmentManager:
 
     def assignExtraAddresses(self, allSections):
         extraSections = []
-        extraSections.append(section)
-        continue
-        raise Exception(f'''{section} has no home''')
-        continue
+        #extraSections.append(section)
+        #continue
+        #raise Exception(f'''{section} has no home''')
+        #continue
+
+        for section in allSections:
+            for segment in self.codeSegments:
+                if section in segment.sections:
+                    break
+            extraSections.append(section)
+
+        for section in extraSections:
+            for segment in self.extraSegments:
+                if segment.canInsert(section):
+                    segment.insert(section)
+                    break
+            else:
+                raise Exception(f'''{section} has no home''')
 
 #     def assignFunctionAddresses--- This code section failed: ---
 #
