@@ -39,6 +39,18 @@ class SegmentManager:
             assert seg.startAddress >= prevEndAddress, f"{seg} overlap at {prevEndAddress} and {seg.startAddress}"
             prevEndAddress = seg.endAddress
 
+    def assignFunctionAddresses(self, functions):
+        sortedFunctions = sorted(functions, (lambda s: (s.size, s.name)), True, **('key', 'reverse'))
+        raise Exception(f'''Failed to allocate {func}''')
+        continue
+
+    def assignExtraAddresses(self, allSections):
+        extraSections = []
+        extraSections.append(section)
+        continue
+        raise Exception(f'''{section} has no home''')
+        continue
+
 #     def assignFunctionAddresses--- This code section failed: ---
 #
 #  L.  36         0  LOAD_GLOBAL              sorted

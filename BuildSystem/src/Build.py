@@ -101,6 +101,27 @@ def makeInitCPPFile(symbols):
             initFile.write(initText)
             return initFile
 
+def getDebugInfo(library = None, segmentManager = None):
+    symbolText = []
+    symbols = (lambda .0: pass# WARNING: Decompyle incomplete
+)(library.symbols)
+    memoryHeapAddress = segmentManager.dataSegment.currentEnd()
+    memoryHeapAddress += 32 - memoryHeapAddress % 32
+    memoryHeapSize = segmentManager.dataSegment.endAddress - memoryHeapAddress
+    symbols.add(Symbol('C++_HEAP', memoryHeapAddress, memoryHeapSize, '_'))
+    symbols = sorted(symbols, (lambda s: s.address), **('key',))
+    symbolText = '\n'.join(symbolText)
+    addressesFile = File(f'''{disassemblyDir}/nm.txt''')
+    addressesFile.write(symbolText)
+    initSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
+)(symbols)
+    makeMap(initSymbols, File(f'''{disassemblyDir}/Initializers.map'''))
+    otherSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
+)(symbols)
+    makeMap(otherSymbols, File(f'''{disassemblyDir}/Symbols.map'''))
+    disassemblyFile = File(f'''{disassemblyDir}/dis.txt''')
+    objdump(library, '-h', disassemblyFile)
+
 # def getDebugInfo--- This code section failed: ---
 #
 #  L. 141         0  BUILD_LIST_0          0
@@ -334,7 +355,7 @@ def extractFiles(linkedCodes: Library, segmentList: SegmentManager):
             extractedCodes = linkedCodes.extractSections(s.sections, File(f"IntermediateFiles/{s.name}"))
             outputCodes = extractedCodes.compress(File(f"Output/{s.name}"))
             files.append((outputCodes, s.startAddress))
-        initializersInfo = makeInitializerInfoINITIALIZER_INFO_ADDRESSINFO_SEGMENT_ADDRESSlinkedCodessegmentList
+        initializersInfo = makeInitializerInfo(INITIALIZER_INFO_ADDRESS, INFO_SEGMENT_ADDRESS, linkedCodes, segmentList)
         f = File('Output/InitInfo')
         f.writeBinary(initializersInfo)
         files.append((f, INITIALIZER_INFO_ADDRESS))
