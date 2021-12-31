@@ -41,8 +41,25 @@ class SegmentManager:
 
     def assignFunctionAddresses(self, functions):
         sortedFunctions = sorted(functions, (lambda s: (s.size, s.name)), True, **('key', 'reverse'))
-        raise Exception(f'''Failed to allocate {func}''')
-        continue
+        #raise Exception(f'''Failed to allocate {func}''')
+        #continue
+
+        for func in sortedFunctions:
+            for s in self.codeSegments:
+                if s.canInsert(func):
+                    s.insert(func)
+                else:
+                    raise Exception(f'''Failed to allocate {func}''')
+                    continue
+
+        # for func in functions:
+        #     for segment in self.codeSegments:
+        #         if segment.canInsert(func):
+        #             func.address = segment.currentAddress
+        #             segment.insertFunction(func)
+        #             break
+        #     else:
+        #         raise Exception(f"{func=} Couldn't fit")
 
     def assignExtraAddresses(self, allSections):
         extraSections = []
