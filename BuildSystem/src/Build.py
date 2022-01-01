@@ -103,21 +103,30 @@ def makeInitCPPFile(symbols):
 
 def getDebugInfo(library = None, segmentManager = None):
     symbolText = []
-    symbols = (lambda .0: pass# WARNING: Decompyle incomplete
-)(library.symbols)
+    #symbols = (lambda .0: pass# WARNING: Decompyle incomplete
+#)(library.symbols)
+    symbols = [symbol for symbol in library.symbols if symbol.startswith('.')]
+    for section in library.sections:
+        if section.startswith('.'):
+            if section.size > 0:
+                symbols.add(Symbol(section.name, section.address, section.size(), "_"))
     memoryHeapAddress = segmentManager.dataSegment.currentEnd()
     memoryHeapAddress += 32 - memoryHeapAddress % 32
     memoryHeapSize = segmentManager.dataSegment.endAddress - memoryHeapAddress
     symbols.add(Symbol('C++_HEAP', memoryHeapAddress, memoryHeapSize, '_'))
     symbols = sorted(symbols, (lambda s: s.address), **('key',))
+    for s in symbols:
+        symbolText.append(f"{s.address:08x} {s.size:08x} {s.type} {s.name}")
     symbolText = '\n'.join(symbolText)
     addressesFile = File(f'''{disassemblyDir}/nm.txt''')
     addressesFile.write(symbolText)
-    initSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
-)(symbols)
+    #initSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
+#)(symbols)
+    initSymbols = [s for s in symbols if segmentManager.initializerSegment.canInsert(s) and segmentManager.dataSegment.canInsert(s)]
     makeMap(initSymbols, File(f'''{disassemblyDir}/Initializers.map'''))
-    otherSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
-)(symbols)
+    #otherSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
+#)(symbols)
+    otherSymbols = [s for s in symbols if segmentManager.initializerSegment.canInsert(s)]
     makeMap(otherSymbols, File(f'''{disassemblyDir}/Symbols.map'''))
     disassemblyFile = File(f'''{disassemblyDir}/dis.txt''')
     objdump(library, '-h', disassemblyFile)
