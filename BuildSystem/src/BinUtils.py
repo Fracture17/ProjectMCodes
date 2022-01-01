@@ -34,18 +34,29 @@ def nm(source: 'Library', options: str, cmdOutput: File=None):
 
 def binutil(path = None, options = None, cmdOutput = None):
 #Warning: block stack is not empty!
+    # commandFile = makeBinUtilCommandFile(options)
+    # command = f'''{path} @{commandFile.path}'''
+    # if cmdOutput is not None:
+    #     command += f''' > {cmdOutput.path}'''
+    #
+    # try:
+    #     pass
+    # finally:
+    #     return None
+    #     os.system(command)
+    # raise Exception(f'''{command}''')
+    # return None
+
     commandFile = makeBinUtilCommandFile(options)
     command = f'''{path} @{commandFile.path}'''
     if cmdOutput is not None:
         command += f''' > {cmdOutput.path}'''
-
     try:
-        pass
-    finally:
-        return None
+        return cmdLineOutput(command)
+    except Exception:
         os.system(command)
-    raise Exception(f'''{command}''')
-    return None
+    finally:
+        raise Exception(f'''{command}''')
 
 # def binutil--- This code section failed: ---
 #
