@@ -72,7 +72,8 @@ class SegmentManager:
             for segment in self.codeSegments:
                 if section in segment.sections:
                     break
-            extraSections.append(section)
+            else:
+                extraSections.append(section)
 
         for section in extraSections:
             for segment in self.extraSegments:
