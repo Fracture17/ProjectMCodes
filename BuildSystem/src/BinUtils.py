@@ -51,12 +51,12 @@ def binutil(path = None, options = None, cmdOutput = None):
     command = f'''{path} @{commandFile.path}'''
     if cmdOutput is not None:
         command += f''' > {cmdOutput.path}'''
-    try:
-        return cmdLineOutput(command)
-    except Exception:
-        os.system(command)
-    finally:
-        raise Exception(f'''{command}''')
+    #try:
+    return cmdLineOutput(command)
+    #finally:
+    os.system(command)
+
+    raise Exception(f'''{command}''')
 
 # def binutil--- This code section failed: ---
 #

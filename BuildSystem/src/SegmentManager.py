@@ -40,7 +40,7 @@ class SegmentManager:
             prevEndAddress = seg.endAddress
 
     def assignFunctionAddresses(self, functions):
-        sortedFunctions = sorted(functions, (lambda s: (s.size, s.name)), True, **('key', 'reverse'))
+        sortedFunctions = sorted(functions, key=(lambda s: (s.size, s.name)), reverse=True)
         #raise Exception(f'''Failed to allocate {func}''')
         #continue
 

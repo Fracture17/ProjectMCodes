@@ -54,12 +54,12 @@ def build(buildDir=None, codesDir=None, ppcBinDirectory=None, brawlFuncMapPath=N
     compiledCodes = FinalSectionNameLibrary(compiledCodes.path)
     for s in compiledCodes.sections:
         assert 2147483648 <= s.address <= 2684354560, f"{s}, address: {hex(s.address)} out of acceptable range"
-        segments.assignExtraAddresses(compiledCodes.sections)
-        getDebugInfo(compiledCodes, segments)
-        files = extractFiles(compiledCodes, segments)
-        data = makeFilesFile(compiledCodes, files)
-        f = File('Output/files')
-        f.writeBinary(data)
+    segments.assignExtraAddresses(compiledCodes.sections)
+    getDebugInfo(compiledCodes, segments)
+    files = extractFiles(compiledCodes, segments)
+    data = makeFilesFile(compiledCodes, files)
+    f = File('Output/files')
+    f.writeBinary(data)
 
 
 def renameSections(codesDirectory: LibraryDirectory):
@@ -76,11 +76,11 @@ def makeCodesCPPFile(symbols):
     for s in symbols:
         if s.isInjection():
             injections.append(s)
-        branches = '\n\t\t'.join([f"b {i.name}" for i in injections])
-        cppText = cppFormat.format(codeBranches=branches)
-        cppFile = File('IntermediateFiles/cppFile.cpp')
-        cppFile.write(cppText)
-        return cppFile
+    branches = '\n\t\t'.join([f"b {i.name}" for i in injections])
+    cppText = cppFormat.format(codeBranches=branches)
+    cppFile = File('IntermediateFiles/cppFile.cpp')
+    cppFile.write(cppText)
+    return cppFile
 
 
 def makeInitCPPFile(symbols):
@@ -89,32 +89,32 @@ def makeInitCPPFile(symbols):
     for s in symbols:
         if s.isInjection() or s.isStartup():
             injections.append(s)
-        branches = '\n\t\t'.join([f"b {i.name}" for i in injections])
-        writes = []
-        for s in symbols:
-            if s.name.startswith('_STRING_WRITE_') or s.name.startswith('_DATA_WRITE_'):
-                name = s.name.partition('/')[0]
-                writes.append(name)
-            writes = '\n\t\t'.join((f"b {w}" for w in writes))
-            initText = initFormat.format(codeBranches=branches, writes=writes)
-            initFile = File('IntermediateFiles/initFile.cpp')
-            initFile.write(initText)
-            return initFile
+    branches = '\n\t\t'.join([f"b {i.name}" for i in injections])
+    writes = []
+    for s in symbols:
+        if s.name.startswith('_STRING_WRITE_') or s.name.startswith('_DATA_WRITE_'):
+            name = s.name.partition('/')[0]
+            writes.append(name)
+    writes = '\n\t\t'.join((f"b {w}" for w in writes))
+    initText = initFormat.format(codeBranches=branches, writes=writes)
+    initFile = File('IntermediateFiles/initFile.cpp')
+    initFile.write(initText)
+    return initFile
 
 def getDebugInfo(library = None, segmentManager = None):
     symbolText = []
     #symbols = (lambda .0: pass# WARNING: Decompyle incomplete
 #)(library.symbols)
-    symbols = [symbol for symbol in library.symbols if symbol.startswith('.')]
+    symbols = {symbol for symbol in library.symbols if symbol.name.startswith('.')}
     for section in library.sections:
-        if section.startswith('.'):
+        if section.name.startswith('.'):
             if section.size > 0:
-                symbols.add(Symbol(section.name, section.address, section.size(), "_"))
+                symbols.add(Symbol(section.name, section.address, section.size, "_"))
     memoryHeapAddress = segmentManager.dataSegment.currentEnd()
     memoryHeapAddress += 32 - memoryHeapAddress % 32
     memoryHeapSize = segmentManager.dataSegment.endAddress - memoryHeapAddress
     symbols.add(Symbol('C++_HEAP', memoryHeapAddress, memoryHeapSize, '_'))
-    symbols = sorted(symbols, (lambda s: s.address), **('key',))
+    symbols = sorted(symbols, key = (lambda s: s.address))
     for s in symbols:
         symbolText.append(f"{s.address:08x} {s.size:08x} {s.type} {s.name}")
     symbolText = '\n'.join(symbolText)
@@ -122,11 +122,11 @@ def getDebugInfo(library = None, segmentManager = None):
     addressesFile.write(symbolText)
     #initSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
 #)(symbols)
-    initSymbols = [s for s in symbols if segmentManager.initializerSegment.canInsert(s) and segmentManager.dataSegment.canInsert(s)]
+    initSymbols = {s for s in symbols if segmentManager.initializerSegment.canInsert(s) and segmentManager.dataSegment.canInsert(s)}
     makeMap(initSymbols, File(f'''{disassemblyDir}/Initializers.map'''))
     #otherSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
 #)(symbols)
-    otherSymbols = [s for s in symbols if segmentManager.initializerSegment.canInsert(s)]
+    otherSymbols = {s for s in symbols if segmentManager.initializerSegment.canInsert(s)}
     makeMap(otherSymbols, File(f'''{disassemblyDir}/Symbols.map'''))
     disassemblyFile = File(f'''{disassemblyDir}/dis.txt''')
     objdump(library, '-h', disassemblyFile)
@@ -364,15 +364,15 @@ def extractFiles(linkedCodes: Library, segmentList: SegmentManager):
             extractedCodes = linkedCodes.extractSections(s.sections, File(f"IntermediateFiles/{s.name}"))
             outputCodes = extractedCodes.compress(File(f"Output/{s.name}"))
             files.append((outputCodes, s.startAddress))
-        initializersInfo = makeInitializerInfo(INITIALIZER_INFO_ADDRESS, INFO_SEGMENT_ADDRESS, linkedCodes, segmentList)
-        f = File('Output/InitInfo')
-        f.writeBinary(initializersInfo)
-        files.append((f, INITIALIZER_INFO_ADDRESS))
-        injectionsInfo = makeInjectionsInfo(linkedCodes)
-        f = File('Output/Injections')
-        f.writeBinary(injectionsInfo)
-        files.append((f, INFO_SEGMENT_ADDRESS))
-        return files
+    initializersInfo = makeInitializerInfo(INITIALIZER_INFO_ADDRESS, INFO_SEGMENT_ADDRESS, linkedCodes, segmentList)
+    f = File('Output/InitInfo')
+    f.writeBinary(initializersInfo)
+    files.append((f, INITIALIZER_INFO_ADDRESS))
+    injectionsInfo = makeInjectionsInfo(linkedCodes)
+    f = File('Output/Injections')
+    f.writeBinary(injectionsInfo)
+    files.append((f, INFO_SEGMENT_ADDRESS))
+    return files
 
 
 def makeInitializerInfo(initializerInfoAddress: int, injectionsInfoAddress: int, compiledCodes: Library, segmentManager: SegmentManager):
@@ -433,9 +433,9 @@ def makeStringWriteInfo(compiledCodes):
             writes += targetAddress
             writes += dataAddress
             writes += dataSize
-        data += (len(writes) // 12).to_bytes(4, 'big')
-        data += writes
-        return data
+    data += (len(writes) // 12).to_bytes(4, 'big')
+    data += writes
+    return data
 
 
 def makeDataWriteInfo(compiledCodes: Library):
@@ -452,16 +452,16 @@ def makeDataWriteInfo(compiledCodes: Library):
                 repeats = int(w[3])
             repeats = repeats.to_bytes(2, 'big')
             writes.append((address, data, repeats))
-        data = bytearray()
-        for w in writes:
-            data += w[0]
-            data += len(w[1]).to_bytes(2, 'big')
-            data += w[2]
-            alignedData = w[1] + bytearray(4 - len(w[1]) % 4)
-            data += alignedData
-        else:
-            data += (0).to_bytes(4, 'big')
-            return data
+    data = bytearray()
+    for w in writes:
+        data += w[0]
+        data += len(w[1]).to_bytes(2, 'big')
+        data += w[2]
+        alignedData = w[1] + bytearray(4 - len(w[1]) % 4)
+        data += alignedData
+    else:
+        data += (0).to_bytes(4, 'big')
+        return data
 
 
 def makeInjectionsInfo(compiledCodes: Library):
