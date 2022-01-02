@@ -7,12 +7,12 @@
 
 
 struct soCollisionAttackModuleImpl {
-    char _spacer[0x40];
+    char _spacer[0x8];
 
-    // 0x40
+    // 0x8
     float knockbackSpeedX;
 
-    // 0x44
+    // 0xC
     float knockbackSpeedY;
 };
 

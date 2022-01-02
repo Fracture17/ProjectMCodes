@@ -18,8 +18,8 @@
 #define MOV_ATTACK 14
 #define MOV_GRAB 15
 
-#define TRACK_COUNT 0xC
-#define ACTION_LENGTH 0xC
+#define TRACK_COUNT 0x18
+#define ACTION_LENGTH 0x6
 
 class MovementTracker {
 public:
@@ -31,20 +31,33 @@ public:
   float approxChance(float levelValue);
 
 private:
-  unsigned char currSequence[ACTION_LENGTH] = {0,0,0,0,0,0,0,0,0,0,0,0};
+  unsigned char currSequence[ACTION_LENGTH] = {0,0,0,0,0,0};
   unsigned char idx = 0;
   unsigned char actionTracker[TRACK_COUNT][ACTION_LENGTH] = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0}
   };
   unsigned char trackIdx = 0;
   bool flushNext = false;
@@ -66,11 +79,11 @@ void MovementTracker::reset() {
 unsigned char actionToMov(int action) {
   if (0x24 <= action && action <= 0x33) return MOV_ATTACK;
   switch (action) {
-    // case 0x0: return MOV_IDLE;
+    case 0x0: return MOV_IDLE;
     case 0x1: return MOV_WALK;
     case 0x4: return MOV_RUN;
     case 0x3: return MOV_DASH;
-    case 0x7: return MOV_DASHTURN;
+    // case 0x7: return MOV_DASHTURN;
     case 0x11: return MOV_CROUCH;
     case 0xB: return MOV_JUMP;
     case 0xC:
@@ -125,7 +138,7 @@ void MovementTracker::pushSet() {
 float MovementTracker::approxChance(float CPULevel) {
   int maxScore = 0; 
   int score = 0;
-  int scoreToGive = 0xC * 0xC;
+  int scoreToGive = TRACK_COUNT * ACTION_LENGTH;
   int lookAmount = (CPULevel / 100) * TRACK_COUNT;
   int tracker = trackIdx - 1;
   for (int i = 0; i < TRACK_COUNT; i++) {

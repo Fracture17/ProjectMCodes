@@ -13,22 +13,6 @@
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 
-class ResetFudgeAIOption : public StandardOption {
-public:
-  ResetFudgeAIOption() {}
-  void modify(float _) {};
-  void deselect() {};
-  void select() {
-    fudgeAI.xMin = 500;
-    fudgeAI.yMin = 500;
-    fudgeAI.xMax = -500;
-    fudgeAI.yMax = -500;
-  };
-  void render(TextPrinter *printer, char *buffer) {
-    printer->printLine("reset bounds");
-  };
-};
-
 class PSAScriptOption : public StandardOption {
 public:
   PSAScriptOption(vector<soAnimCmd*>* data, int& currLine) : data(data), currLine(currLine) {}
@@ -115,14 +99,6 @@ struct debugData {
 };
 
 struct AIData {
-  SubpageOption* trainingScripts;
-  int scriptID = 0xFFFF;
-  int fighterID = -1;
-  int target = -1;
-  unsigned int currentScript = -1;
-  int frameCount = -1;
-  unsigned int md = -1;
-  char buttons[25] = {};
   Inputs aiButtons;
   float lstickX = 0;
   float lstickY = 0;

@@ -26,8 +26,6 @@
 #define strcmp ((int (*)(const char* str1, const char* str2)) 0x803fa3fc)
 #define atof ((float (*)(const char* buffer)) 0x803fbbf8)
 
-extern float ai_customFnInjection[0x10];
-extern bool ai_customFnInjectionToggle[0x10];
 extern TrainingData playerTrainingData[];
 extern char selectedPlayer;
 extern Menu* fudgeMenu;
@@ -259,9 +257,6 @@ void collectData(Fighter* fighter, int pNum) {
     // OSReport("%s: %d\n", __FILE__, __LINE__);
     auto& aiInput = fighter->getOwner()->ftInputPtr;
 
-    currData.aiData.currentScript = aiInput->aiActPtr->aiScript;
-    currData.aiData.frameCount = aiInput->aiActPtr->framesSinceScriptChanged;
-
     auto workModule = fighter->modules->workModule;
     if (workModule != nullptr) {
         auto RABasicsArr = (*(int (*)[workModule->RAVariables->basicsSize])workModule->RAVariables->basics);
@@ -490,6 +485,7 @@ extern "C" void updateOnFrame() {
 
     setupDrawPrimitives();
 
+    bool inputThing = false;
     for (int i = 0; i < 4; i++) {
         PADButtons btn;
         btn.bits = PREVIOUS_PADS[i].button.bits;
@@ -498,12 +494,14 @@ extern "C" void updateOnFrame() {
         visible = fudgeMenu->visible;
         bool selected = fudgeMenu->selected;
         if (btn.L && btn.R && btn.UpDPad && btn.B) {
+            inputThing = true;
             if (instantResponse) {
                 fudgeMenu->toggle();
                 instantResponse = false;
                 SOUND_SYSTEM->playSE(34);
             }
         } else if (btn.L && btn.R && btn.DownDPad) {
+            inputThing = true;
             if (instantResponse) {
                 if (selected) fudgeMenu->deselect();
                 fudgeMenu->visible = false;
@@ -512,6 +510,7 @@ extern "C" void updateOnFrame() {
             }
         } else if (visible) {
             if (btn.B && fudgeMenu->path.size() <= 1 && !selected) {
+                inputThing = true;
                 if (instantResponse) {
                     PREVIOUS_PADS[0].button.B = 0;
                     fudgeMenu->toggle();
@@ -519,6 +518,7 @@ extern "C" void updateOnFrame() {
                     SOUND_SYSTEM->playSE(34);
                 }
             } else if (btn.A && paused) {
+                inputThing = true;
                 if (instantResponse) {
                     PREVIOUS_PADS[0].button.A = 0;
                     fudgeMenu->select();
@@ -526,6 +526,7 @@ extern "C" void updateOnFrame() {
                     SOUND_SYSTEM->playSE(1);
                 }
             } else if (btn.B && paused) {
+                inputThing = true;
                 if (instantResponse) {
                     fudgeMenu->deselect();
                     instantResponse = false;
@@ -533,12 +534,14 @@ extern "C" void updateOnFrame() {
                 }
             } else if (btn.DownDPad) {
                 timer -= 10;
+                inputThing = true;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->down();
                     instantResponse = false;
                     SOUND_SYSTEM->playSE(0);
                 }
             } else if (btn.UpDPad && btn.L && selected && !paused) {
+                inputThing = true;
                 if (instantResponse) {
                     fudgeMenu->modify(-1);
                     fudgeMenu->deselect();
@@ -547,6 +550,7 @@ extern "C" void updateOnFrame() {
                 }
             } else if (btn.UpDPad) {
                 timer -= 10;
+                inputThing = true;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->up();
                     instantResponse = false;
@@ -554,6 +558,7 @@ extern "C" void updateOnFrame() {
                 }
             } else if (btn.LeftDPad) {
                 timer -= 10;
+                inputThing = true;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->modify(btn.Y ? -10 : -(btn.X ? 0.1 : 1));
                     instantResponse = false;
@@ -561,19 +566,21 @@ extern "C" void updateOnFrame() {
                 }
             } else if (btn.RightDPad) {
                 timer -= 10;
+                inputThing = true;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->modify(btn.Y ? 10 : (btn.X ? 0.1 : 1));
                     instantResponse = false;
                     SOUND_SYSTEM->playSE(37);
                 }
-            } else {
+            } else if (!inputThing) {
                 instantResponse = true;
                 timer = 80;
                 cmdDelay = 0;
             }
         } else if (paused && btn.B) {
             paused = false;
-        } else {
+            inputThing = true;
+        } else if (!inputThing) {
             instantResponse = true;
             timer = 80;
             cmdDelay = 0;
@@ -908,17 +915,6 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
 
             auto& aiInput = fighter->getOwner()->ftInputPtr;
     
-            currData.aiData.md = aiInput->aiMd;
-            currData.aiData.target = aiInput->aiTarget;
-            auto btn = aiInput->buttons;
-            sprintf(currData.aiData.buttons, "");
-            if (btn.attack == 1) strcat(currData.aiData.buttons, "A; "); 
-            if (btn.special == 1) strcat(currData.aiData.buttons, "B; "); 
-            if (btn.jump == 1) strcat(currData.aiData.buttons, "X; "); 
-            if (btn.shield == 1) strcat(currData.aiData.buttons, "R; "); 
-            if (btn.dTaunt == 1) strcat(currData.aiData.buttons, "DT; "); 
-            if (btn.uTaunt == 1) strcat(currData.aiData.buttons, "UT; "); 
-            if (btn.sTaunt == 1) strcat(currData.aiData.buttons, "ST; "); 
             currData.aiData.aiButtons = aiInput->buttons;
             currData.aiData.lstickX = aiInput->leftStickX;
             currData.aiData.lstickY = aiInput->leftStickY;
@@ -932,22 +928,6 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
             currData.controllerData.substickY = PREVIOUS_PADS[pNum].substickY;
             currData.controllerData.triggerLeft = PREVIOUS_PADS[pNum].triggerLeft;
             currData.controllerData.triggerRight = PREVIOUS_PADS[pNum].triggerRight;
-
-            // [0] = snapback enabled
-            // [1] = leniency
-            if (currData.aiData.scriptID == 0x8201 && ai_customFnInjection[0] > 0) {
-                if (fighter->modules->statusModule->action == 0x1D) {
-                    currData.aiData.snapbackShieldtimer = ai_customFnInjection[1];
-                } else {
-                    if (currData.aiData.snapbackShieldtimer <= 0) {
-                        auto LAVars = fighter->modules->workModule->LAVariables;
-                        auto LAFloatArr = (*(float (*)[LAVars->floatsSize])LAVars->floats);
-                        LAFloatArr[0x3] = 50;
-                    } else { 
-                        currData.aiData.snapbackShieldtimer --; 
-                    }
-                }
-            }
             
             if (currData.debug.enabled && (currData.debug.fixPosition || currData.debug.settingPosition)) {
                 auto LAVars = fighter->modules->workModule->LAVariables;
@@ -994,40 +974,4 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
         }
     }
 
-}
-
-int intendedScript = 0;
-INJECTION("CPUStoreIntentionASM", 0x80918570, R"(
-    SAVE_REGS
-    mr r3, r4
-    bl CPUStoreIntention
-    RESTORE_REGS
-    lhz r0, 0x78(r3)
-)");
-extern "C" void CPUStoreIntention(int intended) { 
-    // OSReport("INTENDED: %08x\n", intended);
-    intendedScript = intended; 
-}
-INJECTION("CPUForceBehavior", 0x809188B0, R"(
-    SAVE_REGS
-    mr r3, r26
-    mr r4, r25
-    bl CPUForceBehavior
-    addi r26, r3, 0
-    sth r26, 120(r25)
-    RESTORE_REGS
-)");
-extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
-    char pNum = _GetPlayerNo_aiChrIdx(&aiActPtr->ftInputPtr->cpuIdx);
-    if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {
-        OSReport("intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
-        OSReport("current: %04x; ", aiActPtr->aiScript);
-        OSReport("next: %04x\n", intendedScript);
-
-        return param1; // normal routine
-    }
-
-    auto action = aiActPtr->ftInputPtr->ftEntryPtr->ftStageObject->modules->statusModule->action;
-
-    return (aiActPtr->intermediateNextAiScript != 0 || (action >= 0x34 && action <= 0x3B) || action == 0x4D || (action >= 0x74 && action <= 0x7C)) ? param1 : playerTrainingData[pNum].aiData.scriptID;
 }

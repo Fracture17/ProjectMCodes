@@ -7,6 +7,8 @@
 
 
 struct soGeneralWorkSimple {
+    bool isFlag(int flagIdx);
+
     char _spacer[0xC];
     //0xC
     int (*basics)[];
@@ -22,5 +24,6 @@ struct soGeneralWorkSimple {
     int bitsSize;
 };
 
+#define _isFlag_soGeneralWorkSimple ((int (*)(void* self, unsigned int identifier, unsigned int anotherThing)) 0x807990ac)
 
 #endif //PROJECTMCODES_SOGENERALWORKSIMPLE_H
