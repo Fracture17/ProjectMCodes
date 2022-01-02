@@ -27,6 +27,7 @@ To learn PowerPC ASM, see: https://mariokartwii.com/showthread.php?tid=1114 <br 
 
 As well as https://github.com/WhiteTPoison5/brawlback-wiki for more resources
 
+## Acknowledgements
 
 Fracture for the C++ Framework and Fudgepop for tutorials and great code examples
 
