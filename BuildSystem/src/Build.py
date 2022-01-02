@@ -24,12 +24,18 @@ renamedCodesDir = 'IntermediateFiles\\Renamed'
 removedConstructorsDir = 'IntermediateFiles\\Removed'
 disassemblyDir = 'Disassembly'
 symbolMapFile: File = None
+settings: Settings = None
 
-def build(buildDir=None, codesDir=None, ppcBinDirectory=None, brawlFuncMapPath=None):
+def build(buildDir=None, codesDir=None, ppcBinDirectory=None, brawlFuncMapPath=None, settingsPath=None):
     global symbolMapFile
+    global settings
     if brawlFuncMapPath is None:
         brawlFuncMapPath = 'BrawlFuncMap.map'
     symbolMapFile = File(os.path.abspath(brawlFuncMapPath))
+    if settingsPath is None:
+        settingsPath = 'settings.json'
+    settings = get_settings(settingsPath)
+
     assert symbolMapFile.exists(), f"Cannot find function map at {symbolMapFile.path}"
     if buildDir is None:
         buildDir = f"{os.getcwd()}/Build"
@@ -41,19 +47,19 @@ def build(buildDir=None, codesDir=None, ppcBinDirectory=None, brawlFuncMapPath=N
     removedConstructorsDirectoryObject = renamedCodesDirectoryObject.removeSections(['.ctors', '.dtors'], removedConstructorsDir)
     compiler = Compiler()
     cppFile = makeCodesCPPFile(removedConstructorsDirectoryObject.symbols)
-    linkedCodes = compiler.compile(cppFile, (removedConstructorsDirectoryObject.libraries), textStart=2147483648)
+    linkedCodes = compiler.compile(cppFile, (removedConstructorsDirectoryObject.libraries), textStart=int("0x80000000", 0))
     functions = [s for s in linkedCodes.sections if s.type == 'text']
-    segments = SegmentManager()
+    segments = SegmentManager(settings)
     segments.assignFunctionAddresses(functions)
     temp = [segment.sections for segment in segments.codeSegments]
     codeSections = list(chain.from_iterable(temp))
     initFile = makeInitCPPFile(removedConstructorsDirectoryObject.symbols)
-    compiledCodes = compiler.compile(initFile, (renamedCodesDirectoryObject.libraries), textStart=INITIALIZER_SEGMENT_ADDRESS,
-      dataStart=DATA_SEGMENT_ADDRESS,
+    compiledCodes = compiler.compile(initFile, (renamedCodesDirectoryObject.libraries), textStart=settings.INITIALIZER_SEGMENT_ADDRESS,
+      dataStart=settings.DATA_SEGMENT_ADDRESS,
       sections=codeSections)
     compiledCodes = FinalSectionNameLibrary(compiledCodes.path)
     for s in compiledCodes.sections:
-        assert 2147483648 <= s.address <= 2684354560, f"{s}, address: {hex(s.address)} out of acceptable range"
+        assert int("0x80000000", 0) <= s.address <= int("0xA0000000", 0), f"{s}, address: {hex(s.address)} out of acceptable range"
     segments.assignExtraAddresses(compiledCodes.sections)
     getDebugInfo(compiledCodes, segments)
     files = extractFiles(compiledCodes, segments)
@@ -346,7 +352,7 @@ def makeFilesFile(compiledCodes: Library, files: list):
     s = [s for s in compiledCodes.sections if s.name == '_INITIALIZE___text__']
     assert len(s) == 1, (f"{s}")
     data.extend(s[0].address.to_bytes(4, 'big'))
-    data.extend(INITIALIZER_INFO_ADDRESS.to_bytes(4, 'big'))
+    data.extend(settings.INITIALIZER_INFO_ADDRESS.to_bytes(4, 'big'))
     data.extend(len(files).to_bytes(4, 'big'))
     for i, (f, a) in enumerate(files):
         data.extend(a.to_bytes(4, 'big'))
@@ -364,14 +370,14 @@ def extractFiles(linkedCodes: Library, segmentList: SegmentManager):
             extractedCodes = linkedCodes.extractSections(s.sections, File(f"IntermediateFiles/{s.name}"))
             outputCodes = extractedCodes.compress(File(f"Output/{s.name}"))
             files.append((outputCodes, s.startAddress))
-    initializersInfo = makeInitializerInfo(INITIALIZER_INFO_ADDRESS, INFO_SEGMENT_ADDRESS, linkedCodes, segmentList)
+    initializersInfo = makeInitializerInfo(settings.INITIALIZER_INFO_ADDRESS, settings.INFO_SEGMENT_ADDRESS, linkedCodes, segmentList)
     f = File('Output/InitInfo')
     f.writeBinary(initializersInfo)
-    files.append((f, INITIALIZER_INFO_ADDRESS))
+    files.append((f, settings.INITIALIZER_INFO_ADDRESS))
     injectionsInfo = makeInjectionsInfo(linkedCodes)
     f = File('Output/Injections')
     f.writeBinary(injectionsInfo)
-    files.append((f, INFO_SEGMENT_ADDRESS))
+    files.append((f, settings.INFO_SEGMENT_ADDRESS))
     return files
 
 

@@ -27,13 +27,12 @@ To learn PowerPC ASM, see: https://mariokartwii.com/showthread.php?tid=1114 <br 
 
 As well as https://github.com/WhiteTPoison5/brawlback-wiki for more resources
 
-## Acknowledgements
 
-Credit to Bird and Syvkal for MakeSD
+Fracture for the C++ Framework and Fudgepop for tutorials and great code examples
 
 DukeItOut for GCTRM
 
-Fracture for the C++ Framework and Fudgepop for tutorials and great code examples
+Bird and Syvkal for MakeSD
 
 The PMDT and P+DT as well as all those who have contributed code in the Project+ Source
 

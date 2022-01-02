@@ -18,7 +18,7 @@ class Segment:
 
     def __post_init__(self):
         assert self.endAddress > self.startAddress
-        assert self.startAddress >= 2147483648
+        assert self.startAddress >= int("0x80000000", 0)
         self.sections = set()
         self.size = self.endAddress - self.startAddress
         self.remainingSize = self.size
@@ -51,7 +51,7 @@ class Segment2:
 
     def __post_init__(self):
         assert self.endAddress > self.startAddress
-        assert self.startAddress >= 2147483648
+        assert self.startAddress >= int("0x80000000", 0)
         self.sections = set()
         self.size = self.endAddress - self.startAddress
 

@@ -10,25 +10,24 @@
 #                   92  JUMP_BACK            64  'to 64'
 
 from Segment import Segment2
-from Settings import *
 from copy import deepcopy
 
 class SegmentManager:
 
-    def __init__(self):
+    def __init__(self, settings):
         self.segments = {}
         self.codeSegments = []
-        for i, seg in enumerate(codeSegments):
+        for i, seg in enumerate(settings.CODE_SEGMENTS):
             seg = deepcopy(seg)
             seg.name = chr(ord('A') + i)
             self.segments[seg.name] = seg
             self.codeSegments.append(seg)
         else:
             self.extraSegments = []
-            self.dataSegment = Segment2(DATA_SEGMENT_ADDRESS, MEMORY_HEAP_END_ADDRESS, name='Data')
+            self.dataSegment = Segment2(settings.DATA_SEGMENT_ADDRESS, settings.MEMORY_HEAP_END_ADDRESS, name='Data')
             self.segments[self.dataSegment.name] = self.dataSegment
             self.extraSegments.append(self.dataSegment)
-            self.initializerSegment = Segment2(INITIALIZER_SEGMENT_ADDRESS, (INITIALIZER_SEGMENT_ADDRESS + 65536), name='Init')
+            self.initializerSegment = Segment2(settings.INITIALIZER_SEGMENT_ADDRESS, (settings.INITIALIZER_SEGMENT_ADDRESS + 65536), name='Init')
             self.segments[self.initializerSegment.name] = self.initializerSegment
             self.extraSegments.append(self.initializerSegment)
             self.checkForOverlaps()
