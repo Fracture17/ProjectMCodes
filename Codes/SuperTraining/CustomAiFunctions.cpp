@@ -16,8 +16,8 @@
 #include "Brawl/AI/aiStat.h"
 #include "Brawl/Weapon.h"
 #include "PatternManager.h"
-#include "MovementTracker.h"
 #include "FudgeMenu.h"
+#include "MovementTracker.h"
 
 #define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
 #define _length_vec3f ((double (*)(Vec3f* vector)) 0x8070b94c)
@@ -278,6 +278,7 @@ MovementTracker movementTrackers[4] = {
 };
 
 SIMPLE_INJECTION(clearPredictions, 0x800dc590, "li r9, 2") {
+    
     for (int i = 0; i < 0x10; i++) {
         if (i < 4) {
             movementTrackers[i].reset();
@@ -285,6 +286,20 @@ SIMPLE_INJECTION(clearPredictions, 0x800dc590, "li r9, 2") {
             disabledMd[i] = -1;
             autoDefend[i] = true;
             debugSwitch[i] = true;
+            // clear personality
+            if (playerTrainingData[i].aiData.personality.unlocked) {
+                playerTrainingData[i].aiData.personality.aggression = 0;
+                playerTrainingData[i].aiData.personality.bait_dashAwayChance = 0;
+                playerTrainingData[i].aiData.personality.bait_wdashAwayChance = 0;
+                playerTrainingData[i].aiData.personality.baitChance = 0;
+                playerTrainingData[i].aiData.personality.braveChance = 0;
+                playerTrainingData[i].aiData.personality.circleCampChance = 0;
+                playerTrainingData[i].aiData.personality.djumpiness = 0;
+                playerTrainingData[i].aiData.personality.jumpiness = 0;
+                playerTrainingData[i].aiData.personality.platChance = 0;
+                playerTrainingData[i].aiData.personality.SDIChance = 0;
+                playerTrainingData[i].aiData.personality.wall_chance = 0;
+            }
         }
         rpsManagers[i].clearAll();
     }
@@ -379,7 +394,7 @@ extern "C" {
             
             Vec3f startPos {
                     groundModule->landingCollisionBottomXPos,
-                    targetFighter->modules->postureModule->yPos,
+                    groundModule->landingCollisionBottomYPos,
                     targetFighter->modules->postureModule->zPos
             };
 
@@ -403,14 +418,17 @@ extern "C" {
             }
 
             fn_shouldReturnResult = 1;
+            return;
         }
 
         if (switchCase == 0x51) {
             fn_result = FIGHTER_MANAGER->getInput(targetFighterEntry->entryId)->aiMd;
             fn_shouldReturnResult = 1;
+            return;
         }
         if (switchCase == 0x52) {
             fn_result = targetPlayerNo;
+            return;
         }
         if (switchCase == 0x53) {
             if (targetFighterEntry == nullptr) {
@@ -426,10 +444,12 @@ extern "C" {
                 }
             }
             fn_shouldReturnResult = 1;
+            return;
         }
         if (switchCase == 0x54) {
             fn_result = targetFighter->modules->groundModule->isPassableGround(0);
             fn_shouldReturnResult = 1;
+            return;
         }
 
         if (switchCase == 0x55) {
@@ -442,22 +462,26 @@ extern "C" {
                     ->isEnableCancel();
 
             fn_shouldReturnResult = 1;
+            return;
         }
 
         // weight
         if (switchCase == 0x56) {
             fn_result = targetFighter->modules->paramCustomizeModule->weight;
             fn_shouldReturnResult = 1;
+            return;
         }
         // gravity
         if (switchCase == 0x57) {
             fn_result = targetFighter->modules->paramCustomizeModule->gravity;
             fn_shouldReturnResult = 1;
+            return;
         }
         // fastfallspeed
         if (switchCase == 0x58) {
             fn_result = targetFighter->modules->paramCustomizeModule->fastFallSpeed;
             fn_shouldReturnResult = 1;
+            return;
         }
         // endframe
         if (switchCase == 0x59) {
@@ -466,29 +490,58 @@ extern "C" {
                 fn_result = motionModule->getEndFrame();
                 fn_shouldReturnResult = 1;
             }
+            return;
         }
         // width
         if (switchCase == 0x5A) {
             auto groundModule = targetFighter->modules->groundModule;
             fn_result = groundModule->getRightPos().xPos - groundModule->getLeftPos().xPos;
             fn_shouldReturnResult = 1;
+            return;
         }
         // ECB Center X
         if (switchCase == 0x5B) {
             auto groundModule = targetFighter->modules->groundModule;
             fn_result = (groundModule->getRightPos().xPos + groundModule->getLeftPos().xPos) / 2;
             fn_shouldReturnResult = 1;
+            return;
         }
         // ECB Center Y
         if (switchCase == 0x5C) {
             auto groundModule = targetFighter->modules->groundModule;
             fn_result = (groundModule->getUpPos().yPos + groundModule->getDownPos().yPos) / 2;
             fn_shouldReturnResult = 1;
+            return;
         }
 
-        if (switchCase == 0x60) {
-            fn_result = playerTrainingData[targetPlayerNo].aiData.scriptID;
+        // player count
+        if (switchCase == 0x5D) {
+            fn_result = FIGHTER_MANAGER->getEntryCount();
             fn_shouldReturnResult = 1;
+            return;
+        }
+
+        fn_shouldReturnResult = 1;
+        switch (switchCase) {
+            case 0x80: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.aggression; return;
+            case 0x81: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.bait_dashAwayChance; return;
+            case 0x82: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.bait_wdashAwayChance; return;
+            case 0x83: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.baitChance; return;
+            case 0x84: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.braveChance; return;
+            case 0x85: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.circleCampChance; return;
+            case 0x86: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.djumpiness; return;
+            case 0x87: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.jumpiness; return;
+            case 0x88: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.platChance; return;
+            case 0x89: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.SDIChance; return;
+            case 0x8A: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.wall_chance; return;
+            default:
+                fn_shouldReturnResult = 0;
+        }
+
+        if (switchCase == 0xFF) {
+            fn_result = playerTrainingData[targetPlayerNo].aiData.AIDebug;
+            fn_shouldReturnResult = 1;
+            return;
         }
     };
     void outputAiFunctionResult() {
@@ -501,13 +554,79 @@ extern "C" {
     };
 }
 
+bool rq_shouldReturnResult = false;
+INJECTION("CUSTOM_AI_REQUIREMENTS", 0x8091ed20, R"(
+    SAVE_REGS
+    mr r3,r23
+    mr r4,r24
+    bl customAiRequirements
+    RESTORE_REGS
+    lbz r0,0x0(r24)
+    bl customAiRequirementOutput
+)");
+
+// INJECTION("OUTPUT_CUSTOM_REQUIREMENTS", 0x8091ed44, R"(
+//     mr r3,r28
+// )");
+int originScript = 0;
+
 int* gotoCmdStack[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
 int gotoCmdScripts[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int* gotoCmdScriptHeads[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int gotoCmdStackPtr = 0;
+#define _get_script_value_aiScriptData ((double (*)(aiScriptData * self, int soughtValue, int isPartOfVector)) 0x8091dfc4)
+#define _get_script_tag_scriptpac ((int* (*)(int* aice, int* commonce, int target)) 0x8091dedc)
+extern "C" {
+    bool rq_result = false;
+    void customAiRequirements(aiScriptData* aiActInst, const int* args) {
+        rq_shouldReturnResult = true;
+        rq_result = false;
+        switch(args[1]) {
+            case 0x1022: {
+                double traitVal = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                double multiplier = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                rq_shouldReturnResult = true;
+                rq_result = (bool)(_randf() <= (traitVal * multiplier));
+                break;
+            }
+            case 0x1023: {
+                double traitVal = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                double multiplier = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                rq_shouldReturnResult = true;
+                rq_result = (bool)(_randf() >= (traitVal * multiplier));
+                break;
+            }
+            // CalledFrom
+            case 0x1024: {
+                unsigned int scriptVal = *(unsigned int *) &args[2];
+                for (int i = 0; i < gotoCmdStackPtr; i++) {
+                    if (*gotoCmdScriptHeads[i] == scriptVal) {
+                        rq_result = true;
+                        break;
+                    }
+                }
+                break;
+            }
+            default: {
+                rq_shouldReturnResult = false;
+            }
+        }
+        return;
+    };
+    void customAiRequirementOutput() {
+        if (rq_shouldReturnResult) {
+            asm("mr r28, %0"
+                :
+                : "r" (rq_result ? 0x1 : 0x0));
+            rq_shouldReturnResult = false;
+        }
+    }
+}
+
 INJECTION("AI_GOTO_WITH_STACK_PUSH", 0x80917620, R"(
     SAVE_REGS
-    mr r3, r30
+    mr r3, r26
+    mr r4, r30
     bl aiGotoPush
     RESTORE_REGS
     mr r29, r30
@@ -563,12 +682,13 @@ SIMPLE_INJECTION(clearNoRepeatInstruction, 0x809171f4, "li r31, 0x0") {
     NoRepeatInstructions.reallocate(1);
     dynamicDice.reallocate(0);
     dynamicDice.reallocate(1);
-
+    for (int i = 0; i < 4; i++) {
+        movementTrackers[i].incrementTimer();
+    }
 }
 
 int* forcedNextInstruction = nullptr;
 int forcedNextScript = 0;
-int originScript = 0;
 #define _act_change ((void (*)(aiScriptData * self, unsigned int nextScript, char* unk1, int unk2, int unk3)) 0x80918554)
 extern "C" {
     void aiReqCalledAsFix() {
@@ -585,29 +705,38 @@ extern "C" {
         dynamicDice.reallocate(0);
         dynamicDice.reallocate(1);
     }
-    void aiGotoPush(int* nextPlace) {
+    // SOMETHING CAUSED AISCRIPT TO BE SET TO 0 AND IDK WHAT IT IS
+    // BUT AT LEAST THE CORRECT ONE IS STORED IN AISCRIPT
+    // IT'S SO WEIRD BUT I MEAN HEY IT WORKS I GUESS
+    void aiGotoPush(aiScriptData* aiActInst, int* nextPlace) {
+        if (aiActInst->aiScript == 0) aiActInst->aiScript = *(int*)aiActInst->constPtr;
+        int scriptToGet = aiActInst->aiScript;
+
         gotoCmdStack[gotoCmdStackPtr] = nextPlace;
         gotoCmdScripts[gotoCmdStackPtr] = 0;
-        gotoCmdScriptHeads[gotoCmdStackPtr] = 0;
+        gotoCmdScriptHeads[gotoCmdStackPtr] = aiActInst->constPtr;
+        // OSReport("Goto: (%08x) ==> %d: %08x\n", scriptToGet, gotoCmdStackPtr, aiActInst->constPtr);
         gotoCmdStackPtr += 1;
     };
     void aiXGotoPush(aiScriptData* aiActInst, int* nextPlace, int nextScript) {
+        if (aiActInst->aiScript == 0) aiActInst->aiScript = *(int*)aiActInst->constPtr;
         if (originScript == 0) originScript = aiActInst->aiScript;
         gotoCmdStack[gotoCmdStackPtr] = nextPlace;
         gotoCmdScripts[gotoCmdStackPtr] = aiActInst->aiScript;
         gotoCmdScriptHeads[gotoCmdStackPtr] = aiActInst->constPtr;
-        OSReport("(%08x) ==> %d: %08x\n", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
+        // OSReport("XGoto: (%08x) ==> %d: %08x\n", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
         gotoCmdStackPtr += 1;
     };
     char dummy = 0xFF;
     int* aiGotoPop(aiScriptData* aiActInst) {
+        // OSReport("POP-PRE: (%08x) <== %d: %08x\n", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
         if (gotoCmdStackPtr > 0) {
             gotoCmdStackPtr -= 1;
             if (gotoCmdScripts[gotoCmdStackPtr] != 0) {
                 aiActInst->aiScript = 0;
                 _act_change(aiActInst, gotoCmdScripts[gotoCmdStackPtr], &dummy, 0, 0);
                 aiActInst->constPtr = gotoCmdScriptHeads[gotoCmdStackPtr];
-                OSReport("(%08x) <== %d: %08x\n", gotoCmdScripts[gotoCmdStackPtr], gotoCmdStackPtr, aiActInst->constPtr);
+                // OSReport("POP: (%08x) <== %d: %08x\n", gotoCmdScripts[gotoCmdStackPtr], gotoCmdStackPtr, aiActInst->constPtr);
             }
             if (gotoCmdStackPtr == 0) originScript = 0;
             return gotoCmdStack[gotoCmdStackPtr];
@@ -617,8 +746,8 @@ extern "C" {
     };
     void clearGotoStack(aiScriptData* aiActInst) {
         asm("SAVE_REGS");
-        OSReport("CLEARED GOTO STACK\n");
-        aiActInst->aiScript = aiActInst->intermediateCurrentAiScript;
+        // OSReport("CLEARED GOTO STACK\n");
+        aiActInst->aiScript = *(int*)aiActInst->constPtr;
         asm("RESTORE_REGS");
         gotoCmdStackPtr = 0;
         originScript = 0;
@@ -640,7 +769,6 @@ INJECTION("CUSTOM_AI_COMMANDS", 0x80917450, R"(
     bl FORCE_RETURN
 )");
 
-#define _get_script_value_aiScriptData ((double (*)(aiScriptData * self, int soughtValue, int isPartOfVector)) 0x8091dfc4)
 #define _getButtonMask_soController ((unsigned int (*)(int btn)) 0x8076544c)
 extern "C" {
     void RELOCATE_INSTRUCTION() {
@@ -902,14 +1030,11 @@ extern "C" {
             float fastFallSpeed = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
             bool fastFallImmediate = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
             
-            OSReport("fastFallSpeed: %.3f\n", fastFallSpeed);
-            OSReport("fastFallImmediate: %.3f\n", fastFallImmediate ? "true" : "false");
             float accumulator = 0;
             float tracker = ySpeed;
             for (int i = 0; i < frameCount; i++) {
                 accumulator += tracker;
                 tracker += gravity;
-                OSReport("ACCUMULATOR: %.3f; TRACKER: %.3f\n;", accumulator, tracker);
                 if (tracker > fastFallSpeed || (tracker >= 0 && fastFallImmediate)) tracker = fastFallSpeed;
                 else if (tracker > maxFallSpeed) tracker = maxFallSpeed;
             }
@@ -1072,6 +1197,23 @@ extern "C" {
             return;
         }
 
+        // approximateAction
+        if (cmd == 0x58) {
+            int varToMod = args[1];
+            int levelValue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            aiActInst->variables[varToMod] = movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->aiTarget)].approxChance((float) levelValue);
+            return;
+        }
+
+        // approximateSpecifcAction
+        if (cmd == 0x59) {
+            int varToMod = args[1];
+            int actToGet = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            int levelValue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+            aiActInst->variables[varToMod] = movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->aiTarget)].approxChance((float) levelValue, actToGet);
+            return;
+        }
+
         // boolean OR
         if (cmd == 0x60) {
             int varToMod = args[1];
@@ -1218,6 +1360,7 @@ extern "C" {
             clearGotoStack(aiActInst);
             aiActInst->framesSinceScriptChanged = -1;
             forcedNextInstruction = (int*)((int) aiActInst->currentInstruction + 0x0);
+            // aiActInst->constPtr = _get_script_tag_scriptpac((int*)aiActInst->AIScriptPac, (int*)AI_MANAGER->aiCommonCE, nextScript);
             // OSReport("FNInst (1): %08x\n", forcedNextInstruction);
 
             // aiActInst
@@ -1275,6 +1418,82 @@ extern "C" {
         if (cmd == 0x86) {
             dynamicDice.reallocate(0);
             dynamicDice.reallocate(1);
+            return;
+        }
+
+        // ADJUST PERSONALITY
+        if (cmd == 0x90) {
+            int index = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            float amount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            int pNum = _GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx);
+            switch(index) {
+                case 0x0: {
+                    playerTrainingData[pNum].aiData.personality.aggression += amount;
+                    if (playerTrainingData[pNum].aiData.personality.aggression > 2) playerTrainingData[pNum].aiData.personality.aggression = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.aggression < -1) playerTrainingData[pNum].aiData.personality.aggression = -1;
+                    return;
+                }
+                case 0x1: {
+                    playerTrainingData[pNum].aiData.personality.bait_dashAwayChance += amount;
+                    if (playerTrainingData[pNum].aiData.personality.bait_dashAwayChance > 2) playerTrainingData[pNum].aiData.personality.bait_dashAwayChance = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.bait_dashAwayChance < -1) playerTrainingData[pNum].aiData.personality.bait_dashAwayChance = -1;
+                    return;
+                }
+                case 0x2: {
+                    playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance += amount;
+                    if (playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance > 2) playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance < -1) playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance = -1;
+                    return;
+                }
+                case 0x3: {
+                    playerTrainingData[pNum].aiData.personality.baitChance += amount;
+                    if (playerTrainingData[pNum].aiData.personality.baitChance > 2) playerTrainingData[pNum].aiData.personality.baitChance = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.baitChance < -1) playerTrainingData[pNum].aiData.personality.baitChance = -1;
+                    return;
+                }
+                case 0x4: {
+                    playerTrainingData[pNum].aiData.personality.braveChance += amount;
+                    if (playerTrainingData[pNum].aiData.personality.braveChance > 2) playerTrainingData[pNum].aiData.personality.braveChance = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.braveChance < -1) playerTrainingData[pNum].aiData.personality.braveChance = -1;
+                    return;
+                }
+                case 0x5: {
+                    playerTrainingData[pNum].aiData.personality.circleCampChance += amount;
+                    if (playerTrainingData[pNum].aiData.personality.circleCampChance > 2) playerTrainingData[pNum].aiData.personality.circleCampChance = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.circleCampChance < -1) playerTrainingData[pNum].aiData.personality.circleCampChance = -1;
+                    return;
+                }
+                case 0x6: {
+                    playerTrainingData[pNum].aiData.personality.djumpiness += amount;
+                    if (playerTrainingData[pNum].aiData.personality.djumpiness > 2) playerTrainingData[pNum].aiData.personality.djumpiness = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.djumpiness < -1) playerTrainingData[pNum].aiData.personality.djumpiness = -1;
+                    return;
+                }
+                case 0x7: {
+                    playerTrainingData[pNum].aiData.personality.jumpiness += amount;
+                    if (playerTrainingData[pNum].aiData.personality.jumpiness > 2) playerTrainingData[pNum].aiData.personality.jumpiness = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.jumpiness < -1) playerTrainingData[pNum].aiData.personality.jumpiness = -1;
+                    return;
+                }
+                case 0x8: {
+                    playerTrainingData[pNum].aiData.personality.platChance += amount;
+                    if (playerTrainingData[pNum].aiData.personality.platChance > 2) playerTrainingData[pNum].aiData.personality.platChance = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.platChance < -1) playerTrainingData[pNum].aiData.personality.platChance = -1;
+                    return;
+                }
+                case 0x9: {
+                    playerTrainingData[pNum].aiData.personality.SDIChance += amount;
+                    if (playerTrainingData[pNum].aiData.personality.SDIChance > 2) playerTrainingData[pNum].aiData.personality.SDIChance = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.SDIChance < -1) playerTrainingData[pNum].aiData.personality.SDIChance = -1;
+                    return;
+                }
+                case 0xA: {
+                    playerTrainingData[pNum].aiData.personality.wall_chance += amount;
+                    if (playerTrainingData[pNum].aiData.personality.wall_chance > 2) playerTrainingData[pNum].aiData.personality.wall_chance = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.wall_chance < -1) playerTrainingData[pNum].aiData.personality.wall_chance = -1;
+                    return;
+                }
+            }
             return;
         }
 
