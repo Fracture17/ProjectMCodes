@@ -12,6 +12,7 @@
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
+#define qsort ((void (*)(void* base, size_t num, size_t size, int (*comparator)(const void*, const void*))) 0x803f8acc)
 
 class ResetFudgeAIOption : public StandardOption {
 public:
@@ -66,6 +67,25 @@ private:
   bool selected = false;
 };
 
+struct AIPredictions;
+class AIPredictionOption : public StandardOption {
+public:
+  char pNum = -1;
+  
+  AIPredictions& predictions;
+  AIPredictionOption(char pNum, AIPredictions& predictions) : 
+    pNum(pNum), predictions(predictions) {}
+
+  void modify(float amount) {}
+  void select() { }
+  void deselect() { }
+  void render(TextPrinter *printer, char *buffer);
+
+private: 
+  bool selected = false;
+  bool canModify = false;
+};
+
 struct PSAData {
   int threadIdx = 0;
   int scriptLocation = -1;
@@ -114,8 +134,41 @@ struct debugData {
   PSAData psaData;
 };
 
+struct AIPredictions {
+  float IDLE = 0;
+  float WALK = 0;
+  float RUN = 0;
+  float DASH = 0;
+  // float DASHTURN = 0;
+  float CROUCH = 0;
+  float JUMP = 0;
+  float DJUMP = 0;
+  float FALL = 0;
+  float SHIELD = 0;
+  float AIRDODGE = 0;
+  float ROLL = 0;
+  float TECH = 0;
+  float ATTACK = 0;
+  float GRAB = 0;
+};
+
+struct AIPersonality { 
+  AICEPac* AICEData;
+  bool unlocked = true;
+  float braveChance = 0;
+  float baitChance = 0;
+  float aggression = 0;
+  float wall_chance = 0;
+  float circleCampChance = 0;
+  float bait_dashAwayChance = 0;
+  float bait_wdashAwayChance = 0;
+  float jumpiness = 0;
+  float djumpiness = 0;
+  float platChance = 0;
+  float SDIChance = 0;
+};
+
 struct AIData {
-  SubpageOption* trainingScripts;
   int scriptID = 0xFFFF;
   int fighterID = -1;
   int target = -1;
@@ -128,6 +181,10 @@ struct AIData {
   float lstickY = 0;
 
   float snapbackShieldtimer = 0;
+  bool AIDebug = false;
+
+  AIPredictions predictions;
+  AIPersonality personality;
 };
 
 struct TrajectoryOptions {

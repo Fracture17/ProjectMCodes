@@ -98,7 +98,7 @@ void Menu::render(TextPrinter* printer, char* buffer) {
   }
   printer->printLine("");
   getCurrentPage()->render(printer, buffer);
-  printer->saveBoundingBox(0, 0x00000088, 2);
+  printer->saveBoundingBox(0, (0x000000 << 8) | (int) opacity, 2);
 }
 void Menu::unpause() { paused = false; }
 void Menu::toggle() {
@@ -145,7 +145,7 @@ void IntOption::render(TextPrinter* printer, char* buffer) {
 // FloatOption
 //////////////////////////////////
 void FloatOption::modify(float amount) {
-  value += amount;
+  value += amount * changeMultiplier;
   if (max != NUMERIC_DEFAULT && value > max) value = min;
   else if (min != NUMERIC_DEFAULT && value < min) value = max;
 }

@@ -143,65 +143,46 @@ void setPosition(TrainingData& data, Fighter *fighter, aiInput *input, u8 numPla
     }
 }
 
-// INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
-//     SAVE_REGS
-//     mr r3, r31
-//     bl initAiTrainingScripts
-//     RESTORE_REGS
-//     stb r0, 0x0011 (r31)
-// )");
+INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
+    SAVE_REGS
+    mr r3, r31
+    bl initAiTrainingScripts
+    RESTORE_REGS
+    stb r0, 0x0011 (r31)
+)");
 
 // // const char* STR_DEFAULT = "DEFAULT"; 
 #define _GetPlayerNo_aiChrIdx ((int (*)(char* chrIdx)) 0x808fd68c)
-// extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
-//     auto AIData = fighterEntry->owner->ftInputPtr->aiActPtr->AIScriptPac;
-//     if (AIData == nullptr) return;
-//     int numEntries = AIData->numEntries;
-//     int pNum = _GetPlayerNo_aiChrIdx(&fighterEntry->input->cpuIdx);
-//     if (pNum > 3) return;
+extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
+    auto AIData = fighterEntry->owner->ftInputPtr->aiActPtr->AIScriptPac;
+    if (AIData == nullptr) return;
+    int numEntries = AIData->numEntries;
+    int pNum = FIGHTER_MANAGER->getPlayerNo(fighterEntry->entryId);
+    OSReport("=========PNum: %d; addr: %08x==========\n", pNum, &fighterEntry->input->cpuIdx);
+    if (pNum > 3) return;
 
-//     if (fighterEntry->owner->ftInputPtr->fighterId != playerTrainingData[pNum].aiData.fighterID) {
-//         playerTrainingData[pNum].aiData.fighterID = fighterEntry->owner->ftInputPtr->fighterId;
-//         playerTrainingData[pNum].aiData.trainingScripts->removeOptions();
-//         playerTrainingData[pNum].aiData.trainingScripts->addOption(new AITrainingScriptOption(
-//             0xFFFF,
-//             "DEFAULT",
-//             pNum
-//         ));
-//         for (int i = 0; i < numEntries; i++) {
-//             int strCount = AIData->getStringCount(i);
-//             if (strCount == 2 && strcmp(AIData->getStringEntry(i, 0), "*") == 0) {
-//                 AITrainingScriptOption* data = new AITrainingScriptOption(
-//                     AIData->getCEEntry(i)->ID,
-//                     AIData->getStringEntry(i, 1),
-//                     pNum
-//                 );
-//                 // OSReport("FOUND SCRIPT ID: %s\n", data->name);
-//                 playerTrainingData[pNum].aiData.trainingScripts->addOption(data);
-//             } else if (strCount > 2 && strcmp(AIData->getStringEntry(i, 0), "*") == 0) {
-//                 AITrainingScriptSubmenu* data = new AITrainingScriptSubmenu(
-//                     AIData->getCEEntry(i)->ID,
-//                     AIData->getStringEntry(i, 1),
-//                     pNum,
-//                     strCount - 2
-//                 );
-//                 data->addOption(new BoolOption("pause", fudgeMenu->paused));
-//                 signed char varIdx = 0;
-//                 for (int j = 2; j < strCount; j++) {
-//                     if (AIData->getStringEntry(i, j)[0] != ':') {
-//                         data->addOption(new FloatOption(AIData->getStringEntry(i, j), ai_customFnInjection[varIdx]));
-//                         if (j+1 != strCount && AIData->getStringEntry(i, j + 1)[0] == ':') {
-//                             data->addDefault(new AITrainingDefaultVal{ varIdx, atof(AIData->getStringEntry(i, j + 1) + 1) });
-//                             j += 1;
-//                         }
-//                         varIdx ++;
-//                     }
-//                 }
-//                 playerTrainingData[pNum].aiData.trainingScripts->addOption(data);
-//             }
-//         }
-//     } 
-// }
+    if (playerTrainingData[pNum].aiData.personality.unlocked && fighterEntry->owner->ftInputPtr->fighterId != playerTrainingData[pNum].aiData.fighterID) {
+        playerTrainingData[pNum].aiData.fighterID = fighterEntry->owner->ftInputPtr->fighterId;
+        playerTrainingData[pNum].aiData.personality.AICEData = AIData;
+
+        for (int i = 0; i < numEntries; i++) {
+            int strCount = AIData->getStringCount(i);
+            if (strCount > 0 && strcmp(AIData->getStringEntry(i, 0), "PERSONALITY") == 0) {
+                playerTrainingData[pNum].aiData.personality.aggression = atof(AIData->getStringEntry(i, 1));
+                playerTrainingData[pNum].aiData.personality.bait_dashAwayChance = atof(AIData->getStringEntry(i, 2));
+                playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance = atof(AIData->getStringEntry(i, 3));
+                playerTrainingData[pNum].aiData.personality.baitChance = atof(AIData->getStringEntry(i, 4));
+                playerTrainingData[pNum].aiData.personality.braveChance = atof(AIData->getStringEntry(i, 5));
+                playerTrainingData[pNum].aiData.personality.circleCampChance = atof(AIData->getStringEntry(i, 6));
+                playerTrainingData[pNum].aiData.personality.djumpiness = atof(AIData->getStringEntry(i, 7));
+                playerTrainingData[pNum].aiData.personality.jumpiness = atof(AIData->getStringEntry(i, 8));
+                playerTrainingData[pNum].aiData.personality.platChance = atof(AIData->getStringEntry(i, 9));
+                playerTrainingData[pNum].aiData.personality.SDIChance = atof(AIData->getStringEntry(i, 10));
+                playerTrainingData[pNum].aiData.personality.wall_chance = atof(AIData->getStringEntry(i, 11));
+            }
+        }
+    } 
+}
 
 INJECTION("TOGGLE_PAUSE", 0x8002E5B0, R"(
     mr r3, r25
@@ -307,7 +288,6 @@ void collectData(Fighter* fighter, int pNum) {
         ECBRes = grModule->getRightPos();
         currData.posData.ECBRX = ECBRes.xPos;
         currData.posData.ECBRY = ECBRes.yPos;
-
     }
 }
 
@@ -458,6 +438,7 @@ extern "C" void updateOnFrame() {
         mainPage->addOption(p2PageLink);
         mainPage->addOption(p3PageLink);
         mainPage->addOption(p4PageLink);
+        mainPage->addOption(new FloatOption("opacity", fudgeMenu->opacity, 0, 255));
         // mainPage->addOption(new PageLink("Items", new ItemPage(fudgeMenu)));
         
         fudgeMenu->nextPage(mainPage);
@@ -490,6 +471,7 @@ extern "C" void updateOnFrame() {
 
     setupDrawPrimitives();
 
+    bool inputThing = false;
     for (int i = 0; i < 4; i++) {
         PADButtons btn;
         btn.bits = PREVIOUS_PADS[i].button.bits;
@@ -498,12 +480,14 @@ extern "C" void updateOnFrame() {
         visible = fudgeMenu->visible;
         bool selected = fudgeMenu->selected;
         if (btn.L && btn.R && btn.UpDPad && btn.B) {
+            inputThing = true;
             if (instantResponse) {
                 fudgeMenu->toggle();
                 instantResponse = false;
                 SOUND_SYSTEM->playSE(34);
             }
         } else if (btn.L && btn.R && btn.DownDPad) {
+            inputThing = true;
             if (instantResponse) {
                 if (selected) fudgeMenu->deselect();
                 fudgeMenu->visible = false;
@@ -512,6 +496,7 @@ extern "C" void updateOnFrame() {
             }
         } else if (visible) {
             if (btn.B && fudgeMenu->path.size() <= 1 && !selected) {
+                inputThing = true;
                 if (instantResponse) {
                     PREVIOUS_PADS[0].button.B = 0;
                     fudgeMenu->toggle();
@@ -519,6 +504,7 @@ extern "C" void updateOnFrame() {
                     SOUND_SYSTEM->playSE(34);
                 }
             } else if (btn.A && paused) {
+                inputThing = true;
                 if (instantResponse) {
                     PREVIOUS_PADS[0].button.A = 0;
                     fudgeMenu->select();
@@ -526,6 +512,7 @@ extern "C" void updateOnFrame() {
                     SOUND_SYSTEM->playSE(1);
                 }
             } else if (btn.B && paused) {
+                inputThing = true;
                 if (instantResponse) {
                     fudgeMenu->deselect();
                     instantResponse = false;
@@ -533,12 +520,14 @@ extern "C" void updateOnFrame() {
                 }
             } else if (btn.DownDPad) {
                 timer -= 10;
+                inputThing = true;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->down();
                     instantResponse = false;
                     SOUND_SYSTEM->playSE(0);
                 }
             } else if (btn.UpDPad && btn.L && selected && !paused) {
+                inputThing = true;
                 if (instantResponse) {
                     fudgeMenu->modify(-1);
                     fudgeMenu->deselect();
@@ -547,6 +536,7 @@ extern "C" void updateOnFrame() {
                 }
             } else if (btn.UpDPad) {
                 timer -= 10;
+                inputThing = true;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->up();
                     instantResponse = false;
@@ -554,6 +544,7 @@ extern "C" void updateOnFrame() {
                 }
             } else if (btn.LeftDPad) {
                 timer -= 10;
+                inputThing = true;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->modify(btn.Y ? -10 : -(btn.X ? 0.1 : 1));
                     instantResponse = false;
@@ -561,19 +552,21 @@ extern "C" void updateOnFrame() {
                 }
             } else if (btn.RightDPad) {
                 timer -= 10;
+                inputThing = true;
                 if (timer < 0 || instantResponse) {
                     fudgeMenu->modify(btn.Y ? 10 : (btn.X ? 0.1 : 1));
                     instantResponse = false;
                     SOUND_SYSTEM->playSE(37);
                 }
-            } else {
+            } else if (!inputThing) {
                 instantResponse = true;
                 timer = 80;
                 cmdDelay = 0;
             }
         } else if (paused && btn.B) {
             paused = false;
-        } else {
+            inputThing = true;
+        } else if (!inputThing) {
             instantResponse = true;
             timer = 80;
             cmdDelay = 0;
@@ -1018,16 +1011,17 @@ INJECTION("CPUForceBehavior", 0x809188B0, R"(
     RESTORE_REGS
 )");
 extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
-    char pNum = _GetPlayerNo_aiChrIdx(&aiActPtr->ftInputPtr->cpuIdx);
-    if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {
-        OSReport("intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
-        OSReport("current: %04x; ", aiActPtr->aiScript);
-        OSReport("next: %04x\n", intendedScript);
-
+    // char pNum = _GetPlayerNo_aiChrIdx(&aiActPtr->ftInputPtr->cpuIdx);
+    // if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {
+        // OSReport("   ::(intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
+        // OSReport("current: %04x; ", aiActPtr->aiScript);
+        // OSReport("intended: %04x; ", intendedScript);
+        // OSReport("next: %04x)::\n", param1);
+        // aiActPtr->aiScript = intendedScript;
         return param1; // normal routine
-    }
+    // }
 
-    auto action = aiActPtr->ftInputPtr->ftEntryPtr->ftStageObject->modules->statusModule->action;
+    // auto action = aiActPtr->ftInputPtr->ftEntryPtr->ftStageObject->modules->statusModule->action;
 
-    return (aiActPtr->intermediateNextAiScript != 0 || (action >= 0x34 && action <= 0x3B) || action == 0x4D || (action >= 0x74 && action <= 0x7C)) ? param1 : playerTrainingData[pNum].aiData.scriptID;
+    // return (aiActPtr->intermediateNextAiScript != 0 || (action >= 0x34 && action <= 0x3B) || action == 0x4D || (action >= 0x74 && action <= 0x7C)) ? param1 : playerTrainingData[pNum].aiData.scriptID;
 }

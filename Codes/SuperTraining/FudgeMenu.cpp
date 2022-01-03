@@ -1,12 +1,74 @@
 
-#include "FudgeMenu.h"
 // #include "Brawl/IT/itResourceModuleImpl.h"
 #include "Brawl/IT/BaseItem.h"
 #include "Brawl/IT/itManager.h"
 #include "Brawl/FT/ftManager.h"
 #include "./hitboxHeatmap.h"
+#include "FudgeMenu.h"
+#include "MovementTracker.h"
 
 Menu* fudgeMenu;
+
+extern MovementTracker movementTrackers[4]; 
+void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
+  // predictions.IDLE = movementTrackers[pNum].approxChance(100, MOV_IDLE);
+  predictions.WALK = movementTrackers[pNum].approxChance(100, MOV_WALK);
+  predictions.RUN = movementTrackers[pNum].approxChance(100, MOV_RUN);
+  predictions.DASH = movementTrackers[pNum].approxChance(100, MOV_DASH);
+  // predictions.CROUCH = movementTrackers[pNum].approxChance(100, MOV_CROUCH);
+  predictions.JUMP = movementTrackers[pNum].approxChance(100, MOV_JUMP);
+  // predictions.DJUMP = movementTrackers[pNum].approxChance(100, MOV_DJUMP);
+  // predictions.FALL = movementTrackers[pNum].approxChance(100, MOV_FALL);
+  predictions.SHIELD = movementTrackers[pNum].approxChance(100, MOV_SHIELD);
+  // predictions.AIRDODGE = movementTrackers[pNum].approxChance(100, MOV_AIRDODGE);
+  // predictions.ROLL = movementTrackers[pNum].approxChance(100, MOV_ROLL);
+  // predictions.TECH = movementTrackers[pNum].approxChance(100, MOV_TECH);
+  predictions.ATTACK = movementTrackers[pNum].approxChance(100, MOV_ATTACK);
+  predictions.GRAB = movementTrackers[pNum].approxChance(100, MOV_GRAB);
+  KVPair<float> toSort[7] = {
+    // {"idle", predictions.IDLE, 0xFFFFFFFF}, 
+    {"walk", predictions.WALK, 0xFFFFFFFF},
+    {"run", predictions.RUN, 0xFFFFFFFF},
+    {"dash", predictions.DASH, 0xFFFFFFFF},
+    // {"crouch", predictions.CROUCH, 0xFFFFFFFF},
+    {"jump", predictions.JUMP, 0xFFFFFFFF},
+    // {"djump", predictions.DJUMP, 0xFFFFFFFF},
+    // {"fall", predictions.FALL, 0xFFFFFFFF},
+    {"shield", predictions.SHIELD, 0x00FF00FF},
+    // {"airdodge", predictions.AIRDODGE, 0xFFFFFFFF},
+    // {"roll", predictions.ROLL, 0xFFFFFFFF},
+    // {"tech", predictions.TECH, 0xFFFFFFFF},
+    {"attack", predictions.ATTACK, 0xFF0000FF},
+    {"grab", predictions.GRAB, 0x0088FFFF}
+  };
+
+  qsort(toSort, 7, sizeof(KVPair<float>), 
+    [](const void* a, const void* b) mutable -> int {
+    if ( (*(KVPair<float>*)a).value <  (*(KVPair<float>*)b).value ) return -1;
+    if ( (*(KVPair<float>*)a).value == (*(KVPair<float>*)b).value ) return 0;
+    if ( (*(KVPair<float>*)a).value >  (*(KVPair<float>*)b).value ) return 1;
+  });
+
+  printer->setTextColor(0xFFFFFFFF);
+  printer->printLine("Predictions:");
+  for (int i = 0; i < 7; i++) {
+    float value = toSort[6 - i].value;
+    sprintf(buffer, "|| %02d %s: ", i + 1, toSort[6 - i].key);
+    
+    float brightness = value;
+    if (brightness < 0.75) brightness = 0.75;
+    GXColor color = toSort[6 - i].color;
+    color.red *= brightness;
+    color.green *= brightness;
+    color.blue *= brightness;
+    printer->setTextColor(color);
+    printer->padToWidth((RENDER_X_SPACING / 5 + 1));
+    printer->print(buffer);
+    sprintf(buffer, "%.3f%", value * 100);
+    printer->padToWidth((RENDER_X_SPACING));
+    printer->printLine(buffer);
+  }
+}
 
 char selectedPlayer = -1;
 TrainingData playerTrainingData[] = {
@@ -127,32 +189,7 @@ PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   //   this->addOption(new PageLink("AIRangeFinder", AIRangePage));
   // }
 
-  Page* positionalDataPage = new Page(fudgeMenu);
-  positionalDataPage->setTitle("Position Data");
-
-  positionalDataPage->addOption(new FloatOption("X Pos", data->posData.xPos, false));
-  positionalDataPage->addOption(new FloatOption("Y Pos", data->posData.yPos, false));
-  // positionalDataPage->addOption(new FloatOption("Chr X Vel", data->posData.CHRXVel, false));
-  // positionalDataPage->addOption(new FloatOption("Chr Y Vel", data->posData.CHRYVel, false));
-  // positionalDataPage->addOption(new FloatOption("KB X Vel", data->posData.KBXVel, false));
-  // positionalDataPage->addOption(new FloatOption("KB Y Vel", data->posData.KBYVel, false));
-  positionalDataPage->addOption(new FloatOption("Total X Vel", data->posData.totalXVel, false));
-  positionalDataPage->addOption(new FloatOption("Total Y Vel", data->posData.totalYVel, false));
-
-  SubpageOption* collisionSubpage = new SubpageOption("ECB Data");
-
-  collisionSubpage->addOption(new FloatOption("L ECB X", data->posData.ECBLX, false));
-  collisionSubpage->addOption(new FloatOption("L ECB Y", data->posData.ECBLY, false));
-  collisionSubpage->addOption(new FloatOption("T ECB X", data->posData.ECBTX, false));
-  collisionSubpage->addOption(new FloatOption("T ECB Y", data->posData.ECBTY, false));
-  collisionSubpage->addOption(new FloatOption("R ECB X", data->posData.ECBRX, false));
-  collisionSubpage->addOption(new FloatOption("R ECB Y", data->posData.ECBRY, false));
-  collisionSubpage->addOption(new FloatOption("B ECB X", data->posData.ECBBX, false));
-  collisionSubpage->addOption(new FloatOption("B ECB Y", data->posData.ECBBY, false));
-
-  positionalDataPage->addOption(collisionSubpage);
-
-  this->addOption(new PageLink("Position Data", positionalDataPage));
+  this->addOption(new BoolOption("AI DEBUG?", data->aiData.AIDebug));
 
   Page* comboTrainerPage = new Page(fudgeMenu);
   comboTrainerPage->setTitle("Combo Trainer");
@@ -192,6 +229,28 @@ PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   heatmapPage->addOption(new IntOption("color change frame", data->heatmapOpts.colorChangeFrame, 0, 255));
   this->addOption(new PageLink("Heatmap Options", heatmapPage));
 
+  Page* predictionPage = new Page(fudgeMenu);
+  predictionPage->setTitle("AI Predictions");
+  predictionPage->addOption(new AIPredictionOption(pNum, data->aiData.predictions));
+  this->addOption(new PageLink("AI Predictions", predictionPage));
+
+  Page* AIPersonalityPage = new Page(fudgeMenu);
+  AIPersonalityPage->setTitle("AI Personality");
+  AIPersonalityPage->addOption(new BoolOption("unlocked?", data->aiData.personality.unlocked));
+  AIPersonalityPage->addOption(new FloatOption("aggression", data->aiData.personality.aggression, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("dashAwayChance", data->aiData.personality.bait_dashAwayChance, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("wdashAwayChance", data->aiData.personality.bait_wdashAwayChance, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("baitChance", data->aiData.personality.baitChance, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("braveChance", data->aiData.personality.braveChance, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("circleCampChance", data->aiData.personality.circleCampChance, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("djumpiness", data->aiData.personality.djumpiness, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("jumpiness", data->aiData.personality.jumpiness, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("platChance", data->aiData.personality.platChance, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("SDIChance", data->aiData.personality.SDIChance, -1, 2, 0.01f));
+  AIPersonalityPage->addOption(new FloatOption("wall_chance", data->aiData.personality.wall_chance, -1, 2, 0.01f));
+  this->addOption(new PageLink("AI Personality", AIPersonalityPage));
+
+  
   // Page* AIPage = new Page(fudgeMenu);
   // AIPage->setTitle("AI Training");
 
@@ -258,6 +317,33 @@ PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
   controllerInfo->addOption(new FloatOption("LStickY", data->aiData.lstickY, false));
   controllerInfo->addOption(new BoolOption("cStick", data->controllerData.cStick, false));
   this->addOption(new PageLink("Controller Info", controllerInfo));
+
+  // Page* positionalDataPage = new Page(fudgeMenu);
+  // positionalDataPage->setTitle("Position Data");
+
+  // positionalDataPage->addOption(new FloatOption("X Pos", data->posData.xPos, false));
+  // positionalDataPage->addOption(new FloatOption("Y Pos", data->posData.yPos, false));
+  // // positionalDataPage->addOption(new FloatOption("Chr X Vel", data->posData.CHRXVel, false));
+  // // positionalDataPage->addOption(new FloatOption("Chr Y Vel", data->posData.CHRYVel, false));
+  // // positionalDataPage->addOption(new FloatOption("KB X Vel", data->posData.KBXVel, false));
+  // // positionalDataPage->addOption(new FloatOption("KB Y Vel", data->posData.KBYVel, false));
+  // positionalDataPage->addOption(new FloatOption("Total X Vel", data->posData.totalXVel, false));
+  // positionalDataPage->addOption(new FloatOption("Total Y Vel", data->posData.totalYVel, false));
+
+  // SubpageOption* collisionSubpage = new SubpageOption("ECB Data");
+
+  // collisionSubpage->addOption(new FloatOption("L ECB X", data->posData.ECBLX, false));
+  // collisionSubpage->addOption(new FloatOption("L ECB Y", data->posData.ECBLY, false));
+  // collisionSubpage->addOption(new FloatOption("T ECB X", data->posData.ECBTX, false));
+  // collisionSubpage->addOption(new FloatOption("T ECB Y", data->posData.ECBTY, false));
+  // collisionSubpage->addOption(new FloatOption("R ECB X", data->posData.ECBRX, false));
+  // collisionSubpage->addOption(new FloatOption("R ECB Y", data->posData.ECBRY, false));
+  // collisionSubpage->addOption(new FloatOption("B ECB X", data->posData.ECBBX, false));
+  // collisionSubpage->addOption(new FloatOption("B ECB Y", data->posData.ECBBY, false));
+
+  // positionalDataPage->addOption(collisionSubpage);
+
+  // this->addOption(new PageLink("Position Data", positionalDataPage));
 }
 
 void PlayerPage::select() { 

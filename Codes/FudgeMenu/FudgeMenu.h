@@ -170,7 +170,7 @@ struct TrainingData {
 
 class AITrainingScriptOption : public StandardOption {
 public:
-  AITrainingScriptOption(unsigned int id, char* name, char playerNum);
+  AITrainingScriptOption(unsigned int id, const char* name, char playerNum);
   void modify(float) {}
   void select();
   void deselect() {}
@@ -190,7 +190,7 @@ struct AITrainingDefaultVal {
 
 class AITrainingScriptSubmenu : public SubpageOption {
 public:
-  AITrainingScriptSubmenu(unsigned int id, char* name, char playerNum, char height);
+  AITrainingScriptSubmenu(unsigned int id, const char* name, char playerNum, char height);
 
   void select();
   void render(TextPrinter* printer, char* buffer);
@@ -221,7 +221,7 @@ struct CurrentItemParams {
 
 class ItemSelectOption : public StandardOption {
 public:
-  ItemSelectOption(short id, char* name);
+  ItemSelectOption(short id, const char* name);
   void modify(float) {}
   void select();
   void deselect() {}
@@ -234,7 +234,7 @@ private:
 
 class ItemSpawnOption : public StandardOption {
 public:
-  ItemSpawnOption(char* name);
+  ItemSpawnOption(const char* name);
   void modify(float) {}
   void select();
   void deselect() {}

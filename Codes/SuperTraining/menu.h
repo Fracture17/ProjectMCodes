@@ -79,11 +79,12 @@ struct Menu {
   bool selected = false;
   vector<Page*> pages;
   vector<Page*> path;
+  float opacity = 0xDD;
 };
 
 struct PageLink : public StandardOption {
   Page* target;
-  PageLink(char* name, Page* target) {
+  PageLink(const char* name, Page* target) {
     this->target = target;
     sprintf(this->name, "%.19s", name);
   }
@@ -95,22 +96,22 @@ struct PageLink : public StandardOption {
 
 class IntOption : public StandardOption {
 public:
-  IntOption(char* name, int& value) : value(value) {
+  IntOption(const char* name, int& value) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->value = value;
   }
-  IntOption(char* name, int& value, int min, int max) : value(value) {
+  IntOption(const char* name, int& value, int min, int max) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->value = value;
     this->min = min;
     this->max = max;
   }
-  IntOption(char* name, int& value, bool canModify) : value(value) {
+  IntOption(const char* name, int& value, bool canModify) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->value = value;
     this->canModify = canModify;
   }
-  IntOption(char* name, int& value, int min, int max, bool canModify) : value(value) {
+  IntOption(const char* name, int& value, int min, int max, bool canModify) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->value = value;
     this->min = min;
@@ -130,22 +131,34 @@ private:
 
 class FloatOption : public StandardOption {
 public:
-  FloatOption(char* name, float& value) : value(value) {
+  FloatOption(const char* name, float& value) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->value = value;
   }
-  FloatOption(char* name, float& value, float min, float max) : value(value) {
+  FloatOption(const char* name, float& value, float min, float max) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->value = value;
     this->min = min;
     this->max = max;
   }
-  FloatOption(char* name, float& value, bool canModify) : value(value) {
+  FloatOption(const char* name, float& value, float changeMultiplier) : value(value) {
+    sprintf(this->name, "%.19s", name);
+    this->value = value;
+    this->changeMultiplier = changeMultiplier;
+  }
+  FloatOption(const char* name, float& value, float min, float max, float changeMultiplier) : value(value) {
+    sprintf(this->name, "%.19s", name);
+    this->value = value;
+    this->min = min;
+    this->max = max;
+    this->changeMultiplier = changeMultiplier;
+  }
+  FloatOption(const char* name, float& value, bool canModify) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->value = value;
     this->canModify = canModify;
   }
-  FloatOption(char* name, float& value, float min, float max, bool canModify) : value(value) {
+  FloatOption(const char* name, float& value, float min, float max, bool canModify) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->value = value;
     this->min = min;
@@ -163,14 +176,15 @@ private:
   float& value;
   float max = NUMERIC_DEFAULT;
   float min = NUMERIC_DEFAULT;
+  float changeMultiplier = 1;
 };
 
 class BoolOption : public StandardOption { 
 public:
-  BoolOption(char* name, bool& value) : value(value) {
+  BoolOption(const char* name, bool& value) : value(value) {
     sprintf(this->name, "%.19s", name);
   }
-  BoolOption(char* name, bool& value, bool canModify) : value(value) {
+  BoolOption(const char* name, bool& value, bool canModify) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->canModify = canModify;
   }
@@ -192,7 +206,7 @@ enum HexSize {
 
 class HexObserver : public StandardOption {
 public:
-  HexObserver(char* name, u32& value, HexSize size) : value(value) {
+  HexObserver(const char* name, u32& value, HexSize size) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->canModify = false;
     this->size = size;
@@ -209,7 +223,7 @@ private:
 
 class ControlOption : public StandardOption { 
 public:
-  ControlOption(char* name, bool& value) : value(value) {
+  ControlOption(const char* name, bool& value) : value(value) {
     sprintf(this->name, "%.19s", name);
   }
 
@@ -224,7 +238,7 @@ private:
 
 class StringOption : public StandardOption { 
 public:
-  StringOption(char* name, char* value) : value(value) {
+  StringOption(const char* name, char* value) : value(value) {
     sprintf(this->name, "%.19s", name);
     this->canModify = false;
   }
@@ -240,7 +254,7 @@ private:
 
 class NamedIndexOption : public StandardOption {
 public: 
-  NamedIndexOption(char* name, const char** nameArray, int& index, int arrayLength) : index(index) {
+  NamedIndexOption(const char* name, const char** nameArray, int& index, int arrayLength) : index(index) {
     sprintf(this->name, "%.19s", name);
 
     this->canModify = false;
@@ -261,19 +275,19 @@ private:
 
 class SubpageOption : public OptionType {
 public:
-  SubpageOption(char* name) {
+  SubpageOption(const char* name) {
     sprintf(this->name, "%.19s", name);
   }
-  SubpageOption(char* name, int height, int depth) {
+  SubpageOption(const char* name, int height, int depth) {
     sprintf(this->name, "%.19s", name);
     this->height = height;
     this->depth = depth;
   }
-  SubpageOption(char* name, bool collapsible) {
+  SubpageOption(const char* name, bool collapsible) {
     sprintf(this->name, "%.19s", name);
     this->collapsible = collapsible;
   }
-  SubpageOption(char* name, int height, int depth, bool collapsible) {
+  SubpageOption(const char* name, int height, int depth, bool collapsible) {
     sprintf(this->name, "%.19s", name);
     this->height = height;
     this->depth = depth;
@@ -310,14 +324,14 @@ public:
 
 class BarOption : public StandardOption {
 public:
-  BarOption(char* name, float& value, float& max, GXColor color, float width) : value(value), max(max) {
+  BarOption(const char* name, float& value, float& max, GXColor color, float width) : value(value), max(max) {
     sprintf(this->name, "%.19s", name);
     this->color = color;
     this->width = width;
     this->canModify = false;
   }
 
-  BarOption(char* name, float& value, float& max, float& min, GXColor color, float width) : value(value), max(max), min(min) {
+  BarOption(const char* name, float& value, float& max, float& min, GXColor color, float width) : value(value), max(max), min(min) {
     sprintf(this->name, "%.19s", name);
     this->color = color;
     this->width = width;
