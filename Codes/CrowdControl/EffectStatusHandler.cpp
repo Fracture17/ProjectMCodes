@@ -4,25 +4,25 @@
 
 #include "EffectStatusHandler.h"
 
-#define setMetal ((void (*)(double health, int fighterNameAddr, int setEffect, int unk3)) 0x80843110)
-#define setCurry ((void (*)(int fighterNameAddr, int setEffect, int unk3)) 0x80843314)
-#define setHammer ((void (*)(int fighterNameAddr, int setEffect, int unk3)) 0x808436d0)
-#define setSuperStar ((void (*)(int fighterNameAddr, int setEffect, unsigned int unk3, int unk4)) 0x80843978)
-#define setFlower ((void (*)(int fighterNameAddr, double rate, int setEffect, int unk4, double size, int unk6)) 0x80843ce8)
-#define setHeartSwap ((void (*)(int fighterNameAddr, int unk2, int unk3, int setEffect)) 0x80844144)
-#define setSlow ((void (*)(int fighterNameAddr, int setEffect, int unk3, int duration, int unk5)) 0x80842e6c)
-#define startScaling ((void (*)(int fighterNameAddr, int setEffect, int isPoison)) 0x80841ad4)
+//TODO: refactor by putting in Fighter class
+#define setMetal ((void (*)(double health, int fighterPtr, int setEffect, int unk3)) 0x80843110)
+#define setCurry ((void (*)(int fighterPtr, int setEffect, int unk3)) 0x80843314)
+#define setHammer ((void (*)(int fighterPtr, int setEffect, int unk3)) 0x808436d0)
+#define setSuperStar ((void (*)(int fighterPtr, int setEffect, unsigned int unk3, int unk4)) 0x80843978)
+#define setFlower ((void (*)(int fighterPtr, double rate, int setEffect, int unk4, double size, int unk6)) 0x80843ce8)
+#define setHeartSwap ((void (*)(int receivingPlayerFighterPtr, int givingPlayerEntryId, int unk3, int setEffect)) 0x80844144)
+#define setSlow ((void (*)(int fighterPtr, int setEffect, int slowStrength, int duration, int unk5)) 0x80842e6c)
+#define startScaling ((void (*)(int fighterPtr, int setEffect, int isPoison)) 0x80841ad4)
+#define setSwap ((void (*)(ftEntryManager entryManager, bool setEffect, entryID targetPlayer1, entryID targetPlayer2, bool unk3, int duration)) 0x80824090)
+#define setFinal ((void (*)(ftEntry* ftEntry, int unk3)) 0x8082037c)
+#define endFinal ((void (*)(int fighterPtr, int unk2, int unk3, int unk4)) 0x80838318)
 
 #define attachItem ((void (*)(int* soItemManagerModuleImplPtr, unsigned int itemId, unsigned int unk3, int unk4)) 0x807c3b1c)
 
 //#define initStatusBury ((void (*)(int unk1, int moduleAccessorPtr)) 0x8088a01c)
 
-int* getFighterNamePtr(u16 targetPlayer){
-    return (int *)(0x80623324 + (targetPlayer * 580));
-}
-
 int* getSoItemManagerModuleImplPtr(u16 targetPlayer) {
-    int* fighterOwnerPtr = getFighterNamePtr(targetPlayer);
+    int* fighterOwnerPtr = getFighterPtr(targetPlayer);
 
     int iVar5 = *(int *)(*fighterOwnerPtr + 0x60);
     return *(int **)(*(int *)(iVar5 + 0xd8) + 0xa8);
@@ -40,14 +40,14 @@ EXIStatus effectStatusGiveMetal(int numPlayers, u16 targetPlayer, int setEffect,
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players metal
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            setMetal(health, *getFighterNamePtr(targetPlayer), setEffect, 0xffffffff);
+            setMetal(health, *getFighterPtr(targetPlayer), setEffect, 0xffffffff);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        setMetal(health, *getFighterNamePtr(targetPlayer), setEffect, 0xffffffff);
+        setMetal(health, *getFighterPtr(targetPlayer), setEffect, 0xffffffff);
     }
 
     return RESULT_EFFECT_SUCCESS;
@@ -64,14 +64,14 @@ EXIStatus effectStatusGiveCurry(int numPlayers, u16 targetPlayer, int setEffect)
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players curry
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            setCurry(*getFighterNamePtr(targetPlayer), setEffect, 0xffffffff);
+            setCurry(*getFighterPtr(targetPlayer), setEffect, 0xffffffff);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        setCurry(*getFighterNamePtr(targetPlayer), setEffect, 0xffffffff);
+        setCurry(*getFighterPtr(targetPlayer), setEffect, 0xffffffff);
     }
 
     return RESULT_EFFECT_SUCCESS;
@@ -86,14 +86,14 @@ EXIStatus effectStatusGiveHammer(int numPlayers, u16 targetPlayer, int setEffect
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players hammer
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            setHammer(*getFighterNamePtr(targetPlayer), setEffect, 0);
+            setHammer(*getFighterPtr(targetPlayer), setEffect, 0);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        setHammer(*getFighterNamePtr(targetPlayer), setEffect, 0);
+        setHammer(*getFighterPtr(targetPlayer), setEffect, 0);
     }
 
     return RESULT_EFFECT_SUCCESS;
@@ -109,7 +109,7 @@ EXIStatus effectStatusGiveSuperStar(int numPlayers, u16 targetPlayer, int setEff
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        setSuperStar(*getFighterNamePtr(targetPlayer), setEffect, 0xffffffff, 0);
+        setSuperStar(*getFighterPtr(targetPlayer), setEffect, 0xffffffff, 0);
     }
 
     return RESULT_EFFECT_SUCCESS;
@@ -124,14 +124,14 @@ EXIStatus effectStatusGiveFlower(int numPlayers, u16 targetPlayer, int setEffect
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players flowers
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            setFlower(*getFighterNamePtr(targetPlayer), rate, setEffect, 0, size, 0);
+            setFlower(*getFighterPtr(targetPlayer), rate, setEffect, 0, size, 0);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        setFlower(*getFighterNamePtr(targetPlayer), rate, setEffect, 0, size, 0);
+        setFlower(*getFighterPtr(targetPlayer), rate, setEffect, 0, size, 0);
     }
 
     return RESULT_EFFECT_SUCCESS;
@@ -152,20 +152,20 @@ EXIStatus effectStatusGiveHeart(int numPlayers, u16 targetPlayer, u16 givingPlay
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players heart
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            setHeartSwap(*getFighterNamePtr(targetPlayer), id, 0xffffffff, setEffect);
+            setHeartSwap(*getFighterPtr(targetPlayer), id, 0xffffffff, setEffect);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        setHeartSwap(*getFighterNamePtr(targetPlayer), id, 0xffffffff, setEffect);
+        setHeartSwap(*getFighterPtr(targetPlayer), id, 0xffffffff, setEffect);
     }
 
     return RESULT_EFFECT_SUCCESS;
 }
 
-EXIStatus effectStatusGiveSlow(int numPlayers, u16 targetPlayer, int setEffect, int duration){
+EXIStatus effectStatusGiveSlow(int numPlayers, u16 targetPlayer, int setEffect, int slowStrength, int duration){
 
     // Timer item normally has 720 duration
 
@@ -176,14 +176,14 @@ EXIStatus effectStatusGiveSlow(int numPlayers, u16 targetPlayer, int setEffect, 
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players slow
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            setSlow(*getFighterNamePtr(targetPlayer), setEffect, 4, duration, 1);
+            setSlow(*getFighterPtr(targetPlayer), setEffect, slowStrength, duration, 1);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        setSlow(*getFighterNamePtr(targetPlayer), setEffect, 4, duration, 1);
+        setSlow(*getFighterPtr(targetPlayer), setEffect, slowStrength, duration, 1);
     }
 
     return RESULT_EFFECT_SUCCESS;
@@ -198,14 +198,14 @@ EXIStatus effectStatusGiveMushroom(int numPlayers, u16 targetPlayer, int setEffe
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players slow
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            startScaling(*getFighterNamePtr(targetPlayer), setEffect, isPoison);
+            startScaling(*getFighterPtr(targetPlayer), setEffect, isPoison);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        startScaling(*getFighterNamePtr(targetPlayer), setEffect, isPoison);
+        startScaling(*getFighterPtr(targetPlayer), setEffect, isPoison);
     }
 
     return RESULT_EFFECT_SUCCESS;
@@ -233,29 +233,55 @@ EXIStatus effectStatusGiveEquip(int numPlayers, u16 targetPlayer, int itemId){
     return RESULT_EFFECT_SUCCESS;
 }
 
-/*
-EXIStatus effectStatusGiveBury(int numPlayers, u16 targetPlayer, int setEffect){
+EXIStatus effectStatusGiveSwap(int numPlayers, u16 targetPlayer1, u16 targetPlayer2, int setEffect, int duration){
+    if (targetPlayer1 >= numPlayers or targetPlayer2 >= numPlayers or targetPlayer1 == targetPlayer2) {
+        return RESULT_EFFECT_UNAVAILABLE;
+    }
+    else {
+        setSwap(*FIGHTER_MANAGER->entryManager,
+                setEffect,
+                FIGHTER_MANAGER->getEntryIdFromIndex(targetPlayer1),
+                FIGHTER_MANAGER->getEntryIdFromIndex(targetPlayer2),
+                1,
+                duration);
+        return RESULT_EFFECT_SUCCESS;
+    }
+}
 
-    // Weird effect of stopping player but not burying, creates ground effect that doesn't go away
+EXIStatus effectStatusGiveFinalSmash(int numPlayers, u16 targetPlayer, int setEffect) {
+    // TODO: Check if other effects conflict while player is performing final smash
+    // Should have memory extended for FighterEffect and FighterTechqniq otherwise would need to handle one person receiving Final Smash at a time
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
     }
-
-    if (targetPlayer == MAX_PLAYERS) {
-        // give all players hammer
+    if (targetPlayer == MAX_PLAYERS + 1) {
+        // give all players Final Smash
         for (int targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            int *moduleAccessorPtr = (int*)0x817CE808; // P2 test
-            initStatusBury(0x80b899bc, *moduleAccessorPtr);
+            ftEntry* ftEntryPtr = getFighter(targetPlayer)->getOwner()->ftInputPtr->ftEntryPtr;
+            //if (setEffect) {
+            setFinal(ftEntryPtr, 0);
+            //}
+            //else {
+            //    endFinal(*getFighterPtr(targetPlayer), 0, 1,0);
+            //}
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        int *moduleAccessorPtr = (int*)0x817CE808; // P2 test
-        initStatusBury(0x80b899bc, *moduleAccessorPtr);
+        ftEntry* ftEntryPtr = getFighter(targetPlayer)->getOwner()->ftInputPtr->ftEntryPtr;
+        //if (setEffect) {
+        setFinal(ftEntryPtr, 0);
+        //}
+        //else {
+            //endFinal(*getFighterPtr(targetPlayer), 0, 1,0); // will get Landmaster stuck if activated during, also doesn't remove the effect
+        //}
     }
 
     return RESULT_EFFECT_SUCCESS;
-}*/
+}
+
+
+// 80820430 remove/[ftSlot]

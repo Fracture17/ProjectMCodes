@@ -6,10 +6,9 @@
 #define PROJECTMCODES_EFFECTACTIONHANDLER_H
 
 #include "EXIPacket.h"
-#include "Brawl/FT/ftManager.h"
 #include "Utilities.h"
 
-EXIStatus effectActionForce(int numPlayers, int targetPlayer, int actionId);
+EXIStatus effectChangeActionForce(int numPlayers, int targetPlayer, int actionId);
 
 
 #endif //PROJECTMCODES_EFFECTACTIONHANDLER_H

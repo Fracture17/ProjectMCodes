@@ -431,10 +431,10 @@ public class PPlus : SimpleTCPPack
     {	
 		
         // General Effects
-        //createEffect("Trigger the Killswitch", "kill", 3, new[]{"players"}),
+        createEffect("Damage", "give_damage", 3, new[]{"players", "%damage", "set"}),
         //createEffect("Give Stocks", "give_stocks", 4, new[]{"players", "#stocks"}),
-		//createEffect("Remove Stocks", "remove_stocks", 5, new[]{"players", "#stocks"}),
-		
+        //createEffect("Time", "give_time", 5, new[]{"players", "seconds"}),
+
 		// Items
 		createEffectFolder("Items", "items"),
 		
@@ -461,18 +461,20 @@ public class PPlus : SimpleTCPPack
 
 		createEffectFolder("Status", "status"),
 
-		createEffect("Metal", "status_metal", 9, new[]{"players", "%percent"}, "status"),
-		createEffect("Curry", "status_curry", 10, new[]{"players"}, "status"),
+		createEffect("Metal", "status_metal", 9, new[]{"players", "set", "%percent"}, "status"),
+		createEffect("Curry", "status_curry", 10, new[]{"players", "set"}, "status"),
 		createEffect("Hammer", "status_hammer", 11, new[]{"players", "set"}, "status"),
-		createEffect("SuperStar", "status_superstar", 12, new[]{"players"}, "status"),
+		createEffect("SuperStar", "status_superstar", 12, new[]{"players", "set"}, "status"),
 		createEffect("Flower", "status_flower", 13, new[]{"players", "flower_rate", "flower_size"}, "status"),
 		createEffect("Heart", "status_heart", 14, new[]{"players", "players"}, "status"),
-		createEffect("Slow", "status_slow", 15, new[]{"players", "slow_duration"}, "status"),
-		createEffect("Mushroom", "status_mushroom", 16, new[]{"players", "mushroom"}, "status"),
+		createEffect("Slow", "status_slow", 15, new[]{"players", "set", "slow_strength", "slow_duration"}, "status"),
+		createEffect("Mushroom", "status_mushroom", 16, new[]{"players", "set", "mushroom"}, "status"),
 		createEffect("Equip", "status_equip", 17, new[]{"players", "items_equip"}, "status"),
+		createEffect("Swap", "status_swap", 18, new[]{"players_specific", "players_specific", "set", "swap_duration"}, "status"),
+		createEffect("Final Smash", "status_finalsmash", 19, new[]{"players"}, "status"),
 
 		// Force Action
-		createEffect("Action", "action", 18, new[]{"players", "actions"}),
+		createEffect("Action", "action", 20, new[]{"players", "actions"}),
 		// TODO: Maybe have some actions cost more?
 
 		// Dropdown List Selections
@@ -485,9 +487,15 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Player Random", "player_random", 4, "players"),
 		createEffectSubItem("Player All", "player_all", 5, "players"),
 
+        /// Players
+		createEffectSubItem("Player 1", "player", 0, "players_specific"),
+		createEffectSubItem("Player 2", "player", 1, "players_specific"),
+		createEffectSubItem("Player 3", "player", 2, "players_specific"),
+		createEffectSubItem("Player 4", "player", 3, "players_specific"),
+
 		/// Set
-		createEffectSubItem("False", "set_0", 0, "set"),
-		createEffectSubItem("True", "set_1", 1, "set"),
+		createEffectSubItem("Remove", "set_0", 0, "set"),
+		createEffectSubItem("Give", "set_1", 1, "set"),
 
 		// Action
 		createEffectSubItem("Bury", "action", (int)(ActionIds.Enter_Grounded), "actions"),
@@ -504,6 +512,8 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Fall Disabled", "action", (int)(ActionIds.Fall_Disabled), "actions"),
 		createEffectSubItem("Air_Dodge", "action", (int)(ActionIds.Air_Dodge), "actions"),
 		createEffectSubItem("Neutral Special", "action", (int)(ActionIds.Neutral_Special), "actions"),
+		createEffectSubItem("Up Special", "action", (int)(ActionIds.Up_Special), "actions"),
+		createEffectSubItem("Get Up Attack", "action", (int)(ActionIds.Get_Up_Attack), "actions"),
 		//createEffectSubItem("Taunt", "action", (int)(ActionIds.Taunt), "actions"),
 
 
@@ -714,16 +724,21 @@ public class PPlus : SimpleTCPPack
     //Slider ranges need to be defined
     public override List<ItemType> ItemTypes => new List<ItemType>(new[]
     {
+        new ItemType("Damage", "%damage", ItemType.Subtype.Slider, "{\"min\":1,\"max\":15}"),
         new ItemType("Percent", "%percent", ItemType.Subtype.Slider, "{\"min\":1,\"max\":999}"),
         new ItemType("#Stocks", "#stocks", ItemType.Subtype.Slider, "{\"min\":1,\"max\":99}"),
+        new ItemType("Seconds", "seconds", ItemType.Subtype.Slider, "{\"min\":1,\"max\":5"),
 		new ItemType("#Items", "#items", ItemType.Subtype.Slider, "{\"min\":1,\"max\":5}"),
 		new ItemType("#Pkmn", "#pkmn", ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
 		new ItemType("#Assist", "#assist", ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
 		new ItemType("Flower Rate", "flower_rate", ItemType.Subtype.Slider, "{\"min\":1,\"max\":1000}"),
 		new ItemType("Flower Size", "flower_size", ItemType.Subtype.Slider, "{\"min\":1,\"max\":10}"),
+		new ItemType("Slow Strength", "slow_strength", ItemType.Subtype.Slider, "{\"min\":2,\"max\":8}"),
 		new ItemType("Slow Duration", "slow_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":720}"),
+		new ItemType("Swap Duration", "swap_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":720}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
+		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),
 		new ItemType("Set", "set", ItemType.Subtype.ItemList),
 		new ItemType("Actions", "actions", ItemType.Subtype.ItemList),
         new ItemType("Mushroom", "mushroom", ItemType.Subtype.ItemList),

@@ -7,6 +7,7 @@
 #include "EffectItemHandler.h"
 #include "EffectStatusHandler.h"
 #include "EffectActionHandler.h"
+#include "EffectGameHandler.h"
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
@@ -32,7 +33,7 @@ namespace FrameLogic {
     }
 
     // called at the beginning of the logic in a frame
-    void BeginFrame() {
+    void onBeginFrame() {
 
         // halfword vector for sending into to the game
         // first entry is effect id (EFFECT_NOT_CONNECTED = 0, EFFECT_NONE = 1, EFFECT_UNKNOWN = 2, EFFECT_ACTUAL >= 3
@@ -44,24 +45,29 @@ namespace FrameLogic {
         EXIStatus exiStatus = STATUS_UNKNOWN;
         unsigned int scene = getScene();
 
+        // TODO: Investigate crash during classic mode
+
         if (scene == SCENE_TYPE::SCENE_VS || scene == SCENE_TYPE::SCENE_TRAINING_MODE_MMS) {
             int numPlayers = FIGHTER_MANAGER->getEntryCount();
 
             switch (effectRequest[0]) {
+                case EFFECT_GIVE_DAMAGE:
+                    exiStatus = effectGameGiveDamage(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
                 case EFFECT_ITEM_SPAWN_REGULAR:
                     exiStatus = effectItemSpawn(effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_STATUS_METAL:
-                    exiStatus = effectStatusGiveMetal(numPlayers, effectRequest[1], 1, effectRequest[2]);
+                    exiStatus = effectStatusGiveMetal(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
                 case EFFECT_STATUS_CURRY:
-                    exiStatus = effectStatusGiveCurry(numPlayers, effectRequest[1], 1);
+                    exiStatus = effectStatusGiveCurry(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_STATUS_HAMMER:
                     exiStatus = effectStatusGiveHammer(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_STATUS_SUPERSTAR:
-                    exiStatus = effectStatusGiveSuperStar(numPlayers, effectRequest[1], 1);
+                    exiStatus = effectStatusGiveSuperStar(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_STATUS_FLOWER:
                     exiStatus = effectStatusGiveFlower(numPlayers, effectRequest[1], 1, effectRequest[2],
@@ -71,16 +77,23 @@ namespace FrameLogic {
                     exiStatus = effectStatusGiveHeart(numPlayers, effectRequest[1], effectRequest[2], 1);
                     break;
                 case EFFECT_STATUS_SLOW:
-                    exiStatus = effectStatusGiveSlow(numPlayers, effectRequest[1], 1, effectRequest[2]);
+                    exiStatus = effectStatusGiveSlow(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4]);
                     break;
                 case EFFECT_STATUS_MUSHROOM:
-                    exiStatus = effectStatusGiveMushroom(numPlayers, effectRequest[1], 1, effectRequest[2]);
+                    exiStatus = effectStatusGiveMushroom(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
                 case EFFECT_STATUS_EQUIP:
                     exiStatus = effectStatusGiveEquip(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
+                case EFFECT_STATUS_SWAP:
+                    exiStatus = effectStatusGiveSwap(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4]);
+                    break;
+                case EFFECT_STATUS_FINALSMASH:
+                    exiStatus = effectStatusGiveFinalSmash(numPlayers, effectRequest[1], 1);
+                    break;
                 case EFFECT_STATUS_ACTION:
-                    exiStatus = effectActionForce(numPlayers, effectRequest[1], effectRequest[2]);
+                    exiStatus = effectChangeActionForce(numPlayers, effectRequest[1], effectRequest[2]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -96,15 +109,20 @@ namespace FrameLogic {
             if (padSystem->pads[0].buttons.LeftDPad) {
                 //effectStatusGiveCurry(numPlayers, 0, 0);
                 //effectStatusGiveMushroom(numPlayers, 0, 1, 1);
-                //effectActionForce(numPlayers, 0, 0x10C);
+                //effectChangeActionForce(numPlayers, 0, 0x10C);
+                //effectStatusGiveFinalSmash(numPlayers, 0, 0);
+                //effectStatusGiveSwap(4, 0, 1, 0, 720);
             }
             else if (padSystem->pads[0].buttons.RightDPad) {
                 //effectStatusGiveCurry(numPlayers, 0, 1);
-                //effectItemSpawn(0x0, 1); //0x78, 1); // 0x2A - Pokeball
+                effectItemSpawn(0x2A, 1); //0x78, 1); // 0x2A - Pokeball
                 //effectStatusGiveBury(numPlayers, 0, 1);
                 //effectStatusGiveScrewAttack(numPlayers, 0);
                 //effectStatusGiveMushroom(numPlayers, 0, 1, 0);
-                //effectActionForce(numPlayers, 0, 0xC7);
+                //effectChangeActionForce(numPlayers, 0, 0xC7);
+                //effectGameGiveDamage(numPlayers, 0, (int)15, 0);
+                //effectStatusGiveFinalSmash(numPlayers, 0, 1);
+                //effectStatusGiveSwap(4, 0, 1, 1, 720);
             }
 
         }
@@ -116,6 +134,10 @@ namespace FrameLogic {
 
     }
 
+    //void onEndMatch() {
+
+    //}
+
     // called at the end of the game logic in a frame
     //void EndFrame() {
 
@@ -124,6 +146,12 @@ namespace FrameLogic {
     SIMPLE_INJECTION(startGame, 0x806dd5f4, "mr r3, r19") { SendGameStatus(EXIStatus::STATUS_GAME_STARTED); } // when booting up
     SIMPLE_INJECTION(startMatch, 0x800dc590, "li r9, 0x2") { SendGameStatus(EXIStatus::STATUS_MATCH_STARTED); } // when starting match
     SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") { SendGameStatus(EXIStatus::STATUS_MATCH_ENDED); } // when exiting match
-    SIMPLE_INJECTION(beginFrame, 0x80147394, "li r0, 0x1") { BeginFrame(); }
+    SIMPLE_INJECTION(beginFrame, 0x80147394, "li r0, 0x1") { onBeginFrame(); }
     //SIMPLE_INJECTION(endFrame,   0x801473a0, "li r0, 0x0") { EndFrame(); }
+
+
+    INJECTION("forceVisMemPool", 0x80025dc8, R"(
+    cmpwi r3, 69
+)");
+
 }
