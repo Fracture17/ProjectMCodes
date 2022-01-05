@@ -16,6 +16,7 @@
 #include "soKineticModuleGenericImpl.h"
 #include "soGroundModuleImpl.h"
 #include "soGenerateArticleManageModuleImpl.h"
+#include "soItemManageModuleImpl.h"
 #include "../FT/ftParamCustomizeModuleImpl.h"
 #include "../FT/ftStopModuleImpl.h"
 #include "soColorBlendModule.h"
@@ -68,19 +69,22 @@ struct soModuleAccessor {
     char _spacer8[0x7C - 0x78 - 4];
     //0x70 + 0xC = 0x7C
     soStatusModuleImpl* statusModule;
-    char _spacer9[0x80 - 0x7C - 4];
+    char _spacer9[0x88 - 0x7C - 4];
     //0x7C + 0xC = 0x88
     soKineticModuleGenericImpl* kineticModule;
-    char _spacer10[0xC];
+    char _spacer10[0x90 - 0x88 - 4];
     //0x84 + 0xC = 0x90
     soGenerateArticleManageModuleImpl* generateArticleManageModule;
-    char _spacer11[0xB8 - 0x90 - 4];
+    char _spacer11[0xB4 - 0x90 - 4];
+    //0xA8 + 0xC = 0xB4
+    soItemManageModuleImpl* itemManageModule;
+    char _spacer12[0xB8 - 0xB4 - 4];
     //0xAC + 0xC = 0xB8
     soColorBlendModule* colorBlendModule;
-    char _spacer12[0xD0 - 0xB8 - 4];
+    char _spacer13[0xD0 - 0xB8 - 4];
     //0xC4 + 0xC = 0xD0
     ftParamCustomizeModuleImpl* paramCustomizeModule;
-    char _spacer13[4];
+    char _spacer14[4];
     // 0xCC + 0xC = 0xD8
     soModuleAccessor * moduleEnumeration;
 };

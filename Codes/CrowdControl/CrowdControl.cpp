@@ -115,9 +115,8 @@ namespace FrameLogic {
             }
             else if (padSystem->pads[0].buttons.RightDPad) {
                 //effectStatusGiveCurry(numPlayers, 0, 1);
-                effectItemSpawn(0x2A, 1); //0x78, 1); // 0x2A - Pokeball
-                //effectStatusGiveBury(numPlayers, 0, 1);
-                //effectStatusGiveScrewAttack(numPlayers, 0);
+                //effectItemSpawn(0x2A, 1); //0x78, 1); // 0x2A - Pokeball
+                effectStatusGiveEquip(numPlayers, 0, 0x32);
                 //effectStatusGiveMushroom(numPlayers, 0, 1, 0);
                 //effectChangeActionForce(numPlayers, 0, 0xC7);
                 //effectGameGiveDamage(numPlayers, 0, (int)15, 0);

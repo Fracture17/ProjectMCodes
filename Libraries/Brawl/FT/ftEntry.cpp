@@ -4,3 +4,7 @@
 
 #include "ftEntry.h"
 
+void ftEntry::setFinal(int unk1){
+    setFinal_ftEntry(this, unk1);
+}
+

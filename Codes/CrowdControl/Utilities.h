@@ -16,7 +16,6 @@ int randi(int max);
 int max(int x1, int x2);
 unsigned int min(unsigned int x1, unsigned int x2);
 
-int* getFighterPtr(u16 targetPlayer);
 Fighter* getFighter(int targetPlayer);
 ftOwner* getFtOwner(int targetPlayer);
 

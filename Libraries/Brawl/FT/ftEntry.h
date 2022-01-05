@@ -16,6 +16,8 @@ struct Fighter;
 // size: 0x244
 struct ftEntry {
     // unsigned int getTeam();
+    void setFinal(int unk1);
+
     char _spacer[0x4];
     // 0x04
     int entryId;
@@ -55,6 +57,6 @@ struct ftEntry {
 };
 
 #define _getTeam_ftEntry ((unsigned int (*)(ftEntry* self, )) 0x80821974)
-
+#define setFinal_ftEntry ((void (*)(ftEntry* self, int unk3)) 0x8082037c)
 
 #endif //PROJECTMCODES_FTENTRY_H
