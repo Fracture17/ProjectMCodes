@@ -111,7 +111,7 @@ def getDebugInfo(library = None, segmentManager = None):
     symbolText = []
     #symbols = (lambda .0: pass# WARNING: Decompyle incomplete
 #)(library.symbols)
-    symbols = {symbol for symbol in library.symbols if symbol.name.startswith('.')}
+    symbols = {symbol for symbol in library.symbols if not symbol.name.startswith('.')}
     for section in library.sections:
         if section.name.startswith('.'):
             if section.size > 0:
@@ -128,11 +128,11 @@ def getDebugInfo(library = None, segmentManager = None):
     addressesFile.write(symbolText)
     #initSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
 #)(symbols)
-    initSymbols = {s for s in symbols if segmentManager.initializerSegment.canInsert(s) and segmentManager.dataSegment.canInsert(s)}
+    initSymbols = {s for s in symbols if not segmentManager.initializerSegment.canInsert(s) and segmentManager.dataSegment.canInsert(s)}
     makeMap(initSymbols, File(f'''{disassemblyDir}/Initializers.map'''))
     #otherSymbols = (lambda .0 = None: pass# WARNING: Decompyle incomplete
 #)(symbols)
-    otherSymbols = {s for s in symbols if segmentManager.initializerSegment.canInsert(s)}
+    otherSymbols = {s for s in symbols if not segmentManager.initializerSegment.canInsert(s)}
     makeMap(otherSymbols, File(f'''{disassemblyDir}/Symbols.map'''))
     disassemblyFile = File(f'''{disassemblyDir}/dis.txt''')
     objdump(library, '-h', disassemblyFile)
