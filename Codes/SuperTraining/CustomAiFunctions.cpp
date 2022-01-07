@@ -18,11 +18,11 @@
 #include "PatternManager.h"
 #include "FudgeMenu.h"
 #include "MovementTracker.h"
+#include "WeightedDie.h"
 
 #define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
 #define _length_vec3f ((double (*)(Vec3f* vector)) 0x8070b94c)
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
-#define _randf ((double (*)()) 0x8003fb64)
 
 INJECTION("FORCE_AI_TAUNT_ROUTINE", 0x809112cc, R"(
     SAVE_REGS
@@ -314,6 +314,14 @@ INJECTION("TRACK_ACTION", 0x8077f9d8, R"(
     cmpwi r4, -1
 )")
 
+
+float functionalStack[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int functionalStackPtr = -1;
+WeightedDie dynamicDice[2] = {
+    WeightedDie(),
+    WeightedDie()
+};
+
 extern "C" {
     double fn_result = 0;
     void trackActionChange(int action, soModuleAccessor * accesser) {
@@ -521,6 +529,18 @@ extern "C" {
             return;
         }
 
+        // functional stack pop
+        if (switchCase == 0x5E) {
+            if (functionalStackPtr >= 0) {
+                fn_result = functionalStack[functionalStackPtr];
+                fn_shouldReturnResult = 1;
+                functionalStackPtr --;
+                return;
+            } else {
+                OSReport("========ERROR: TRIED TO ACCESS STACK VARIABLE THAT DIDN'T EXIST========\n");
+            }
+        }
+
         fn_shouldReturnResult = 1;
         switch (switchCase) {
             case 0x80: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.aggression; return;
@@ -674,17 +694,14 @@ INJECTION("CUSTOM_AI_XGOTO_REQ_FIX", 0x8091ea68, R"(
 )");
 
 vector<const void*> NoRepeatInstructions = vector<const void*>();
-vector<int> dynamicDice = vector<int>();
 #define _target_check_aiInput ((void (*)(aiInput* self)) 0x80907ba4)
 #define _getEntity_ftEntryManager ((ftEntry* (*)(ftEntryManager* self, entryID entryid)) 0x80823b24)
 SIMPLE_INJECTION(clearNoRepeatInstruction, 0x809171f4, "li r31, 0x0") {
     NoRepeatInstructions.reallocate(0);
     NoRepeatInstructions.reallocate(1);
-    dynamicDice.reallocate(0);
-    dynamicDice.reallocate(1);
-    for (int i = 0; i < 4; i++) {
-        movementTrackers[i].incrementTimer();
-    }
+    dynamicDice[0].clear();
+    dynamicDice[1].clear();
+    functionalStackPtr = 0;
 }
 
 int* forcedNextInstruction = nullptr;
@@ -702,8 +719,8 @@ extern "C" {
         }
     }
     void clearDynamicDice(aiScriptData* aiActInst) { 
-        dynamicDice.reallocate(0);
-        dynamicDice.reallocate(1);
+        dynamicDice[0].clear();
+        dynamicDice[1].clear();
     }
     // SOMETHING CAUSED AISCRIPT TO BE SET TO 0 AND IDK WHAT IT IS
     // BUT AT LEAST THE CORRECT ONE IS STORED IN AISCRIPT
@@ -724,19 +741,28 @@ extern "C" {
         gotoCmdStack[gotoCmdStackPtr] = nextPlace;
         gotoCmdScripts[gotoCmdStackPtr] = aiActInst->aiScript;
         gotoCmdScriptHeads[gotoCmdStackPtr] = aiActInst->constPtr;
-        // OSReport("XGoto: (%08x) ==> %d: %08x\n", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
+        // OSReport("XGoto: (%08x) ==> %d: %08x: [", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
+        // for (int i = 0; i < gotoCmdStackPtr; i++) {
+        //     OSReport("%08x, ", gotoCmdScriptHeads[i]);
+        // }
+        // OSReport("]\n");
         gotoCmdStackPtr += 1;
     };
     char dummy = 0xFF;
     int* aiGotoPop(aiScriptData* aiActInst) {
         // OSReport("POP-PRE: (%08x) <== %d: %08x\n", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
+        // OSReport("POP-PRE: (%08x) <== %d: %08x: [", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
+        // for (int i = 0; i < gotoCmdStackPtr; i++) {
+        //     OSReport("%08x, ", gotoCmdScriptHeads[i]);
+        // }
+        // OSReport("]\n");
         if (gotoCmdStackPtr > 0) {
             gotoCmdStackPtr -= 1;
             if (gotoCmdScripts[gotoCmdStackPtr] != 0) {
                 aiActInst->aiScript = 0;
                 _act_change(aiActInst, gotoCmdScripts[gotoCmdStackPtr], &dummy, 0, 0);
                 aiActInst->constPtr = gotoCmdScriptHeads[gotoCmdStackPtr];
-                // OSReport("POP: (%08x) <== %d: %08x\n", gotoCmdScripts[gotoCmdStackPtr], gotoCmdStackPtr, aiActInst->constPtr);
+                // OSReport("POP: (%08sx) <== %d: %08x\n", gotoCmdScripts[gotoCmdStackPtr], gotoCmdStackPtr, aiActInst->constPtr);
             }
             if (gotoCmdStackPtr == 0) originScript = 0;
             return gotoCmdStack[gotoCmdStackPtr];
@@ -986,17 +1012,16 @@ extern "C" {
         // SwitchTarget
         if (cmd == 0x42) {
             auto entryCount = FIGHTER_MANAGER->getEntryCount();
-            int newTargetId = FIGHTER_MANAGER->getEntryIdFromIndex(0);
+            int newTargetId = FIGHTER_MANAGER->getEntryIdFromIndex((int) (_randf() * entryCount) % entryCount);
             
             if (entryCount > 1) {
-                int i = 0;
+                int i = _randf() * entryCount * 1.5;
                 while (i < 10 && FIGHTER_MANAGER->getOwner(newTargetId)->ownerDataPtr->team == aiActInst->ftInputPtr->ftEntryPtr->owner->ownerDataPtr->team) {
-                    newTargetId = FIGHTER_MANAGER->getEntryIdFromIndex((int)((float) entryCount * _randf()));
+                    newTargetId = FIGHTER_MANAGER->getEntryIdFromIndex(i % entryCount);
                     i++;
                 }
+                aiActInst->ftInputPtr->aiTarget = FIGHTER_MANAGER->getPlayerNo(newTargetId);
             }
-
-            aiActInst->ftInputPtr->aiTarget = FIGHTER_MANAGER->getPlayerNo(newTargetId);
             return;
         }
 
@@ -1251,6 +1276,7 @@ extern "C" {
             int varToMod = args[1];
             int op1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
             int op2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+            if (op2 < 1) op2 = 1;
             aiActInst->variables[varToMod] = op1 % op2; 
             return;
         }
@@ -1269,6 +1295,77 @@ extern "C" {
             int varToMod = args[1];
             float angleValue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);            
             aiActInst->variables[varToMod] = math_sin(angleValue * math_rad);
+            return;
+        }
+
+        // SetVariableByNumber
+        if (cmd == 0x67) {
+            int varNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            float value = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            if (varNum >= 24) {
+                OSReport("========WARNING: TRIED TO INSERT DATA INTO VARNUM %d\n========", varNum);
+            } else {
+                aiActInst->variables[varNum] = value;
+            }
+            return;
+        }
+
+        // CopyVariableByNum
+        if (cmd == 0x68) {
+            int varNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            int varFrom = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            if (varNum >= 24 || varFrom >= 24) {
+                OSReport("========WARNING: TRIED OBTAIN DATA FROM VARNUM %d\n========", varNum);
+            } else {
+                aiActInst->variables[varNum] = aiActInst->variables[varFrom];
+            }
+            return;
+        }
+
+        // Push to functional stack
+        // nice
+        if (cmd == 0x69) {
+            float value = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            if (functionalStackPtr >= 0x10) {
+                OSReport("========WARNING: FUNCTIONAL STACK OVERFLOW\n========");
+            }
+            functionalStackPtr ++;
+            functionalStack[functionalStackPtr] = value;
+            return;
+        }
+
+        // GotoByVar
+        if (cmd == 0x6A) {
+            s32 toFind = _get_script_value_aiScriptData(aiActInst, *(s32 *) &args[1], 0);
+            s32* item = (s32 *)((int) aiActInst->constPtr + *(s32*)(aiActInst->constPtr + 0x1));
+            u32 iter = -1;
+            while( true ) {
+              while (*(u8 *)item != 0x3) {
+                item = (s32 *)((s32) item + (u32)*(u16 *)((s32)item + 0x2));
+              }
+              iter++;
+              if ((*(u8 *)((s32)item + 0x1) != 0x0) && (item[0x1] == toFind)) break;
+              item = (s32 *)((s32)item + (u32)*(u16 *)((s32)item + 0x2));
+            }
+            aiGotoPush(aiActInst, (s32*)((s32) args));
+            forcedNextInstruction = item;
+            return;
+        }
+
+        // SeekNoCommit
+        if (cmd == 0x6B) {
+            s32 toFind = args[1];
+            s32* item = (s32 *)((int) aiActInst->constPtr + *(s32*)(aiActInst->constPtr + 0x1));
+            u32 iter = -1;
+            while( true ) {
+              while (*(u8 *)item != 0x3) {
+                item = (s32 *)((s32) item + (u32)*(u16 *)((s32)item + 0x2));
+              }
+              iter++;
+              if ((*(u8 *)((s32)item + 0x1) != 0x0) && (item[0x1] == toFind)) break;
+              item = (s32 *)((s32)item + (u32)*(u16 *)((s32)item + 0x2));
+            }
+            forcedNextInstruction = item;
             return;
         }
 
@@ -1402,23 +1499,40 @@ extern "C" {
             return;
         }
 
+        // DynamicDiceAdd
         if (cmd == 0x84) {
-            dynamicDice.push((int) _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0));
+            int slot = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            int value = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+            float weight = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+            // OSReport("====Slot: %d, value: %d, weight: %.3f====\n", slot, value, weight);
+            dynamicDice[slot].addValue({value, weight});
+            // OSReport("====weight: %.3f====\n", dynamicDice[slot].getWeight());
             return;
         }
+        // DynamicDiceRoll
         if (cmd == 0x85) {
-            int varToMod = args[1];
-            if (dynamicDice.size() == 0) {
+            int slot = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            int varToMod = args[2];
+            bool shouldRemove = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+            
+            if (dynamicDice[slot].getWeight() == 0) {
                 aiActInst->variables[varToMod] = -1;
                 return;
             }
-            aiActInst->variables[varToMod] = dynamicDice[(int) (_randf() * dynamicDice.size())];
+            aiActInst->variables[varToMod] = (shouldRemove) ? dynamicDice[slot].rollAndRemove() : dynamicDice[slot].roll();
             return;
         }
+        // DynamicDiceClear
         if (cmd == 0x86) {
-            dynamicDice.reallocate(0);
-            dynamicDice.reallocate(1);
+            int slot = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            dynamicDice[slot].clear();
             return;
+        }
+        // DynamicDiceSize
+        if (cmd == 0x87) {
+            int slot = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+            int varToMod = args[2];
+            aiActInst->variables[varToMod] = dynamicDice[slot].getWeight();
         }
 
         // ADJUST PERSONALITY
@@ -1491,6 +1605,12 @@ extern "C" {
                     playerTrainingData[pNum].aiData.personality.wall_chance += amount;
                     if (playerTrainingData[pNum].aiData.personality.wall_chance > 2) playerTrainingData[pNum].aiData.personality.wall_chance = 2;
                     else if (playerTrainingData[pNum].aiData.personality.wall_chance < -1) playerTrainingData[pNum].aiData.personality.wall_chance = -1;
+                    return;
+                }
+                case 0xB: {
+                    playerTrainingData[pNum].aiData.personality.reactionTime += amount;
+                    if (playerTrainingData[pNum].aiData.personality.reactionTime > 2) playerTrainingData[pNum].aiData.personality.reactionTime = 2;
+                    else if (playerTrainingData[pNum].aiData.personality.reactionTime < -1) playerTrainingData[pNum].aiData.personality.reactionTime = -1;
                     return;
                 }
             }

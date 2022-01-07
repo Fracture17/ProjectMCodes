@@ -19,7 +19,9 @@
 
 #include "./menu.h"
 #include "./FudgeMenu.h"
+#include "./FudgeMenuPages.h"
 #include "./hitboxHeatmap.h"
+#include "./MovementTracker.h"
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
@@ -167,6 +169,7 @@ extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
 
         for (int i = 0; i < numEntries; i++) {
             int strCount = AIData->getStringCount(i);
+            // IMPORTANT: alphabetical order
             if (strCount > 0 && strcmp(AIData->getStringEntry(i, 0), "PERSONALITY") == 0) {
                 playerTrainingData[pNum].aiData.personality.aggression = atof(AIData->getStringEntry(i, 1));
                 playerTrainingData[pNum].aiData.personality.bait_dashAwayChance = atof(AIData->getStringEntry(i, 2));
@@ -177,8 +180,9 @@ extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
                 playerTrainingData[pNum].aiData.personality.djumpiness = atof(AIData->getStringEntry(i, 7));
                 playerTrainingData[pNum].aiData.personality.jumpiness = atof(AIData->getStringEntry(i, 8));
                 playerTrainingData[pNum].aiData.personality.platChance = atof(AIData->getStringEntry(i, 9));
-                playerTrainingData[pNum].aiData.personality.SDIChance = atof(AIData->getStringEntry(i, 10));
-                playerTrainingData[pNum].aiData.personality.wall_chance = atof(AIData->getStringEntry(i, 11));
+                playerTrainingData[pNum].aiData.personality.reactionTime = atof(AIData->getStringEntry(i, 10));
+                playerTrainingData[pNum].aiData.personality.SDIChance = atof(AIData->getStringEntry(i, 11));
+                playerTrainingData[pNum].aiData.personality.wall_chance = atof(AIData->getStringEntry(i, 12));
             }
         }
     } 
@@ -216,8 +220,8 @@ void collectData(Fighter* fighter, int pNum) {
 
     // OSReport("%s: %d\n", __FILE__, __LINE__);
     // OSReport("Free Size: %08x\n", getFreeSize(mainHeap));
-    currData.debug.psaData.fullScript->reallocate(0);
-    currData.debug.psaData.fullScript->reallocate(1);
+    currData.debug.psaData.fullScript.reallocate(0);
+    currData.debug.psaData.fullScript.reallocate(1);
     auto* threads = &fighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector;
     auto* thread = &threads->threadUnion.asArray[currData.debug.psaData.threadIdx];
     if (thread != nullptr && thread->cmdInterpreter->currCommand != nullptr) {
@@ -226,7 +230,7 @@ void collectData(Fighter* fighter, int pNum) {
         currData.debug.psaData.scriptLocation = -1;
         while (currCommand != nullptr && !(currCommand->_module == 0 && currCommand->code == 0) && !(currCommand->_module == 0xFF && currCommand->code == 0xFF)) {
             if (currCommand->_module != 0xFA && currCommand->_module != 0xFF) {
-                currData.debug.psaData.fullScript->push(currCommand);
+                currData.debug.psaData.fullScript.push(currCommand);
                 // OSReport("Idx: %d; psaVecSize: %d\n", commandIdx, currData.debug.psaData.fullScript->size());
             } else {
                 break;
@@ -419,28 +423,7 @@ extern "C" void updateOnFrame() {
     // }
     if (fudgeMenu == nullptr) {
         fudgeMenu = new Menu();
-        Page* mainPage = new Page(fudgeMenu);
-        mainPage->setTitle("main");
-
-        PlayerPage* p1Page = new PlayerPage(fudgeMenu, 0);
-        PageLink* p1PageLink = new PageLink("Player 1", p1Page);
-
-        PlayerPage* p2Page = new PlayerPage(fudgeMenu, 1);
-        PageLink* p2PageLink = new PageLink("Player 2", p2Page);
-
-        PlayerPage* p3Page = new PlayerPage(fudgeMenu, 2);
-        PageLink* p3PageLink = new PageLink("Player 3", p3Page);
-
-        PlayerPage* p4Page = new PlayerPage(fudgeMenu, 3);
-        PageLink* p4PageLink = new PageLink("Player 4", p4Page);
-        
-        mainPage->addOption(p1PageLink);
-        mainPage->addOption(p2PageLink);
-        mainPage->addOption(p3PageLink);
-        mainPage->addOption(p4PageLink);
-        mainPage->addOption(new FloatOption("opacity", fudgeMenu->opacity, 0, 255));
-        // mainPage->addOption(new PageLink("Items", new ItemPage(fudgeMenu)));
-        
+        Page* mainPage = new MainPage(fudgeMenu);        
         fudgeMenu->nextPage(mainPage);
     }
     
@@ -878,9 +861,14 @@ extern "C" void updateOnFrame() {
     }
 }
 
+extern MovementTracker movementTrackers[4];
 SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
     renderables.updateTick();
     storedHitboxTick();
+
+    for (int i = 0; i < 4; i++) {
+        movementTrackers[i].incrementTimer();
+    }
     
     auto scene = getScene();
     if (scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
@@ -1018,6 +1006,7 @@ extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
         // OSReport("intended: %04x; ", intendedScript);
         // OSReport("next: %04x)::\n", param1);
         // aiActPtr->aiScript = intendedScript;
+        if (param1 == 0x2010) return 0x0;
         return param1; // normal routine
     // }
 

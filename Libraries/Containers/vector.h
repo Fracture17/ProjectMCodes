@@ -37,6 +37,9 @@ public:
     void erase(size_t index);
     //destroys elements from start, up to (but not including) end
     //void erase(size_t start, size_t end);
+
+    // sets the length to 0 without trying to free the elements
+    void forget();
     void clear();
     bool empty();
 
@@ -113,6 +116,11 @@ void vector<T>::pop_back() {
 template<class T>
 size_t vector<T>::size() const {
     return length;
+}
+
+template<class T>
+void vector<T>::forget() {
+    length = 0;
 }
 
 template<class T>

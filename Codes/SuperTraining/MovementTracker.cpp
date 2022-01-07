@@ -106,21 +106,26 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
   lookAmount *= 0.3;
   // for each offset in the array, we'll compare it to the current series of actions
   // and look for patterns in the actions taken and the timing of those actions
+  // OSReport("offsets size: %d; idx: %d\n", offsets.size(), idx);
   for (int i = 0; i < offsets.size(); i++) {
-    int startTracker = idx - 1;
+    int startTracker = idx;
     // because reasons
     if (actionTracker[startTracker] == actionType) startTracker -= 1;
-    int offsetTracker = offsets[i];
+    int offsetTracker = offsets[i] + 1;
+    // so we don't react *immediately* if the target attacks then attacks shortly after
+    if (startTracker - offsetTracker < 6) continue;
     // scoreMultiplier decrements each time to a fraction of lookAmount. This makes the
     // influence of patterns deteriorate over time
     float scoreMultiplier = 1;
     int looked = 0;
     while(offsetTracker != idx && looked < lookAmount) {
       if (i != offsets.size() && offsetTracker == offsets[i + 1]) break;
-      // pointless to continue because MOV_NONE effectively means uninitalized
-      if (offsets[offsetTracker] == MOV_NONE) break;
       if (startTracker < 0) startTracker = ACTION_COUNT - 1;
       if (offsetTracker < 0) offsetTracker = ACTION_COUNT - 1;
+      // pointless to continue because MOV_NONE effectively means uninitalized
+      if (actionTracker[offsetTracker] == MOV_NONE) break;
+
+      // OSReport("i: %d; mov @ idx: %d; mov @ tracker: %d\n", i, actionTracker[startTracker], actionTracker[offsetTracker]);
 
       // a value (toAdd) is calculated based on the weight and the scoremultiplier
       float toAdd = ((float) weights[actionTracker[offsetTracker]] / 100) * scoreMultiplier;
