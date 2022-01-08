@@ -7,6 +7,7 @@
 // Adapted spawn item code by fudgepop
 
 #define _randf ((double (*)()) 0x8003fb64)
+
 EXIStatus effectItemSpawn(int itemId, int amount) {
 
     // TODO: Check if item can be spawned in
@@ -25,3 +26,29 @@ EXIStatus effectItemSpawn(int itemId, int amount) {
 
     return RESULT_EFFECT_SUCCESS;
 }
+
+EXIStatus effectPokemonPreload(int itemId) {
+    ITEM_MANAGER->preloadPokemon((itemIdName) itemId);
+    return RESULT_EFFECT_SUCCESS;
+}
+
+EXIStatus effectAssistPreload(int itemId) {
+    ITEM_MANAGER->preloadAssist((itemIdName) itemId);
+    return RESULT_EFFECT_SUCCESS;
+}
+
+
+INJECTION("pokemonVarietyLimitPreloadPokemon", 0x809afd74, R"(
+    cmpwi r3, 69
+)");
+
+//INJECTION("pokemonVarietyCapacityPreloadPokemon", 0x809afda8, R"(
+//    cmpwi r3, 69
+//)");
+
+INJECTION("pokemonVarietyLimitProcessBegin", 0x809ad73c, R"(
+    cmpwi r3, 69
+)");
+
+
+

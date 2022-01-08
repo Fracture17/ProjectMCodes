@@ -14,6 +14,7 @@
 #include "Brawl/GF/GameFrame.h"
 #include "Brawl/FT/Fighter.h"
 #include <Brawl/FT/ftManager.h>
+#include "MenuPages.h"
 
 enum CCEffect
 {
@@ -51,5 +52,6 @@ enum SCENE_TYPE {
     SCENE_TRAINING_MODE_MMS = 0x8,
     SCENE_VS = 0xA
 };
+
 
 #endif //PROJECTMCODES_CROWDCONTROL_H

@@ -8,8 +8,11 @@
 #include "Brawl/IT/BaseItem.h"
 #include "Brawl/IT/itManager.h"
 #include "EXIPacket.h"
+#include "Assembly.h"
 
 EXIStatus effectItemSpawn(int itemId, int amount);
+EXIStatus effectPokemonPreload(int itemId);
+EXIStatus effectAssistPreload(int itemId);
 
 
 #endif //PROJECTMCODES_EFFECTITEMHANDLER_H

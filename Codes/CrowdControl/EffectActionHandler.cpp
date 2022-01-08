@@ -5,7 +5,7 @@
 #include "EffectActionHandler.h"
 
 // Adapted change action code by fudgepop
-EXIStatus effectChangeActionForce(int numPlayers, int targetPlayer, int actionId) {
+EXIStatus effectActionChangeForce(int numPlayers, int targetPlayer, int actionId) {
 
     // TODO: Check if action can be performed (maybe have a version instead that is pricier to guarantee force the option the moment it becomes available)
     // TODO: Check if player is still alive as well as other safety checks for hitstun and freeze (make sure player has been hit once)

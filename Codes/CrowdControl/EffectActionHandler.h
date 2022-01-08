@@ -8,7 +8,7 @@
 #include "EXIPacket.h"
 #include "Utilities.h"
 
-EXIStatus effectChangeActionForce(int numPlayers, int targetPlayer, int actionId);
+EXIStatus effectActionChangeForce(int numPlayers, int targetPlayer, int actionId);
 
 
 #endif //PROJECTMCODES_EFFECTACTIONHANDLER_H

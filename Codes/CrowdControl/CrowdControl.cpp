@@ -11,6 +11,15 @@
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
+    // setup global variables
+    DebugData data = DebugData();
+    DebugData* debugData = &data;
+    Menu* myMenu;
+    bool visible = false;
+
+    const int MIN_PRELOADED_ITEM_FRAMES = 60;
+    int preloadedItemId = -1;
+    int preloadedItemWaitFrames = 0;
 
     //hacky way to check if in game
     unsigned int getScene() {
@@ -32,8 +41,37 @@ namespace FrameLogic {
         responsePckt.Send();
     }
 
-    // called at the beginning of the logic in a frame
-    void onBeginFrame() {
+    // called every frame
+    void onUpdateFrame() {
+
+        // initializes the menu
+        if (myMenu == nullptr) {
+            myMenu = new Menu();
+            Page* mainPage = new MainPage(myMenu, debugData);
+            myMenu->nextPage(mainPage);
+
+        }
+        printer.setup();
+        printer.drawBoundingBoxes(0);
+
+        startNormalDraw();
+
+
+        Message * message = &printer.message;
+        message->zPos = 0;
+        message->fontScaleX = 0.1;
+        message->fontScaleY = 0.1;
+
+        printer.lineHeight = 20 * message->fontScaleY;
+
+        char buffer[200] = {};
+
+        message->xPos = 1;
+        message->yPos = 1;
+        message->zPos = 0;
+
+        setupDrawPrimitives();
+
 
         // halfword vector for sending into to the game
         // first entry is effect id (EFFECT_NOT_CONNECTED = 0, EFFECT_NONE = 1, EFFECT_UNKNOWN = 2, EFFECT_ACTUAL >= 3
@@ -47,7 +85,21 @@ namespace FrameLogic {
 
         // TODO: Investigate crash during classic mode
 
+        // for testing effects
+        gfPadSystem *padSystem = PAD_SYSTEM;
+
         if (scene == SCENE_TYPE::SCENE_VS || scene == SCENE_TYPE::SCENE_TRAINING_MODE_MMS) {
+            visible = true;
+
+            if (preloadedItemId >= 0) { // TODO: Tell to crowd control to wait if currently preloading
+                preloadedItemWaitFrames++;
+                if (preloadedItemWaitFrames > MIN_PRELOADED_ITEM_FRAMES) {
+                    effectItemSpawn(preloadedItemId, 1);
+                    preloadedItemId = -1;
+                    preloadedItemWaitFrames = 0;
+                }
+            }
+
             int numPlayers = FIGHTER_MANAGER->getEntryCount();
 
             switch (effectRequest[0]) {
@@ -92,7 +144,7 @@ namespace FrameLogic {
                     exiStatus = effectStatusGiveFinalSmash(numPlayers, effectRequest[1], 1);
                     break;
                 case EFFECT_STATUS_ACTION:
-                    exiStatus = effectChangeActionForce(numPlayers, effectRequest[1], effectRequest[2]);
+                    exiStatus = effectActionChangeForce(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
@@ -103,25 +155,64 @@ namespace FrameLogic {
                     break;
             }
 
-            // for testing effects
-            gfPadSystem* padSystem = PAD_SYSTEM;
+            if (preloadedItemId < 0) {
 
-            if (padSystem->pads[0].buttons.LeftDPad) {
-                //effectStatusGiveCurry(numPlayers, 0, 0);
-                //effectStatusGiveMushroom(numPlayers, 0, 1, 1);
-                //effectChangeActionForce(numPlayers, 0, 0x10C);
-                //effectStatusGiveFinalSmash(numPlayers, 0, 0);
-                //effectStatusGiveSwap(4, 0, 1, 0, 720);
+                if (padSystem->pads[0].buttons.LeftDPad) {
+                    //effectStatusGiveCurry(numPlayers, 0, 0);
+                    //effectStatusGiveMushroom(numPlayers, 0, 1, 1);
+                    //effectActionChangeForce(numPlayers, 0, 0x10C);
+                    //effectStatusGiveFinalSmash(numPlayers, 0, 0);
+                    //effectStatusGiveSwap(4, 0, 1, 0, 720);
+
+                    effectPokemonPreload(0x69); // Deoxys
+                    preloadedItemId = 0x69;
+
+                    //effectAssistPreload(0x96); // Hammer Bro
+                    //preloadedItemId = 0x96;
+                } else if (padSystem->pads[0].buttons.RightDPad) {
+                    //effectStatusGiveCurry(numPlayers, 0, 1);
+                    //effectItemSpawn(0x2A, 1); //0x78, 1); // 0x2A - Pokeball
+                    //effectStatusGiveEquip(numPlayers, 0, 0x32);
+                    //effectStatusGiveMushroom(numPlayers, 0, 1, 0);
+                    //effectActionChangeForce(numPlayers, 0, 0xC7);
+                    //effectGameGiveDamage(numPlayers, 0, (int)15, 0);
+                    //effectStatusGiveFinalSmash(numPlayers, 0, 1);
+                    //effectStatusGiveSwap(4, 0, 1, 1, 720);
+
+                    effectPokemonPreload(0x6C); // Staryu
+                    preloadedItemId = 0x6C;
+
+                    //effectAssistPreload(0x9D); // Little Mac
+                    //preloadedItemId = 0x9D;
+                } else if (padSystem->pads[0].buttons.UpDPad) {
+                    effectPokemonPreload(0x84); // Suicune
+                    preloadedItemId = 0x84;
+
+                    //effectAssistPreload(0xA2); // Isaac
+                    //preloadedItemId = 0xA2;
+
+                } else if (padSystem->pads[0].buttons.DownDPad) {
+                    effectPokemonPreload(0x66); // Entei
+                    preloadedItemId = 0x66;
+
+                    //effectAssistPreload(0xAA); // Stafy
+                    //preloadedItemId = 0xAA;
+                } else if (padSystem->pads[0].buttons.Z) {
+                    effectPokemonPreload(0x64); // Chickorita
+                    preloadedItemId = 0x64;
+
+                    //effectAssistPreload(0xAF); // Waluigi
+                    //preloadedItemId = 0xAF;
+                } else if (padSystem->pads[0].buttons.B) {
+                    //effectPokemonSpawn(0x64, 1); // Chickorita
+
+                    //effectAssistSpawn(0x94, 1); // // Knuckle Joe
+                }
             }
-            else if (padSystem->pads[0].buttons.RightDPad) {
-                //effectStatusGiveCurry(numPlayers, 0, 1);
-                //effectItemSpawn(0x2A, 1); //0x78, 1); // 0x2A - Pokeball
-                effectStatusGiveEquip(numPlayers, 0, 0x32);
-                //effectStatusGiveMushroom(numPlayers, 0, 1, 0);
-                //effectChangeActionForce(numPlayers, 0, 0xC7);
-                //effectGameGiveDamage(numPlayers, 0, (int)15, 0);
-                //effectStatusGiveFinalSmash(numPlayers, 0, 1);
-                //effectStatusGiveSwap(4, 0, 1, 1, 720);
+            int size = ((int (*)(void* it)) ITEM_MANAGER->itKindArrayList_vtable->size)(&ITEM_MANAGER->itKindArrayList_vtable);
+            for (int i = 0; i < size; i++) {
+                int* pkmnPtr = ((int* (*)(void* it, int i)) ITEM_MANAGER->itKindArrayList_vtable->at)(&ITEM_MANAGER->itKindArrayList_vtable, i);
+                if (pkmnPtr != nullptr) debugData->loadedPkmn[i] = *pkmnPtr;
             }
 
         }
@@ -130,6 +221,24 @@ namespace FrameLogic {
             EXIPacket responsePckt = EXIPacket(exiStatus, nullptr, 0);
             responsePckt.Send();
         }
+
+
+        startNormalDraw();
+        if (visible) {
+            printer.setup();
+            printer.start2D();
+
+            message->fontScaleY = RENDER_SCALE_Y;
+            message->fontScaleX = RENDER_SCALE_X;
+            printer.lineHeight = 20 * message->fontScaleY;
+            message->xPos = LEFT_PADDING;
+            message->yPos = TOP_PADDING;
+            myMenu->render(&printer, buffer);
+        }
+
+        startNormalDraw();
+
+
 
     }
 
@@ -145,7 +254,12 @@ namespace FrameLogic {
     SIMPLE_INJECTION(startGame, 0x806dd5f4, "mr r3, r19") { SendGameStatus(EXIStatus::STATUS_GAME_STARTED); } // when booting up
     SIMPLE_INJECTION(startMatch, 0x800dc590, "li r9, 0x2") { SendGameStatus(EXIStatus::STATUS_MATCH_STARTED); } // when starting match
     SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") { SendGameStatus(EXIStatus::STATUS_MATCH_ENDED); } // when exiting match
-    SIMPLE_INJECTION(beginFrame, 0x80147394, "li r0, 0x1") { onBeginFrame(); }
+    /*INJECTION("frameUpdate", 0x8001792c, R"(
+    bl onUpdateFrame
+    addi r3, r30, 280
+)");*/
+
+    SIMPLE_INJECTION(beginFrame, 0x80147394, "li r0, 0x1") { onUpdateFrame(); }
     //SIMPLE_INJECTION(endFrame,   0x801473a0, "li r0, 0x0") { EndFrame(); }
 
 
