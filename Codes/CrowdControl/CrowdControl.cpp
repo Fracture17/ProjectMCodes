@@ -20,6 +20,7 @@ namespace FrameLogic {
     const int MIN_PRELOADED_ITEM_FRAMES = 60;
     int preloadedItemId = -1;
     int preloadedItemWaitFrames = 0;
+    int preloadedItemAmount = 0;
 
     //hacky way to check if in game
     unsigned int getScene() {
@@ -89,14 +90,15 @@ namespace FrameLogic {
         gfPadSystem *padSystem = PAD_SYSTEM;
 
         if (scene == SCENE_TYPE::SCENE_VS || scene == SCENE_TYPE::SCENE_TRAINING_MODE_MMS) {
-            visible = true;
+            //visible = true;
 
             if (preloadedItemId >= 0) { // TODO: Tell to crowd control to wait if currently preloading
                 preloadedItemWaitFrames++;
                 if (preloadedItemWaitFrames > MIN_PRELOADED_ITEM_FRAMES) {
-                    effectItemSpawn(preloadedItemId, 1);
+                    effectItemSpawn(preloadedItemId, preloadedItemAmount);
                     preloadedItemId = -1;
                     preloadedItemWaitFrames = 0;
+                    preloadedItemAmount = 0;
                 }
             }
 
@@ -109,6 +111,13 @@ namespace FrameLogic {
                 case EFFECT_ITEM_SPAWN_REGULAR:
                     exiStatus = effectItemSpawn(effectRequest[1], effectRequest[2]);
                     break;
+                case EFFECT_ITEM_SPAWN_POKEMON:
+                    if (preloadedItemId < 0) {
+                        exiStatus = effectPokemonPreload(effectRequest[1]);
+                        preloadedItemId = effectRequest[1];
+                        preloadedItemAmount = effectRequest[2];
+                    }
+                    else exiStatus = RESULT_EFFECT_RETRY;
                 case EFFECT_STATUS_METAL:
                     exiStatus = effectStatusGiveMetal(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
@@ -163,9 +172,11 @@ namespace FrameLogic {
                     //effectActionChangeForce(numPlayers, 0, 0x10C);
                     //effectStatusGiveFinalSmash(numPlayers, 0, 0);
                     //effectStatusGiveSwap(4, 0, 1, 0, 720);
+                    effectItemSpawn(0x2A, 1); //0x78, 1); // 0x2A - Pokeball
 
-                    effectPokemonPreload(0x69); // Deoxys
-                    preloadedItemId = 0x69;
+                    //effectPokemonPreload(0x69); // Deoxys
+                    //preloadedItemId = 0x69;
+                    //preloadedItemAmount = 1;
 
                     //effectAssistPreload(0x96); // Hammer Bro
                     //preloadedItemId = 0x96;
@@ -181,12 +192,14 @@ namespace FrameLogic {
 
                     effectPokemonPreload(0x6C); // Staryu
                     preloadedItemId = 0x6C;
+                    preloadedItemAmount = 1;
 
                     //effectAssistPreload(0x9D); // Little Mac
                     //preloadedItemId = 0x9D;
                 } else if (padSystem->pads[0].buttons.UpDPad) {
                     effectPokemonPreload(0x84); // Suicune
                     preloadedItemId = 0x84;
+                    preloadedItemAmount = 1;
 
                     //effectAssistPreload(0xA2); // Isaac
                     //preloadedItemId = 0xA2;
@@ -194,24 +207,42 @@ namespace FrameLogic {
                 } else if (padSystem->pads[0].buttons.DownDPad) {
                     effectPokemonPreload(0x66); // Entei
                     preloadedItemId = 0x66;
+                    preloadedItemAmount = 1;
 
                     //effectAssistPreload(0xAA); // Stafy
                     //preloadedItemId = 0xAA;
                 } else if (padSystem->pads[0].buttons.Z) {
-                    effectPokemonPreload(0x64); // Chickorita
-                    preloadedItemId = 0x64;
+                    //effectPokemonPreload(0x64); // Chickorita
+                    //preloadedItemId = 0x64;
+                    //preloadedItemAmount = 1;
 
                     //effectAssistPreload(0xAF); // Waluigi
                     //preloadedItemId = 0xAF;
                 } else if (padSystem->pads[0].buttons.B) {
-                    //effectPokemonSpawn(0x64, 1); // Chickorita
+                    //effectPokemonPreload(0x6E); // Hooh
+                    //preloadedItemId = 0x6E;
+                    //preloadedItemAmount = 1;
+
+                    //effectAssistSpawn(0x94, 1); // // Knuckle Joe
+                }
+                else if (padSystem->pads[0].buttons.R) {
+                    //effectPokemonPreload(0x7B); // Metagross
+                    //preloadedItemId = 0x7B;
+                    //preloadedItemAmount = 1;
 
                     //effectAssistSpawn(0x94, 1); // // Knuckle Joe
                 }
             }
+
+            int capacity = ((int (*)(void* it)) ITEM_MANAGER->itKindArrayList_vtable->capacity)(&ITEM_MANAGER->itKindArrayList_vtable);
+            for (int i = 0; i < capacity; i++) {
+                debugData->loadedPkmn[i] = 0;
+            }
+
             int size = ((int (*)(void* it)) ITEM_MANAGER->itKindArrayList_vtable->size)(&ITEM_MANAGER->itKindArrayList_vtable);
             for (int i = 0; i < size; i++) {
                 int* pkmnPtr = ((int* (*)(void* it, int i)) ITEM_MANAGER->itKindArrayList_vtable->at)(&ITEM_MANAGER->itKindArrayList_vtable, i);
+                //int* pkmnPtr = ((int* (*)(void* it, int i)) ITEM_MANAGER->itArchiveArrayList_vtable->at)(&ITEM_MANAGER->itArchiveArrayList_vtable, i);
                 if (pkmnPtr != nullptr) debugData->loadedPkmn[i] = *pkmnPtr;
             }
 

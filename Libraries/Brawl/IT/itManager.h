@@ -4,6 +4,26 @@
 
 #include "Brawl/IT/BaseItem.h"
 
+struct itManager_itArchiveArrayList_vtable {
+    char _spacer[0x8];
+    void** isNull;
+    void** at;
+    void** at_7;
+    void** size;
+    void** isEmpty;
+    void** __dt;
+    void** shift;
+    void** pop;
+    void** clear;
+    void** unshift;
+    void** push;
+    void** insert;
+    void** erase;
+    void** capacity;
+    void** isFull;
+    void** set;
+};
+
 struct itManager_itKindArrayList_vtable {
     char _spacer[0x8];
     void** isNull;
@@ -22,7 +42,6 @@ struct itManager_itKindArrayList_vtable {
     void** capacity;
     void** isFull;
     void** set;
-
 };
 
 struct itManager {
@@ -32,13 +51,14 @@ struct itManager {
     void preloadPokemon(itemIdName itemId);
     void preloadItemKindArchive(itemIdName itemId);
 
-    char _spacer[0x10BC];
+    char _spacer[0xC8];
+    itManager_itArchiveArrayList_vtable* itArchiveArrayList_vtable;
+
+    char _spacer2[0x10BC - 0xC8 - 4];
     itemIdName nextAssist;
 
-    char _spacer2[0x10C8 - 0x10BC - 4];
+    char _spacer3[0x10C8 - 0x10BC - 4];
     itManager_itKindArrayList_vtable* itKindArrayList_vtable;
-
-
 
 };
 
