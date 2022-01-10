@@ -477,6 +477,8 @@ public class PPlus : SimpleTCPPack
 		createEffect("Action", "action", 20, new[]{"players", "actions"}),
 		// TODO: Maybe have some actions cost more?
 
+		// TODO: Secret ??? e.g. change character to a hidden Ex character
+
 		// Dropdown List Selections
 		
 		/// Players

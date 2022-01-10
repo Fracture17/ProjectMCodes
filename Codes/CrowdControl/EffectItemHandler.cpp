@@ -38,6 +38,9 @@ EXIStatus effectPokemonPreload(int itemId) {
 }
 
 EXIStatus effectAssistPreload(int itemId) {
+    // TODO: Investigate which Assists work (e.g. Nintendog and Devil don't)
+
+    ITEM_MANAGER->nextAssist = (itemIdName)0xffffffff;
     ITEM_MANAGER->preloadAssist((itemIdName) itemId);
     return RESULT_EFFECT_SUCCESS;
 }
@@ -53,17 +56,22 @@ extern "C" itemIdName pokemonEnqueueOverride() {
 }*/
 
 
-INJECTION("pokemonVarietyLimitPreloadPokemon", 0x809afd74, R"(
-    cmpwi r3, 69
-)");
+//INJECTION("pokemonVarietyLimitPreloadPokemon", 0x809afd74, R"(
+//    cmpwi r3, 69
+//)");
 
 //INJECTION("pokemonVarietyCapacityPreloadPokemon", 0x809afda8, R"(
 //    cmpwi r3, 69
 //)");
 
-INJECTION("pokemonVarietyLimitProcessBegin", 0x809ad73c, R"(
-    cmpwi r3, 69
-)");
+//INJECTION("pokemonVarietyLimitProcessBegin", 0x809ad73c, R"(
+//    cmpwi r3, 69
+//)");
+
+//INJECTION("forceAssistPreload", 0x809afc40, R"(
+//   nop
+//");
+
 
 
 /*

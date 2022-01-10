@@ -40,15 +40,15 @@ Memory Expansion for FighterKirbyResource (+0,15MB) [Glitch, Grimdeath]
 * 08421b14 00040000
 * 20020010 00000000
 
-
 Memory Expansion for FighterTechqniq [Glitch]
 * 04421BC4 0034D100 #Original: 00119b00 Diff: 00146500
-
 
 Memory Expansion for FighterEffect [Glitch]
 * 04422434 00166C00 #Original: 00059b00 Diff: 00066500
 * 04421b04 00166C00
 
+Memory Expansion for AssistFigureResource [Kapedani]
+* 04421D34 00400600 #Original: 00066700
 
 Memory Expansion for PokemonResource [Kapedani]
 * 04421D44 00500500 #Original: 00100100
