@@ -9,10 +9,12 @@
 #include "Brawl/IT/itManager.h"
 #include "EXIPacket.h"
 #include "Assembly.h"
+#include "Utilities.h"
 
-EXIStatus effectItemSpawn(int itemId, int amount);
-EXIStatus effectPokemonPreload(int itemId);
-EXIStatus effectAssistPreload(int itemId);
+EXIStatus effectItemSpawn(int itemId, u16 amount);
+EXIStatus effectItemPreloadPokemon(int itemId);
+EXIStatus effectItemPreloadAssist(int itemId);
+EXIStatus effectItemAttachGooey(int numPlayers, u16 targetPlayer, u16 amount);
 
 
 #endif //PROJECTMCODES_EFFECTITEMHANDLER_H

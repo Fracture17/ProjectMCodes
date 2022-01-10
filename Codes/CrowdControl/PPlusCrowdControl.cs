@@ -452,8 +452,14 @@ public class PPlus : SimpleTCPPack
 		
 		//// Spawn Assist Trophies
 		createEffect("Assist", "items_spawn_assist", 8, new[]{"items_assist", "#assist"}, "items_spawn"),
+
+		/// Attach Items
+		createEffectFolder("Attach", "items_attach", "items"),
+
+        //// Attach Gooey
+		createEffect("Attach Gooey", "item_attach_gooey", 9, new[]{"players, #gooey"}, "items_attach")
 		
-		/// TODO: Item rain selection
+		/// TODO: Item rain selection e.g. active Gooey, active Boxes active Pokeballs
 
 		/// TODO: Spawn at player (or alternatively see if can just auto make player hold the item)
 
@@ -461,22 +467,23 @@ public class PPlus : SimpleTCPPack
 
 		createEffectFolder("Status", "status"),
 
-		createEffect("Metal", "status_metal", 9, new[]{"players", "set", "%percent"}, "status"),
-		createEffect("Curry", "status_curry", 10, new[]{"players", "set"}, "status"),
-		createEffect("Hammer", "status_hammer", 11, new[]{"players", "set"}, "status"),
-		createEffect("SuperStar", "status_superstar", 12, new[]{"players", "set"}, "status"),
-		createEffect("Flower", "status_flower", 13, new[]{"players", "flower_rate", "flower_size"}, "status"),
-		createEffect("Heart", "status_heart", 14, new[]{"players", "players"}, "status"),
-		createEffect("Slow", "status_slow", 15, new[]{"players", "set", "slow_strength", "slow_duration"}, "status"),
-		createEffect("Mushroom", "status_mushroom", 16, new[]{"players", "set", "mushroom"}, "status"),
-		createEffect("Equip", "status_equip", 17, new[]{"players", "items_equip"}, "status"),
-		createEffect("Swap", "status_swap", 18, new[]{"players_specific", "players_specific", "set", "swap_duration"}, "status"),
-		createEffect("Final Smash", "status_finalsmash", 19, new[]{"players"}, "status"),
+		createEffect("Metal", "status_metal", 10, new[]{"players", "set", "%percent"}, "status"),
+		createEffect("Curry", "status_curry", 11, new[]{"players", "set"}, "status"),
+		createEffect("Hammer", "status_hammer", 12, new[]{"players", "set"}, "status"),
+		createEffect("SuperStar", "status_superstar", 13, new[]{"players", "set"}, "status"),
+		createEffect("Flower", "status_flower", 14, new[]{"players", "flower_rate", "flower_size"}, "status"),
+		createEffect("Heart", "status_heart", 15, new[]{"players", "players"}, "status"),
+		createEffect("Slow", "status_slow", 16, new[]{"players", "set", "slow_strength", "slow_duration"}, "status"),
+		createEffect("Mushroom", "status_mushroom", 17, new[]{"players", "set", "mushroom"}, "status"),
+		createEffect("Equip", "status_equip", 18, new[]{"players", "items_equip"}, "status"),
+		createEffect("Swap", "status_swap", 19, new[]{"players_specific", "players_specific", "set", "swap_duration"}, "status"),
+		createEffect("Final Smash", "status_finalsmash", 20, new[]{"players"}, "status"),
 
 		// Force Action
-		createEffect("Action", "action", 20, new[]{"players", "actions"}),
+		createEffect("Action", "action", 21, new[]{"players", "actions"}),
 		// TODO: Maybe have some actions cost more?
 
+        // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
 
 		// Dropdown List Selections
@@ -733,6 +740,7 @@ public class PPlus : SimpleTCPPack
 		new ItemType("#Items", "#items", ItemType.Subtype.Slider, "{\"min\":1,\"max\":5}"),
 		new ItemType("#Pkmn", "#pkmn", ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
 		new ItemType("#Assist", "#assist", ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
+		new ItemType("#Gooey", "#gooey", ItemType.Subtype.Slider, "{\"min\":1,\"max\":3}"),
 		new ItemType("Flower Rate", "flower_rate", ItemType.Subtype.Slider, "{\"min\":1,\"max\":1000}"),
 		new ItemType("Flower Size", "flower_size", ItemType.Subtype.Slider, "{\"min\":1,\"max\":10}"),
 		new ItemType("Slow Strength", "slow_strength", ItemType.Subtype.Slider, "{\"min\":2,\"max\":8}"),
