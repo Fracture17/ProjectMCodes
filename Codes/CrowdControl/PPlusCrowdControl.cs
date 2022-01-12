@@ -459,7 +459,7 @@ public class PPlus : SimpleTCPPack
         //// Attach Gooey
 		createEffect("Attach Gooey", "item_attach_gooey", 9, new[]{"players, #gooey"}, "items_attach")
 		
-		/// TODO: Item rain selection e.g. active Gooey, active Boxes active Pokeballs
+		/// TODO: Item rain selection e.g. active Gooey, active Boxes active Pokeballs, carpet bob-ombs where one opening like booksquirm, maybe hold them in place like random landmines
 
 		/// TODO: Spawn at player (or alternatively see if can just auto make player hold the item)
 
@@ -482,6 +482,14 @@ public class PPlus : SimpleTCPPack
 		// Force Action
 		createEffect("Action", "action", 21, new[]{"players", "actions"}),
 		// TODO: Maybe have some actions cost more?
+
+        // Warp
+        createEffectFolder("Warp", "warp"),
+
+        /// Warp to Player
+        createEffect("Warp to Player", "warp_toplayer", 22, new[]{"players", "players"}, "warp"),
+
+        // TODO: Random safe warp
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -524,7 +532,6 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Up Special", "action", (int)(ActionIds.Up_Special), "actions"),
 		createEffectSubItem("Get Up Attack", "action", (int)(ActionIds.Get_Up_Attack), "actions"),
 		//createEffectSubItem("Taunt", "action", (int)(ActionIds.Taunt), "actions"),
-
 
 		/// Mushroom
         createEffectSubItem("Super", "mushroom_0", 0, "mushroom"),

@@ -8,6 +8,7 @@
 #include "EffectStatusHandler.h"
 #include "EffectActionHandler.h"
 #include "EffectGameHandler.h"
+#include "EffectPositionHandler.h"
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
@@ -181,6 +182,9 @@ namespace FrameLogic {
                 case EFFECT_STATUS_ACTION:
                     exiStatus = effectActionChangeForce(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
+                case EFFECT_WARP_TOPLAYER:
+                    exiStatus = effectPositionWarpToPlayer(numPlayers, effectRequest[1], effectRequest[2]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -209,6 +213,8 @@ namespace FrameLogic {
                     //preloadedAssistAmount = 1;
 
                     //effectItemAttachGooey(numPlayers, 0, 1);
+                    //effectPositionWarpToPlayer(numPlayers, 0, MAX_PLAYERS + 1);
+
                 } else if (padSystem->pads[0].buttons.RightDPad) {
                     //effectStatusGiveCurry(numPlayers, 0, 1);
                     //effectItemSpawn(0x2A, 1); //0x78, 1); // 0x2A - Pokeball
@@ -291,6 +297,7 @@ namespace FrameLogic {
             responsePckt.Send();
         }
 
+        // TODO: Print current active effect e.g. Random Element (and maybe time left)
 
         startNormalDraw();
         if (visible) {

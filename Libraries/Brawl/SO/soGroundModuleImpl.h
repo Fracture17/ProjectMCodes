@@ -51,12 +51,14 @@ struct soGroundModuleImpl {
     double getDistanceFromUnderGrCol(double maxDistance, Vec3f * unk, bool unkBool);
     unsigned int isPassableCheck(int unk);
     unsigned int isPassableGround(int unk);
+    int getCorrect();
     void setCorrect(int mode);
     xyDouble getLeftPos();
     xyDouble getRightPos();
     xyDouble getUpPos();
     xyDouble getDownPos();
     // xyDouble getDownCorrectPos();
+    void setShapeSafePos(xyDouble xyPos);
 
     char _spacer2[0x28];
 
@@ -72,6 +74,7 @@ struct soGroundModuleImpl {
 
 #define _getDistanceFromUnderGrCol_soGroundModuleImpl ((double (*)(double maxDistance, soGroundModuleImpl * self, Vec3f * position, bool unkBool)) 0x80734f8c)
 #define _setGrCollisisonMode ((void (*)(soGroundModuleImpl * self, int collisionMode)) 0x80730a04)
+#define _getCorrect_soGroundModuleImpl ((int (*)(soGroundModuleImpl * self, int index)) 0x80731730)
 #define _setCorrect_soGroundModuleImpl ((void (*)(soGroundModuleImpl * self, int mode, int unk)) 0x80731324)
 #define _isPassableGround_soGroundModuleImpl ((unsigned int (*)(soGroundModuleImpl * self, int unk)) 0x80731e44)
 #define _isPassableCheck_soGroundModuleImpl ((unsigned int (*)(soGroundModuleImpl * self, int unk)) 0x80731b1c)
@@ -81,5 +84,7 @@ struct soGroundModuleImpl {
 #define _getUpPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80733f14)
 #define _getDownPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80733f58)
 // #define _getDownCorrectPos_soGroundModuleImpl ((xyDouble (*)(soGroundModuleImpl * self, int unk)) 0x80734184)
+
+#define _setShapeSafePos_soGroundModule ((void (*)(soGroundModuleImpl* self, xyDouble xyPos, int unk2)) 0x807344b8)
 
 #endif //PROJECTMCODES_SOGROUNDMODULEIMPL_H

@@ -40,6 +40,7 @@ enum CCEffect
     EFFECT_STATUS_SWAP = 19,
     EFFECT_STATUS_FINALSMASH = 20,
     EFFECT_STATUS_ACTION = 21,
+    EFFECT_WARP_TOPLAYER = 22,
 };
 
 //hacky way to check if in game
