@@ -58,7 +58,7 @@ struct soGroundModuleImpl {
     xyDouble getUpPos();
     xyDouble getDownPos();
     // xyDouble getDownCorrectPos();
-    void setShapeSafePos(xyDouble xyPos);
+    void setShapeSafePos(xyDouble xyPos, int unk);
 
     char _spacer2[0x28];
 

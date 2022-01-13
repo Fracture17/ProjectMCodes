@@ -11,9 +11,12 @@
 #include "Assembly.h"
 #include "Utilities.h"
 
+
+void checkSpawnPokemonOrAssist();
+
 EXIStatus effectItemSpawn(int itemId, u16 amount);
-EXIStatus effectItemPreloadPokemon(int itemId);
-EXIStatus effectItemPreloadAssist(int itemId);
+EXIStatus effectItemPreloadPokemon(int itemId, u16 amount);
+EXIStatus effectItemPreloadAssist(int itemId, u16 amount);
 EXIStatus effectItemAttachGooey(int numPlayers, u16 targetPlayer, u16 amount);
 
 

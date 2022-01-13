@@ -7,7 +7,7 @@
 
 #include "Wii/mtRand.h"
 #include "Brawl/FT/ftManager.h"
-
+#include "Memory.h"
 
 const int MAX_PLAYERS = 4;
 
@@ -15,6 +15,20 @@ const int MAX_PLAYERS = 4;
 int randi(int max);
 int max(int x1, int x2);
 unsigned int min(unsigned int x1, unsigned int x2);
+
+class ArrayPicker {
+
+public:
+    ArrayPicker(u16 numPlayers);
+    ~ArrayPicker();
+
+    u16 pickAndShiftArray();
+
+private:
+    u16 array[MAX_PLAYERS] = {0,1, 2, 3};
+    u16 size;
+};
+
 
 Fighter* getFighter(int targetPlayer);
 ftOwner* getFtOwner(int targetPlayer);

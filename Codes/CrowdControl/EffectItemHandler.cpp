@@ -12,6 +12,38 @@
 //const int POKEMON_IDS[] = {0x62, 0x63, 0x64, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6E, 0x70, 0x71, 0x72, 0x73, 0x75, 0x76, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7F, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85};
 //int currentPokemonId = 0;
 
+int preloadedPokemonId = -1;
+int preloadedPokemonWaitFrames = 0;
+u16 preloadedPokemonAmount = 0;
+int preloadedAssistId = -1;
+int preloadedAssistWaitFrames = 0;
+u16 preloadedAssistAmount = 0;
+
+const int MIN_PRELOADED_POKEMON_FRAMES = 60;
+const int MIN_PRELOADED_ASSIST_FRAMES = 120;
+
+void checkSpawnPokemonOrAssist() {
+    if (preloadedPokemonId >= 0) {
+        preloadedPokemonWaitFrames++;
+        if (preloadedPokemonWaitFrames > MIN_PRELOADED_POKEMON_FRAMES) {
+            effectItemSpawn(preloadedPokemonId, preloadedPokemonAmount);
+            preloadedPokemonId = -1;
+            preloadedPokemonWaitFrames = 0;
+            preloadedPokemonAmount = 0;
+        }
+    }
+
+    if (preloadedAssistId >= 0) {
+        preloadedAssistWaitFrames++;
+        if (preloadedAssistWaitFrames > MIN_PRELOADED_ASSIST_FRAMES) {
+            effectItemSpawn(preloadedAssistId, preloadedAssistAmount);
+            preloadedAssistId = -1;
+            preloadedAssistWaitFrames = 0;
+            preloadedAssistAmount = 0;
+        }
+    }
+}
+
 EXIStatus effectItemSpawn(int itemId, u16 amount) {
 
     // TODO: Check if item can be spawned in
@@ -33,18 +65,32 @@ EXIStatus effectItemSpawn(int itemId, u16 amount) {
     return RESULT_EFFECT_SUCCESS;
 }
 
-EXIStatus effectItemPreloadPokemon(int itemId) {
-    ((int* (*)(void* it)) ITEM_MANAGER->itKindArrayList_vtable->pop)(&ITEM_MANAGER->itKindArrayList_vtable);
-    ITEM_MANAGER->preloadPokemon((itemIdName) itemId);
-    return RESULT_EFFECT_SUCCESS;
+EXIStatus effectItemPreloadPokemon(int itemId, u16 amount) {
+    if (preloadedPokemonId < 0) {
+        ((int *(*)(void *it)) ITEM_MANAGER->itKindArrayList_vtable->pop)(&ITEM_MANAGER->itKindArrayList_vtable);
+        ITEM_MANAGER->preloadPokemon((itemIdName) itemId);
+        preloadedPokemonId = itemId;
+        preloadedPokemonAmount = amount;
+        return RESULT_EFFECT_SUCCESS;
+    }
+    else {
+        return RESULT_EFFECT_RETRY;
+    }
 }
 
-EXIStatus effectItemPreloadAssist(int itemId) {
+EXIStatus effectItemPreloadAssist(int itemId, u16 amount) {
     // TODO: Investigate which Assists work (e.g. Nintendog and Devil don't)
+    if (preloadedAssistId < 0) {
+        ITEM_MANAGER->nextAssist = (itemIdName)0xffffffff;
+        ITEM_MANAGER->preloadAssist((itemIdName) itemId);
+        preloadedAssistId = itemId;
+        preloadedAssistAmount = amount;
+        return RESULT_EFFECT_SUCCESS;
+    }
+    else {
+        return RESULT_EFFECT_RETRY;
+    }
 
-    ITEM_MANAGER->nextAssist = (itemIdName)0xffffffff;
-    ITEM_MANAGER->preloadAssist((itemIdName) itemId);
-    return RESULT_EFFECT_SUCCESS;
 }
 
 void attachGooeyToPlayer(u16 targetPlayer, u16 amount) {

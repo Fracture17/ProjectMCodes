@@ -18,14 +18,9 @@ namespace FrameLogic {
     Menu* myMenu;
     bool visible = false;
 
-    const int MIN_PRELOADED_POKEMON_FRAMES = 60;
-    const int MIN_PRELOADED_ASSIST_FRAMES = 120;
-    int preloadedPokemonId = -1;
-    int preloadedPokemonWaitFrames = 0;
-    int preloadedPokemonAmount = 0;
-    int preloadedAssistId = -1;
-    int preloadedAssistWaitFrames = 0;
-    int preloadedAssistAmount = 0;
+    const int MIN_TEST_LOCKOUT_FRAMES = 20;
+    bool testLockout = false;
+    int testWaitFrames = 0;
 
     //hacky way to check if in game
     unsigned int getScene() {
@@ -97,25 +92,16 @@ namespace FrameLogic {
         if (scene == SCENE_TYPE::SCENE_VS || scene == SCENE_TYPE::SCENE_TRAINING_MODE_MMS) {
             //visible = true;
 
-            if (preloadedPokemonId >= 0) {
-                preloadedPokemonWaitFrames++;
-                if (preloadedPokemonWaitFrames > MIN_PRELOADED_POKEMON_FRAMES) {
-                    effectItemSpawn(preloadedPokemonId, preloadedPokemonAmount);
-                    preloadedPokemonId = -1;
-                    preloadedPokemonWaitFrames = 0;
-                    preloadedPokemonAmount = 0;
+            if (testLockout) {
+                testWaitFrames++;
+                if (testWaitFrames > MIN_TEST_LOCKOUT_FRAMES) {
+                    testLockout = false;
+                    testWaitFrames = 0;
                 }
             }
 
-            if (preloadedAssistId >= 0) {
-                preloadedAssistWaitFrames++;
-                if (preloadedAssistWaitFrames > MIN_PRELOADED_ASSIST_FRAMES) {
-                    effectItemSpawn(preloadedAssistId, preloadedAssistAmount);
-                    preloadedAssistId = -1;
-                    preloadedAssistWaitFrames = 0;
-                    preloadedAssistAmount = 0;
-                }
-            }
+            checkResetCorrect();
+            checkSpawnPokemonOrAssist();
 
             int numPlayers = FIGHTER_MANAGER->getEntryCount();
 
@@ -127,20 +113,10 @@ namespace FrameLogic {
                     exiStatus = effectItemSpawn(effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_ITEM_SPAWN_POKEMON:
-                    if (preloadedPokemonId < 0) {
-                        exiStatus = effectItemPreloadPokemon(effectRequest[1]);
-                        preloadedPokemonId = effectRequest[1];
-                        preloadedPokemonAmount = effectRequest[2];
-                    }
-                    else exiStatus = RESULT_EFFECT_RETRY;
+                    exiStatus = effectItemPreloadPokemon(effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_ITEM_SPAWN_ASSIST:
-                    if (preloadedAssistId < 0) {
-                        exiStatus = effectItemPreloadAssist(effectRequest[1]);
-                        preloadedAssistId = effectRequest[1];
-                        preloadedAssistAmount = effectRequest[2];
-                    }
-                    else exiStatus = RESULT_EFFECT_RETRY;
+                    exiStatus = effectItemPreloadAssist(effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_ITEM_ATTACH_GOOEY:
                     exiStatus = effectItemAttachGooey(numPlayers, effectRequest[1], effectRequest[2]);
@@ -185,6 +161,9 @@ namespace FrameLogic {
                 case EFFECT_WARP_TOPLAYER:
                     exiStatus = effectPositionWarpToPlayer(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
+                case EFFECT_WARP_SWAP:
+                    exiStatus = effectPositionSwap(numPlayers, effectRequest[1], effectRequest[2]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -194,7 +173,7 @@ namespace FrameLogic {
                     break;
             }
 
-            if (preloadedAssistId < 0) {//preloadedPokemonId < 0) {
+            if (!testLockout) {//preloadedPokemonId < 0) {
 
                 if (padSystem->pads[0].buttons.LeftDPad) {
                     //effectStatusGiveCurry(numPlayers, 0, 0);
@@ -213,7 +192,10 @@ namespace FrameLogic {
                     //preloadedAssistAmount = 1;
 
                     //effectItemAttachGooey(numPlayers, 0, 1);
-                    //effectPositionWarpToPlayer(numPlayers, 0, MAX_PLAYERS + 1);
+                    //effectPositionWarpToPlayer(numPlayers, 0, 1);
+                    //effectPositionSwap(numPlayers, MAX_PLAYERS + 1, MAX_PLAYERS + 1);
+                    //effectPositionSwap(numPlayers, 0, 1);
+                    //testLockout = true;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {
                     //effectStatusGiveCurry(numPlayers, 0, 1);

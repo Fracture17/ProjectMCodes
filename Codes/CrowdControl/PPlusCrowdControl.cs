@@ -489,6 +489,11 @@ public class PPlus : SimpleTCPPack
         /// Warp to Player
         createEffect("Warp to Player", "warp_toplayer", 22, new[]{"players", "players"}, "warp"),
 
+        // TODO: Blob of terror (have characters stuck to each other for a period of time)
+
+        /// Warp to Player
+        createEffect("Swap Positions", "warp_swap", 23, new[]{"players", "players"}, "warp"),
+
         // TODO: Random safe warp
 
         // TODO: ??? Mystery Box of random effects

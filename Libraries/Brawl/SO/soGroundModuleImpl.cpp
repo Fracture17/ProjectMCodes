@@ -45,6 +45,6 @@ xyDouble soGroundModuleImpl::getDownPos() {
 //     return _getDownCorrectPos_soGroundModuleImpl(this, 0);
 // }
 
-void soGroundModuleImpl::setShapeSafePos(xyDouble xyPos) {
-    return _setShapeSafePos_soGroundModule(this, xyPos, 0);
+void soGroundModuleImpl::setShapeSafePos(xyDouble xyPos, int unk) {
+    return _setShapeSafePos_soGroundModule(this, xyPos, unk);
 }
