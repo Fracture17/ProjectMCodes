@@ -56,6 +56,7 @@ EXIStatus effectStatusGiveCurry(int numPlayers, u16 targetPlayer, bool setEffect
 }
 
 EXIStatus effectStatusGiveHammer(int numPlayers, u16 targetPlayer, bool setEffect){
+    // TODO: Have a duration and stop at duration
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
@@ -154,14 +155,14 @@ EXIStatus effectStatusGiveSlow(int numPlayers, u16 targetPlayer, bool setEffect,
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players slow
         for (u16 targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            getFighter(targetPlayer)->setSlow(setEffect, slowStrength, duration, 1);
+            getFighter(targetPlayer)->setSlow(setEffect, slowStrength, duration*60, 1);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        getFighter(targetPlayer)->setSlow(setEffect, slowStrength, duration, 1);
+        getFighter(targetPlayer)->setSlow(setEffect, slowStrength, duration*60, 1);
     }
 
     return RESULT_EFFECT_SUCCESS;
@@ -221,7 +222,7 @@ EXIStatus effectStatusGiveSwap(int numPlayers, u16 targetPlayer1, u16 targetPlay
                 FIGHTER_MANAGER->getEntryIdFromIndex(targetPlayer1),
                 FIGHTER_MANAGER->getEntryIdFromIndex(targetPlayer2),
                 1,
-                duration);
+                duration*60);
         return RESULT_EFFECT_SUCCESS;
     }
 }

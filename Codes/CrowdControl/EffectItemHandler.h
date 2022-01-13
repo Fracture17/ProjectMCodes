@@ -12,7 +12,7 @@
 #include "Utilities.h"
 
 
-void checkSpawnPokemonOrAssist();
+void checkItemSpawnPokemonOrAssist();
 
 EXIStatus effectItemSpawn(int itemId, u16 amount);
 EXIStatus effectItemPreloadPokemon(int itemId, u16 amount);

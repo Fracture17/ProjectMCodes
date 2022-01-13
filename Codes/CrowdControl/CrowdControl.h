@@ -42,6 +42,8 @@ enum CCEffect
     EFFECT_STATUS_ACTION = 21,
     EFFECT_WARP_TOPLAYER = 22,
     EFFECT_WARP_SWAP = 23,
+    EFFECT_MODE_FLIGHT = 24,
+    EFFECT_MODE_BORDERLESS = 25,
 };
 
 //hacky way to check if in game

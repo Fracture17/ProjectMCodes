@@ -19,26 +19,21 @@ int preloadedAssistId = -1;
 int preloadedAssistWaitFrames = 0;
 u16 preloadedAssistAmount = 0;
 
-const int MIN_PRELOADED_POKEMON_FRAMES = 60;
-const int MIN_PRELOADED_ASSIST_FRAMES = 120;
-
-void checkSpawnPokemonOrAssist() {
+void checkItemSpawnPokemonOrAssist() {
     if (preloadedPokemonId >= 0) {
-        preloadedPokemonWaitFrames++;
-        if (preloadedPokemonWaitFrames > MIN_PRELOADED_POKEMON_FRAMES) {
+        preloadedPokemonWaitFrames--;
+        if (preloadedPokemonWaitFrames == 0) {
             effectItemSpawn(preloadedPokemonId, preloadedPokemonAmount);
             preloadedPokemonId = -1;
-            preloadedPokemonWaitFrames = 0;
             preloadedPokemonAmount = 0;
         }
     }
 
     if (preloadedAssistId >= 0) {
-        preloadedAssistWaitFrames++;
-        if (preloadedAssistWaitFrames > MIN_PRELOADED_ASSIST_FRAMES) {
+        preloadedAssistWaitFrames--;
+        if (preloadedAssistWaitFrames == 0) {
             effectItemSpawn(preloadedAssistId, preloadedAssistAmount);
             preloadedAssistId = -1;
-            preloadedAssistWaitFrames = 0;
             preloadedAssistAmount = 0;
         }
     }
@@ -71,6 +66,7 @@ EXIStatus effectItemPreloadPokemon(int itemId, u16 amount) {
         ITEM_MANAGER->preloadPokemon((itemIdName) itemId);
         preloadedPokemonId = itemId;
         preloadedPokemonAmount = amount;
+        preloadedPokemonWaitFrames = 60;
         return RESULT_EFFECT_SUCCESS;
     }
     else {
@@ -85,6 +81,7 @@ EXIStatus effectItemPreloadAssist(int itemId, u16 amount) {
         ITEM_MANAGER->preloadAssist((itemIdName) itemId);
         preloadedAssistId = itemId;
         preloadedAssistAmount = amount;
+        preloadedAssistWaitFrames = 120;
         return RESULT_EFFECT_SUCCESS;
     }
     else {

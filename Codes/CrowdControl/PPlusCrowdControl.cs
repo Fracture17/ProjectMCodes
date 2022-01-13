@@ -496,6 +496,12 @@ public class PPlus : SimpleTCPPack
 
         // TODO: Random safe warp
 
+        // Modes
+        createEffectFolder("Modes", "mode"),
+
+        createEffect("Flight", "mode_flight", 24, new[]{"flight_duration", "flight_xmaxspeed", "flight_ymaxspeed", "flight_xaccel", "flight_yaccel"}, "mode"),
+        createEffect("Borderless", "mode_borderless", 25, "mode"),
+
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
 
@@ -756,8 +762,13 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Flower Rate", "flower_rate", ItemType.Subtype.Slider, "{\"min\":1,\"max\":1000}"),
 		new ItemType("Flower Size", "flower_size", ItemType.Subtype.Slider, "{\"min\":1,\"max\":10}"),
 		new ItemType("Slow Strength", "slow_strength", ItemType.Subtype.Slider, "{\"min\":2,\"max\":8}"),
-		new ItemType("Slow Duration", "slow_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":720}"),
-		new ItemType("Swap Duration", "swap_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":720}"),
+		new ItemType("Slow Duration", "slow_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Swap Duration", "swap_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Flight Duration", "flight_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Flight Max Horizontal Speed", "flight_xmaxspeed", ItemType.Subtype.Slider, "{\"min\":0,\"max\":100}"),
+		new ItemType("Flight Max Vertical Speed", "flight_ymaxspeed", ItemType.Subtype.Slider, "{\"min\":0,\"max\":100}"),
+		new ItemType("Flight Horizontal Acceleration", "flight_xaccel", ItemType.Subtype.Slider, "{\"min\":-100,\"max\":100}"),
+		new ItemType("Flight Vertical Acceleration", "flight_yaccel", ItemType.Subtype.Slider, "{\"min\":-100,\"max\":100}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),

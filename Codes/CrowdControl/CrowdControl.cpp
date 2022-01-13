@@ -9,6 +9,7 @@
 #include "EffectActionHandler.h"
 #include "EffectGameHandler.h"
 #include "EffectPositionHandler.h"
+#include "EffectModeHandler.h"
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
@@ -18,9 +19,7 @@ namespace FrameLogic {
     Menu* myMenu;
     bool visible = false;
 
-    const int MIN_TEST_LOCKOUT_FRAMES = 20;
-    bool testLockout = false;
-    int testWaitFrames = 0;
+    unsigned int testWaitDuration = 0;
 
     //hacky way to check if in game
     unsigned int getScene() {
@@ -92,16 +91,13 @@ namespace FrameLogic {
         if (scene == SCENE_TYPE::SCENE_VS || scene == SCENE_TYPE::SCENE_TRAINING_MODE_MMS) {
             //visible = true;
 
-            if (testLockout) {
-                testWaitFrames++;
-                if (testWaitFrames > MIN_TEST_LOCKOUT_FRAMES) {
-                    testLockout = false;
-                    testWaitFrames = 0;
-                }
+            if (testWaitDuration > 0) {
+                testWaitDuration--;
             }
 
-            checkResetCorrect();
-            checkSpawnPokemonOrAssist();
+            checkEffectModeDurationFinished();
+            checkPositionResetCorrect();
+            checkItemSpawnPokemonOrAssist();
 
             int numPlayers = FIGHTER_MANAGER->getEntryCount();
 
@@ -164,6 +160,13 @@ namespace FrameLogic {
                 case EFFECT_WARP_SWAP:
                     exiStatus = effectPositionSwap(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
+                case EFFECT_MODE_FLIGHT:
+                    // TODO: Package the new Dolphin with increased packet size
+                    exiStatus = effectModeFlight(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_MODE_BORDERLESS:
+                    exiStatus = effectModeBorderless(effectRequest[1]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -173,14 +176,14 @@ namespace FrameLogic {
                     break;
             }
 
-            if (!testLockout) {//preloadedPokemonId < 0) {
+            if (testWaitDuration == 0) {//preloadedPokemonId < 0) {
 
                 if (padSystem->pads[0].buttons.LeftDPad) {
                     //effectStatusGiveCurry(numPlayers, 0, 0);
                     //effectStatusGiveMushroom(numPlayers, 0, 1, 1);
                     //effectActionChangeForce(numPlayers, 0, 0x10C);
                     //effectStatusGiveFinalSmash(numPlayers, 0, 0);
-                    //effectStatusGiveSwap(4, 0, 1, 0, 720);
+                    //effectStatusGiveSwap(4, 0, 1, 0, 12);
                     //effectItemSpawn(0x0, 1); //0x78, 1); // 0x2A - Pokeball
 
                     //effectItemPreloadPokemon(0x69); // Deoxys
@@ -195,7 +198,10 @@ namespace FrameLogic {
                     //effectPositionWarpToPlayer(numPlayers, 0, 1);
                     //effectPositionSwap(numPlayers, MAX_PLAYERS + 1, MAX_PLAYERS + 1);
                     //effectPositionSwap(numPlayers, 0, 1);
-                    //testLockout = true;
+
+                    //effectModeFlight(12, 2, 2, (u16)-1, 1);
+                    //effectModeBorderless(12);
+                    testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {
                     //effectStatusGiveCurry(numPlayers, 0, 1);
@@ -279,7 +285,7 @@ namespace FrameLogic {
             responsePckt.Send();
         }
 
-        // TODO: Print current active effect e.g. Random Element (and maybe time left)
+        // TODO: Print current active effect e.g. Random Element (and maybe time left) (should handle it in durationFinished)
 
         startNormalDraw();
         if (visible) {
@@ -311,7 +317,9 @@ namespace FrameLogic {
 
     SIMPLE_INJECTION(startGame, 0x806dd5f4, "mr r3, r19") { SendGameStatus(EXIStatus::STATUS_GAME_STARTED); } // when booting up
     SIMPLE_INJECTION(startMatch, 0x800dc590, "li r9, 0x2") { SendGameStatus(EXIStatus::STATUS_MATCH_STARTED); } // when starting match
-    SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") { SendGameStatus(EXIStatus::STATUS_MATCH_ENDED); } // when exiting match
+    SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") {
+        resetEffectMode();
+        SendGameStatus(EXIStatus::STATUS_MATCH_ENDED); } // when exiting match
     /*INJECTION("frameUpdate", 0x8001792c, R"(
     bl onUpdateFrame
     addi r3, r30, 280

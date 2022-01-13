@@ -9,7 +9,7 @@
 #define PROJECTMCODES_EFFECTPOSITIONHANDLER_H
 
 
-void checkResetCorrect();
+void checkPositionResetCorrect();
 
 EXIStatus effectPositionWarpToPlayer(int numPlayers, u16 targetPlayer, u16 warpingPlayer);
 EXIStatus effectPositionSwap(int numPlayers, u16 targetPlayer1, u16 targetPlayer2);

@@ -6,7 +6,7 @@
 
 bool isPlayersTeleporting[] = {false, false, false, false};
 
-void checkResetCorrect() {
+void checkPositionResetCorrect() {
     for (int player = 0; player < MAX_PLAYERS; player++) {
         if (isPlayersTeleporting[player]) {
             getFighter(player)->modules->groundModule->setCorrect(5);
