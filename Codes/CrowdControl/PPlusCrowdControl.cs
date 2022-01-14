@@ -500,7 +500,9 @@ public class PPlus : SimpleTCPPack
         createEffectFolder("Modes", "mode"),
 
         createEffect("Flight", "mode_flight", 24, new[]{"flight_duration", "flight_xmaxspeed", "flight_ymaxspeed", "flight_xaccel", "flight_yaccel"}, "mode"),
-        createEffect("Borderless", "mode_borderless", 25, "mode"),
+        createEffect("Borderless", "mode_borderless", 25, new[]{"borderless_duration"}, "mode"),
+        createEffect("Random Element", "mode_element", 26, new[]{"element_duration"}, "mode"),
+        createEffect("Zero to Death", "mode_ztd", 27, new[]{"ztd_duration"}, "mode"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -769,6 +771,9 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Flight Max Vertical Speed", "flight_ymaxspeed", ItemType.Subtype.Slider, "{\"min\":0,\"max\":100}"),
 		new ItemType("Flight Horizontal Acceleration", "flight_xaccel", ItemType.Subtype.Slider, "{\"min\":-100,\"max\":100}"),
 		new ItemType("Flight Vertical Acceleration", "flight_yaccel", ItemType.Subtype.Slider, "{\"min\":-100,\"max\":100}"),
+		new ItemType("Borderless Duration", "borderless_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Element Duration", "element_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Zero to Death Duration", "ztd_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),

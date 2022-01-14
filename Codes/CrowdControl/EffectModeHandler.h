@@ -12,5 +12,7 @@ void checkEffectModeDurationFinished();
 
 EXIStatus effectModeFlight(u16 duration, u16 x_maxspeed, u16 y_maxspeed, s16 x_accel, s16 y_accel);
 EXIStatus effectModeBorderless(u16 duration);
+EXIStatus effectModeElement(u16 duration);
+EXIStatus effectModeZTD(u16 duration);
 
 #endif //PROJECTMCODES_EFFECTMODEHANDLER_H

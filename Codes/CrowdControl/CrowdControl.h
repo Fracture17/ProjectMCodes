@@ -44,6 +44,8 @@ enum CCEffect
     EFFECT_WARP_SWAP = 23,
     EFFECT_MODE_FLIGHT = 24,
     EFFECT_MODE_BORDERLESS = 25,
+    EFFECT_MODE_ELEMENT = 26,
+    EFFECT_MODE_ZTD = 27,
 };
 
 //hacky way to check if in game
