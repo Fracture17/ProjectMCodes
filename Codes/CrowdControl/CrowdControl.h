@@ -46,6 +46,8 @@ enum CCEffect
     EFFECT_MODE_BORDERLESS = 25,
     EFFECT_MODE_ELEMENT = 26,
     EFFECT_MODE_ZTD = 27,
+    EFFECT_MODE_BOMBRAIN = 28,
+    EFFECT_MODE_WILD = 29,
 };
 
 //hacky way to check if in game

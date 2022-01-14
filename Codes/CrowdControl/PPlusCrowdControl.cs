@@ -503,6 +503,8 @@ public class PPlus : SimpleTCPPack
         createEffect("Borderless", "mode_borderless", 25, new[]{"borderless_duration"}, "mode"),
         createEffect("Random Element", "mode_element", 26, new[]{"element_duration"}, "mode"),
         createEffect("Zero to Death", "mode_ztd", 27, new[]{"ztd_duration"}, "mode"),
+        createEffect("Bomb Rain", "mode_bombrain", 28, new[]{"bombrain_duration"}, "mode"),
+        createEffect("Wild", "mode_wild", 29, new[]{"wild_duration", "wild_speed", "growth"}, "mode"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -518,14 +520,18 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Player All", "player_all", 5, "players"),
 
         /// Players
-		createEffectSubItem("Player 1", "player", 0, "players_specific"),
-		createEffectSubItem("Player 2", "player", 1, "players_specific"),
-		createEffectSubItem("Player 3", "player", 2, "players_specific"),
-		createEffectSubItem("Player 4", "player", 3, "players_specific"),
+		createEffectSubItem("Player 1", "player_specific", 0, "players_specific"),
+		createEffectSubItem("Player 2", "player_specific", 1, "players_specific"),
+		createEffectSubItem("Player 3", "player_specific", 2, "players_specific"),
+		createEffectSubItem("Player 4", "player_specific", 3, "players_specific"),
 
 		/// Set
-		createEffectSubItem("Remove", "set_0", 0, "set"),
-		createEffectSubItem("Give", "set_1", 1, "set"),
+		createEffectSubItem("Remove", "set_remove", 0, "set"),
+		createEffectSubItem("Give", "set_give", 1, "set"),
+
+		/// Growth
+        createEffectSubItem("Decrease", "growth_decrease", 0, "growth"),
+        createEffectSubItem("Increase", "growth_increase", 1, "growth"),
 
 		// Action
 		createEffectSubItem("Bury", "action", (int)(ActionIds.Enter_Grounded), "actions"),
@@ -774,10 +780,14 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Borderless Duration", "borderless_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Element Duration", "element_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Zero to Death Duration", "ztd_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Bomb Rain Duration", "bombrain_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Wild Duration", "wild_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Wild Speed", "wild_speed", ItemType.Subtype.Slider, "{\"min\":0,\"max\":12}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),
 		new ItemType("Set", "set", ItemType.Subtype.ItemList),
+		new ItemType("Growth", "growth", ItemType.Subtype.ItemList),
 		new ItemType("Actions", "actions", ItemType.Subtype.ItemList),
         new ItemType("Mushroom", "mushroom", ItemType.Subtype.ItemList),
 		new ItemType("Regular Items", "items_reg", ItemType.Subtype.ItemList),

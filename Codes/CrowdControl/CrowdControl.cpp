@@ -173,6 +173,12 @@ namespace FrameLogic {
                 case EFFECT_MODE_ZTD:
                     exiStatus = effectModeZTD(effectRequest[1]);
                     break;
+                case EFFECT_MODE_BOMBRAIN:
+                    exiStatus = effectModeBombRain(effectRequest[1]);
+                    break;
+                case EFFECT_MODE_WILD:
+                    exiStatus = effectModeWild(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -209,6 +215,8 @@ namespace FrameLogic {
                     //effectModeBorderless(12);
                     //effectModeElement(12);
                     //effectModeZTD(12);
+                    //effectModeBombRain(12);
+                    //effectModeWild(12, 6, true);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {

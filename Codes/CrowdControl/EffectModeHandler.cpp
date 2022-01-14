@@ -18,13 +18,21 @@ s8 prev_stamina_toggle = 0;
 s8 prev_borderless_toggle = 0;
 unsigned int borderlessDuration = 0;
 
-s8* ELEMENT_TOGGLE = (s8*)(0x9017F360 + 0x1A);
+s8* ELEMENT_TOGGLE = (s8*)(0x9017F37A);
 s8 prev_element_toggle = 0;
 unsigned int elementDuration = 0;
 
-s8* ZTD_TOGGLE = (s8*)(0x9017F360 + 0x1A);
+s8* ZTD_TOGGLE = (s8*)(0x9017F37A);
 s8 prev_ztd_toggle = 0;
 unsigned int ztdDuration = 0;
+
+s8* BOMBRAIN_TOGGLE = (s8*)(0x9017F37F);
+s8 prev_bombrain_toggle = 0;
+unsigned int bombRainDuration = 0;
+
+//s8* WILD_TOGGLE = (s8*)(0x9017F37E);
+float prev_wild_speed = 0;
+unsigned int wildDuration = 0;
 
 void resetEffectMode() {
     *FLIGHT_MODE_TOGGLE = prev_flight_toggle;
@@ -39,6 +47,13 @@ void resetEffectMode() {
 
     *ZTD_TOGGLE = prev_ztd_toggle;
     ztdDuration = 0;
+
+    *BOMBRAIN_TOGGLE = prev_bombrain_toggle;
+    bombRainDuration = 0;
+
+    float* gameSpeedPtr = (float*)(*(int*)(*(int*)(0x805a0000 + 0xE0) + 0x44) + 0x4);
+    *gameSpeedPtr = prev_wild_speed;
+    wildDuration = 0;
 }
 
 void checkEffectModeDurationFinished() {
@@ -70,10 +85,25 @@ void checkEffectModeDurationFinished() {
             *ZTD_TOGGLE = prev_ztd_toggle;
         }
     }
+
+    if (bombRainDuration > 0) {
+        bombRainDuration--;
+        if (bombRainDuration == 0) {
+            *BOMBRAIN_TOGGLE = prev_bombrain_toggle;
+        }
+    }
+
+    if (wildDuration > 0) {
+        wildDuration--;
+        if (wildDuration == 0) {
+            float* gameSpeedPtr = (float*)(*(int*)(*(int*)(0x805a0000 + 0xE0) + 0x44) + 0x4);
+            *gameSpeedPtr = prev_wild_speed;
+        }
+    }
 }
 
 EXIStatus effectModeFlight(u16 duration, u16 x_maxspeed, u16 y_maxspeed, s16 x_accel, s16 y_accel) {
-    if (flightModeDuration > 0) {
+    if (flightModeDuration == 0) {
         prev_flight_toggle = *FLIGHT_MODE_TOGGLE;
     }
 
@@ -87,7 +117,7 @@ EXIStatus effectModeFlight(u16 duration, u16 x_maxspeed, u16 y_maxspeed, s16 x_a
 }
 
 EXIStatus effectModeBorderless(u16 duration) {
-    if (borderlessDuration > 0) {
+    if (borderlessDuration == 0) {
         prev_stamina_toggle = *STAMINA_TOGGLE;
         prev_borderless_toggle = *BORDERLESS_TOGGLE;
     }
@@ -104,7 +134,7 @@ EXIStatus effectModeElement(u16 duration) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        if (elementDuration > 0) {
+        if (elementDuration == 0) {
             prev_element_toggle = *ELEMENT_TOGGLE;
         }
         *ELEMENT_TOGGLE = 1;
@@ -120,11 +150,44 @@ EXIStatus effectModeZTD(u16 duration) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        if (ztdDuration > 0) {
+        if (ztdDuration == 0) {
             prev_ztd_toggle = *ZTD_TOGGLE;
         }
         *ZTD_TOGGLE = 2;
         ztdDuration += duration * 60;
         return RESULT_EFFECT_SUCCESS;
     }
+}
+
+EXIStatus effectModeBombRain(u16 duration) {
+    // TODO: Bomb rain and All-Star VS toggle use same address (maybe separate them for crowd control?) (Bomb rain overwrites Fixed camera)
+
+    if (*BOMBRAIN_TOGGLE == 2) {
+        return RESULT_EFFECT_UNAVAILABLE;
+    } else {
+        if (bombRainDuration == 0) {
+            prev_bombrain_toggle = *BOMBRAIN_TOGGLE;
+        }
+        *BOMBRAIN_TOGGLE = 1;
+        bombRainDuration += duration * 60;
+        return RESULT_EFFECT_SUCCESS;
+    }
+}
+
+EXIStatus effectModeWild(u16 duration, float speed, bool increase) {
+    // TODO: Wild overrides slow, maybe should change that if slow works by activating while in game?
+
+    // From Wild.asm
+    float* gameSpeedPtr = (float*)(*(int*)(*(int*)(0x805a0000 + 0xE0) + 0x44) + 0x4);
+
+    if (wildDuration == 0) {
+        prev_wild_speed = *gameSpeedPtr;
+    }
+
+    if (increase) *gameSpeedPtr = speed;
+    else *gameSpeedPtr = 1/speed;
+
+    wildDuration += duration * 60;
+    return RESULT_EFFECT_SUCCESS;
+
 }
