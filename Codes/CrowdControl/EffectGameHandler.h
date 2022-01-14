@@ -8,7 +8,11 @@
 #include "EXIPacket.h"
 #include "Utilities.h"
 
-EXIStatus effectGameGiveDamage(int numPlayers, u16 targetPlayer, double percent, bool givePercent);
+void resetEffectGame();
+void checkEffectGameDurationFinished();
+
+EXIStatus effectGameGiveDamage(u16 numPlayers, u16 targetPlayer, double percent, bool givePercent);
 //EXIStatus effectGameGiveTime(int seconds, bool giveTime);
+EXIStatus effectGameWild(u16 duration, float speed, bool increase);
 
 #endif //PROJECTMCODES_EFFECTGAMEHANDLER_H

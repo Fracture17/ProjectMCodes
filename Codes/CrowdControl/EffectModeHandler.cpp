@@ -4,35 +4,31 @@
 
 #include "EffectModeHandler.h"
 
-int* FLIGHT_MODE_TOGGLE = (int*)0x804E1EE8;
+u32* FLIGHT_MODE_TOGGLE = (u32*)0x804E1EE8;
 float* FLIGHT_MODE_X_MAXSPEED = (float*)(0x804E1F18 + 0x8);
 float* FLIGHT_MODE_Y_MAXSPEED = (float*)(0x804E1F54 + 0x8);
 float* FLIGHT_MODE_X_ACCEL = (float*)(0x804E1FCC + 0x8);
 float* FLIGHT_MODE_Y_ACCEL = (float*)(0x804E200C + 0x8);
 int prev_flight_toggle = false;
-unsigned int flightModeDuration = 0;
+u32 flightModeDuration = 0;
 
 s8* STAMINA_TOGGLE = (s8*)0x9017F378;
 s8* BORDERLESS_TOGGLE = (s8*)0x9017F385;
 s8 prev_stamina_toggle = 0;
 s8 prev_borderless_toggle = 0;
-unsigned int borderlessDuration = 0;
+u32 borderlessDuration = 0;
 
 s8* ELEMENT_TOGGLE = (s8*)(0x9017F37A);
 s8 prev_element_toggle = 0;
-unsigned int elementDuration = 0;
+u32 elementDuration = 0;
 
 s8* ZTD_TOGGLE = (s8*)(0x9017F37A);
 s8 prev_ztd_toggle = 0;
-unsigned int ztdDuration = 0;
+u32 ztdDuration = 0;
 
 s8* BOMBRAIN_TOGGLE = (s8*)(0x9017F37F);
 s8 prev_bombrain_toggle = 0;
-unsigned int bombRainDuration = 0;
-
-//s8* WILD_TOGGLE = (s8*)(0x9017F37E);
-float prev_wild_speed = 0;
-unsigned int wildDuration = 0;
+u32 bombRainDuration = 0;
 
 void resetEffectMode() {
     *FLIGHT_MODE_TOGGLE = prev_flight_toggle;
@@ -51,9 +47,6 @@ void resetEffectMode() {
     *BOMBRAIN_TOGGLE = prev_bombrain_toggle;
     bombRainDuration = 0;
 
-    float* gameSpeedPtr = (float*)(*(int*)(*(int*)(0x805a0000 + 0xE0) + 0x44) + 0x4);
-    *gameSpeedPtr = prev_wild_speed;
-    wildDuration = 0;
 }
 
 void checkEffectModeDurationFinished() {
@@ -93,13 +86,6 @@ void checkEffectModeDurationFinished() {
         }
     }
 
-    if (wildDuration > 0) {
-        wildDuration--;
-        if (wildDuration == 0) {
-            float* gameSpeedPtr = (float*)(*(int*)(*(int*)(0x805a0000 + 0xE0) + 0x44) + 0x4);
-            *gameSpeedPtr = prev_wild_speed;
-        }
-    }
 }
 
 EXIStatus effectModeFlight(u16 duration, u16 x_maxspeed, u16 y_maxspeed, s16 x_accel, s16 y_accel) {
@@ -172,22 +158,4 @@ EXIStatus effectModeBombRain(u16 duration) {
         bombRainDuration += duration * 60;
         return RESULT_EFFECT_SUCCESS;
     }
-}
-
-EXIStatus effectModeWild(u16 duration, float speed, bool increase) {
-    // TODO: Wild overrides slow, maybe should change that if slow works by activating while in game?
-
-    // From Wild.asm
-    float* gameSpeedPtr = (float*)(*(int*)(*(int*)(0x805a0000 + 0xE0) + 0x44) + 0x4);
-
-    if (wildDuration == 0) {
-        prev_wild_speed = *gameSpeedPtr;
-    }
-
-    if (increase) *gameSpeedPtr = speed;
-    else *gameSpeedPtr = 1/speed;
-
-    wildDuration += duration * 60;
-    return RESULT_EFFECT_SUCCESS;
-
 }

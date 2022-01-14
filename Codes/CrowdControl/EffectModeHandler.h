@@ -15,6 +15,5 @@ EXIStatus effectModeBorderless(u16 duration);
 EXIStatus effectModeElement(u16 duration);
 EXIStatus effectModeZTD(u16 duration);
 EXIStatus effectModeBombRain(u16 duration);
-EXIStatus effectModeWild(u16 duration, float speed, bool increase);
 
 #endif //PROJECTMCODES_EFFECTMODEHANDLER_H

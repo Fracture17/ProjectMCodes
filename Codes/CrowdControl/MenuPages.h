@@ -7,7 +7,7 @@
 #define ADD_UNPAUSE addOption(new ControlOption("unpause", menu->paused));
 
 struct DebugData {
-    unsigned int loadedPkmn[12];
+    u32 loadedPkmn[12];
 };
 
 struct MainPage : public BasicPage {

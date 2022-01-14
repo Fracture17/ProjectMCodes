@@ -19,10 +19,10 @@ namespace FrameLogic {
     Menu* myMenu;
     bool visible = false;
 
-    unsigned int testWaitDuration = 0;
+    u32 testWaitDuration = 0;
 
     //hacky way to check if in game
-    unsigned int getScene() {
+    u32 getScene() {
         u32* ptr = (u32*) (0x805b4fd8 + 0xd4);
         ptr = (u32*) *ptr;
         if(ptr < (u32*)0xA0000000) {
@@ -81,7 +81,7 @@ namespace FrameLogic {
         u16* effectRequest = (u16*)requestPckt.source;
 
         EXIStatus exiStatus = STATUS_UNKNOWN;
-        unsigned int scene = getScene();
+        u32 scene = getScene();
 
         // TODO: Investigate crash during classic mode
 
@@ -95,6 +95,7 @@ namespace FrameLogic {
                 testWaitDuration--;
             }
 
+            checkEffectGameDurationFinished();
             checkEffectModeDurationFinished();
             checkPositionResetCorrect();
             checkItemSpawnPokemonOrAssist();
@@ -177,7 +178,7 @@ namespace FrameLogic {
                     exiStatus = effectModeBombRain(effectRequest[1]);
                     break;
                 case EFFECT_MODE_WILD:
-                    exiStatus = effectModeWild(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    exiStatus = effectGameWild(effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
@@ -216,7 +217,7 @@ namespace FrameLogic {
                     //effectModeElement(12);
                     //effectModeZTD(12);
                     //effectModeBombRain(12);
-                    //effectModeWild(12, 6, true);
+                    //effectGameWild(12, 6, true);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {
@@ -289,8 +290,8 @@ namespace FrameLogic {
 
             int size = ((int (*)(void* it)) ITEM_MANAGER->itKindArrayList_vtable->size)(&ITEM_MANAGER->itKindArrayList_vtable);
             for (int i = 0; i < size; i++) {
-                int* pkmnPtr = ((int* (*)(void* it, int i)) ITEM_MANAGER->itKindArrayList_vtable->at)(&ITEM_MANAGER->itKindArrayList_vtable, i);
-                //int* pkmnPtr = ((int* (*)(void* it, int i)) ITEM_MANAGER->itArchiveArrayList_vtable->at)(&ITEM_MANAGER->itArchiveArrayList_vtable, i);
+                u32* pkmnPtr = ((u32* (*)(void* it, int i)) ITEM_MANAGER->itKindArrayList_vtable->at)(&ITEM_MANAGER->itKindArrayList_vtable, i);
+                //u32* pkmnPtr = ((u32* (*)(void* it, int i)) ITEM_MANAGER->itArchiveArrayList_vtable->at)(&ITEM_MANAGER->itArchiveArrayList_vtable, i);
                 if (pkmnPtr != nullptr) debugData->loadedPkmn[i] = *pkmnPtr;
             }
 
@@ -334,6 +335,7 @@ namespace FrameLogic {
     SIMPLE_INJECTION(startGame, 0x806dd5f4, "mr r3, r19") { SendGameStatus(EXIStatus::STATUS_GAME_STARTED); } // when booting up
     SIMPLE_INJECTION(startMatch, 0x800dc590, "li r9, 0x2") { SendGameStatus(EXIStatus::STATUS_MATCH_STARTED); } // when starting match
     SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") {
+        resetEffectGame();
         resetEffectMode();
         SendGameStatus(EXIStatus::STATUS_MATCH_ENDED); } // when exiting match
     /*INJECTION("frameUpdate", 0x8001792c, R"(
