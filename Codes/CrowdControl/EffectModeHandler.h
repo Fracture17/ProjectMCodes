@@ -6,6 +6,7 @@
 #define PROJECTMCODES_EFFECTMODEHANDLER_H
 
 #include "EXIPacket.h"
+#include "Assembly.h"
 
 void resetEffectMode();
 void checkEffectModeDurationFinished();
@@ -15,5 +16,7 @@ EXIStatus effectModeBorderless(u16 duration);
 EXIStatus effectModeElement(u16 duration);
 EXIStatus effectModeZTD(u16 duration);
 EXIStatus effectModeBombRain(u16 duration);
+EXIStatus effectModeWar(u16 duration);
+EXIStatus effectModeRandomAngle(u16 duration);
 
 #endif //PROJECTMCODES_EFFECTMODEHANDLER_H

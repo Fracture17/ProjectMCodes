@@ -39,6 +39,7 @@ void checkItemSpawnPokemonOrAssist() {
     }
 }
 
+//// Credit: fudgepop01
 EXIStatus effectItemSpawn(int itemId, u16 amount) {
 
     // TODO: Check if item can be spawned in
@@ -60,6 +61,7 @@ EXIStatus effectItemSpawn(int itemId, u16 amount) {
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: fudgepop01, Kapedani
 EXIStatus effectItemPreloadPokemon(int itemId, u16 amount) {
     if (preloadedPokemonId < 0) {
         ((int *(*)(void *it)) ITEM_MANAGER->itKindArrayList_vtable->pop)(&ITEM_MANAGER->itKindArrayList_vtable);
@@ -74,6 +76,7 @@ EXIStatus effectItemPreloadPokemon(int itemId, u16 amount) {
     }
 }
 
+//// Credit: fudgepop01, Kapedani
 EXIStatus effectItemPreloadAssist(int itemId, u16 amount) {
     // TODO: Investigate which Assists work (e.g. Nintendog and Devil don't)
     if (preloadedAssistId < 0) {
@@ -100,6 +103,7 @@ void attachGooeyToPlayer(u16 targetPlayer, u16 amount) {
     }
 }
 
+//// Credit: fudgepop01, Kapedani
 EXIStatus effectItemAttachGooey(int numPlayers, u16 targetPlayer, u16 amount) {
     // TODO: Check if too many are already spawned (otherwise crashes) since stickied gooey's don't seem to despawn
     // TODO: Check if player is still alive

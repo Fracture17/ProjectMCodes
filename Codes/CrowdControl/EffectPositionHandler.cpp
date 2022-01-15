@@ -12,12 +12,10 @@ void checkPositionResetCorrect() {
             getFighter(player)->modules->groundModule->setCorrect(5);
             isPlayersTeleporting[player] = false;
         }
-
     }
 }
 
 void setPlayerPosition(u16 targetPlayer, float xPos, float yPos) {
-
 
     // TODO: Check if player is alive
     Fighter* targetFighter = getFighter(targetPlayer);
@@ -40,6 +38,7 @@ void setPlayerPosition(u16 targetPlayer, float xPos, float yPos) {
     isPlayersTeleporting[targetPlayer] = true;
 }
 
+//// Credit: fudgepop01, Kapedani
 EXIStatus effectPositionWarpToPlayer(int numPlayers, u16 targetPlayer, u16 warpingPlayer) {
     // TODO: use better random
     if (targetPlayer >= numPlayers) {
@@ -80,6 +79,7 @@ EXIStatus effectPositionWarpToPlayer(int numPlayers, u16 targetPlayer, u16 warpi
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: fudgepop01, Kapedani
 EXIStatus effectPositionSwap(int numPlayers, u16 targetPlayer1, u16 targetPlayer2) {
 
     // TODO: bool to swap direction facing too

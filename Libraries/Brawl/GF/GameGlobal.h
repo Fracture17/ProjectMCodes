@@ -9,6 +9,12 @@
 #include "../gmGlobalModeMelee.h"
 #include "GameFrame.h"
 
+struct unk1_GameGlobal {
+    char _spacer[0x4];
+
+    // Used in Wild Mode
+    float stageSpeed;
+};
 
 //has a bunch of pointers to stuff
 struct GameGlobal {
@@ -26,7 +32,12 @@ struct GameGlobal {
     char _spacer2[0x28 - 0x8 - 4];
     //0x28
     PlayerTagSystem* playerTagSystem;
+
+    char _spacer3[0x44 - 0x28 - 4];
+
+    unk1_GameGlobal* unk1;
 };
+
 
 
 

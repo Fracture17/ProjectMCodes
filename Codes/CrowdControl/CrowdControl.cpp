@@ -180,6 +180,15 @@ namespace FrameLogic {
                 case EFFECT_MODE_WILD:
                     exiStatus = effectGameWild(effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
+                case EFFECT_MODE_SPEED:
+                    exiStatus = effectGameSpeed(effectRequest[1], effectRequest[2]);
+                    break;
+                case EFFECT_MODE_WAR:
+                    exiStatus = effectModeWar(effectRequest[1]);
+                    break;
+                case EFFECT_MODE_RANDOMANGLE:
+                    exiStatus = effectModeRandomAngle(effectRequest[1]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -218,6 +227,9 @@ namespace FrameLogic {
                     //effectModeZTD(12);
                     //effectModeBombRain(12);
                     //effectGameWild(12, 6, true);
+                    //effectGameSpeed(12, 120);
+                    //effectModeWar(12);
+                    //effectModeRandomAngle(12);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {

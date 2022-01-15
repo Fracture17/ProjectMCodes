@@ -6,8 +6,7 @@
 #include "CLibs/cstring.h"
 #include "Wii/OS/OSInterrupt.h"
 
-// Adapted code from Pine
-
+// Adapted code from PiNE
 EXIPacket::EXIPacket(u8 EXIStatus, void* source, u32 size) {
     // enough for the EXIStatus byte + size of the packet
     u32 new_size = sizeof(EXIStatus) + size;

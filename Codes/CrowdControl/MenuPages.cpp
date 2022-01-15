@@ -1,6 +1,7 @@
 #include "MenuPages.h"
 #include "menu.h"
 
+// Adapted menu code from fudgepop01
 void MainPage::show() {
     addOption(new HexObserver("Loaded Pkmn 0", data->loadedPkmn[0], HexSize::SHORT));
     addOption(new HexObserver("Loaded Pkmn 1", data->loadedPkmn[1], HexSize::SHORT));

@@ -22,9 +22,19 @@ in CrowdControl.cpp.
 
 ## Acknowledgements
 
-[FaultyPine](https://github.com/FaultyPine/brawlback-asm) for sending/receiving data to/from Dolphin using Exi
+Credits for each effect are listed above its corresponding functions.
 
-[fudgepop01](https://github.com/Fracture17/ProjectMCodes/tree/master/Codes/SuperTraining) for the item spawning code
+[Kapedani](https://twitter.com/kapadanii)  
+[fudgepop01](https://github.com/fudgepop01)  
+[Eon](https://twitter.com/Eon_TAS/)  
+DukeItOut  
+[Fracture](https://github.com/Fracture17/)  
+[DesiacX](https://github.com/DesiacX)  
+[PyotrLuzhin](https://www.youtube.com/c/%D0%9F%D0%B5%D1%82%D1%80%D0%9B%D1%83%D0%B6%D0%B8%D0%BD64)  
+wiiztec
 
+As well as a special thanks to:
+
+[FaultyPine](https://github.com/FaultyPine/) for sending/receiving data to/from Dolphin using Exi  
 [Sammi Husky](https://github.com/Sammi-Husky) for managing and hosting the Ghidra server
 

@@ -504,7 +504,10 @@ public class PPlus : SimpleTCPPack
         createEffect("Random Element", "mode_element", 26, new[]{"element_duration"}, "mode"),
         createEffect("Zero to Death", "mode_ztd", 27, new[]{"ztd_duration"}, "mode"),
         createEffect("Bomb Rain", "mode_bombrain", 28, new[]{"bombrain_duration"}, "mode"),
-        createEffect("Wild", "mode_wild", 29, new[]{"wild_duration", "wild_speed", "growth"}, "mode"),
+        createEffect("Wild (Stage Speed)", "mode_wild", 29, new[]{"wild_duration", "stage_speed", "growth"}, "mode"),
+        createEffect("Game Speed", "mode_speed", 30, new[]{"speed_duration", "game_speed"}, "mode"),
+        createEffect("War", "mode_war", 31, new[]{"war_duration"}, "mode"),
+        createEffect("Random Angle", "mode_randomangle", 32, new[]{"randomangle_duration"}, "mode"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -782,7 +785,11 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Zero to Death Duration", "ztd_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Bomb Rain Duration", "bombrain_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Wild Duration", "wild_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
-		new ItemType("Wild Speed", "wild_speed", ItemType.Subtype.Slider, "{\"min\":0,\"max\":12}"),
+		new ItemType("Stage Speed", "stage_speed", ItemType.Subtype.Slider, "{\"min\":0,\"max\":12}"),
+		new ItemType("Speed Duration", "speed_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Game Speed", "game_speed", ItemType.Subtype.Slider, "{\"min\":30,\"max\":120}"),
+		new ItemType("War Duration", "war_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Random Angle Duration", "randomangle_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),

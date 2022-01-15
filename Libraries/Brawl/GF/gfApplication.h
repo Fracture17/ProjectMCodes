@@ -5,7 +5,7 @@
 #ifndef PROJECTMCODES_GFAPPLICATION_H
 #define PROJECTMCODES_GFAPPLICATION_H
 
-
+#include "stddef.h"
 
 //The object that controls the main loop
 struct gfApplication {
@@ -16,6 +16,10 @@ struct gfApplication {
     //0x4 seems to be set if actually in a game (including results screen)
     //0x10 might be if to reset graphics somehow
     u32 _gameFlags;
+
+    char _spacer_2[0xF8 - 0xEC - 0x4];
+
+    u16 frameSpeed;
 };
 
 

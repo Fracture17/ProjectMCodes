@@ -9,6 +9,7 @@
 // TODO: Check if player is KO'ed / effect can be applied
 // TODO: Versions where permanently on unless taken off?
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveMetal(int numPlayers, u16 targetPlayer, bool setEffect, double health){
 
     if (targetPlayer == MAX_PLAYERS) {
@@ -31,6 +32,7 @@ EXIStatus effectStatusGiveMetal(int numPlayers, u16 targetPlayer, bool setEffect
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveCurry(int numPlayers, u16 targetPlayer, bool setEffect){
 
     // TODO: Effect goes away on hit, maybe should investigate why
@@ -55,6 +57,7 @@ EXIStatus effectStatusGiveCurry(int numPlayers, u16 targetPlayer, bool setEffect
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveHammer(int numPlayers, u16 targetPlayer, bool setEffect){
     // TODO: Have a duration and stop at duration
 
@@ -78,6 +81,7 @@ EXIStatus effectStatusGiveHammer(int numPlayers, u16 targetPlayer, bool setEffec
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveSuperStar(int numPlayers, u16 targetPlayer, bool setEffect){
 
     if (targetPlayer == MAX_PLAYERS) {
@@ -94,6 +98,7 @@ EXIStatus effectStatusGiveSuperStar(int numPlayers, u16 targetPlayer, bool setEf
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveFlower(int numPlayers, u16 targetPlayer, bool setEffect, double rate, double size){
 
     if (targetPlayer == MAX_PLAYERS) {
@@ -116,6 +121,7 @@ EXIStatus effectStatusGiveFlower(int numPlayers, u16 targetPlayer, bool setEffec
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveHeart(int numPlayers, u16 targetPlayer, u16 givingPlayer, bool setEffect){
 
     if (targetPlayer == MAX_PLAYERS) {
@@ -144,6 +150,7 @@ EXIStatus effectStatusGiveHeart(int numPlayers, u16 targetPlayer, u16 givingPlay
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveSlow(int numPlayers, u16 targetPlayer, bool setEffect, int slowStrength, int duration){
 
     // Timer item normally has 720 duration
@@ -168,6 +175,7 @@ EXIStatus effectStatusGiveSlow(int numPlayers, u16 targetPlayer, bool setEffect,
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveMushroom(int numPlayers, u16 targetPlayer, bool setEffect, bool isPoison){
 
     if (targetPlayer == MAX_PLAYERS) {
@@ -190,6 +198,7 @@ EXIStatus effectStatusGiveMushroom(int numPlayers, u16 targetPlayer, bool setEff
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveEquip(int numPlayers, u16 targetPlayer, int itemId){
 
     if (targetPlayer == MAX_PLAYERS) {
@@ -212,6 +221,7 @@ EXIStatus effectStatusGiveEquip(int numPlayers, u16 targetPlayer, int itemId){
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Eon
 EXIStatus effectStatusGiveSwap(int numPlayers, u16 targetPlayer1, u16 targetPlayer2, bool setEffect, int duration){
     if (targetPlayer1 >= numPlayers or targetPlayer2 >= numPlayers or targetPlayer1 == targetPlayer2) {
         return RESULT_EFFECT_UNAVAILABLE;
@@ -227,6 +237,7 @@ EXIStatus effectStatusGiveSwap(int numPlayers, u16 targetPlayer1, u16 targetPlay
     }
 }
 
+//// Credit: Kapedani
 EXIStatus effectStatusGiveFinalSmash(int numPlayers, u16 targetPlayer, bool setEffect) {
     // TODO: Check if other effects conflict while player is performing final smash
     // Should have memory extended for FighterEffect and FighterTechqniq otherwise would need to handle one person receiving Final Smash at a time

@@ -7,22 +7,34 @@
 float prev_wild_speed = 0;
 u32 wildDuration = 0;
 
+u16 prev_game_speed = 0;
+u32 speedDuration = 0;
+
 void resetEffectGame() {
-    float* gameSpeedPtr = (float*)(*(u32*)(*(u32*)(0x805a0000 + 0xE0) + 0x44) + 0x4);
-    *gameSpeedPtr = prev_wild_speed;
+    GAME_GLOBAL->unk1->stageSpeed = prev_wild_speed;
     wildDuration = 0;
+
+    GF_APPLICATION->frameSpeed = prev_game_speed;
+    speedDuration = 0;
 }
 
 void checkEffectGameDurationFinished() {
     if (wildDuration > 0) {
         wildDuration--;
         if (wildDuration == 0) {
-            float* gameSpeedPtr = (float*)(*(u32*)(*(u32*)(0x805a0000 + 0xE0) + 0x44) + 0x4);
-            *gameSpeedPtr = prev_wild_speed;
+            GAME_GLOBAL->unk1->stageSpeed = prev_wild_speed;
+        }
+    }
+
+    if (speedDuration > 0) {
+        speedDuration--;
+        if (speedDuration == 0) {
+            GF_APPLICATION->frameSpeed = prev_game_speed;
         }
     }
 }
 
+//// Credit: fudgepop01
 EXIStatus effectGameGiveDamage(u16 numPlayers, u16 targetPlayer, double percent, bool givePercent) {
 
     if (!givePercent) {
@@ -69,19 +81,31 @@ EXIStatus effectGameGiveTime(u16 seconds, bool giveTime) {
 
 }*/
 
-EXIStatus effectGameWild(u16 duration, float speed, bool increase) {
-
-    // From Wild.asm
-    float* gameSpeedPtr = (float*)(*(u16*)(*(u16*)(0x805a0000 + 0xE0) + 0x44) + 0x4);
-
+//// Credit: DukeItOut
+EXIStatus effectGameWild(u16 duration, float stageSpeed, bool increase) {
     if (wildDuration == 0) {
-        prev_wild_speed = *gameSpeedPtr;
+        prev_wild_speed = GAME_GLOBAL->unk1->stageSpeed;
     }
 
-    if (increase) *gameSpeedPtr = speed;
-    else *gameSpeedPtr = 1/speed;
+    // TODO: should the value get overridden if currently active?
+
+    if (increase) GAME_GLOBAL->unk1->stageSpeed = stageSpeed;
+    else GAME_GLOBAL->unk1->stageSpeed = 1 / stageSpeed;
 
     wildDuration += duration * 60;
     return RESULT_EFFECT_SUCCESS;
+}
 
+//// Credit: DesiacX
+EXIStatus effectGameSpeed(u16 duration, u16 gameSpeed) {
+    if (speedDuration == 0) {
+        prev_game_speed = GF_APPLICATION->frameSpeed;
+    }
+
+    // TODO: should the value get overridden if currently active?
+
+    GF_APPLICATION->frameSpeed = gameSpeed;
+
+    speedDuration += duration * 60;
+    return RESULT_EFFECT_SUCCESS;
 }

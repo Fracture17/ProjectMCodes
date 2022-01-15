@@ -48,6 +48,9 @@ enum CCEffect
     EFFECT_MODE_ZTD = 27,
     EFFECT_MODE_BOMBRAIN = 28,
     EFFECT_MODE_WILD = 29,
+    EFFECT_MODE_SPEED = 30,
+    EFFECT_MODE_WAR = 31,
+    EFFECT_MODE_RANDOMANGLE = 32,
 };
 
 //hacky way to check if in game
