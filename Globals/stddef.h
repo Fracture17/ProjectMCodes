@@ -40,38 +40,35 @@ struct Position3D {
 };
 
 #define offsetof(type, member) (__builtin_offsetof(type, member))
+#define _randf ((double (*)()) 0x8003fb64)
 
 // template<class> class function; // not defined
  
-//   template<class R, class... ArgTypes>
-//   class function<R(ArgTypes...)> {
-//   public:
-//     using result_type = R;
- 
-//     // construct/copy/destroy
-//     function() noexcept;
-//     function(const function&);
-//     function(function&&) noexcept;
- 
-//     function& operator=(const function&);
-//     function& operator=(function&&);
-//     template<class F> function& operator=(F&&);
- 
-//     ~function();
- 
-//     // function modifiers
-//     void swap(function&) noexcept;
- 
-//     // function capacity
-//     explicit operator bool() const noexcept;
- 
-//     // function invocation
-//     R operator()(ArgTypes...) const;
- 
-//     // function target access
-//     template<class T>       T* target() noexcept;
-//     template<class T> const T* target() const noexcept;
-//   };
- 
-//   template<class R, class... ArgTypes>
-//     function(R(*)(ArgTypes...)) -> function<R(ArgTypes...)>;
+// template<class R, class... ArgTypes>
+// class function<R(ArgTypes...)> {
+// public:
+// using result_type = R;
+
+// // construct/copy/destroy
+// function() noexcept;
+// function(const function&);
+// function(function&&) noexcept;
+
+// ~function();
+
+// // function modifiers
+// void swap(function&) noexcept;
+
+// // function capacity
+// explicit operator bool() const noexcept;
+
+// // function invocation
+// R operator()(ArgTypes...) const;
+
+// // function target access
+// template<class T>       T* target() noexcept;
+// template<class T> const T* target() const noexcept;
+// };
+
+// template<class R, class... ArgTypes>
+// function(R(*)(ArgTypes...)) -> function<R(ArgTypes...)>;

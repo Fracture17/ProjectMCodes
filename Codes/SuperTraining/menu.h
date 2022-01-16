@@ -30,7 +30,7 @@ struct OptionType {
   virtual void up() = 0;
   virtual void setParentPage(Page* p) = 0;
   virtual ~OptionType() {};
-  char name[20];
+  const char* name;
   Page* parent;
   SubpageOption* subParent = nullptr;
   bool canModify = true;
@@ -47,19 +47,33 @@ struct Page {
   Page(Menu* myMenu);
   void addOption(OptionType* option);
   void setTitle(char* newTitle);
-  virtual void select();
-  virtual void deselect();
+  void hide();
   void up();
   void down();
   void modify(float amount);
   void render(TextPrinter* printer, char* buffer);
+  virtual void show();
+  virtual void select();
+  virtual void deselect();
+  virtual const char* getTitle();
   virtual ~Page() {}
 
-  char title[20];
   vector<OptionType*> options;
   char currentOption = 0;
   bool isSelected = false;
   Menu* menu;
+private:
+  char* title;
+};
+
+struct BasicPage : public Page {
+  BasicPage(Menu* myMenu, const char* title);
+  void select();
+  void deselect();
+  const char* getTitle();
+  virtual void show() = 0;
+private:
+  const char* title;
 };
 
 struct Menu {
@@ -86,7 +100,7 @@ struct PageLink : public StandardOption {
   Page* target;
   PageLink(const char* name, Page* target) {
     this->target = target;
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
   }
   void modify(float);
   void select();
@@ -97,22 +111,22 @@ struct PageLink : public StandardOption {
 class IntOption : public StandardOption {
 public:
   IntOption(const char* name, int& value) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
   }
   IntOption(const char* name, int& value, int min, int max) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
     this->min = min;
     this->max = max;
   }
   IntOption(const char* name, int& value, bool canModify) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
     this->canModify = canModify;
   }
   IntOption(const char* name, int& value, int min, int max, bool canModify) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
     this->min = min;
     this->max = max;
@@ -132,34 +146,34 @@ private:
 class FloatOption : public StandardOption {
 public:
   FloatOption(const char* name, float& value) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
   }
   FloatOption(const char* name, float& value, float min, float max) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
     this->min = min;
     this->max = max;
   }
   FloatOption(const char* name, float& value, float changeMultiplier) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
     this->changeMultiplier = changeMultiplier;
   }
   FloatOption(const char* name, float& value, float min, float max, float changeMultiplier) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
     this->min = min;
     this->max = max;
     this->changeMultiplier = changeMultiplier;
   }
   FloatOption(const char* name, float& value, bool canModify) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
     this->canModify = canModify;
   }
   FloatOption(const char* name, float& value, float min, float max, bool canModify) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->value = value;
     this->min = min;
     this->max = max;
@@ -182,10 +196,10 @@ private:
 class BoolOption : public StandardOption { 
 public:
   BoolOption(const char* name, bool& value) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
   }
   BoolOption(const char* name, bool& value, bool canModify) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->canModify = canModify;
   }
 
@@ -207,7 +221,7 @@ enum HexSize {
 class HexObserver : public StandardOption {
 public:
   HexObserver(const char* name, u32& value, HexSize size) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->canModify = false;
     this->size = size;
   }
@@ -224,7 +238,7 @@ private:
 class ControlOption : public StandardOption { 
 public:
   ControlOption(const char* name, bool& value) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
   }
 
   void modify(float amount);
@@ -239,7 +253,7 @@ private:
 class StringOption : public StandardOption { 
 public:
   StringOption(const char* name, char* value) : value(value) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->canModify = false;
   }
 
@@ -254,12 +268,11 @@ private:
 
 class NamedIndexOption : public StandardOption {
 public: 
-  NamedIndexOption(const char* name, const char** nameArray, int& index, int arrayLength) : index(index) {
-    sprintf(this->name, "%.19s", name);
+  NamedIndexOption(const char* name, const char** nameArray, int& index, int arrayLength) : index(index), nameArray(nameArray) {
+    this->name = name;
 
     this->canModify = false;
     this->arrayLength = arrayLength;
-    this->nameArray = nameArray;
   }
 
   void modify(float amount);
@@ -276,19 +289,19 @@ private:
 class SubpageOption : public OptionType {
 public:
   SubpageOption(const char* name) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
   }
   SubpageOption(const char* name, int height, int depth) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->height = height;
     this->depth = depth;
   }
   SubpageOption(const char* name, bool collapsible) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->collapsible = collapsible;
   }
   SubpageOption(const char* name, int height, int depth, bool collapsible) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->height = height;
     this->depth = depth;
     this->collapsible = collapsible;
@@ -325,14 +338,14 @@ public:
 class BarOption : public StandardOption {
 public:
   BarOption(const char* name, float& value, float& max, GXColor color, float width) : value(value), max(max) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->color = color;
     this->width = width;
     this->canModify = false;
   }
 
   BarOption(const char* name, float& value, float& max, float& min, GXColor color, float width) : value(value), max(max), min(min) {
-    sprintf(this->name, "%.19s", name);
+    this->name = name;
     this->color = color;
     this->width = width;
     this->canModify = false;

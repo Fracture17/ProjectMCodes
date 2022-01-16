@@ -22,7 +22,7 @@ enum class ReplayState {
 
 ReplayState replayState = ReplayState::none;
 
-char replayPathFormat[]  = "/Project+/rp/rp_%02d%02d%02d_%02d%02d_%02d.bin";
+char replayPathFormat[]  = "/Tourney+/rp/rp_%02d%02d%02d_%02d%02d_%02d.bin";
 
 
 //these are the hashes of the load events that were already supposed to occur
@@ -300,7 +300,7 @@ extern "C" bool loadReplayHeader(gfCollectionIO* collectionIo) {
     if(collectionIo->fileSystemType == 1) {
         if(strstr(collectionIo->collectionName, "rp_") != nullptr) {
             char replayPath[0x100];
-            sprintf(replayPath, "/Project+/rp/%s", collectionIo->collectionName);
+            sprintf(replayPath, "/Tourney+/rp/%s", collectionIo->collectionName);
             auto file = fopen(replayPath);
 
             //Needs to alloc from here or will cause issues when the game tries to free it

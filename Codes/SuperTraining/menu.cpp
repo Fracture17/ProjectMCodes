@@ -10,7 +10,6 @@
 //////////////////////////////////
 Page::Page(Menu* myMenu) {
   menu = myMenu;
-  addOption(new ControlOption("unpause", menu->paused));
 }
 
 void Page::addOption(OptionType* option) {
@@ -19,9 +18,13 @@ void Page::addOption(OptionType* option) {
 }
 
 void Page::deselect() {
-  if (!isSelected) menu->path.reallocate(menu->path.size() - 1);
-  isSelected = false;
-  options[currentOption]->deselect();
+  if (!isSelected) {
+    menu->path.reallocate(menu->path.size() - 1);
+    hide();
+  } else {
+    isSelected = false;
+    options[currentOption]->deselect();
+  }
 }
 
 void Page::select() {
@@ -71,11 +74,31 @@ void Page::render(TextPrinter* printer, char* buffer) {
   }
 }
 
+void Page::hide() {
+  for (int i = options.size() - 1; i >= 0; i--) {
+    delete options[i];
+  }
+  options.reallocate(0);
+  options.reallocate(1);
+}
+
+void Page::show() {}
+const char* Page::getTitle() { return this->title; }
+
+//////////////////////////////////
+// BasicPage
+//////////////////////////////////
+BasicPage::BasicPage(Menu* myMenu, const char* t) : Page(myMenu) {this->title = t;};
+void BasicPage::select() {Page::select();}
+void BasicPage::deselect() {Page::deselect();}
+const char* BasicPage::getTitle() { return this->title; }
+
 //////////////////////////////////
 // Menu
 //////////////////////////////////
 void Menu::nextPage(Page* p) { 
   p->menu = this;
+  p->show();
   path.push(p);
 }
 
@@ -93,8 +116,8 @@ void Menu::render(TextPrinter* printer, char* buffer) {
   char amt = path.size();
   printer->print(" > ");
   for (char i = 0; i < amt; i++) {
+    printer->print(path[i]->getTitle());
     printer->print(" / ");
-    printer->print(path[i]->title);
   }
   printer->printLine("");
   getCurrentPage()->render(printer, buffer);

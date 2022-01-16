@@ -11,6 +11,11 @@
 #define FLOAT_MIN_VALUE (*(float*) 0x805a2974)
 #define ZERO (*(float*) 0x805a3780)
 #define NEGATIVE_ONE (*(float*) 0x805a3784)
+#define math_cos ((double (*)(double param1)) 0x804004d8)
+#define math_rad (*(float *) 0x805a4ad8)
+#define math_sin ((double (*)(double param1)) 0x804009e0)
+#define math_atan2 ((double (*)(double x, double y)) 0x803fd0b0)
+#define _floor ((float (*)(float value)) 0x804005ac)
 
 #define _atan_s_atan ((double (*)(double input)) 0x8040012c)
 

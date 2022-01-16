@@ -12,7 +12,6 @@ pf/
 rp/
 st/
 *.gct
-BuildSystem/settings.json
 
 # User-specific files
 *.rsuser

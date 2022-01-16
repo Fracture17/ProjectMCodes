@@ -19,6 +19,7 @@
 
 #include "./menu.h"
 #include "./FudgeMenu.h"
+#include "./FudgeMenuPages.h"
 #include "./hitboxHeatmap.h"
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
@@ -233,8 +234,8 @@ void collectData(Fighter* fighter, int pNum) {
 
     // OSReport("%s: %d\n", __FILE__, __LINE__);
     // OSReport("Free Size: %08x\n", getFreeSize(mainHeap));
-    currData.debug.psaData.fullScript->reallocate(0);
-    currData.debug.psaData.fullScript->reallocate(1);
+    currData.debug.psaData.fullScript.reallocate(0);
+    currData.debug.psaData.fullScript.reallocate(1);
     auto* threads = &fighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector;
     auto* thread = &threads->threadUnion.asArray[currData.debug.psaData.threadIdx];
     if (thread != nullptr && thread->cmdInterpreter->currCommand != nullptr) {
@@ -243,7 +244,7 @@ void collectData(Fighter* fighter, int pNum) {
         currData.debug.psaData.scriptLocation = -1;
         while (currCommand != nullptr && !(currCommand->_module == 0 && currCommand->code == 0) && !(currCommand->_module == 0xFF && currCommand->code == 0xFF)) {
             if (currCommand->_module != 0xFA && currCommand->_module != 0xFF) {
-                currData.debug.psaData.fullScript->push(currCommand);
+                currData.debug.psaData.fullScript.push(currCommand);
                 // OSReport("Idx: %d; psaVecSize: %d\n", commandIdx, currData.debug.psaData.fullScript->size());
             } else {
                 break;
@@ -256,6 +257,9 @@ void collectData(Fighter* fighter, int pNum) {
     }
     // OSReport("%s: %d\n", __FILE__, __LINE__);
     auto& aiInput = fighter->getOwner()->ftInputPtr;
+
+    currData.aiData.currentScript = aiInput->aiActPtr->aiScript;
+    currData.aiData.frameCount = aiInput->aiActPtr->framesSinceScriptChanged;
 
     auto workModule = fighter->modules->workModule;
     if (workModule != nullptr) {
@@ -302,7 +306,6 @@ void collectData(Fighter* fighter, int pNum) {
         ECBRes = grModule->getRightPos();
         currData.posData.ECBRX = ECBRes.xPos;
         currData.posData.ECBRY = ECBRes.yPos;
-
     }
 }
 
@@ -434,27 +437,7 @@ extern "C" void updateOnFrame() {
     // }
     if (fudgeMenu == nullptr) {
         fudgeMenu = new Menu();
-        Page* mainPage = new Page(fudgeMenu);
-        mainPage->setTitle("main");
-
-        PlayerPage* p1Page = new PlayerPage(fudgeMenu, 0);
-        PageLink* p1PageLink = new PageLink("Player 1", p1Page);
-
-        PlayerPage* p2Page = new PlayerPage(fudgeMenu, 1);
-        PageLink* p2PageLink = new PageLink("Player 2", p2Page);
-
-        PlayerPage* p3Page = new PlayerPage(fudgeMenu, 2);
-        PageLink* p3PageLink = new PageLink("Player 3", p3Page);
-
-        PlayerPage* p4Page = new PlayerPage(fudgeMenu, 3);
-        PageLink* p4PageLink = new PageLink("Player 4", p4Page);
-        
-        mainPage->addOption(p1PageLink);
-        mainPage->addOption(p2PageLink);
-        mainPage->addOption(p3PageLink);
-        mainPage->addOption(p4PageLink);
-        // mainPage->addOption(new PageLink("Items", new ItemPage(fudgeMenu)));
-        
+        Page* mainPage = new MainPage(fudgeMenu);        
         fudgeMenu->nextPage(mainPage);
     }
     

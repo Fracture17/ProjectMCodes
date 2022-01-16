@@ -48,7 +48,7 @@ private:
   static constexpr unsigned char weights[0x10] = {
     20, // NONE
     90, // IDLE
-    110, // WALK
+    0, // WALK
     80, // RUN
     120, // DASH
     0, // DASHTURN
@@ -57,10 +57,10 @@ private:
     130, // DJUMP
     100, // FALL
     170, // SHIELD 
-    70, // AIRDODGE 
-    130, // ROLL 
-    130, // TECH 
-    170, // ATTACK 
+    80, // AIRDODGE 
+    115, // ROLL 
+    110, // TECH 
+    150, // ATTACK 
     190, // GRAB 
   };
 

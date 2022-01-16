@@ -8,9 +8,11 @@
 
 struct soControllerModuleImpl {
     //This looks incorrect
-    char _spacer[0x8F];
-    int framesSinceShieldPressed;
+    // char _spacer[0x8F];
+    // int framesSinceShieldPressed;
 };
+
+
 
 
 #endif //PROJECTMCODES_SOCONTROLLERMODULEIMPL_H

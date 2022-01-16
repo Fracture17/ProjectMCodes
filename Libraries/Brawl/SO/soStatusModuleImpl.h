@@ -8,8 +8,12 @@
 
 #include "../../../Globals/stddef.h"
 #include "soModuleAccessor.h"
+#include "Containers/ArrayVector.h"
 
 struct soModuleAccessor;
+
+struct soStatusUniqProcess {};
+
 struct soStatusModuleImpl {
     void changeStatusForce(u32 action, soModuleAccessor* accesser);
 
@@ -18,7 +22,10 @@ struct soStatusModuleImpl {
     // 0x06
     u16 previousAction;
 
-    char _spacer2[0x34 - 0x06 - 4];
+    char _spacer2[0x30 - 0x06 - 4];
+
+    // 0x30
+    ArrayVector<soStatusUniqProcess>* uniqProcessArrayVec;
 
     // 0x34
     u32 action;
