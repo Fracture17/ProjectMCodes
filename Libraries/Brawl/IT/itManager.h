@@ -4,6 +4,7 @@
 
 #include "Brawl/IT/BaseItem.h"
 
+
 struct itManager_itArchiveArrayList_vtable {
     char _spacer[0x8];
     void** isNull;
@@ -44,6 +45,11 @@ struct itManager_itKindArrayList_vtable {
     void** set;
 };
 
+struct itArchive {};
+
+struct itKind {};
+
+// TODO: Use ArrayVector wrapper
 struct itManager {
     BaseItem* getItemFromIndex(u32 index);
     BaseItem* createItem(itemIdName itemID, u32 variantID);
@@ -58,6 +64,7 @@ struct itManager {
     itemIdName nextAssist;
 
     char _spacer3[0x10C8 - 0x10BC - 4];
+    // Pokemon Queue
     itManager_itKindArrayList_vtable* itKindArrayList_vtable;
 
 };

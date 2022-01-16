@@ -211,13 +211,8 @@ namespace FrameLogic {
                     //effectStatusGiveSwap(4, 0, 1, 0, 12);
                     //effectItemSpawn(0x0, 1); //0x78, 1); // 0x2A - Pokeball
 
-                    //effectItemPreloadPokemon(0x69); // Deoxys
-                    //preloadedPokemonId = 0x69;
-                    //preloadedPokemonAmount = 1;
-
-                    //effectItemPreloadAssist(0x9D); // Little Mac
-                    //preloadedAssistId = 0x9D;
-                    //preloadedAssistAmount = 1;
+                    //effectItemPreloadPokemon(0x69, 1); // Deoxys
+                    //effectItemPreloadAssist(0x9D, 1); // Little Mac
 
                     //effectItemAttachGooey(numPlayers, 0, 1);
                     //effectPositionWarpToPlayer(numPlayers, 0, 1);
@@ -246,56 +241,32 @@ namespace FrameLogic {
                     //effectStatusGiveFinalSmash(numPlayers, 0, 1);
                     //effectStatusGiveSwap(4, 0, 1, 1, 720);
 
-                    //effectItemPreloadPokemon(0x6C); // Staryu
-                    //preloadedPokemonId = 0x6C;
-                    //preloadedPokemonAmount = 1;
+                    //effectItemPreloadPokemon(0x6C, 1); // Staryu
+                    //effectItemPreloadAssist(0x96, 1); // Hammer Bro
 
-                    //effectItemPreloadAssist(0x96); // Hammer Bro
-                    //preloadedAssistId = 0x96;
-                    //preloadedAssistAmount = 2;
 
                 } else if (padSystem->pads[0].buttons.UpDPad) {
-                    //effectItemPreloadPokemon(0x84); // Suicune
-                    //preloadedPokemonId = 0x84;
-                    //preloadedPokemonAmount = 1;
+                    //effectItemPreloadPokemon(0x84, 1); // Suicune
+                    //effectItemPreloadAssist(0xA2, 1); // Isaac
 
-                    //effectItemPreloadAssist(0xA2); // Isaac
-                    //preloadedAssistId = 0xA2;
-                    //preloadedAssistAmount = 1;
 
                 } else if (padSystem->pads[0].buttons.DownDPad) {
-                    //effectItemPreloadPokemon(0x66); // Entei
-                    //preloadedPokemonId = 0x66;
-                    //preloadedPokemonAmount = 1;
+                    //effectItemPreloadPokemon(0x66, 1); // Entei
+                    //effectItemPreloadAssist(0xAA, 1); // Stafy
 
-                    //effectItemPreloadAssist(0xAA); // Stafy
-                    //preloadedAssistId = 0xAA;
-                    //preloadedAssistAmount = 1;
                 } else if (padSystem->pads[0].buttons.Z) {
-                    //effectItemPreloadPokemon(0x64); // Chickorita
-                    //preloadedPokemonId = 0x64;
-                    //preloadedPokemonAmount = 1;
+                    //effectItemPreloadPokemon(0x64, 1); // Chickorita
+                    //effectItemPreloadAssist(0xAF, 1); // Waluigi
 
-                    //effectItemPreloadAssist(0xAF); // Waluigi
-                    //preloadedAssistId = 0xAF;
-                    //preloadedAssistAmount = 1;
                 } else if (padSystem->pads[0].buttons.B) {
-                    //effectItemPreloadPokemon(0x6E); // Hooh
-                    //preloadedPokemonId = 0x6E;
-                    //preloadedPokemonAmount = 1;
-
+                    //effectItemPreloadPokemon(0x6E, 1); // Hooh
                     //effectAssistSpawn(0x94, 1); // // Knuckle Joe
-                    //preloadedAssistId = 0x94;
-                    //preloadedAssistAmount = 1;
+
                 }
                 else if (padSystem->pads[0].buttons.R) {
-                    //effectItemPreloadPokemon(0x7B); // Metagross
-                    //preloadedPokemonId = 0x7B;
-                    //preloadedPokemonAmount = 1;
+                    //effectItemPreloadPokemon(0x7B, 1); // Metagross
+                    //effectItemPreloadAssist(0x9F, 1); // Nintendog
 
-                    //effectItemPreloadAssist(0x9F); // Nintendog
-                    //preloadedAssistId = 0xAA;
-                    //preloadedAssistAmount = 1;
                 }
             }
 

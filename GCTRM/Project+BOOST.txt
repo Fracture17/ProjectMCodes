@@ -5,7 +5,8 @@
 op cmplwi r0, 0x30 @ $8018CFC4
 op blt- 0x34	   @ $8018CFC8
 
-.include Source/Extras/MemoryExtension.asm
+#.include Source/Extras/MemoryExtension.asm
+.include Source/Project+/MemoryExtension.asm
 .include Source/LegacyTE/Replays.asm
 .include Source/Project+/StageFiles.asm
 .include Source/Project+/CustomRequirements.asm
@@ -41,4 +42,4 @@ op blt- 0x34	   @ $8018CFC8
 #.include Source/Extras/Netplay.asm	# Only use this in Dolphin! The codes in this will result in bad behavior on the Wii!
 
 .include Source/Extras/More.asm
-.include Source/Extras/CrowdControl.asm
+#.include Source/Extras/CrowdControl.asm
