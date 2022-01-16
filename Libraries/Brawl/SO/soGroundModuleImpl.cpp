@@ -9,6 +9,10 @@ double soGroundModuleImpl::getDistanceFromUnderGrCol(double maxDistance, Vec3f *
     return _getDistanceFromUnderGrCol_soGroundModuleImpl(maxDistance, this, position, unkBool);
 }
 
+int soGroundModuleImpl::getCorrect() {
+    return _getCorrect_soGroundModuleImpl(this, 0);
+}
+
 void soGroundModuleImpl::setCorrect(int collisionMode) {
     _setCorrect_soGroundModuleImpl(this, collisionMode, 0);
 }
@@ -40,3 +44,7 @@ xyDouble soGroundModuleImpl::getDownPos() {
 // xyDouble soGroundModuleImpl::getDownCorrectPos() {
 //     return _getDownCorrectPos_soGroundModuleImpl(this, 0);
 // }
+
+void soGroundModuleImpl::setShapeSafePos(xyDouble xyPos, int unk) {
+    return _setShapeSafePos_soGroundModule(this, xyPos, unk);
+}

@@ -8,6 +8,10 @@ build/
 cmake-build*/
 ./.vscode/
 Dolphin/
+pf/
+rp/
+st/
+*.gct
 
 # User-specific files
 *.rsuser
@@ -20,7 +24,6 @@ Dolphin/
 *.userprefs
 
 # Build results
-[Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
@@ -304,9 +307,12 @@ paket-files/
 # CodeRush personal settings
 .cr/personal
 
+# Pyinstaller
+dist/
+
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
-*.pyc
+#*.pyc
 
 # Cake - Uncomment if you are using it
 # tools/**

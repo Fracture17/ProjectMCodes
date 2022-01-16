@@ -16,6 +16,10 @@ void itManager::preloadAssist(itemIdName itemID) {
     _preloadAssist_itManager(this, itemID);
 }
 
+void itManager::preloadPokemon(itemIdName itemID) {
+    _preloadPokemon_itManager(this, itemID);
+}
+
 void itManager::preloadItemKindArchive(itemIdName id) {
     _preloadItemKindArchive_itManager(this, id, 0x1388, 0x1, 0x1);
 }
