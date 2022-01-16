@@ -68,7 +68,8 @@
       "PRINT_TEST": 0,
       "SUPER_TRAINING": 0,
       "FUDGE_MENU": 1,
-      "RANDOM_1_TO_1_ALTS": 1
+      "RANDOM_1_TO_1_ALTS": 1,
+      "ENABLE_DEBUG": 1
     }
   },
   {
