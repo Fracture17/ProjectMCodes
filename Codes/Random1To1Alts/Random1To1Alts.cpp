@@ -9,7 +9,7 @@ vector<StageInfo> stages;
 
 
 STARTUP(loadStageFile) {
-    char path[] = "/Project+/StageData/StageData";
+    char path[] = "/Tourney+/StageData/StageData";
     auto file = fopen(path);
     auto buffer = new StageInfo[0x400];
     fread(buffer, sizeof(StageInfo), 0x400, file);

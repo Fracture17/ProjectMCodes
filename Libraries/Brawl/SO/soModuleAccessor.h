@@ -68,10 +68,10 @@ struct soModuleAccessor {
     char _spacer8[0x7C - 0x78 - 4];
     //0x70 + 0xC = 0x7C
     soStatusModuleImpl* statusModule;
-    char _spacer9[0x80 - 0x7C - 4];
+    char _spacer9[0x88 - 0x7C - 4];
     //0x7C + 0xC = 0x88
     soKineticModuleGenericImpl* kineticModule;
-    char _spacer10[0xC];
+    char _spacer10[0x90 - 0x88 - 4];
     //0x84 + 0xC = 0x90
     soGenerateArticleManageModuleImpl* generateArticleManageModule;
     char _spacer11[0xB8 - 0x90 - 4];

@@ -12,10 +12,11 @@
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
+#define qsort ((void (*)(void* base, size_t num, size_t size, int (*comparator)(const void*, const void*))) 0x803f8acc)
 
 class PSAScriptOption : public StandardOption {
 public:
-  PSAScriptOption(vector<soAnimCmd*>* data, int& currLine) : data(data), currLine(currLine) {}
+  PSAScriptOption(vector<soAnimCmd*>& data, int& currLine) : data(data), currLine(currLine) {}
 
   void modify(float amount) {
     scrollPoint -= (int) amount;
@@ -23,7 +24,7 @@ public:
   void select() { selected = true; }
   void deselect() { selected = false; }
   void render(TextPrinter *printer, char *buffer) {
-    int count = data->size();
+    int count = data.size();
     // OSReport("Render Size: %d\n", count);
     if (!selected) scrollPoint = currLine - 5;
     if (scrollPoint > (count - 15)) scrollPoint = count - 15; 
@@ -37,23 +38,24 @@ public:
       sprintf(buffer, "%02d: ", (i + 1));
       printer->padToWidth(RENDER_X_SPACING / 5);
       printer->print(buffer);
-      sprintf(buffer, "%02x%02x%02x%02x", (*data)[i]->_module, (*data)[i]->code, (*data)[i]->numArguments, (*data)[i]->option);
+      sprintf(buffer, "%02x%02x%02x%02x", (data)[i]->_module, (data)[i]->code, (data)[i]->numArguments, (data)[i]->option);
       printer->padToWidth(RENDER_X_SPACING / 2.5);
       printer->printLine(buffer);
     }
   }
 
 private: 
-  vector<soAnimCmd*>* data;
+  vector<soAnimCmd*>& data;
   int& currLine;
   int scrollPoint = 0;
   bool selected = false;
 };
 
+
 struct PSAData {
   int threadIdx = 0;
   int scriptLocation = -1;
-  vector<soAnimCmd*>* fullScript;
+  vector<soAnimCmd*> fullScript;
   unsigned int action = -1;
   unsigned int prevAction = -1;
   unsigned int subaction = -1;
@@ -99,6 +101,13 @@ struct debugData {
 };
 
 struct AIData {
+  int scriptID = 0xFFFF;
+  int fighterID = -1;
+  int target = -1;
+  unsigned int currentScript = -1;
+  int frameCount = -1;
+  unsigned int md = -1;
+  char buttons[25] = {};
   Inputs aiButtons;
   float lstickX = 0;
   float lstickY = 0;
@@ -190,7 +199,7 @@ struct AITrainingDefaultVal {
 
 class AITrainingScriptSubmenu : public SubpageOption {
 public:
-  AITrainingScriptSubmenu(unsigned int id, const char* name, char playerNum, char height);
+  AITrainingScriptSubmenu(unsigned int id, char* name, char playerNum, char height);
 
   void select();
   void render(TextPrinter* printer, char* buffer);
@@ -207,11 +216,14 @@ private:
 };
 
 struct PlayerPage : public Page {
-  PlayerPage(Menu* myMenu, char pNum);
+  PlayerPage(Menu*& myMenu, char pNum);
+  void show();
   void select();
   void deselect();
-  TrainingData* data;
+  const char* getTitle();
+  TrainingData& data;
   char playerNum;
+  char title[sizeof("Player X")];
 };
 
 struct CurrentItemParams {
@@ -221,7 +233,7 @@ struct CurrentItemParams {
 
 class ItemSelectOption : public StandardOption {
 public:
-  ItemSelectOption(short id, const char* name);
+  ItemSelectOption(short id, char* name);
   void modify(float) {}
   void select();
   void deselect() {}
@@ -234,7 +246,7 @@ private:
 
 class ItemSpawnOption : public StandardOption {
 public:
-  ItemSpawnOption(const char* name);
+  ItemSpawnOption(char* name);
   void modify(float) {}
   void select();
   void deselect() {}

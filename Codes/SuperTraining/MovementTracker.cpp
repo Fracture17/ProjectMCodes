@@ -14,7 +14,7 @@ unsigned char actionToMov(int action) {
   if (0x24 <= action && action <= 0x33 || action > 0x112) return MOV_ATTACK;
   switch (action) {
     case 0x0: return MOV_IDLE;
-    case 0x1: return MOV_WALK;
+    // case 0x1: return MOV_WALK;
     case 0x3: return MOV_DASH;
     case 0x4: return MOV_RUN;
     // case 0x7: return MOV_DASHTURN;
@@ -102,18 +102,37 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
     if (actionTracker[tracker] == actionType && tracker != idx) offsets.push(tracker);
     tracker --;
   }
+
+  // to prevent the AI from reacting instantly
+  int reactionTime = (1 - (CPULevel / 100)) * 45 + 12 + 7 * _randf();
+  if (CPULevel == 101) reactionTime = 0;
+
+  // create an offset to use instead of 
+  int reactionPatchTime = timeTracker[idx];
+  int reactionPatchIdx = idx;
+  while(reactionTime > 0) {
+    reactionPatchTime = timeTracker[reactionPatchIdx];
+    int difference = timeTracker[reactionPatchIdx] - reactionTime;
+    reactionTime -= timeTracker[reactionPatchIdx];
+    if (reactionTime <= 0) {
+      reactionPatchTime -= difference;
+    } else {
+      reactionPatchIdx -= 1;
+      if (reactionPatchIdx < 0) reactionPatchIdx += ACTION_COUNT;
+    }
+  }
+
   // just so we don't look through the full array AGAIN if the level is high
   lookAmount *= 0.3;
   // for each offset in the array, we'll compare it to the current series of actions
   // and look for patterns in the actions taken and the timing of those actions
   // OSReport("offsets size: %d; idx: %d\n", offsets.size(), idx);
   for (int i = 0; i < offsets.size(); i++) {
-    int startTracker = idx;
+    int startTracker = reactionPatchIdx;
     // because reasons
     if (actionTracker[startTracker] == actionType) startTracker -= 1;
     int offsetTracker = offsets[i] + 1;
-    // so we don't react *immediately* if the target attacks then attacks shortly after
-    if (startTracker - offsetTracker < 6) continue;
+    
     // scoreMultiplier decrements each time to a fraction of lookAmount. This makes the
     // influence of patterns deteriorate over time
     float scoreMultiplier = 1;
@@ -130,7 +149,7 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
       // a value (toAdd) is calculated based on the weight and the scoremultiplier
       float toAdd = ((float) weights[actionTracker[offsetTracker]] / 100) * scoreMultiplier;
       // ...the difference in time is then calculated, and the absolute value is taken
-      float timeDifference = timeTracker[startTracker] - timeTracker[offsetTracker];
+      float timeDifference = (looked == 0) ? reactionPatchTime : timeTracker[startTracker] - timeTracker[offsetTracker];
       if (timeDifference < 0) timeDifference *= -1;
       // finally, toAdd is MULTIPLIED by 80 MINUS the time difference times the scoreMultiplier (again)
       // This effecitvely means "take this into account if the time difference is less than 80 frames",

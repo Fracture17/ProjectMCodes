@@ -4,12 +4,15 @@
 
 #include <Graphics/TextPrinter.h>
 #include <Wii/PAD/PADStatus.h>
+#include <Wii/MATH.h>
 #include "Assembly.h"
 #include "Memory.h"
 #include "Graphics/Drawable.h"
 #include "Containers/vector.h"
+#include "Containers/ArrayVector.h"
 
 #include "Brawl/FT/ftManager.h"
+#include "Brawl/FT/ftControllerModuleImpl.h"
 #include "Brawl/AI/aiMgr.h"
 #include "Brawl/AI/aiScriptData.h"
 #include "Brawl/sndSystem.h"
@@ -188,6 +191,72 @@ extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
     } 
 }
 
+// sekret stuff - shh <3
+// int forcedAction = 0x0;
+// bool isWaveland = false;
+// INJECTION("PERFECT_WD_FIX", 0x8077f9dc, R"(
+//     SAVE_REGS
+//     mr r3, r4
+//     mr r4, r5
+//     bl perfectWDFix
+//     RESTORE_REGS
+//     bl forceNextAction
+//     mr r29, r3
+// )")
+
+// INJECTION("PERFECT_WD_FIX_2", 0x80874458, R"(
+//     SAVE_REGS
+//     mr r3, (r31)
+//     bl forceWavelandPSACommand
+//     RESTORE_REGS
+//     cmpwi r3,22
+// )")
+
+// extern "C" {
+//     soModuleAccessor* tempAccessor = nullptr;
+//     void perfectWDFix(int action, soModuleAccessor * accesser) {
+//         tempAccessor = accesser;
+//         soStatusModuleImpl& statusMod = *accesser->statusModule;
+//         soMotionModule& motionMod = *accesser->motionModule;
+//         ftControllerModuleImpl& controllerMod = *((ftControllerModuleImpl*) accesser->controllerModule);
+//         soKineticModuleGenericImpl& kineticMod = *accesser->kineticModule;
+//         // OSReport("prev action: %04x; old action: %04x; new action: %04x\n", statusMod.previousAction, statusMod.action, action);
+//         forcedAction = action;
+//         isWaveland = false;
+//         if (statusMod.action == 0xB && motionMod.getFrame() == 0 && action == 0x21 && controllerMod.controller.stickY < 0) {
+//             forcedAction = 0x16;
+
+//             // OSReport("changing\n");
+//             _changeKinetic_soKineticModuleGenericImpl(&kineticMod, 0x12, accesser);
+//             // OSReport("clearing\n");
+//             int clearType = 0xFFFF;
+//             _clearSpeed_soKineticModuleGenericImpl(&kineticMod, &clearType);
+
+//             float angleRad = math_atan2(controllerMod.controller.stickY, controllerMod.controller.stickX);
+//             float xVel = math_cos(angleRad) * 3.1 * accesser->postureModule->direction;
+//             OSReport("xVel: %.3f\n", xVel);
+//             Vec3f change = {xVel, 0, 0};
+//             _addSpeed_soKineticModuleGenericImpl(&kineticMod, &change, accesser);
+//             isWaveland = true;
+//         }
+//     }
+//     void forceNextAction() {
+//         asm("mr r4, %0"
+//             :
+//             : "r" (forcedAction));
+//     }
+//     void forceWavelandPSACommand(soModuleAccessor * accessor) {
+//         if (isWaveland) {
+//             accessor->statusModule->action = 0x19;
+//             accessor->statusModule->previousAction = 0x21;
+//             auto workModule = accessor->workModule;
+//             auto LAFloatArr = (*(float (*)[workModule->LAVariables->floatsSize])workModule->LAVariables->floats);
+//             LAFloatArr[0] = 10;
+//         }
+//         isWaveland = false;
+//     }
+// }
+
 INJECTION("TOGGLE_PAUSE", 0x8002E5B0, R"(
     mr r3, r25
     bl checkMenuPaused 
@@ -334,7 +403,7 @@ void collectData(Fighter* fighter, int pNum) {
 //         if (procTimer <= 0) {
 //             // process/[gfTask]
 //             ((void (*)(char** task, int processKind)) 0x8002dc74)(currTask, kind);    
-//             procInstant = false;
+//             procInstant = false; 
 //         }
 //     }
 // }
@@ -1006,7 +1075,7 @@ extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
         // OSReport("intended: %04x; ", intendedScript);
         // OSReport("next: %04x)::\n", param1);
         // aiActPtr->aiScript = intendedScript;
-        if (param1 == 0x2010) return 0x0;
+        if (param1 < 0x8000 && param1 != 0x1120) return (aiActPtr->aiScript != 0x0) ? aiActPtr->aiScript : 0x8000;
         return param1; // normal routine
     // }
 

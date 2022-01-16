@@ -2,7 +2,7 @@
 #include "WeightedDie.h"
 
 void WeightedDie::addValue(WeightedValue weight) {
-  OSReport("AddValue (currSize: %d) (weight: %d, %.3f)\n", weights.size(), weight.value, weight.weight);
+  // OSReport("AddValue (currSize: %d) (weight: %d, %.3f)\n", weights.size(), weight.value, weight.weight);
   if (weight.weight == 0) {
     return;
   }

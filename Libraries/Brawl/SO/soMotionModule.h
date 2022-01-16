@@ -40,7 +40,11 @@ struct soMotionModule {
     float getEndFrame();
     void changeMotionRequest(int* subAction);
 
-    char _spacer[0x3C];
+    char _spacer[0x2C];
+    // 0x2C
+    float direction;
+
+    char _spacer2[0x3C - 0x2C - 4];
     // 0x3C
     soAnimChr mainAnimationData;
 

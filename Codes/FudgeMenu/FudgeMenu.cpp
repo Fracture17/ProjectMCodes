@@ -1,10 +1,11 @@
 
-#include "FudgeMenu.h"
 // #include "Brawl/IT/itResourceModuleImpl.h"
 #include "Brawl/IT/BaseItem.h"
 #include "Brawl/IT/itManager.h"
 #include "Brawl/FT/ftManager.h"
 #include "./hitboxHeatmap.h"
+#include "./FudgeMenuPages.h"
+#include "./FudgeMenu.h"
 
 Menu* fudgeMenu;
 
@@ -18,151 +19,53 @@ TrainingData playerTrainingData[] = {
 
 CurrentItemParams currentItemParams = CurrentItemParams();
 
-// must be defined globally else they get eaten when leaving scope
-const char* threadNames[] = {
-  "Action Main",
-  "Subaction Main",
-  "Subaction Gfx",
-  "Subaction Sfx",
-  "Subaction Other",
-  "Alt Subaction Main",
-  "Alt Subaction Gfx",
-  "Alt Subaction Sfx",
-  "Alt Subaction Other",
-  "Concurrent Infinite Loop",
-  "Action Hidden"
-};
-
-PlayerPage::PlayerPage(Menu* myMenu, char pNum) : Page(myMenu) {
-  char tempTitle[9] = {};
+PlayerPage::PlayerPage(Menu*& myMenu, char pNum) : Page(myMenu), playerNum(pNum), data(playerTrainingData[pNum]) {
   this->playerNum = pNum;
   sprintf(this->title, "Player %d", pNum + 1);
-  data = &playerTrainingData[pNum];
+}
 
-  // if (pNum == 0) {
-  //   Page* AIRangePage = new Page(fudgeMenu);
-  //   AIRangePage->setTitle("AIRangeFinder");
-  //   AIRangePage->addOption(new BoolOption("HM ON", data->heatmapOpts.active));
+void PlayerPage::show() {
+    // if (pNum == 0) {
+    //   Page* AIRangePage = new Page(fudgeMenu);
+    //   AIRangePage->setTitle("AIRangeFinder");
+    //   AIRangePage->addOption(new BoolOption("HM ON", this->data->heatmapOpts.active));
 
-  //   AIRangePage->addOption(new BoolOption("enabled", data->debug.enabled));
-  //   AIRangePage->addOption(new BoolOption("fix position", data->debug.fixPosition));
-  //   AIRangePage->addOption(new ControlOption("set position", data->debug.settingPosition));
+    //   AIRangePage->addOption(new BoolOption("enabled", this->data->debug.enabled));
+    //   AIRangePage->addOption(new BoolOption("fix position", this->data->debug.fixPosition));
+    //   AIRangePage->addOption(new ControlOption("set position", this->data->debug.settingPosition));
 
-  //   AIRangePage->addOption(new FloatOption("xmin", fudgeAI.trueXMin, false));
-  //   AIRangePage->addOption(new FloatOption("ymin", fudgeAI.trueYMin, false));
-  //   AIRangePage->addOption(new FloatOption("width", fudgeAI.width, false));
-  //   AIRangePage->addOption(new FloatOption("height", fudgeAI.height, false));
+    //   AIRangePage->addOption(new FloatOption("xmin", fudgeAI.trueXMin, false));
+    //   AIRangePage->addOption(new FloatOption("ymin", fudgeAI.trueYMin, false));
+    //   AIRangePage->addOption(new FloatOption("width", fudgeAI.width, false));
+    //   AIRangePage->addOption(new FloatOption("height", fudgeAI.height, false));
 
-  //   AIRangePage->addOption(new ResetFudgeAIOption());
-  //   this->addOption(new PageLink("AIRangeFinder", AIRangePage));
-  // }
+    //   AIRangePage->addOption(new ResetFudgeAIOption());
+    //   this->addOption(new PageLink("AIRangeFinder", AIRangePage));
+    // }
+    
+    Page* comboTrainerPage = new ComboTrainerPage(menu, data);
+    this->addOption(new PageLink(comboTrainerPage->getTitle(), comboTrainerPage));
 
-  Page* comboTrainerPage = new Page(fudgeMenu);
-  comboTrainerPage->setTitle("Combo Trainer");
+    Page* trajectoryLinePage = new TrajectoryLinePage(menu, data);
+    this->addOption(new PageLink(trajectoryLinePage->getTitle(), trajectoryLinePage));
 
-  comboTrainerPage->addOption(new BoolOption("enabled", data->debug.enabled));
-  comboTrainerPage->addOption(new BoolOption("no clip", data->debug.noclip));
-  comboTrainerPage->addOption(new FloatOption("damage", data->debug.damage, 0, 999));
-  comboTrainerPage->addOption(new IntOption("combo timer", data->debug.comboTimer, false));
-  comboTrainerPage->addOption(new BarOption("remaining hitstun", data->debug.hitstun, data->debug.maxHitstun, 0xFF8800FF, 50));
-  comboTrainerPage->addOption(new IntOption("combo adjust", data->debug.comboTimerAdjustment));
-  comboTrainerPage->addOption(new BarOption("shield", data->debug.shieldValue, data->debug.maxShieldValue, 0xFF8800FF, 50));
-  comboTrainerPage->addOption(new FloatOption("shieldstun taken", data->debug.maxShieldstun, false));
-  comboTrainerPage->addOption(new BarOption("shieldstun", data->debug.shieldstun, data->debug.maxShieldstun, 0xFF8800FF, 50));
-  comboTrainerPage->addOption(new BoolOption("fix position", data->debug.fixPosition));
-  comboTrainerPage->addOption(new ControlOption("set position", data->debug.settingPosition));
-  comboTrainerPage->addOption(new BoolOption("randomize position", data->debug.randomizePosition));
-  comboTrainerPage->addOption(new BoolOption("set on ground", data->debug.randOnGround));
-  comboTrainerPage->addOption(new BoolOption("randomize damage", data->debug.randomizeDamage));
-  comboTrainerPage->addOption(new FloatOption("X", data->debug.xPos, false));
-  comboTrainerPage->addOption(new FloatOption("Y", data->debug.yPos, false));
-  this->addOption(new PageLink("Combo Trainer", comboTrainerPage));
+    Page* heatmapPage = new HeatmapPage(menu, data);
+    this->addOption(new PageLink(heatmapPage->getTitle(), heatmapPage));
 
-  Page* trajectoryLinePage = new Page(fudgeMenu);
-  trajectoryLinePage->setTitle("Trajectory Line");
+    this->addOption(new BoolOption("actionable overlay", data.actionableOverlay));
+    this->addOption(new IntOption("actionable sound", data.actionableSE, -1, 0xFF));
+    this->addOption(new BoolOption("input display", data.inputDisplay));
 
-  trajectoryLinePage->addOption(new BoolOption("enabled", data->trajectoryOpts.active));
-  trajectoryLinePage->addOption(new IntOption("thickness", data->trajectoryOpts.thickness, 0, 10));
-  trajectoryLinePage->addOption(new IntOption("segments", data->trajectoryOpts.segments, 1, 10));
-  trajectoryLinePage->addOption(new IntOption("segment length", data->trajectoryOpts.segmentLength, 1, 20));
-  this->addOption(new PageLink("Trajectory Line", trajectoryLinePage));
+    Page* PSAData = new PSADataPage(menu, data);
+    // this->data->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);
+    // PSAData->addOption(this->data->debug.psaData.subactionSwitcher);
+    this->addOption(new PageLink(PSAData->getTitle(), PSAData));
 
-  Page* heatmapPage = new Page(fudgeMenu);
-  heatmapPage->setTitle("Heatmap Options");
-  heatmapPage->addOption(new BoolOption("enabled", data->heatmapOpts.active));
-  heatmapPage->addOption(new IntOption("lifetime", data->heatmapOpts.lifetime, 0, 0x7FFFFFFF));
-  heatmapPage->addOption(new IntOption("opacity", data->heatmapOpts.opacity, 0, 255));
-  heatmapPage->addOption(new IntOption("color change frame", data->heatmapOpts.colorChangeFrame, 0, 255));
-  this->addOption(new PageLink("Heatmap Options", heatmapPage));
+    Page* controllerInfo = new ControllerInfoPage(menu, data);
+    this->addOption(new PageLink(controllerInfo->getTitle(), controllerInfo));
 
-  this->addOption(new BoolOption("actionable overlay", data->actionableOverlay));
-  this->addOption(new IntOption("actionable sound", data->actionableSE, -1, 0xFF));
-  this->addOption(new BoolOption("input display", data->inputDisplay));
-
-  Page* PSAData = new Page(fudgeMenu);
-  PSAData->setTitle("PSA Data");
-
-  Page* PSAScript = new Page(fudgeMenu);
-  PSAScript->setTitle("Full Script");
-  PSAScript->addOption(new IntOption("thread", data->debug.psaData.threadIdx, 0, 10));
-  if (data->debug.psaData.fullScript == nullptr) data->debug.psaData.fullScript = new vector<soAnimCmd*>();
-
-  PSAScript->addOption(new NamedIndexOption("thread name", threadNames, data->debug.psaData.threadIdx, 11));
-  PSAScript->addOption(new PSAScriptOption(data->debug.psaData.fullScript, data->debug.psaData.scriptLocation));
-  PSAData->addOption(new PageLink("Full Script", PSAScript));
-  
-  PSAData->addOption(new HexObserver("action", data->debug.psaData.action, HexSize::SHORT));
-  PSAData->addOption(new HexObserver("prev action", data->debug.psaData.prevAction, HexSize::SHORT));
-  PSAData->addOption(new HexObserver("subaction", data->debug.psaData.subaction, HexSize::SHORT));
-  PSAData->addOption(new StringOption("subaction name", data->debug.psaData.currSubactionName));
-  PSAData->addOption(new FloatOption("current frame", data->debug.psaData.currentFrame, false));
-  PSAData->addOption(new FloatOption("end frame", data->debug.psaData.currentEndFrame, false));
-  PSAData->addOption(new FloatOption("FSM", data->debug.psaData.frameSpeedModifier, false));
-  
-  // data->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);
-  // PSAData->addOption(data->debug.psaData.subactionSwitcher);
-
-  this->addOption(new PageLink("PSA Data", PSAData));
-
-  Page* controllerInfo = new Page(fudgeMenu);
-  controllerInfo->setTitle("Controller Info");
-  controllerInfo->addOption(new BoolOption("display:", data->inputDisplay));
-  controllerInfo->addOption(new StringOption("", "raw values"));
-  controllerInfo->addOption(new IntOption("LStickX", data->controllerData.stickX, false));
-  controllerInfo->addOption(new IntOption("LStickY", data->controllerData.stickY, false));
-  controllerInfo->addOption(new IntOption("cStickX", data->controllerData.substickX, false));
-  controllerInfo->addOption(new IntOption("cStickY", data->controllerData.substickY, false));
-  controllerInfo->addOption(new IntOption("L Trigger", data->controllerData.triggerLeft, false));
-  controllerInfo->addOption(new IntOption("R Trigger", data->controllerData.triggerRight, false));
-
-  controllerInfo->addOption(new StringOption("", "game inputs:"));
-  controllerInfo->addOption(new FloatOption("LStickX", data->aiData.lstickX, false));
-  controllerInfo->addOption(new FloatOption("LStickY", data->aiData.lstickY, false));
-  controllerInfo->addOption(new BoolOption("cStick", data->controllerData.cStick, false));
-  this->addOption(new PageLink("Controller Info", controllerInfo));
-
-  Page* positionalDataPage = new Page(fudgeMenu);
-  positionalDataPage->setTitle("Position Data");
-
-  positionalDataPage->addOption(new FloatOption("X Pos", data->posData.xPos, false));
-  positionalDataPage->addOption(new FloatOption("Y Pos", data->posData.yPos, false));
-  positionalDataPage->addOption(new FloatOption("Total X Vel", data->posData.totalXVel, false));
-  positionalDataPage->addOption(new FloatOption("Total Y Vel", data->posData.totalYVel, false));
-
-  SubpageOption* collisionSubpage = new SubpageOption("ECB Data");
-
-  collisionSubpage->addOption(new FloatOption("L ECB X", data->posData.ECBLX, false));
-  collisionSubpage->addOption(new FloatOption("L ECB Y", data->posData.ECBLY, false));
-  collisionSubpage->addOption(new FloatOption("T ECB X", data->posData.ECBTX, false));
-  collisionSubpage->addOption(new FloatOption("T ECB Y", data->posData.ECBTY, false));
-  collisionSubpage->addOption(new FloatOption("R ECB X", data->posData.ECBRX, false));
-  collisionSubpage->addOption(new FloatOption("R ECB Y", data->posData.ECBRY, false));
-  collisionSubpage->addOption(new FloatOption("B ECB X", data->posData.ECBBX, false));
-  collisionSubpage->addOption(new FloatOption("B ECB Y", data->posData.ECBBY, false));
-
-  positionalDataPage->addOption(collisionSubpage);
-
-  this->addOption(new PageLink("Position Data", positionalDataPage));
+    Page* positionalDataPage = new PositionalDataPage(menu, data);
+    this->addOption(new PageLink(positionalDataPage->getTitle(), positionalDataPage)); 
 }
 
 void PlayerPage::select() { 
@@ -172,6 +75,9 @@ void PlayerPage::select() {
 void PlayerPage::deselect() { 
   selectedPlayer = -1; 
   Page::deselect();
+}
+const char* PlayerPage::getTitle() {
+  return this->title;
 }
 
 // ItemSelectOption::ItemSelectOption(short id, char* name) {

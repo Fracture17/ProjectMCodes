@@ -96,7 +96,7 @@ void getCurrentReplayName(muReplayTask& replayTask, char* buffer) {
 }
 
 
-const char REPLAY_DIRECTORY[] = "A:/Project+/rp/";
+const char REPLAY_DIRECTORY[] = "A:/Tourney+/rp/";
 
 
 void setGameInfoForReplay(muReplayTask& replayTask) {

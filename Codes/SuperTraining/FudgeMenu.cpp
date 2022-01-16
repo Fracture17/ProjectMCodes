@@ -13,37 +13,37 @@ Menu* fudgeMenu;
 extern MovementTracker movementTrackers[4]; 
 void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
   // predictions.IDLE = movementTrackers[pNum].approxChance(100, MOV_IDLE);
-  predictions.WALK = movementTrackers[pNum].approxChance(100, MOV_WALK);
+  // predictions.WALK = movementTrackers[pNum].approxChance(100, MOV_WALK);
   predictions.RUN = movementTrackers[pNum].approxChance(100, MOV_RUN);
   predictions.DASH = movementTrackers[pNum].approxChance(100, MOV_DASH);
   // predictions.CROUCH = movementTrackers[pNum].approxChance(100, MOV_CROUCH);
   predictions.JUMP = movementTrackers[pNum].approxChance(100, MOV_JUMP);
-  // predictions.DJUMP = movementTrackers[pNum].approxChance(100, MOV_DJUMP);
+  predictions.DJUMP = movementTrackers[pNum].approxChance(100, MOV_DJUMP);
   // predictions.FALL = movementTrackers[pNum].approxChance(100, MOV_FALL);
   predictions.SHIELD = movementTrackers[pNum].approxChance(100, MOV_SHIELD);
   // predictions.AIRDODGE = movementTrackers[pNum].approxChance(100, MOV_AIRDODGE);
-  // predictions.ROLL = movementTrackers[pNum].approxChance(100, MOV_ROLL);
+  predictions.ROLL = movementTrackers[pNum].approxChance(100, MOV_ROLL);
   // predictions.TECH = movementTrackers[pNum].approxChance(100, MOV_TECH);
   predictions.ATTACK = movementTrackers[pNum].approxChance(100, MOV_ATTACK);
   predictions.GRAB = movementTrackers[pNum].approxChance(100, MOV_GRAB);
-  KVPair<float> toSort[7] = {
+  KVPair<float> toSort[8] = {
     // {"idle", predictions.IDLE, 0xFFFFFFFF}, 
-    {"walk", predictions.WALK, 0xFFFFFFFF},
+    // {"walk", predictions.WALK, 0xFFFFFFFF},
     {"run", predictions.RUN, 0xFFFFFFFF},
     {"dash", predictions.DASH, 0xFFFFFFFF},
     // {"crouch", predictions.CROUCH, 0xFFFFFFFF},
     {"jump", predictions.JUMP, 0xFFFFFFFF},
-    // {"djump", predictions.DJUMP, 0xFFFFFFFF},
+    {"djump", predictions.DJUMP, 0xFFFFFFFF},
     // {"fall", predictions.FALL, 0xFFFFFFFF},
     {"shield", predictions.SHIELD, 0x00FF00FF},
     // {"airdodge", predictions.AIRDODGE, 0xFFFFFFFF},
-    // {"roll", predictions.ROLL, 0xFFFFFFFF},
+    {"roll", predictions.ROLL, 0xFFFFFFFF},
     // {"tech", predictions.TECH, 0xFFFFFFFF},
     {"attack", predictions.ATTACK, 0xFF0000FF},
     {"grab", predictions.GRAB, 0x0088FFFF}
   };
 
-  qsort(toSort, 7, sizeof(KVPair<float>), 
+  qsort(toSort, 8, sizeof(KVPair<float>), 
     [](const void* a, const void* b) mutable -> int {
     if ( (*(KVPair<float>*)a).value <  (*(KVPair<float>*)b).value ) return -1;
     if ( (*(KVPair<float>*)a).value == (*(KVPair<float>*)b).value ) return 0;
@@ -52,13 +52,13 @@ void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
 
   printer->setTextColor(0xFFFFFFFF);
   printer->printLine("Predictions:");
-  for (int i = 0; i < 7; i++) {
-    float value = toSort[6 - i].value;
-    sprintf(buffer, "|| %02d %s: ", i + 1, toSort[6 - i].key);
+  for (int i = 0; i < 8; i++) {
+    float value = toSort[7 - i].value;
+    sprintf(buffer, "|| %02d %s: ", i + 1, toSort[7 - i].key);
     
     float brightness = value;
     if (brightness < 0.75) brightness = 0.75;
-    GXColor color = toSort[6 - i].color;
+    GXColor color = toSort[7 - i].color;
     color.red *= brightness;
     color.green *= brightness;
     color.blue *= brightness;
