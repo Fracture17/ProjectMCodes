@@ -4,46 +4,54 @@
 
 #include "EffectModeHandler.h"
 
-u32* FLIGHT_MODE_TOGGLE = (u32*)0x804E1EE8;
-float* FLIGHT_MODE_X_MAXSPEED = (float*)(0x804E1F18 + 0x8);
-float* FLIGHT_MODE_Y_MAXSPEED = (float*)(0x804E1F54 + 0x8);
-float* FLIGHT_MODE_X_ACCEL = (float*)(0x804E1FCC + 0x8);
-float* FLIGHT_MODE_Y_ACCEL = (float*)(0x804E200C + 0x8);
+#define FLIGHT_MODE_TOGGLE ((u32*) 0x804E1EE8)
+#define FLIGHT_MODE_X_MAXSPEED ((float*)(0x804E1F18 + 0x8))
+#define FLIGHT_MODE_Y_MAXSPEED ((float*)(0x804E1F54 + 0x8))
+#define FLIGHT_MODE_X_ACCEL ((float*)(0x804E1FCC + 0x8))
+#define FLIGHT_MODE_Y_ACCEL ((float*)(0x804E200C + 0x8))
 int prev_flight_toggle = false;
 u32 flightModeDuration = 0;
 
-s8* STAMINA_TOGGLE = (s8*)0x9017F378;
-s8* BORDERLESS_TOGGLE = (s8*)0x9017F385;
+#define STAMINA_TOGGLE ((s8*)0x9017F378)
+#define BORDERLESS_TOGGLE ((s8*)0x9017F385)
 s8 prev_stamina_toggle = 0;
 s8 prev_borderless_toggle = 0;
 u32 borderlessDuration = 0;
 
-s8* ELEMENT_TOGGLE = (s8*)(0x9017F37A);
+#define ELEMENT_TOGGLE ((s8*)0x9017F37A)
 s8 prev_element_toggle = 0;
 u32 elementDuration = 0;
 
-s8* ZTD_TOGGLE = (s8*)(0x9017F37A);
+#define ZTD_TOGGLE ((s8*)0x9017F37A)
 s8 prev_ztd_toggle = 0;
 u32 ztdDuration = 0;
 
-s8* BOMBRAIN_TOGGLE = (s8*)(0x9017F37F);
+#define BOMBRAIN_TOGGLE ((s8*)0x9017F37F)
 s8 prev_bombrain_toggle = 0;
 u32 bombRainDuration = 0;
 
-bool war_toggle = false;
-bool prev_war_toggle = false;
 u32 warDuration = 0;
 
-bool randomangle_toggle = false;
-bool prev_randomangle_toggle = false;
 u32 randomAngleDuration = 0;
+
+u32 bigHeadDuration = 0;
+float bighead_size = 1;
+
+void saveEffectMode() {
+    prev_flight_toggle = *FLIGHT_MODE_TOGGLE;
+    prev_stamina_toggle = *STAMINA_TOGGLE;
+    prev_borderless_toggle = *BORDERLESS_TOGGLE;
+    prev_element_toggle = *ELEMENT_TOGGLE;
+    prev_ztd_toggle = *ZTD_TOGGLE;
+    prev_bombrain_toggle = *BOMBRAIN_TOGGLE;
+}
 
 void resetEffectMode() {
     *FLIGHT_MODE_TOGGLE = prev_flight_toggle;
     flightModeDuration = 0;
 
     *STAMINA_TOGGLE = prev_stamina_toggle;
-    *BORDERLESS_TOGGLE = prev_stamina_toggle;
+    *BORDERLESS_TOGGLE = prev_borderless_toggle;
     borderlessDuration = 0;
 
     *ELEMENT_TOGGLE = prev_element_toggle;
@@ -55,11 +63,11 @@ void resetEffectMode() {
     *BOMBRAIN_TOGGLE = prev_bombrain_toggle;
     bombRainDuration = 0;
 
-    war_toggle = prev_war_toggle;
     warDuration = 0;
 
-    randomangle_toggle = prev_randomangle_toggle;
     randomAngleDuration = 0;
+
+    bigHeadDuration = 0;
 }
 
 void checkEffectModeDurationFinished() {
@@ -101,18 +109,15 @@ void checkEffectModeDurationFinished() {
 
     if (warDuration > 0) {
         warDuration--;
-        if (warDuration == 0) {
-            war_toggle = prev_war_toggle;
-        }
     }
 
     if (randomAngleDuration > 0) {
         randomAngleDuration--;
-        if (randomAngleDuration == 0) {
-            randomangle_toggle = prev_randomangle_toggle;
-        }
     }
 
+    if (bigHeadDuration > 0) {
+        bigHeadDuration--;
+    }
 }
 
 //// Credit: Fracture
@@ -178,7 +183,7 @@ EXIStatus effectModeZTD(u16 duration) {
 
 //// Credit: DukeItOut
 EXIStatus effectModeBombRain(u16 duration) {
-    // TODO: Bomb rain and All-Star VS toggle use same address (maybe separate them for crowd control?) (Bomb rain overwrites Fixed camera)
+    // TODO: Bomb rain and All-Star VS toggle use same address (maybe separate them for crowd control?) (Bomb rain overwrites Fixed camera) Check behaviour if changing value in all star vs match
 
     if (*BOMBRAIN_TOGGLE == 2) {
         return RESULT_EFFECT_UNAVAILABLE;
@@ -194,22 +199,22 @@ EXIStatus effectModeBombRain(u16 duration) {
 
 //// Credit: PyotrLuzhin, wiiztec
 EXIStatus effectModeWar(u16 duration) {
-
-    if (warDuration == 0) {
-        prev_war_toggle = war_toggle;
-    }
-    war_toggle = true;
     warDuration += duration*60;
     return RESULT_EFFECT_SUCCESS;
 }
 
 //// Credit: PyotrLuzhin, Eon
 EXIStatus effectModeRandomAngle(u16 duration) {
-    if (randomAngleDuration == 0) {
-        prev_randomangle_toggle = randomangle_toggle;
-    }
-    randomangle_toggle = true;
     randomAngleDuration += duration*60;
+    return RESULT_EFFECT_SUCCESS;
+}
+
+//// Credit: Eon
+EXIStatus effectModeBigHead(u16 duration, float size, bool increase) {
+    // TODO: should the value get overridden if currently active?
+    if (increase || size == 0) bighead_size = size;
+    else bighead_size = 1/size;
+    bigHeadDuration += duration*60;
     return RESULT_EFFECT_SUCCESS;
 }
 
@@ -217,8 +222,8 @@ extern "C" void warMode(){
     //// War Mode 1.5 [PyotrLuzhin, wiiztec]
     asm(R"(
 loc_0x0:
-  cmpwi %0, 0x1
-  bne- loc_0x74
+  cmplwi %0, 0x1
+  blt- loc_0x74
   cmpwi r20, 0x0
   beq- loc_0x74
   lwz r12, 40(r3)
@@ -253,7 +258,7 @@ loc_0x74:
   lbz r0, 15(r3)
             )"
     :
-    : "r" (war_toggle));
+    : "r" (warDuration));
 }
 
 extern "C" void randomAngleMode(){
@@ -264,8 +269,8 @@ extern "C" void randomAngleMode(){
 loc_0x00:
   stw r3, 0x08(r1)
   stw r4, 0x0C(r1)
-  cmpwi %0, 0x1
-  bne- loc_0x5C
+  cmplwi %0, 0x1
+  blt- loc_0x5C
 
 loc_0x28:
 #randi
@@ -290,15 +295,75 @@ loc_0x5C:
 
             )"
     :
-    : "r" (randomangle_toggle));
+    : "r" (randomAngleDuration));
+}
+
+extern "C" void bigHeadMode(){
+    //// Big Head Mode v1.0 [Eon]
+    asm(R"(
+  stwu r1, -0x20(r1)
+  mflr r0
+  stw r0, 0x24(r1)
+
+  cmplwi %0, 0x1
+  blt return
+
+  #getCameraSubject(0)
+  lwz r3, 0xD8(r31)
+  lwz r3, 0x60(r3)
+  lwz r3, 0x18(r3)
+  li r4, 0
+  lwz r12, 0x0(r3)
+  lwz r12, 0xC(r12)
+  mtctr r12
+  bctrl
+
+  lwz r4, 0x10(r3)
+
+
+Size_Set:
+
+  lwz r4, 0x0(r4) #HeadN node ID
+  stw %1, 0x8(r1)
+  stw %1, 0xC(r1)
+  stw %1, 0x10(r1)
+  addi r5, r1, 0x8
+
+  lwz r3, 0xD8(r31)
+  lwz r3, 0x4(r3)
+  lwz r12, 0x8(r3)
+  lwz r12, 0x68(r12)
+  mtctr r12
+  bctrl
+
+ return:
+  lwz r0, 0x24(r1)
+  mflr r0
+  addi r1, r1, 0x20
+
+orig:
+  lis r3, 0x80B8
+
+# jump back
+  lis r12, 0x8083
+  ori r12, r12, 0x9018
+  mtctr r12
+  bctr
+
+            )"
+    :
+    : "r" (bigHeadDuration), "r" (bighead_size));
 }
 
 INJECTION("WAR_MODE", 0x80816508, R"(
     bl warMode
 )");
 
-
 INJECTION("RANDOM_ANGLE_MODE", 0x80767adc, R"(
   b randomAngleMode
+)");
+
+INJECTION("BIG_HEAD_MODE", 0x80839010, R"(
+  b bigHeadMode
 )");
 

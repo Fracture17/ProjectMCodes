@@ -10,6 +10,7 @@
 #include "Brawl/GF/GameGlobal.h"
 #include "Brawl/GF/gfApplication.h"
 
+void saveEffectGame();
 void resetEffectGame();
 void checkEffectGameDurationFinished();
 

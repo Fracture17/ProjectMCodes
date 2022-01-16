@@ -4,11 +4,16 @@
 
 #include "EffectGameHandler.h"
 
-float prev_wild_speed = 0;
+float prev_wild_speed = 1;
 u32 wildDuration = 0;
 
-u16 prev_game_speed = 0;
+u16 prev_game_speed = 60;
 u32 speedDuration = 0;
+
+void saveEffectGame() {
+    prev_wild_speed = GAME_GLOBAL->unk1->stageSpeed;
+    prev_game_speed = GF_APPLICATION->frameSpeed;
+}
 
 void resetEffectGame() {
     GAME_GLOBAL->unk1->stageSpeed = prev_wild_speed;
@@ -89,7 +94,7 @@ EXIStatus effectGameWild(u16 duration, float stageSpeed, bool increase) {
 
     // TODO: should the value get overridden if currently active?
 
-    if (increase) GAME_GLOBAL->unk1->stageSpeed = stageSpeed;
+    if (increase && stageSpeed == 0) GAME_GLOBAL->unk1->stageSpeed = stageSpeed;
     else GAME_GLOBAL->unk1->stageSpeed = 1 / stageSpeed;
 
     wildDuration += duration * 60;

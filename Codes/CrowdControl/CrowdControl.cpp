@@ -189,6 +189,9 @@ namespace FrameLogic {
                 case EFFECT_MODE_RANDOMANGLE:
                     exiStatus = effectModeRandomAngle(effectRequest[1]);
                     break;
+                case EFFECT_MODE_BIGHEAD:
+                    exiStatus = effectModeBigHead(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -230,6 +233,7 @@ namespace FrameLogic {
                     //effectGameSpeed(12, 120);
                     //effectModeWar(12);
                     //effectModeRandomAngle(12);
+                    //effectModeBigHead(12, 0, false);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {
@@ -345,7 +349,10 @@ namespace FrameLogic {
     //}
 
     SIMPLE_INJECTION(startGame, 0x806dd5f4, "mr r3, r19") { SendGameStatus(EXIStatus::STATUS_GAME_STARTED); } // when booting up
-    SIMPLE_INJECTION(startMatch, 0x800dc590, "li r9, 0x2") { SendGameStatus(EXIStatus::STATUS_MATCH_STARTED); } // when starting match
+    SIMPLE_INJECTION(startMatch, 0x800dc590, "li r9, 0x2") {
+        saveEffectGame();
+        saveEffectMode();
+        SendGameStatus(EXIStatus::STATUS_MATCH_STARTED); } // when starting match
     SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") {
         resetEffectGame();
         resetEffectMode();

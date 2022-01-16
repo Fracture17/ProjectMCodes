@@ -8,6 +8,7 @@
 #include "EXIPacket.h"
 #include "Assembly.h"
 
+void saveEffectMode();
 void resetEffectMode();
 void checkEffectModeDurationFinished();
 
@@ -18,5 +19,6 @@ EXIStatus effectModeZTD(u16 duration);
 EXIStatus effectModeBombRain(u16 duration);
 EXIStatus effectModeWar(u16 duration);
 EXIStatus effectModeRandomAngle(u16 duration);
+EXIStatus effectModeBigHead(u16 duration, float size, bool increase);
 
 #endif //PROJECTMCODES_EFFECTMODEHANDLER_H
