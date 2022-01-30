@@ -509,6 +509,7 @@ public class PPlus : SimpleTCPPack
         createEffect("War", "mode_war", 31, new[]{"war_duration"}, "mode"),
         createEffect("Random Angle", "mode_randomangle", 32, new[]{"randomangle_duration"}, "mode"),
         createEffect("Big Head", "mode_bighead", 33, new[]{"bighead_duration", "bighead_size", "growth"}, "mode"),
+        createEffect("Hitfall", "mode_hitfall", 34, new[]{"hitfall_duration"}, "mode"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -806,6 +807,7 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Random Angle Duration", "randomangle_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Big Head Duration", "bighead_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Big Head Size", "bighead_size", ItemType.Subtype.Slider, "{\"min\":0,\"max\":5}"),
+		new ItemType("Hitfall Duration", "hitfall_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),

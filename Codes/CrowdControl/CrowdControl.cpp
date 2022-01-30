@@ -192,6 +192,9 @@ namespace FrameLogic {
                 case EFFECT_MODE_BIGHEAD:
                     exiStatus = effectModeBigHead(effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
+                case EFFECT_MODE_HITFALL:
+                    exiStatus = effectModeHitfall(effectRequest[1]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -229,6 +232,7 @@ namespace FrameLogic {
                     //effectModeWar(12);
                     //effectModeRandomAngle(12);
                     //effectModeBigHead(12, 0, false);
+                    //effectModeHitfall(12);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {
