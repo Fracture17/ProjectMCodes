@@ -10,7 +10,7 @@
 // TODO: Versions where permanently on unless taken off?
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveMetal(int numPlayers, u16 targetPlayer, bool setEffect, double health){
+EXIStatus effectStatusGiveMetal(u16 numPlayers, u16 targetPlayer, bool setEffect, double health){
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
@@ -33,7 +33,7 @@ EXIStatus effectStatusGiveMetal(int numPlayers, u16 targetPlayer, bool setEffect
 }
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveCurry(int numPlayers, u16 targetPlayer, bool setEffect){
+EXIStatus effectStatusGiveCurry(u16 numPlayers, u16 targetPlayer, bool setEffect){
 
     // TODO: Effect goes away on hit, maybe should investigate why
 
@@ -58,7 +58,7 @@ EXIStatus effectStatusGiveCurry(int numPlayers, u16 targetPlayer, bool setEffect
 }
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveHammer(int numPlayers, u16 targetPlayer, bool setEffect){
+EXIStatus effectStatusGiveHammer(u16 numPlayers, u16 targetPlayer, bool setEffect){
     // TODO: Have a duration and stop at duration
 
     if (targetPlayer == MAX_PLAYERS) {
@@ -82,7 +82,7 @@ EXIStatus effectStatusGiveHammer(int numPlayers, u16 targetPlayer, bool setEffec
 }
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveSuperStar(int numPlayers, u16 targetPlayer, bool setEffect){
+EXIStatus effectStatusGiveSuperStar(u16 numPlayers, u16 targetPlayer, bool setEffect){
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
@@ -99,7 +99,7 @@ EXIStatus effectStatusGiveSuperStar(int numPlayers, u16 targetPlayer, bool setEf
 }
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveFlower(int numPlayers, u16 targetPlayer, bool setEffect, double rate, double size){
+EXIStatus effectStatusGiveFlower(u16 numPlayers, u16 targetPlayer, bool setEffect, double rate, double size){
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
@@ -122,7 +122,7 @@ EXIStatus effectStatusGiveFlower(int numPlayers, u16 targetPlayer, bool setEffec
 }
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveHeart(int numPlayers, u16 targetPlayer, u16 givingPlayer, bool setEffect){
+EXIStatus effectStatusGiveHeart(u16 numPlayers, u16 targetPlayer, u16 givingPlayer, bool setEffect){
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
@@ -151,7 +151,7 @@ EXIStatus effectStatusGiveHeart(int numPlayers, u16 targetPlayer, u16 givingPlay
 }
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveSlow(int numPlayers, u16 targetPlayer, bool setEffect, int slowStrength, int duration){
+EXIStatus effectStatusGiveSlow(u16 numPlayers, u16 targetPlayer, bool setEffect, int slowStrength, int duration){
 
     // Timer item normally has 720 duration
 
@@ -176,7 +176,7 @@ EXIStatus effectStatusGiveSlow(int numPlayers, u16 targetPlayer, bool setEffect,
 }
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveMushroom(int numPlayers, u16 targetPlayer, bool setEffect, bool isPoison){
+EXIStatus effectStatusGiveMushroom(u16 numPlayers, u16 targetPlayer, bool setEffect, bool isPoison){
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
@@ -199,7 +199,7 @@ EXIStatus effectStatusGiveMushroom(int numPlayers, u16 targetPlayer, bool setEff
 }
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveEquip(int numPlayers, u16 targetPlayer, int itemId){
+EXIStatus effectStatusGiveEquip(u16 numPlayers, u16 targetPlayer, u16 itemId){
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
@@ -222,7 +222,7 @@ EXIStatus effectStatusGiveEquip(int numPlayers, u16 targetPlayer, int itemId){
 }
 
 //// Credit: Eon
-EXIStatus effectStatusGiveSwap(int numPlayers, u16 targetPlayer1, u16 targetPlayer2, bool setEffect, int duration){
+EXIStatus effectStatusGiveSwap(u16 numPlayers, u16 targetPlayer1, u16 targetPlayer2, bool setEffect, int duration){
     if (targetPlayer1 >= numPlayers or targetPlayer2 >= numPlayers or targetPlayer1 == targetPlayer2) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
@@ -238,7 +238,7 @@ EXIStatus effectStatusGiveSwap(int numPlayers, u16 targetPlayer1, u16 targetPlay
 }
 
 //// Credit: Kapedani
-EXIStatus effectStatusGiveFinalSmash(int numPlayers, u16 targetPlayer, bool setEffect) {
+EXIStatus effectStatusGiveFinalSmash(u16 numPlayers, u16 targetPlayer, bool setEffect) {
     // TODO: Check if other effects conflict while player is performing final smash
     // Should have memory extended for FighterEffect and FighterTechqniq otherwise would need to handle one person receiving Final Smash at a time
 

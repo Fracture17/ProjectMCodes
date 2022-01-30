@@ -107,7 +107,7 @@ namespace FrameLogic {
                     exiStatus = effectGameGiveDamage(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
                 case EFFECT_ITEM_SPAWN_REGULAR:
-                    exiStatus = effectItemSpawn(effectRequest[1], effectRequest[2]);
+                    exiStatus = effectItemSpawn(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
                 case EFFECT_ITEM_SPAWN_POKEMON:
                     exiStatus = effectItemPreloadPokemon(effectRequest[1], effectRequest[2]);
@@ -209,7 +209,7 @@ namespace FrameLogic {
                     //effectActionChangeForce(numPlayers, 0, 0x10C);
                     //effectStatusGiveFinalSmash(numPlayers, 0, 0);
                     //effectStatusGiveSwap(4, 0, 1, 0, 12);
-                    //effectItemSpawn(0x0, 1); //0x78, 1); // 0x2A - Pokeball
+                    //effectItemSpawn(numPlayers, 0x29, 1, 3); //0x78, 1); // 0x2A - Pokeball
 
                     //effectItemPreloadPokemon(0x69, 1); // Deoxys
                     //effectItemPreloadAssist(0x9D, 1); // Little Mac

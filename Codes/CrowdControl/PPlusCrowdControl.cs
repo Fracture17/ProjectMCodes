@@ -442,7 +442,7 @@ public class PPlus : SimpleTCPPack
 		createEffectFolder("Spawn", "items_spawn", "items"),
 		
 		//// Spawn Regular Items
-		createEffect("Regular", "items_spawn_reg", 6, new[]{"items_reg", "#items"}, "items_spawn"),
+		createEffect("Regular", "items_spawn_reg", 6, new[]{"items_reg", "#items", "items_throwtype"}, "items_spawn"),
 		
 		//// Spawn Special Items
 		//new Effect("Special Items", "items_spawn_sp", new[]{"items_sp"}, "items_spawn"),
@@ -559,6 +559,16 @@ public class PPlus : SimpleTCPPack
 		/// Mushroom
         createEffectSubItem("Super", "mushroom_0", 0, "mushroom"),
         createEffectSubItem("Poison", "mushroom_1", 1, "mushroom"),
+
+        // Item Throw Type
+        createEffectSubItem("None", "item_throwtype", 0, "items_throwtype"),
+        createEffectSubItem("Drop", "item_throwtype", 1, "items_throwtype"),
+        createEffectSubItem("Random", "item_throwtype", 2, "items_throwtype"),
+        createEffectSubItem("Player 1", "item_throwtype", 3, "items_throwtype"),
+        createEffectSubItem("Player 2", "item_throwtype", 4, "items_throwtype"),
+        createEffectSubItem("Player 3", "item_throwtype", 5, "items_throwtype"),
+        createEffectSubItem("Player 4", "item_throwtype", 6, "items_throwtype"),
+        createEffectSubItem("Player Random", "item_throwtype", 7, "items_throwtype"),
 		
 		/// Regular Items
 		createEffectSubItem("Assist Trophy", "item_reg", (int)ItemIds.Assist_Trophy, "items_reg"),
@@ -671,7 +681,7 @@ public class PPlus : SimpleTCPPack
 		//createEffectSubItem("Unknown3", "item_sp", (int)ItemIds.Unknown3, "items_sp"),
 		//createEffectSubItem("Unknown4", "item_sp", (int)ItemIds.Unknown4, "items_sp"),
 		//createEffectSubItem("Unknown5", "item_sp", (int)ItemIds.Unknown5, "items_sp"),
-		
+
 		/// Pokemon
 		createEffectSubItem("Torchic", "item_pkmn", (int)ItemIds.Torchic, "items_pkmn"),
 		//createEffectSubItem("Celebi", "item_pkmn", (int)ItemIds.Cerebi, "items_pkmn"),
@@ -757,6 +767,9 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Dr. Wright", "item_assist", (int)ItemIds.Dr_Wright, "items_assist"),
 		createEffectSubItem("Wright Buildings", "item_assist", (int)ItemIds.Wright_Buildings, "items_assist"),
 		createEffectSubItem("Random", "item_assist", (int)ItemIds.Random, "items_assist")
+
+
+
 		
     };
 
@@ -800,6 +813,7 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Growth", "growth", ItemType.Subtype.ItemList),
 		new ItemType("Actions", "actions", ItemType.Subtype.ItemList),
         new ItemType("Mushroom", "mushroom", ItemType.Subtype.ItemList),
+        new ItemType("Throw Type", "items_throwtype", ItemType.Subtype.ItemList),
 		new ItemType("Regular Items", "items_reg", ItemType.Subtype.ItemList),
 		new ItemType("Equippable Items", "items_equip", ItemType.Subtype.ItemList),
 		//new ItemType("Special Items", "items_sp", ItemType.Subtype.ItemList),
