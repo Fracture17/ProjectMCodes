@@ -510,6 +510,7 @@ public class PPlus : SimpleTCPPack
         createEffect("Random Angle", "mode_randomangle", 32, new[]{"randomangle_duration"}, "mode"),
         createEffect("Big Head", "mode_bighead", 33, new[]{"bighead_duration", "bighead_size", "growth"}, "mode"),
         createEffect("Hitfall", "mode_hitfall", 34, new[]{"hitfall_duration"}, "mode"),
+        createEffect("Landing Lag", "mode_landinglag", 35, new[]{"landinglag_duration", "players", "set_alc", "landinglag_regular", "landinglag_cancelled"}, "mode"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -537,6 +538,10 @@ public class PPlus : SimpleTCPPack
 		/// Growth
         createEffectSubItem("Decrease", "growth_decrease", 0, "growth"),
         createEffectSubItem("Increase", "growth_increase", 1, "growth"),
+
+		/// Set ALC
+        createEffectSubItem("ALC Off", "set_alc_off", 0, "set_alc"),
+        createEffectSubItem("ALC On", "set_alc_on", 1, "set_alc"),
 
 		// Action
 		createEffectSubItem("Bury", "action", (int)(ActionIds.Enter_Grounded), "actions"),
@@ -768,9 +773,6 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Dr. Wright", "item_assist", (int)ItemIds.Dr_Wright, "items_assist"),
 		createEffectSubItem("Wright Buildings", "item_assist", (int)ItemIds.Wright_Buildings, "items_assist"),
 		createEffectSubItem("Random", "item_assist", (int)ItemIds.Random, "items_assist")
-
-
-
 		
     };
 
@@ -808,11 +810,15 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Big Head Duration", "bighead_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Big Head Size", "bighead_size", ItemType.Subtype.Slider, "{\"min\":0,\"max\":5}"),
 		new ItemType("Hitfall Duration", "hitfall_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Landing Lag Duration", "landinglag_duration", ItemType.Subtype.Slider, "{\"min\":0,\"max\":12}"),
+		new ItemType("Landing Lag Regular", "landinglag_regular", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+		new ItemType("Landing Lag Cancelled", "landinglag_cancelled", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),
 		new ItemType("Set", "set", ItemType.Subtype.ItemList),
 		new ItemType("Growth", "growth", ItemType.Subtype.ItemList),
+		new ItemType("Set ALC", "set_alc", ItemType.Subtype.ItemList),
 		new ItemType("Actions", "actions", ItemType.Subtype.ItemList),
         new ItemType("Mushroom", "mushroom", ItemType.Subtype.ItemList),
         new ItemType("Throw Type", "items_throwtype", ItemType.Subtype.ItemList),
@@ -821,5 +827,6 @@ public class PPlus : SimpleTCPPack
 		//new ItemType("Special Items", "items_sp", ItemType.Subtype.ItemList),
 		new ItemType("Pokemon", "items_pkmn", ItemType.Subtype.ItemList),
 		new ItemType("Assist", "items_assist", ItemType.Subtype.ItemList)
+
     });
 }

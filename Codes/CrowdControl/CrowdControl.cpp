@@ -193,7 +193,10 @@ namespace FrameLogic {
                     exiStatus = effectModeBigHead(effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
                 case EFFECT_MODE_HITFALL:
-                    exiStatus = effectModeHitfall(effectRequest[1]);
+                    exiStatus = effectGameHitfall(effectRequest[1]);
+                    break;
+                case EFFECT_MODE_LANDINGLAG:
+                    exiStatus = effectGameLandingLag(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
                     break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
@@ -232,7 +235,8 @@ namespace FrameLogic {
                     //effectModeWar(12);
                     //effectModeRandomAngle(12);
                     //effectModeBigHead(12, 0, false);
-                    //effectModeHitfall(12);
+                    //effectGameHitfall(12);
+                    effectGameLandingLag(numPlayers, 12, 0, false, 0, -2);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {

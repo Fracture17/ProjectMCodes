@@ -37,8 +37,6 @@ u32 randomAngleDuration = 0;
 u32 bigHeadDuration = 0;
 float bighead_size = 1;
 
-u32 hitfallDuration = 0;
-
 void saveEffectMode() {
     prev_flight_toggle = *FLIGHT_MODE_TOGGLE;
     prev_stamina_toggle = *STAMINA_TOGGLE;
@@ -70,8 +68,6 @@ void resetEffectMode() {
     randomAngleDuration = 0;
 
     bigHeadDuration = 0;
-
-    hitfallDuration = 0;
 }
 
 void checkEffectModeDurationFinished() {
@@ -122,18 +118,10 @@ void checkEffectModeDurationFinished() {
     if (bigHeadDuration > 0) {
         bigHeadDuration--;
     }
-
-    if (hitfallDuration > 0) {
-        hitfallDuration--;
-    }
 }
 
 //// Credit: Fracture
 EXIStatus effectModeFlight(u16 duration, u16 x_maxspeed, u16 y_maxspeed, s16 x_accel, s16 y_accel) {
-    if (flightModeDuration == 0) {
-        prev_flight_toggle = *FLIGHT_MODE_TOGGLE;
-    }
-
     *FLIGHT_MODE_TOGGLE = true;
     *FLIGHT_MODE_X_MAXSPEED = x_maxspeed;
     *FLIGHT_MODE_Y_MAXSPEED = y_maxspeed;
@@ -145,10 +133,6 @@ EXIStatus effectModeFlight(u16 duration, u16 x_maxspeed, u16 y_maxspeed, s16 x_a
 
 //// Credit: wiiztec, DukeItOut
 EXIStatus effectModeBorderless(u16 duration) {
-    if (borderlessDuration == 0) {
-        prev_stamina_toggle = *STAMINA_TOGGLE;
-        prev_borderless_toggle = *BORDERLESS_TOGGLE;
-    }
     *BORDERLESS_TOGGLE = 2;
     *STAMINA_TOGGLE = 2;
     borderlessDuration += duration*60;
@@ -163,9 +147,6 @@ EXIStatus effectModeElement(u16 duration) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        if (elementDuration == 0) {
-            prev_element_toggle = *ELEMENT_TOGGLE;
-        }
         *ELEMENT_TOGGLE = 1;
         elementDuration += duration * 60;
         return RESULT_EFFECT_SUCCESS;
@@ -180,9 +161,6 @@ EXIStatus effectModeZTD(u16 duration) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        if (ztdDuration == 0) {
-            prev_ztd_toggle = *ZTD_TOGGLE;
-        }
         *ZTD_TOGGLE = 2;
         ztdDuration += duration * 60;
         return RESULT_EFFECT_SUCCESS;
@@ -196,9 +174,6 @@ EXIStatus effectModeBombRain(u16 duration) {
     if (*BOMBRAIN_TOGGLE == 2) {
         return RESULT_EFFECT_UNAVAILABLE;
     } else {
-        if (bombRainDuration == 0) {
-            prev_bombrain_toggle = *BOMBRAIN_TOGGLE;
-        }
         *BOMBRAIN_TOGGLE = 1;
         bombRainDuration += duration * 60;
         return RESULT_EFFECT_SUCCESS;
@@ -223,12 +198,6 @@ EXIStatus effectModeBigHead(u16 duration, float size, bool increase) {
     if (increase || size == 0) bighead_size = size;
     else bighead_size = 1/size;
     bigHeadDuration += duration*60;
-    return RESULT_EFFECT_SUCCESS;
-}
-
-//// Credit: Eon
-EXIStatus effectModeHitfall(u16 duration) {
-    hitfallDuration += duration*60;
     return RESULT_EFFECT_SUCCESS;
 }
 
@@ -369,68 +338,6 @@ orig:
     : "r" (bigHeadDuration), "r" (bighead_size));
 }
 
-extern "C" void hitfallMode(){
-    //// Enable fastfall on aerial hit [Eon]
-    asm(R"(
-    .set fallFrameBuffer, 0x4
-
-    lwz r31, 0x1C(r1)           # Original instr
-
-    cmpwi %0, 0                 # / Skip if (codemenu var == 0)
-    beq hitfallEnd
-
-    lwz r3, 0x10(r1)            # If hitstun/SDI-able code, just jump out its not worth it
-    lis r4, 0x80B8
-    ori r4, r4, 0x97BC
-    cmpw r3, r4
-    beq hitfallEnd
-
-    lwz r3, 0xD8(r30)
-    lwz r3, 0x5C(r3)
-    lwz r12, 0x0(r3)
-    lwz r12, 0x6C(r12)
-    mtctr r12
-    bctrl                       # getFlickY
-    cmpwi r3, fallFrameBuffer   # Input window for tap input
-    bge hitfallEnd
-
-    lwz r3, 0xD8(r30)
-    lwz r3, 0x5C(r3)
-    lwz r12, 0x0(r3)
-    lwz r12, 0x50(r12)
-    mtctr r12
-    bctrl #getStickY
-    lis r3, 0xbf1A
-    stw r3, 0x1C(r1)
-    lfs f2, 0x1C(r1)
-    fcmpo cr0, f1, f2       # If stick not below threshold this frame
-    bgt hitfallEnd                 # stop
-
-    #set fastfall bit, if the move can fastfall, it will, even if you normally never would
-    lwz r3, 0xD8(r30)
-    lwz r3, 0x64(r3)
-    lis r4, 0x2200          #ra-bit
-    ori r4, r4, 0x2 #2
-    lwz r12, 0x0(r3)
-    lwz r12, 0x50(r12)
-    mtctr r12
-    bctrl                   #onFlag
-
-hitfallEnd:
-    lwz r0, 0x24(r1)
-
-    # jump back
-    lis r12, 0x8077
-    ori r12, r12, 0xe8f8
-    mtctr r12
-    bctr
-
-
-            )"
-    :
-    : "r" (hitfallDuration));
-}
-
 INJECTION("WAR_MODE", 0x80816508, R"(
     bl warMode
 )");
@@ -444,13 +351,5 @@ INJECTION("BIG_HEAD_MODE", 0x80839010, R"(
 )");
 
 
-INJECTION("HITFALL_MODE_SUPPLEMENTARY", 0x8077e8d4, R"(
-  stw r3, 0x10(r1)
-  cmpwi r3, 0
-)");
-
-INJECTION("HITFALL_MODE", 0x8077e8f4, R"(
-  b hitfallMode
-)");
 
 

@@ -53,6 +53,7 @@ enum CCEffect
     EFFECT_MODE_RANDOMANGLE = 32,
     EFFECT_MODE_BIGHEAD = 33,
     EFFECT_MODE_HITFALL = 34,
+    EFFECT_MODE_LANDINGLAG = 35,
 };
 
 //hacky way to check if in game

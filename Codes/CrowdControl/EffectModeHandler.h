@@ -20,6 +20,5 @@ EXIStatus effectModeBombRain(u16 duration);
 EXIStatus effectModeWar(u16 duration);
 EXIStatus effectModeRandomAngle(u16 duration);
 EXIStatus effectModeBigHead(u16 duration, float size, bool increase);
-EXIStatus effectModeHitfall(u16 duration);
 
 #endif //PROJECTMCODES_EFFECTMODEHANDLER_H
