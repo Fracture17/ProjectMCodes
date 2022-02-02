@@ -131,7 +131,7 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
     int startTracker = reactionPatchIdx;
     // because reasons
     if (actionTracker[startTracker] == actionType) startTracker -= 1;
-    int offsetTracker = offsets[i] + 1;
+    int offsetTracker = offsets[i] - 1;
     
     // scoreMultiplier decrements each time to a fraction of lookAmount. This makes the
     // influence of patterns deteriorate over time
@@ -149,7 +149,7 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
       // a value (toAdd) is calculated based on the weight and the scoremultiplier
       float toAdd = ((float) weights[actionTracker[offsetTracker]] / 100) * scoreMultiplier;
       // ...the difference in time is then calculated, and the absolute value is taken
-      float timeDifference = (looked == 0) ? reactionPatchTime : timeTracker[startTracker] - timeTracker[offsetTracker];
+      float timeDifference = ((looked == 0) ? reactionPatchTime : timeTracker[startTracker]) - timeTracker[offsetTracker];
       if (timeDifference < 0) timeDifference *= -1;
       // finally, toAdd is MULTIPLIED by 80 MINUS the time difference times the scoreMultiplier (again)
       // This effecitvely means "take this into account if the time difference is less than 80 frames",
