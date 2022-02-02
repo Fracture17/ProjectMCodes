@@ -512,6 +512,11 @@ public class PPlus : SimpleTCPPack
         createEffect("Hitfall", "mode_hitfall", 34, new[]{"hitfall_duration"}, "mode"),
         createEffect("Landing Lag", "mode_landinglag", 35, new[]{"landinglag_duration", "players", "set_alc", "landinglag_regular", "landinglag_cancelled"}, "mode"),
 
+        // Modes
+        createEffectFolder("Attributes", "attribute"),
+
+        createEffect("Trip Rate", "attribute_triprate", 36, new[]{"slip_duration", "players", "slip_rate", "set_tripcooldown"}, "attribute"),
+
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
 
@@ -542,6 +547,10 @@ public class PPlus : SimpleTCPPack
 		/// Set ALC
         createEffectSubItem("ALC Off", "set_alc_off", 0, "set_alc"),
         createEffectSubItem("ALC On", "set_alc_on", 1, "set_alc"),
+
+        /// Set Trip Cooldown
+        createEffectSubItem("Trip Cooldown Off", "set_tripcooldown_off", 0, "set_tripcooldown"),
+        createEffectSubItem("Trip Cooldown On", "set_tripcooldown_on", 1, "set_tripcooldown"),
 
 		// Action
 		createEffectSubItem("Bury", "action", (int)(ActionIds.Enter_Grounded), "actions"),
@@ -810,15 +819,18 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Big Head Duration", "bighead_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Big Head Size", "bighead_size", ItemType.Subtype.Slider, "{\"min\":0,\"max\":5}"),
 		new ItemType("Hitfall Duration", "hitfall_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
-		new ItemType("Landing Lag Duration", "landinglag_duration", ItemType.Subtype.Slider, "{\"min\":0,\"max\":12}"),
+		new ItemType("Landing Lag Duration", "landinglag_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Landing Lag Regular", "landinglag_regular", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
 		new ItemType("Landing Lag Cancelled", "landinglag_cancelled", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+		new ItemType("Slip Duration", "slip_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Slip Rate", "slip_rate", ItemType.Subtype.Slider, "{\"min\":0,\"max\":100}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),
 		new ItemType("Set", "set", ItemType.Subtype.ItemList),
 		new ItemType("Growth", "growth", ItemType.Subtype.ItemList),
 		new ItemType("Set ALC", "set_alc", ItemType.Subtype.ItemList),
+		new ItemType("Trip Cooldown", "set_tripcooldown", ItemType.Subtype.ItemList),
 		new ItemType("Actions", "actions", ItemType.Subtype.ItemList),
         new ItemType("Mushroom", "mushroom", ItemType.Subtype.ItemList),
         new ItemType("Throw Type", "items_throwtype", ItemType.Subtype.ItemList),

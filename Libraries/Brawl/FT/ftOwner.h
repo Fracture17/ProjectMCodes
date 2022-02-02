@@ -47,6 +47,23 @@ struct ftOwner {
     ftOwnerData* ownerDataPtr;
     // 0x4
     aiInput* ftInputPtr;
+
+    char _spacer[0x4d0 - 0x4 - 0x4];
+    // 0x4d0
+    float slipMul;
+
+    char _spacer2[0x4e0 - 0x4d0 - 0x4];
+    // 0x4e0
+    char slipInterval;
+
+    // Seal (Sticker) fields
+
+    char _spacer3[0x83C - 0x4e0 - 0x1];
+    // 0x83C
+    float slipMulSeal;
+
+
+
 };
 
 #define _getDamage_ftOwner ((double (*)(ftOwner * owner)) 0x8081c264)

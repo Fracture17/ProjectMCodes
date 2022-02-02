@@ -10,6 +10,7 @@
 #include "EffectGameHandler.h"
 #include "EffectPositionHandler.h"
 #include "EffectModeHandler.h"
+#include "EffectAttributeHandler.h"
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
@@ -95,12 +96,13 @@ namespace FrameLogic {
                 testWaitDuration--;
             }
 
+            int numPlayers = FIGHTER_MANAGER->getEntryCount();
+
             checkEffectGameDurationFinished();
             checkEffectModeDurationFinished();
+            checkEffectAttributeDurationFinished(numPlayers);
             checkPositionResetCorrect();
             checkItemSpawnPokemonOrAssist();
-
-            int numPlayers = FIGHTER_MANAGER->getEntryCount();
 
             switch (effectRequest[0]) {
                 case EFFECT_GIVE_DAMAGE:
@@ -198,6 +200,9 @@ namespace FrameLogic {
                 case EFFECT_MODE_LANDINGLAG:
                     exiStatus = effectGameLandingLag(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
                     break;
+                case EFFECT_ATTRIBUTE_SLIP:
+                    exiStatus = effectAttributeSlip(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -218,7 +223,7 @@ namespace FrameLogic {
                     //effectItemSpawn(numPlayers, 0x29, 1, 3); //0x78, 1); // 0x2A - Pokeball
 
                     //effectItemPreloadPokemon(0x69, 1); // Deoxys
-                    //effectItemPreloadAssist(0x9D, 1); // Little Mac
+                    //effectItemPreloadAssist(0xAD, 1); // Tingle
 
                     //effectItemAttachGooey(numPlayers, 0, 1);
                     //effectPositionWarpToPlayer(numPlayers, 0, 1);
@@ -236,7 +241,10 @@ namespace FrameLogic {
                     //effectModeRandomAngle(12);
                     //effectModeBigHead(12, 0, false);
                     //effectGameHitfall(12);
-                    effectGameLandingLag(numPlayers, 12, 0, false, 0, -2);
+                    //effectGameLandingLag(numPlayers, 12, 0, false, 0, -2);
+                    //effectAttributeSlip(numPlayers, 12, 0, 100, false);
+
+                    //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {

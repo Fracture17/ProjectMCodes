@@ -20,6 +20,15 @@ u32 playerALC[MAX_PLAYERS] = {(u32)*ALC_TOGGLE, (u32)*ALC_TOGGLE, (u32)*ALC_TOGG
 float playerLandingLagRegular[MAX_PLAYERS] = {LANDING_LAG_MULTIPLIER_DEFAULT, LANDING_LAG_MULTIPLIER_DEFAULT, LANDING_LAG_MULTIPLIER_DEFAULT, LANDING_LAG_MULTIPLIER_DEFAULT};
 float playerLandingLagCancelled[MAX_PLAYERS] = {LC_LANDING_LAG_MULTIPLIER_DEFAULT, LC_LANDING_LAG_MULTIPLIER_DEFAULT, LC_LANDING_LAG_MULTIPLIER_DEFAULT, LC_LANDING_LAG_MULTIPLIER_DEFAULT};
 
+void setEffectGameLandingCancel(u16 targetPlayer, u16 duration, bool alcOn, float landingLagMultiplier, float lcLandingLagMultiplier) {
+    // TODO: should the value get overridden if currently active?
+
+    landingLagPlayerDuration[targetPlayer] = duration*60;
+    playerALC[targetPlayer] = alcOn;
+    playerLandingLagRegular[targetPlayer] = landingLagMultiplier;
+    playerLandingLagCancelled[targetPlayer] = lcLandingLagMultiplier;
+}
+
 void saveEffectGame() {
     prev_wild_speed = GAME_GLOBAL->unk1->stageSpeed;
     prev_game_speed = GF_APPLICATION->frameSpeed;
@@ -34,11 +43,12 @@ void resetEffectGame() {
 
     hitfallDuration = 0;
 
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        landingLagPlayerDuration[i] = 0;
-        playerALC[i] = *ALC_TOGGLE;
-        playerLandingLagRegular[i] = LANDING_LAG_MULTIPLIER_DEFAULT;
-        playerLandingLagCancelled[i] = LC_LANDING_LAG_MULTIPLIER_DEFAULT;
+    for (u16 targetPlayer = 0; targetPlayer < MAX_PLAYERS; targetPlayer++) {
+        setEffectGameLandingCancel(targetPlayer,
+                                   0,
+                                   *ALC_TOGGLE,
+                                   LANDING_LAG_MULTIPLIER_DEFAULT,
+                                   LC_LANDING_LAG_MULTIPLIER_DEFAULT);
     }
 }
 
@@ -61,13 +71,15 @@ void checkEffectGameDurationFinished() {
         hitfallDuration--;
     }
 
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        if (landingLagPlayerDuration[i] > 0) {
-            landingLagPlayerDuration[i]--;
-            if (landingLagPlayerDuration[i] == 0) {
-                playerALC[i] = *ALC_TOGGLE;
-                playerLandingLagRegular[i] = LANDING_LAG_MULTIPLIER_DEFAULT;
-                playerLandingLagCancelled[i] = LC_LANDING_LAG_MULTIPLIER_DEFAULT;
+    for (u16 targetPlayer = 0; targetPlayer < MAX_PLAYERS; targetPlayer++) {
+        if (landingLagPlayerDuration[targetPlayer] > 0) {
+            landingLagPlayerDuration[targetPlayer]--;
+            if (landingLagPlayerDuration[targetPlayer] == 0) {
+                setEffectGameLandingCancel(targetPlayer,
+                                           0,
+                                           *ALC_TOGGLE,
+                                           LANDING_LAG_MULTIPLIER_DEFAULT,
+                                           LC_LANDING_LAG_MULTIPLIER_DEFAULT);
             }
         }
     }
@@ -149,15 +161,6 @@ EXIStatus effectGameHitfall(u16 duration) {
     return RESULT_EFFECT_SUCCESS;
 }
 
-void setLandingCancelEffect(u16 targetPlayer, u16 duration, bool alcOn, float landingLagMultiplier, float lcLandingLagMultiplier) {
-    // TODO: should the value get overridden if currently active?
-
-    landingLagPlayerDuration[targetPlayer] = duration*60;
-    playerALC[targetPlayer] = alcOn;
-    playerLandingLagRegular[targetPlayer] = landingLagMultiplier;
-    playerLandingLagCancelled[targetPlayer] = lcLandingLagMultiplier;
-}
-
 //// Credit: Magus, Standardtoaster, wiiztec, Eon, DesiacX
 EXIStatus effectGameLandingLag(u16 numPlayers, u16 duration, u16 targetPlayer, bool alcOn, s8 landingLagModifier, s8 lcLandingLagModifier) {
     float landingLagMultiplier = LANDING_LAG_MULTIPLIER_DEFAULT;
@@ -176,20 +179,17 @@ EXIStatus effectGameLandingLag(u16 numPlayers, u16 duration, u16 targetPlayer, b
     if (targetPlayer == MAX_PLAYERS + 1) {
         // give all players equipment
         for (u16 targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
-            setLandingCancelEffect(targetPlayer, duration, alcOn, landingLagMultiplier, lcLandingLagMultiplier);
+            setEffectGameLandingCancel(targetPlayer, duration, alcOn, landingLagMultiplier, lcLandingLagMultiplier);
         }
     }
     else if (targetPlayer >= numPlayers) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        setLandingCancelEffect(targetPlayer, duration, alcOn, landingLagMultiplier, lcLandingLagMultiplier);
+        setEffectGameLandingCancel(targetPlayer, duration, alcOn, landingLagMultiplier, lcLandingLagMultiplier);
     }
 
     return RESULT_EFFECT_SUCCESS;
-
-    //hitfallDuration += duration*60;
-    //return RESULT_EFFECT_SUCCESS;
 }
 
 extern "C" void hitfallMode(){
