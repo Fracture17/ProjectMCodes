@@ -203,6 +203,9 @@ namespace FrameLogic {
                 case EFFECT_ATTRIBUTE_SLIP:
                     exiStatus = effectAttributeSlip(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4]);
                     break;
+                case EFFECT_ATTRIBUTE_NUMJUMPS:
+                    exiStatus = effectAttributeNumJumps(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -243,8 +246,9 @@ namespace FrameLogic {
                     //effectGameHitfall(12);
                     //effectGameLandingLag(numPlayers, 12, 0, false, 0, -2);
                     //effectAttributeSlip(numPlayers, 12, 0, 100, false);
+                    //effectAttributeNumJumps(numPlayers, 12, 0, 1);
 
-                    //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules);
+                    //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {

@@ -5,6 +5,301 @@
 #ifndef PROJECTMCODES_FTPARAMCUSTOMIZEMODULEIMPL_H
 #define PROJECTMCODES_FTPARAMCUSTOMIZEMODULEIMPL_H
 
+#include "stddef.h"
+
+struct ftParam {
+    // 0
+    float walkInitVel;
+    // 1
+    float walkAccel;
+    // 2
+    float walkMaxVel;
+    // 3
+    float groundFriction;
+    // 4
+    float dashInitVel;
+    // 5
+    float dashRunAccA;
+    // 6
+    float dashRunAccB;
+    // 7
+    float dashRunTermVel;
+    // 8
+    float runAccel_maybe;
+    // 9
+    float groundedMaxXVel;
+    // a
+    u32 dashCancelFrameWindow;
+    // b
+    float guardOnMaxMomentum;
+    // c
+    u32 jumpSquatFrames;
+    // d
+    float jumpXInitVel;
+    // e
+    float jumpYInitVel;
+    // f
+    float jumpXVelGroundMult;
+    // 10
+    float jumpXInitTermVel;
+    // 11
+    float jumpYInitVelShort;
+    // 12
+    float airJumpYMult;
+    // 13
+    float airJumpAdditionalHVel;
+    // 14
+    float footstoolInitVel;
+    // 15
+    float footstoolInitVelShort;
+    // 16
+    float footstoolCancelWindow;
+    // 17
+    float meteorCancelDelay;
+    // 18
+    u32 numJumps;
+    // 19
+    float gravity;
+    // 1a
+    float maxFallSpeed;
+    // 1b
+    float airFrictionY;
+    // 1c
+    float airYTermVel;
+    // 1d
+    float airMobilityA;
+    // 1e
+    float airMobilityB;
+    // 1f
+    float airXTermVel;
+    // 20
+    float airFrictionX;
+    // 21
+    float fastFallSpeed;
+    // 22
+    float airXTermVelHard;
+    // 23
+    u32 glideFrameWindow;
+    // 24
+    float unk_0x90;
+    // 25
+    float jab2Window;
+    // 26
+    float jab3Window;
+    // 27
+    float ftilt2Window;
+    // 28
+    float ftilt3Window;
+    // 29
+    float fsmash2Window;
+    // 2a
+    float flipDirFrame;
+    // 2b
+    float unk_0xac;
+    // 2c
+    float weight;
+    // 2d
+    float size;
+    // 2e
+    float resultsScreenSize;
+    // 2f
+    float unk_0xbc;
+    // 30
+    float unk_0xc0;
+    // 31
+    float shieldSize;
+    // 32
+    float shieldBreakVel;
+    // 33
+    float shieldStrength;
+    // 34
+    float unk_0xd0;
+    // 35
+    float respawnPlatformSize;
+    // 36
+    float unk_0xd8;
+    // 37
+    float unk_0xdc;
+    // 38
+    float unk_0xe0;
+    // 39
+    float edgeJumpXVel;
+    // 3a
+    u32 edgeJumpYVel;
+    // 3b
+    u32 unk_0xec;
+    // 3c
+    float unk_0xf0;
+    // 3d
+    float unk_0xf4;
+    // 3e
+    float unk_0xf8;
+    // 3f
+    float unk_0xfc;
+    // 40
+    float unk_0x100;
+    // 41
+    float itemThrowStrength;
+    // 42
+    float unk_0x108;
+    // 43
+    float unk_0x10c;
+    // 44
+    float unk_0x110;
+    // 45
+    float projectileItemMoveSpeed;
+    // 46
+    float projectileItemMoveSpeedDashF;
+    // 47
+    float projectileItemMoveSpeedDashB;
+    // 48
+    float unk_0x120;
+    // 49
+    float lightLandingLag;
+    // 4a
+    float normalLandingLag;
+    // 4b
+    float nairLandingLag;
+    // 4c
+    float fairLandingLag;
+    // 4d
+    float bairLandingLag;
+    // 4e
+    float uairLandingLag;
+    // 4f
+    float dairLandingLag;
+    // 50
+    float termVelHardFrames;
+    // 51
+    float hipNBone;
+    // 52
+    float tagHeightValue;
+    // 53
+    float unk_0x14c;
+    // 54
+    float walljumpXVel;
+    // 55
+    u32 walljumpYVel;
+    // 56
+    u32 unk_0x158;
+    // 57
+    float lhandNBone;
+    // 58
+    float rhandNBone;
+    // 59
+    float unk_0x164;
+    // 5a
+    float waterYAcc;
+    // 5b
+    float unk_0x16c;
+    // 5c
+    float unk_0x170;
+    // 5d
+    u32 unk_0x174;
+    // 5e
+    float unk_0x178;
+    // 5f
+    float unk_0x17c;
+    // 60
+    u32 spitStarSize;
+    // 61
+    u32 spitStarDamage;
+    // 62
+    float eggSize;
+    // 63
+    float unk_0x18c;
+    // 64
+    float unk_0x190;
+    // 65
+    float unk_0x194;
+    // 66
+    float unk_0x198;
+    // 67
+    float unk_0x19c;
+    // 68
+    float unk_0x1a0;
+    // 69
+    float unk_0x1a4;
+    // 6a
+    u32 hipNBone2;
+    // 6b
+    float unk_0x1ac;
+    // 6c
+    float unk_0x1b0;
+    // 6d
+    float unk_0x1b4;
+    // 6e
+    float unk_0x1b8;
+    // 6f
+    float xRotNBone;
+    // 70
+    float unk_0x1c0;
+    // 71
+    float unk_0x1c4;
+    // 72
+    float unk_0x1c8;
+    // 73
+    u32 unk_0x1cc;
+    // 74
+    float unk_0x1d0;
+    // 75
+    float cameraInitialYOffset;
+    // 76
+    float cameraSizeFront;
+    // 77
+    float cameraSizeBack;
+    // 78
+    u32 cameraSizeTop;
+    // 79
+    float cameraSizeBottom;
+    // 7a
+    float unk_0x1e8;
+    // 7b
+    float zoomCameraSizeFront;
+    // 7c
+    float zoomCameraSizeBack;
+    // 7d
+    float zoomCameraSizeTop;
+
+    char _spacer[0xa2*4 - 0x7d*4 - 4];
+    // a2
+    float unk_0x288;
+    // a3
+    u32 unk_0x28c;
+    // a4
+    u32 unk_0x290;
+    // a5
+    u32 unk_0x294;
+    // a6
+    float unk_0x298;
+    // a7
+    u32 unk_0x29c;
+
+    char _spacer2[0xb0*4 - 0xa7*4 - 4];
+
+    // b0
+    float unk_b0;
+    // b1
+    float unk_b1;
+    // b2
+    float unk_b2;
+    // b3
+    float unk_b3;
+    // b4
+    float unk_b4;
+    // b5
+    float unk_b5;
+    // b6
+    float unk_b6;
+    // b7
+    float unk_b7;
+    // b8
+    float unk_b8;
+};
+
+struct ftParamEtc {
+
+};
 
 struct ftParamCustomizeModuleImpl {
     // start
@@ -240,41 +535,41 @@ struct ftParamCustomizeModuleImpl {
     // 0x1e0
     char _spacer2[0x3a8 - 0x1e0];
     // 0x3a8
-    float dashCancelFrameWindow;
+    u32 dashCancelFrameWindow;
     // 0x3ac
-    float jumpSquatFrames;
+    u32 jumpSquatFrames;
     // 0x3b0
-    float numJumps;
+    u32 numJumps;
     // 0x3b4
-    float glideFrameWindow;
+    u32 glideFrameWindow;
     // 0x3b8
-    float edgeJumpYVel;
+    u32 edgeJumpYVel;
     // 0x3bc
-    float unk_0xec;
+    u32 unk_0xec;
     // 0x3c0
-    float walljumpYVel;
+    u32 walljumpYVel;
     // 0x3c4
-    float unk_0x158;
+    u32 unk_0x158;
     // 0x3c8
-    float unk_0x174;
+    u32 unk_0x174;
     // 0x3cc
-    float spitStarSize;
+    u32 spitStarSize;
     // 0x3d0
-    float spitStarDamage;
+    u32 spitStarDamage;
     // 0x3d4
-    float hipNBone2;
+    u32 hipNBone2;
     // 0x3d8
-    float unk_0x1cc;
+    u32 unk_0x1cc;
     // 0x3dc
-    float cameraSizeTop;
+    u32 cameraSizeTop;
     // 0x3e0
-    float unk_0x28c;
+    u32 unk_0x28c;
     // 0x3e4
-    float unk_0x290;
+    u32 unk_0x290;
     // 0x3e8
-    float unk_0x294;
+    u32 unk_0x294;
     // 0x3ec
-    float unk_0x29c;
+    u32 unk_0x29c;
 };
 
 

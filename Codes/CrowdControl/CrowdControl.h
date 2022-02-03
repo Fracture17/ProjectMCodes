@@ -55,6 +55,7 @@ enum CCEffect
     EFFECT_MODE_HITFALL = 34,
     EFFECT_MODE_LANDINGLAG = 35,
     EFFECT_ATTRIBUTE_SLIP = 36,
+    EFFECT_ATTRIBUTE_NUMJUMPS = 37,
 };
 
 //hacky way to check if in game

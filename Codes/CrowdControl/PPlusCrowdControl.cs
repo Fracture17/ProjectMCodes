@@ -516,6 +516,7 @@ public class PPlus : SimpleTCPPack
         createEffectFolder("Attributes", "attribute"),
 
         createEffect("Trip Rate", "attribute_triprate", 36, new[]{"slip_duration", "players", "slip_rate", "set_tripcooldown"}, "attribute"),
+        createEffect("Number of Jumps", "attribute_numjumps", 37, new[]{"numjumps_duration", "players", "#jumps"}, "attribute"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -824,6 +825,8 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Landing Lag Cancelled", "landinglag_cancelled", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
 		new ItemType("Slip Duration", "slip_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Slip Rate", "slip_rate", ItemType.Subtype.Slider, "{\"min\":0,\"max\":100}"),
+		new ItemType("#Jumps Duration", "numjumps_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("#Jumps", "#jumps, ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),
