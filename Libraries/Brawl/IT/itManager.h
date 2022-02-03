@@ -3,7 +3,7 @@
 #define PROJECTMCODES_ITMANAGER_H
 
 #include "Brawl/IT/BaseItem.h"
-
+#include "Containers/ArrayList.h"
 
 struct itManager_itArchiveArrayList_vtable {
     char _spacer[0x8];
@@ -47,8 +47,6 @@ struct itManager_itKindArrayList_vtable {
 
 struct itArchive {};
 
-struct itKind {};
-
 // TODO: Use ArrayVector wrapper
 struct itManager {
     BaseItem* getItemFromIndex(u32 index);
@@ -58,15 +56,17 @@ struct itManager {
     void preloadItemKindArchive(itemIdName itemId);
 
     char _spacer[0xC8];
-    itManager_itArchiveArrayList_vtable* itArchiveArrayList_vtable;
+    ArrayList<itArchive*> itArchiveArrayList;
 
-    char _spacer2[0x10BC - 0xC8 - 4];
+    char _spacer2[0x6D8 - 0xC8 - sizeof(itArchiveArrayList)];
+    ArrayList<BaseItem*> baseItemArrayList;
+
+    char _spacer3[0x10BC - 0x6D8 - sizeof(baseItemArrayList)];
     itemIdName nextAssist;
 
-    char _spacer3[0x10C8 - 0x10BC - 4];
+    char _spacer4[0x10C8 - 0x10BC - 4];
     // Pokemon Queue
-    itManager_itKindArrayList_vtable* itKindArrayList_vtable;
-
+    ArrayList<u32> itKindArrayList;
 };
 
 #define _getItemFromIndex_itManager ((BaseItem * (*)(itManager * self, u32 index)) 0x809b33a0)

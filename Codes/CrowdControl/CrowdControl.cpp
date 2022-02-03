@@ -286,14 +286,14 @@ namespace FrameLogic {
                 }
             }
 
-            int capacity = ((int (*)(void* it)) ITEM_MANAGER->itKindArrayList_vtable->capacity)(&ITEM_MANAGER->itKindArrayList_vtable);
+            /*int capacity = ITEM_MANAGER->itKindArrayList.capacity();
             for (int i = 0; i < capacity; i++) {
                 debugData->loadedPkmn[i] = 0;
-            }
+            }*/
 
-            int size = ((int (*)(void* it)) ITEM_MANAGER->itKindArrayList_vtable->size)(&ITEM_MANAGER->itKindArrayList_vtable);
+            int size = ITEM_MANAGER->itKindArrayList.size();
             for (int i = 0; i < size; i++) {
-                u32* pkmnPtr = ((u32* (*)(void* it, int i)) ITEM_MANAGER->itKindArrayList_vtable->at)(&ITEM_MANAGER->itKindArrayList_vtable, i);
+                u32* pkmnPtr = ITEM_MANAGER->itKindArrayList.at(i);
                 //u32* pkmnPtr = ((u32* (*)(void* it, int i)) ITEM_MANAGER->itArchiveArrayList_vtable->at)(&ITEM_MANAGER->itArchiveArrayList_vtable, i);
                 if (pkmnPtr != nullptr) debugData->loadedPkmn[i] = *pkmnPtr;
             }

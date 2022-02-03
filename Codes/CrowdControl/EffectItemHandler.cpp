@@ -89,7 +89,7 @@ EXIStatus effectItemSpawn(u16 numPlayers, u16 itemId, u16 amount, u16 throwType)
 //// Credit: fudgepop01, Kapedani
 EXIStatus effectItemPreloadPokemon(u16 itemId, u16 amount) {
     if (preloadedPokemonId < 0) {
-        ((int *(*)(void *it)) ITEM_MANAGER->itKindArrayList_vtable->pop)(&ITEM_MANAGER->itKindArrayList_vtable);
+        ITEM_MANAGER->itKindArrayList.pop();
         ITEM_MANAGER->preloadPokemon((itemIdName) itemId);
         preloadedPokemonId = itemId;
         preloadedPokemonAmount = amount;

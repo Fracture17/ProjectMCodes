@@ -1,5 +1,5 @@
-#ifndef PROJECTMCODES_ARRAYVECTOR_H
-#define PROJECTMCODES_ARRAYVECTOR_H
+#ifndef PROJECTMCODES_ARRAYLIST_H
+#define PROJECTMCODES_ARRAYLIST_H
 
 struct ArrayListVTable {
   char _spacer[0x8];
@@ -85,7 +85,7 @@ T* ArrayList<T>::pop() {
 }
 
 template<class T>
-T* ArrayList<T>::clear() {
+void ArrayList<T>::clear() {
   return ((T* (*)(void* self)) this->vtable1->clearFn)(this);
 }
 
