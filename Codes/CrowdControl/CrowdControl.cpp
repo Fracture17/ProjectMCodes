@@ -206,6 +206,21 @@ namespace FrameLogic {
                 case EFFECT_ATTRIBUTE_NUMJUMPS:
                     exiStatus = effectAttributeNumJumps(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
+                case EFFECT_ATTRIBUTE_JUMPSQUAT:
+                    exiStatus = effectAttributeJumpSquat(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_GROUNDFRICTION:
+                    exiStatus = effectAttributeGroundFriction(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_GRAVITY:
+                    exiStatus = effectAttributeGravity(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_FASTFALLSPEED:
+                    exiStatus = effectAttributeFastFallSpeed(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_WEIGHT:
+                    exiStatus = effectAttributeWeight(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -247,6 +262,11 @@ namespace FrameLogic {
                     //effectGameLandingLag(numPlayers, 12, 0, false, 0, -2);
                     //effectAttributeSlip(numPlayers, 12, 0, 100, false);
                     //effectAttributeNumJumps(numPlayers, 12, 0, 1);
+                    //effectAttributeJumpSquat(numPlayers, 12, 0, 15);
+                    //effectAttributeGroundFriction(numPlayers, 12, 0, -9);
+                    //effectAttributeGravity(numPlayers, 12, 0, -1);
+                    //effectAttributeFastFallSpeed(numPlayers, 12, 0, -3);
+                    //effectAttributeWeight(numPlayers, 12, 1, 20);
 
                     //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
                     testWaitDuration = 60;

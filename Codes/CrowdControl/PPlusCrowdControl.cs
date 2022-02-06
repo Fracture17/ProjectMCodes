@@ -512,11 +512,16 @@ public class PPlus : SimpleTCPPack
         createEffect("Hitfall", "mode_hitfall", 34, new[]{"hitfall_duration"}, "mode"),
         createEffect("Landing Lag", "mode_landinglag", 35, new[]{"landinglag_duration", "players", "set_alc", "landinglag_regular", "landinglag_cancelled"}, "mode"),
 
-        // Modes
+        // Attributes
         createEffectFolder("Attributes", "attribute"),
 
         createEffect("Trip Rate", "attribute_triprate", 36, new[]{"slip_duration", "players", "slip_rate", "set_tripcooldown"}, "attribute"),
         createEffect("Number of Jumps", "attribute_numjumps", 37, new[]{"numjumps_duration", "players", "#jumps"}, "attribute"),
+        createEffect("Jump Squat", "attribute_jumpsquat", 38, new[]{"jumpsquat_duration", "players", "jumpsquat_frames"}, "attribute"),
+        createEffect("Ground Friction", "attribute_groundfriction", 39, new[]{"groundfriction_duration", "players", "groundfriction_modifer"}, "attribute"),
+        createEffect("Gravity", "attribute_gravity", 40, new[]{"gravity_duration", "players", "gravity_modifer"}, "attribute"),
+        createEffect("Fast Fall Speed", "attribute_fastfallspeed", 41, new[]{"fastfallspeed_duration", "players", "fastfallspeed_modifier"}, "attribute"),
+        createEffect("Weight", "attribute_weight", 42, new[]{"weight_duration", "players", "weight_modifier"}, "attribute"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -821,12 +826,22 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Big Head Size", "bighead_size", ItemType.Subtype.Slider, "{\"min\":0,\"max\":5}"),
 		new ItemType("Hitfall Duration", "hitfall_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Landing Lag Duration", "landinglag_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
-		new ItemType("Landing Lag Regular", "landinglag_regular", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
-		new ItemType("Landing Lag Cancelled", "landinglag_cancelled", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+		new ItemType("Landing Lag Regular", "landinglag_regular", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":5}"),
+		new ItemType("Landing Lag Cancelled", "landinglag_cancelled", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":5}"),
 		new ItemType("Slip Duration", "slip_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Slip Rate", "slip_rate", ItemType.Subtype.Slider, "{\"min\":0,\"max\":100}"),
 		new ItemType("#Jumps Duration", "numjumps_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("#Jumps", "#jumps, ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
+		new ItemType("Jump Squat Duration", "jumpsquat_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Jump Squat Frames", "jumpsquat_frames", ItemType.Subtype.Slider, "{\"min\":0,\"max\":15}"),
+        new ItemType("Ground Friction Duration", "groundfriction_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Ground Friction Modifier", "groundfriction_modifier", ItemType.Subtype.Slider, "{\"min\":-9,\"max\":10}"),
+        new ItemType("Gravity Duration", "gravity_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Gravity Modifier", "gravity_modifier", ItemType.Subtype.Slider, "{\"min\":-1,\"max\":10}"),
+        new ItemType("Fast Fall Speed Duration", "fastfallspeed_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Fast Fall Speed Modifier", "fastfallspeed_modifier", ItemType.Subtype.Slider, "{\"min\":-3,\"max\":10}"),
+        new ItemType("Weight Duration", "weight_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Weight Modifier", "weight_modifier", ItemType.Subtype.Slider, "{\"min\":-20,\"max\":20}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),

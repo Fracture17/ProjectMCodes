@@ -163,14 +163,12 @@ EXIStatus effectGameHitfall(u16 duration) {
 
 //// Credit: Magus, Standardtoaster, wiiztec, Eon, DesiacX
 EXIStatus effectGameLandingLag(u16 numPlayers, u16 duration, u16 targetPlayer, bool alcOn, s8 landingLagModifier, s8 lcLandingLagModifier) {
-    float landingLagMultiplier = LANDING_LAG_MULTIPLIER_DEFAULT;
-    float lcLandingLagMultiplier = LC_LANDING_LAG_MULTIPLIER_DEFAULT;
 
-    if (landingLagModifier >= 0) landingLagMultiplier = (float)landingLagModifier;
-    else landingLagMultiplier = 1/((float)-landingLagModifier);
+    float landingLagMultiplier = (float)landingLagModifier;
+    if (landingLagModifier < 0)  landingLagMultiplier = 1/((float)-landingLagModifier + 1);
 
-    if (lcLandingLagModifier >= 0) lcLandingLagMultiplier = (float)lcLandingLagModifier;
-    else lcLandingLagMultiplier = 1/((float)-lcLandingLagModifier);
+    float lcLandingLagMultiplier = (float)lcLandingLagModifier;
+    if (lcLandingLagModifier < 0) lcLandingLagMultiplier = 1/((float)-lcLandingLagModifier + 1);
 
     if (targetPlayer == MAX_PLAYERS) {
         targetPlayer = randi(numPlayers);
