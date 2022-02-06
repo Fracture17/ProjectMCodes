@@ -122,10 +122,6 @@ void checkEffectModeDurationFinished() {
 
 //// Credit: Fracture
 EXIStatus effectModeFlight(u16 duration, u16 x_maxspeed, u16 y_maxspeed, s16 x_accel, s16 y_accel) {
-    if (flightModeDuration == 0) {
-        prev_flight_toggle = *FLIGHT_MODE_TOGGLE;
-    }
-
     *FLIGHT_MODE_TOGGLE = true;
     *FLIGHT_MODE_X_MAXSPEED = x_maxspeed;
     *FLIGHT_MODE_Y_MAXSPEED = y_maxspeed;
@@ -137,10 +133,6 @@ EXIStatus effectModeFlight(u16 duration, u16 x_maxspeed, u16 y_maxspeed, s16 x_a
 
 //// Credit: wiiztec, DukeItOut
 EXIStatus effectModeBorderless(u16 duration) {
-    if (borderlessDuration == 0) {
-        prev_stamina_toggle = *STAMINA_TOGGLE;
-        prev_borderless_toggle = *BORDERLESS_TOGGLE;
-    }
     *BORDERLESS_TOGGLE = 2;
     *STAMINA_TOGGLE = 2;
     borderlessDuration += duration*60;
@@ -155,9 +147,6 @@ EXIStatus effectModeElement(u16 duration) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        if (elementDuration == 0) {
-            prev_element_toggle = *ELEMENT_TOGGLE;
-        }
         *ELEMENT_TOGGLE = 1;
         elementDuration += duration * 60;
         return RESULT_EFFECT_SUCCESS;
@@ -172,9 +161,6 @@ EXIStatus effectModeZTD(u16 duration) {
         return RESULT_EFFECT_UNAVAILABLE;
     }
     else {
-        if (ztdDuration == 0) {
-            prev_ztd_toggle = *ZTD_TOGGLE;
-        }
         *ZTD_TOGGLE = 2;
         ztdDuration += duration * 60;
         return RESULT_EFFECT_SUCCESS;
@@ -188,9 +174,6 @@ EXIStatus effectModeBombRain(u16 duration) {
     if (*BOMBRAIN_TOGGLE == 2) {
         return RESULT_EFFECT_UNAVAILABLE;
     } else {
-        if (bombRainDuration == 0) {
-            prev_bombrain_toggle = *BOMBRAIN_TOGGLE;
-        }
         *BOMBRAIN_TOGGLE = 1;
         bombRainDuration += duration * 60;
         return RESULT_EFFECT_SUCCESS;
@@ -366,4 +349,7 @@ INJECTION("RANDOM_ANGLE_MODE", 0x80767adc, R"(
 INJECTION("BIG_HEAD_MODE", 0x80839010, R"(
   b bigHeadMode
 )");
+
+
+
 

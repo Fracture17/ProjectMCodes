@@ -25,6 +25,7 @@ struct Fighter : public StageObject {
 	//IpHuman* getInput();
 	ftOwner* getOwner();
 
+    int getFtKind();
     void setMetal(double health, bool setEffect, int unk3);
     void setCurry(bool setEffect, int unk2);
     void setHammer(bool setEffect, int unk2);
@@ -42,7 +43,7 @@ struct Fighter : public StageObject {
 	char _spacer_ft[0x110 - 0x100 - 4];
 };
 
-#define _getFtKind_Fighter (( (*)()) 0x8076b00c)
+#define _getFtKind_Fighter ((int (*)(Fighter * This)) 0x8076b00c)
 
 //first int is fighter id or somethign
 //second int seems to not be used (immediatly overwritten)
