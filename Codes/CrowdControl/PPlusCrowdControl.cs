@@ -491,37 +491,44 @@ public class PPlus : SimpleTCPPack
 
         // TODO: Blob of terror (have characters stuck to each other for a period of time)
 
-        /// Warp to Player
+        /// Swap Positions
         createEffect("Swap Positions", "warp_swap", 23, new[]{"players", "players"}, "warp"),
 
         // TODO: Random safe warp
 
+        /// Switch Directions
+        createEffect("Switch Directions", "warp_switchdirections", 24, new[]{"players"}, "warp"),
+
         // Modes
         createEffectFolder("Modes", "mode"),
 
-        createEffect("Flight", "mode_flight", 24, new[]{"flight_duration", "flight_xmaxspeed", "flight_ymaxspeed", "flight_xaccel", "flight_yaccel"}, "mode"),
-        createEffect("Borderless", "mode_borderless", 25, new[]{"borderless_duration"}, "mode"),
-        createEffect("Random Element", "mode_element", 26, new[]{"element_duration"}, "mode"),
-        createEffect("Zero to Death", "mode_ztd", 27, new[]{"ztd_duration"}, "mode"),
-        createEffect("Bomb Rain", "mode_bombrain", 28, new[]{"bombrain_duration"}, "mode"),
-        createEffect("Wild (Stage Speed)", "mode_wild", 29, new[]{"wild_duration", "stage_speed", "growth"}, "mode"),
-        createEffect("Game Speed", "mode_speed", 30, new[]{"speed_duration", "game_speed"}, "mode"),
-        createEffect("War", "mode_war", 31, new[]{"war_duration"}, "mode"),
-        createEffect("Random Angle", "mode_randomangle", 32, new[]{"randomangle_duration"}, "mode"),
-        createEffect("Big Head", "mode_bighead", 33, new[]{"bighead_duration", "bighead_size", "growth"}, "mode"),
-        createEffect("Hitfall", "mode_hitfall", 34, new[]{"hitfall_duration"}, "mode"),
-        createEffect("Landing Lag", "mode_landinglag", 35, new[]{"landinglag_duration", "players", "set_alc", "landinglag_regular", "landinglag_cancelled"}, "mode"),
+        createEffect("Flight", "mode_flight", 25, new[]{"flight_duration", "flight_xmaxspeed", "flight_ymaxspeed", "flight_xaccel", "flight_yaccel"}, "mode"),
+        createEffect("Borderless", "mode_borderless", 26, new[]{"borderless_duration"}, "mode"),
+        createEffect("Random Element", "mode_element", 27, new[]{"element_duration"}, "mode"),
+        createEffect("Zero to Death", "mode_ztd", 28, new[]{"ztd_duration"}, "mode"),
+        createEffect("Bomb Rain", "mode_bombrain", 29, new[]{"bombrain_duration"}, "mode"),
+        createEffect("Wild (Stage Speed)", "mode_wild", 30, new[]{"wild_duration", "stage_speed", "growth"}, "mode"),
+        createEffect("Game Speed", "mode_speed", 31, new[]{"speed_duration", "game_speed"}, "mode"),
+        createEffect("War", "mode_war", 32, new[]{"war_duration"}, "mode"),
+        createEffect("Random Angle", "mode_randomangle", 33, new[]{"randomangle_duration"}, "mode"),
+        createEffect("Big Head", "mode_bighead", 34, new[]{"bighead_duration", "bighead_size", "growth"}, "mode"),
+        createEffect("Hitfall", "mode_hitfall", 35, new[]{"hitfall_duration"}, "mode"),
+        createEffect("Landing Lag", "mode_landinglag", 36, new[]{"landinglag_duration", "players", "set_alc", "landinglag_regular", "landinglag_cancelled"}, "mode"),
+        createEffect("Sudden Death", "mode_suddendeath", 37, new[]{"suddendeath_duration", "players"}, "mode"),
 
         // Attributes
         createEffectFolder("Attributes", "attribute"),
 
-        createEffect("Trip Rate", "attribute_triprate", 36, new[]{"slip_duration", "players", "slip_rate", "set_tripcooldown"}, "attribute"),
-        createEffect("Number of Jumps", "attribute_numjumps", 37, new[]{"numjumps_duration", "players", "#jumps"}, "attribute"),
-        createEffect("Jump Squat", "attribute_jumpsquat", 38, new[]{"jumpsquat_duration", "players", "jumpsquat_frames"}, "attribute"),
-        createEffect("Ground Friction", "attribute_groundfriction", 39, new[]{"groundfriction_duration", "players", "groundfriction_modifer"}, "attribute"),
-        createEffect("Gravity", "attribute_gravity", 40, new[]{"gravity_duration", "players", "gravity_modifer"}, "attribute"),
-        createEffect("Fast Fall Speed", "attribute_fastfallspeed", 41, new[]{"fastfallspeed_duration", "players", "fastfallspeed_modifier"}, "attribute"),
-        createEffect("Weight", "attribute_weight", 42, new[]{"weight_duration", "players", "weight_modifier"}, "attribute"),
+        createEffect("Trip Rate", "attribute_triprate", 38, new[]{"slip_duration", "players", "slip_rate", "set_tripcooldown"}, "attribute"),
+        createEffect("Number of Jumps", "attribute_numjumps", 39, new[]{"numjumps_duration", "players", "#jumps"}, "attribute"),
+        createEffect("Jump Squat", "attribute_jumpsquat", 40, new[]{"jumpsquat_duration", "players", "jumpsquat_frames"}, "attribute"),
+        createEffect("Ground Friction", "attribute_groundfriction", 41, new[]{"groundfriction_duration", "players", "groundfriction_modifer"}, "attribute"),
+        createEffect("Gravity", "attribute_gravity", 42, new[]{"gravity_duration", "players", "gravity_modifer"}, "attribute"),
+        createEffect("Fast Fall Speed", "attribute_fastfallspeed", 43, new[]{"fastfallspeed_duration", "players", "fastfallspeed_modifier"}, "attribute"),
+        createEffect("Weight", "attribute_weight", 44, new[]{"weight_duration", "players", "weight_modifier"}, "attribute"),
+        createEffect("Size", "attribute_size", 45, new[]{"size_duration", "players", "size_modifier"}, "attribute"),
+        createEffect("Shield", "attribute_shield", 46, new[]{"shield_duration", "players", "shieldsize_modifier", "shieldstrength_modifier", "shieldbreak_modifier"}, "attribute"),
+        createEffect("Item Throw", "attribute_itemthrow", 47, new[]{"itemthrow_duration", "players", "itemthrowstrength_modifier", "itemmovespeed_modifier", "itemmovespeeddashf_modifier"}, "attribute"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -825,9 +832,10 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Big Head Duration", "bighead_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Big Head Size", "bighead_size", ItemType.Subtype.Slider, "{\"min\":0,\"max\":5}"),
 		new ItemType("Hitfall Duration", "hitfall_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
-		new ItemType("Landing Lag Duration", "landinglag_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Landing Lag Modifier Duration", "landinglag_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Landing Lag Regular", "landinglag_regular", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":5}"),
 		new ItemType("Landing Lag Cancelled", "landinglag_cancelled", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":5}"),
+		new ItemType("Sudden Death Duration", "suddendeath_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Slip Duration", "slip_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Slip Rate", "slip_rate", ItemType.Subtype.Slider, "{\"min\":0,\"max\":100}"),
 		new ItemType("#Jumps Duration", "numjumps_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
@@ -842,6 +850,16 @@ public class PPlus : SimpleTCPPack
         new ItemType("Fast Fall Speed Modifier", "fastfallspeed_modifier", ItemType.Subtype.Slider, "{\"min\":-3,\"max\":10}"),
         new ItemType("Weight Duration", "weight_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
         new ItemType("Weight Modifier", "weight_modifier", ItemType.Subtype.Slider, "{\"min\":-20,\"max\":20}"),
+        new ItemType("Size Duration", "size_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Size Modifier", "size_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+        new ItemType("Shield Modifier Duration", "shield_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Shield Size Modifier", "shieldsize_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+        new ItemType("Shield Strength Modifier", "shieldstrength_modifier", ItemType.Subtype.Slider, "{\"min\":1,\"max\":1}"),
+        new ItemType("Shield Break Vel Modifier", "shieldbreak_modifier", ItemType.Subtype.Slider, "{\"min\":1,\"max\":1}"),
+        new ItemType("Item Throw Modifier Duration", "itemthrow_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Item Throw Strength Modifier", "itemthrowstrength_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+        new ItemType("Item Move Speed Modifier", "itemmovespeed_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+        new ItemType("Item Move Speed Dash Modifier", "itemmovespeeddashf_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),

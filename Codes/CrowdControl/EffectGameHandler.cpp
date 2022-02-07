@@ -4,6 +4,10 @@
 
 #include "EffectGameHandler.h"
 
+#define SUDDEN_DEATH_PERCENT 300.0
+double playerPercentBeforeSuddenDeath[MAX_PLAYERS] = {0, 0, 0, 0};
+u32 suddenDeathPlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
+
 float prev_wild_speed = 1;
 u32 wildDuration = 0;
 
@@ -29,6 +33,15 @@ void setEffectGameLandingCancel(u16 targetPlayer, u16 duration, bool alcOn, floa
     playerLandingLagCancelled[targetPlayer] = lcLandingLagMultiplier;
 }
 
+void setEffectGameSuddenDeath(u16 targetPlayer, u16 duration, double percent) {
+
+    suddenDeathPlayerDuration[targetPlayer] = duration*60;
+    ftOwner* ftOwner = getFtOwner(targetPlayer);
+
+    playerPercentBeforeSuddenDeath[targetPlayer] = ftOwner->getDamage();
+    ftOwner->setDamage(percent, 0);
+}
+
 void saveEffectGame() {
     prev_wild_speed = GAME_GLOBAL->unk1->stageSpeed;
     prev_game_speed = GF_APPLICATION->frameSpeed;
@@ -49,6 +62,8 @@ void resetEffectGame() {
                                    *ALC_TOGGLE,
                                    LANDING_LAG_MULTIPLIER_DEFAULT,
                                    LC_LANDING_LAG_MULTIPLIER_DEFAULT);
+
+        suddenDeathPlayerDuration[targetPlayer] = 0;
     }
 }
 
@@ -82,6 +97,14 @@ void checkEffectGameDurationFinished() {
                                            LC_LANDING_LAG_MULTIPLIER_DEFAULT);
             }
         }
+
+        if (suddenDeathPlayerDuration[targetPlayer] > 0) {
+            suddenDeathPlayerDuration[targetPlayer]--;
+            if (suddenDeathPlayerDuration[targetPlayer] == 0) {
+                ftOwner* ftOwner = getFtOwner(targetPlayer);
+                getFtOwner(targetPlayer)->setDamage(min(ftOwner->getDamage(), playerPercentBeforeSuddenDeath[targetPlayer]), 0);
+            }
+        }
     }
 }
 
@@ -109,6 +132,29 @@ EXIStatus effectGameGiveDamage(u16 numPlayers, u16 targetPlayer, double percent,
     else {
         ftOwner* ftOwner = getFtOwner(targetPlayer);
         ftOwner->setDamage(ftOwner->getDamage() + percent, 0);
+    }
+
+    return RESULT_EFFECT_SUCCESS;
+}
+
+//// Credit: fudgepop01
+EXIStatus effectGameSuddenDeath(u16 numPlayers, u16 duration, u16 targetPlayer, double percent) {
+
+    if (targetPlayer == MAX_PLAYERS) {
+        targetPlayer = randi(numPlayers);
+    }
+
+    if (targetPlayer == MAX_PLAYERS + 1) {
+        // give all players metal
+        for (u16 targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
+            setEffectGameSuddenDeath(targetPlayer, duration, percent);
+        }
+    }
+    else if (targetPlayer >= numPlayers) {
+        return RESULT_EFFECT_UNAVAILABLE;
+    }
+    else {
+        setEffectGameSuddenDeath(targetPlayer, duration, percent);
     }
 
     return RESULT_EFFECT_SUCCESS;

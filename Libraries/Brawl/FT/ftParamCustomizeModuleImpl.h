@@ -570,6 +570,10 @@ struct ftParamCustomizeModuleImpl {
     u32 unk_0x294;
     // 0x3ec
     u32 unk_0x29c;
+    char _spacer3[0x690 - 0x3ec - 4];
+    // 0x690
+    float unk_690;
+
 };
 
 

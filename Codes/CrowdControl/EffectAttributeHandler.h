@@ -12,7 +12,7 @@
 #include "Brawl/FT/ftCommonDataAccessor.h"
 
 //void saveEffectAttribute();
-//void resetEffectAttribute();
+void resetEffectAttribute();
 void checkEffectAttributeDurationFinished(u16 numPlayers);
 
 EXIStatus effectAttributeSlip(u16 numPlayers, u16 duration, u16 targetPlayer, u16 tripRate, u16 tripCooldown);
@@ -22,5 +22,8 @@ EXIStatus effectAttributeGroundFriction(u16 numPlayers, u16 duration, u16 target
 EXIStatus effectAttributeGravity(u16 numPlayers, u16 duration, u16 targetPlayer, s8 gravityModifier);
 EXIStatus effectAttributeFastFallSpeed(u16 numPlayers, u16 duration, u16 targetPlayer, s8 fastFallSpeedModifier);
 EXIStatus effectAttributeWeight(u16 numPlayers, u16 duration, u16 targetPlayer, s8 weightModifier);
+EXIStatus effectAttributeSize(u16 numPlayers, u16 duration, u16 targetPlayer, s8 sizeModifier);
+EXIStatus effectAttributeShield(u16 numPlayers, u16 duration, u16 targetPlayer, s8 shieldSizeModifier, s8 shieldStrengthModifier, s8 shieldBreakVelModifier);
+EXIStatus effectAttributeItemThrow(u16 numPlayers, u16 duration, u16 targetPlayer, s8 itemThrowStrengthModifier, s8 projectileItemMoveSpeedModifier, s8 projectileItemMoveSpeedDashFModifier);
 
 #endif //PROJECTMCODES_EFFECTATTRIBUTEHANDLER_H

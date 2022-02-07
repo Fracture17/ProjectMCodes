@@ -163,6 +163,9 @@ namespace FrameLogic {
                 case EFFECT_WARP_SWAP:
                     exiStatus = effectPositionSwap(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
+                case EFFECT_WARP_SWITCHDIRECTIONS:
+                    exiStatus = effectPositionSwitchDirection(numPlayers, effectRequest[1]);
+                    break;
                 case EFFECT_MODE_FLIGHT:
                     // TODO: Package the new Dolphin with increased packet size
                     exiStatus = effectModeFlight(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
@@ -200,6 +203,9 @@ namespace FrameLogic {
                 case EFFECT_MODE_LANDINGLAG:
                     exiStatus = effectGameLandingLag(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
                     break;
+                case EFFECT_MODE_SUDDENDEATH:
+                    exiStatus = effectGameSuddenDeath(numPlayers, effectRequest[1], effectRequest[2], 300.0);
+                    break;
                 case EFFECT_ATTRIBUTE_SLIP:
                     exiStatus = effectAttributeSlip(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4]);
                     break;
@@ -221,6 +227,15 @@ namespace FrameLogic {
                 case EFFECT_ATTRIBUTE_WEIGHT:
                     exiStatus = effectAttributeWeight(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
+                case EFFECT_ATTRIBUTE_SIZE:
+                    exiStatus = effectAttributeSize(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_SHIELD:
+                    exiStatus = effectAttributeShield(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_ITEMTHROWSTRENGTH:
+                    exiStatus = effectAttributeItemThrow(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -234,7 +249,7 @@ namespace FrameLogic {
 
                 if (padSystem->pads[0].buttons.LeftDPad) {
                     //effectStatusGiveCurry(numPlayers, 0, 0);
-                    //effectStatusGiveMushroom(numPlayers, 0, 1, 1);
+                    //effectStatusGiveMushroom(numPlayers, 0, 1, 0);
                     //effectActionChangeForce(numPlayers, 0, 0x10C);
                     //effectStatusGiveFinalSmash(numPlayers, 0, 0);
                     //effectStatusGiveSwap(4, 0, 1, 0, 12);
@@ -267,6 +282,11 @@ namespace FrameLogic {
                     //effectAttributeGravity(numPlayers, 12, 0, -1);
                     //effectAttributeFastFallSpeed(numPlayers, 12, 0, -3);
                     //effectAttributeWeight(numPlayers, 12, 1, 20);
+                    //effectAttributeSize(numPlayers, 12, 0, -5);
+                    //effectPositionSwitchDirection(numPlayers, 0);
+                    //effectAttributeShield(numPlayers, 12, 0, 1, 1, 1);
+                    //effectAttributeItemThrow(numPlayers, 12, 0, 0, 0, 0);
+                    //effectGameSuddenDeath(numPlayers, 12, 0, 300.0);
 
                     //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
                     testWaitDuration = 60;
@@ -367,6 +387,7 @@ namespace FrameLogic {
     SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") {
         resetEffectGame();
         resetEffectMode();
+        resetEffectAttribute();
         SendGameStatus(EXIStatus::STATUS_MATCH_ENDED); } // when exiting match
     /*INJECTION("frameUpdate", 0x8001792c, R"(
     bl onUpdateFrame

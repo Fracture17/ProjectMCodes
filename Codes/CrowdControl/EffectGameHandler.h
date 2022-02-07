@@ -15,6 +15,7 @@ void resetEffectGame();
 void checkEffectGameDurationFinished();
 
 EXIStatus effectGameGiveDamage(u16 numPlayers, u16 targetPlayer, double percent, bool givePercent);
+EXIStatus effectGameSuddenDeath(u16 numPlayers, u16 duration, u16 targetPlayer, double percent);
 //EXIStatus effectGameGiveTime(int seconds, bool giveTime);
 EXIStatus effectGameWild(u16 duration, float stageSpeed, bool increase);
 EXIStatus effectGameSpeed(u16 duration, u16 gameSpeed);
