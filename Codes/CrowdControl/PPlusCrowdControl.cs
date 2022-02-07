@@ -530,6 +530,14 @@ public class PPlus : SimpleTCPPack
         createEffect("Shield", "attribute_shield", 46, new[]{"shield_duration", "players", "shieldsize_modifier", "shieldstrength_modifier", "shieldbreak_modifier"}, "attribute"),
         createEffect("Item Throw", "attribute_itemthrow", 47, new[]{"itemthrow_duration", "players", "itemthrowstrength_modifier", "itemmovespeed_modifier", "itemmovespeeddashf_modifier"}, "attribute"),
 
+        // Attributes
+        createEffectFolder("Debug", "debug"),
+        createEffect("Pause", "debug_pause", 48, "debug"),
+        createEffect("Camera Lock", "debug_cameralock", 49, new[]{"cameralock_duration"}, "debug"), // TODO: Set camera angle and position / matrix
+        //createEffect("Remove HUD", "debug_removehud", 50, new[]{"removehud_duration"}, "debug"),
+        createEffect("Debug Display", "debug_display", 51, new[]{"debug_duration", "hitbox_display", "collision_display", "stagecollision_display", "di_display"}, "debug"),
+
+
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
 
@@ -794,8 +802,26 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Waluigi", "item_assist", (int)ItemIds.Waluigi, "items_assist"),
 		createEffectSubItem("Dr. Wright", "item_assist", (int)ItemIds.Dr_Wright, "items_assist"),
 		createEffectSubItem("Wright Buildings", "item_assist", (int)ItemIds.Wright_Buildings, "items_assist"),
-		createEffectSubItem("Random", "item_assist", (int)ItemIds.Random, "items_assist")
-		
+		createEffectSubItem("Random", "item_assist", (int)ItemIds.Random, "items_assist"),
+
+        /// Hitbox Display
+		createEffectSubItem("Off", "hitbox_display_off", 0, "hitbox_display"),
+		createEffectSubItem("On", "hitbox_display_on", 1, "hitbox_display"),
+		createEffectSubItem("Models Off", "hitbox_display_modelsoff", 2, "hitbox_display"),
+
+		/// Collision Display
+        createEffectSubItem("Off", "collision_display_off", 0, "collision_display"),
+        createEffectSubItem("On", "collision_display_on", 1, "collision_display"),
+
+		/// Stage Collisions
+        createEffectSubItem("Off", "stagecollision_display_off", 0, "stagecollision_display"),
+        createEffectSubItem("On", "stagecollision_display_on", 1, "stagecollision_display"),
+        createEffectSubItem("Background Off", "stagecollision_display_backgroundoff", 2, "stagecollision_display"),
+
+        /// Draw DI
+        createEffectSubItem("Off", "di_display_off", 0, "di_display"),
+        createEffectSubItem("On", "di_display_on", 1, "di_display")
+
     };
 
     //Slider ranges need to be defined
@@ -860,6 +886,9 @@ public class PPlus : SimpleTCPPack
         new ItemType("Item Throw Strength Modifier", "itemthrowstrength_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
         new ItemType("Item Move Speed Modifier", "itemmovespeed_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
         new ItemType("Item Move Speed Dash Modifier", "itemmovespeeddashf_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+        new ItemType("Camera Lock Duration", "cameralock_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Remove HUD Duration", "removehud_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Debug Duration", "debug_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),
@@ -874,7 +903,9 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Equippable Items", "items_equip", ItemType.Subtype.ItemList),
 		//new ItemType("Special Items", "items_sp", ItemType.Subtype.ItemList),
 		new ItemType("Pokemon", "items_pkmn", ItemType.Subtype.ItemList),
-		new ItemType("Assist", "items_assist", ItemType.Subtype.ItemList)
-
+		new ItemType("Hitbox Display", "hitbox_display", ItemType.Subtype.ItemList),
+		new ItemType("Collision Display", "collision_display", ItemType.Subtype.ItemList),
+		new ItemType("Stage Collisions", "stagecollision_display", ItemType.Subtype.ItemList),
+		new ItemType("Draw DI", "di_display", ItemType.Subtype.ItemList)
     });
 }

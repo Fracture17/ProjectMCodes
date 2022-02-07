@@ -4,7 +4,6 @@
 
 #include "EffectGameHandler.h"
 
-#define SUDDEN_DEATH_PERCENT 300.0
 double playerPercentBeforeSuddenDeath[MAX_PLAYERS] = {0, 0, 0, 0};
 u32 suddenDeathPlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
 
@@ -23,6 +22,11 @@ u32 landingLagPlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
 u32 playerALC[MAX_PLAYERS] = {(u32)*ALC_TOGGLE, (u32)*ALC_TOGGLE, (u32)*ALC_TOGGLE, (u32)*ALC_TOGGLE};
 float playerLandingLagRegular[MAX_PLAYERS] = {LANDING_LAG_MULTIPLIER_DEFAULT, LANDING_LAG_MULTIPLIER_DEFAULT, LANDING_LAG_MULTIPLIER_DEFAULT, LANDING_LAG_MULTIPLIER_DEFAULT};
 float playerLandingLagCancelled[MAX_PLAYERS] = {LC_LANDING_LAG_MULTIPLIER_DEFAULT, LC_LANDING_LAG_MULTIPLIER_DEFAULT, LC_LANDING_LAG_MULTIPLIER_DEFAULT, LC_LANDING_LAG_MULTIPLIER_DEFAULT};
+
+#define PAUSE_TOGGLE ((s16*) 0x805B8A0A)
+
+#define CAMERA_LOCK_TOGGLE ((s8*)0x804E0B37)
+u32 cameraLockDuration = 0;
 
 void setEffectGameLandingCancel(u16 targetPlayer, u16 duration, bool alcOn, float landingLagMultiplier, float lcLandingLagMultiplier) {
     // TODO: should the value get overridden if currently active?
@@ -56,6 +60,9 @@ void resetEffectGame() {
 
     hitfallDuration = 0;
 
+    *CAMERA_LOCK_TOGGLE = false;
+    cameraLockDuration = 0;
+
     for (u16 targetPlayer = 0; targetPlayer < MAX_PLAYERS; targetPlayer++) {
         setEffectGameLandingCancel(targetPlayer,
                                    0,
@@ -84,6 +91,13 @@ void checkEffectGameDurationFinished() {
 
     if (hitfallDuration > 0) {
         hitfallDuration--;
+    }
+
+    if (cameraLockDuration > 0) {
+        cameraLockDuration--;
+        if (cameraLockDuration == 0) {
+            *CAMERA_LOCK_TOGGLE = false;
+        }
     }
 
     for (u16 targetPlayer = 0; targetPlayer < MAX_PLAYERS; targetPlayer++) {
@@ -233,6 +247,19 @@ EXIStatus effectGameLandingLag(u16 numPlayers, u16 duration, u16 targetPlayer, b
         setEffectGameLandingCancel(targetPlayer, duration, alcOn, landingLagMultiplier, lcLandingLagMultiplier);
     }
 
+    return RESULT_EFFECT_SUCCESS;
+}
+
+//// Credit: Eon
+EXIStatus effectGamePause() {
+    *PAUSE_TOGGLE = 1;
+    return RESULT_EFFECT_SUCCESS;
+}
+
+//// Credit: Eon
+EXIStatus effectGameLockCamera(u16 duration) {
+    cameraLockDuration += duration*60;
+    *CAMERA_LOCK_TOGGLE = true;
     return RESULT_EFFECT_SUCCESS;
 }
 

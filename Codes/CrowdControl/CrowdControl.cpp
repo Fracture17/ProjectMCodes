@@ -11,6 +11,7 @@
 #include "EffectPositionHandler.h"
 #include "EffectModeHandler.h"
 #include "EffectAttributeHandler.h"
+#include "EffectDrawHandler.h"
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
@@ -101,6 +102,7 @@ namespace FrameLogic {
             checkEffectGameDurationFinished();
             checkEffectModeDurationFinished();
             checkEffectAttributeDurationFinished(numPlayers);
+            checkEffectDrawDurationFinished();
             checkPositionResetCorrect();
             checkItemSpawnPokemonOrAssist();
 
@@ -236,6 +238,18 @@ namespace FrameLogic {
                 case EFFECT_ATTRIBUTE_ITEMTHROWSTRENGTH:
                     exiStatus = effectAttributeItemThrow(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
                     break;
+                case EFFECT_DEBUG_PAUSE:
+                    exiStatus = effectGamePause();
+                    break;
+                case EFFECT_DEBUG_LOCK_CAMERA:
+                    exiStatus = effectGameLockCamera(effectRequest[1]);
+                    break;
+                //case EFFECT_DEBUG_REMOVE_HUD:
+                //    exiStatus = effectDrawRemoveHUD(effectRequest[1]);
+                //    break;
+                case EFFECT_DEBUG_VIEW:
+                    exiStatus = effectDrawDebug(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -287,6 +301,8 @@ namespace FrameLogic {
                     //effectAttributeShield(numPlayers, 12, 0, 1, 1, 1);
                     //effectAttributeItemThrow(numPlayers, 12, 0, 0, 0, 0);
                     //effectGameSuddenDeath(numPlayers, 12, 0, 300.0);
+                    //effectGameLockCamera(12);
+                    //effectDrawDebug(12, 1, 1, 1, 1);
 
                     //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
                     testWaitDuration = 60;
@@ -388,6 +404,7 @@ namespace FrameLogic {
         resetEffectGame();
         resetEffectMode();
         resetEffectAttribute();
+        resetEffectDraw();
         SendGameStatus(EXIStatus::STATUS_MATCH_ENDED); } // when exiting match
     /*INJECTION("frameUpdate", 0x8001792c, R"(
     bl onUpdateFrame
