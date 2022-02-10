@@ -45,7 +45,7 @@ void checkEffectDrawDurationFinished() {
 }
 
 /*
-//// Credit: Eon
+//// Credit: Fracture
 // Crashes when HUD is turned back on
 EXIStatus effectDrawRemoveHUD(u16 duration) {
     hudDuration += duration*60;
@@ -54,7 +54,7 @@ EXIStatus effectDrawRemoveHUD(u16 duration) {
 }
 */
 
-//// Credit: Eon
+//// Credit: Eon, Fracture
 EXIStatus effectDrawDebug(u16 duration, u16 displayHitboxes, u16 displayCollisions, u16 displayStageCollisions, u16 drawDI) {
     debugDuration += duration*60;
     *HITBOX_TOGGLE = displayHitboxes;

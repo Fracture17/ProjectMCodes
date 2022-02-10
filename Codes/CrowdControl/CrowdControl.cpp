@@ -238,6 +238,39 @@ namespace FrameLogic {
                 case EFFECT_ATTRIBUTE_ITEMTHROWSTRENGTH:
                     exiStatus = effectAttributeItemThrow(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
                     break;
+                //case EFFECT_ATTRIBUTE_WALLJUMP:
+                //    exiStatus = effectAttributeWalljump(numPlayers, false, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4]);
+                //    break;
+                case EFFECT_ATTRIBUTE_WALK:
+                    exiStatus = effectAttributeWalk(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_DASH:
+                    exiStatus = effectAttributeDash(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_JUMP:
+                    exiStatus = effectAttributeJump(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_AIRJUMP:
+                    exiStatus = effectAttributeAirJump(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_HIT:
+                    exiStatus = effectAttributeHit(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_SDI:
+                    exiStatus = effectAttributeSDI(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_SHIELD_GLOBAL:
+                    exiStatus = effectAttributeShieldGlobal(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_SHIELD_PUSHBACK:
+                    exiStatus = effectAttributeShieldPushback(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_KNOCKBACK:
+                    exiStatus = effectAttributeKnockback(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_LEDGE:
+                    exiStatus = effectAttributeLedge(effectRequest[1], effectRequest[2]);
+                    break;
                 case EFFECT_DEBUG_PAUSE:
                     exiStatus = effectGamePause();
                     break;
@@ -298,13 +331,13 @@ namespace FrameLogic {
                     //effectAttributeWeight(numPlayers, 12, 1, 20);
                     //effectAttributeSize(numPlayers, 12, 0, -5);
                     //effectPositionSwitchDirection(numPlayers, 0);
-                    //effectAttributeShield(numPlayers, 12, 0, 1, 1, 1);
+                    //effectAttributeShield(numPlayers, 12, 0, 1, 2, 1);
                     //effectAttributeItemThrow(numPlayers, 12, 0, 0, 0, 0);
                     //effectGameSuddenDeath(numPlayers, 12, 0, 300.0);
                     //effectGameLockCamera(12);
                     //effectDrawDebug(12, 1, 1, 1, 1);
 
-                    //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
+                    OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {
@@ -399,6 +432,7 @@ namespace FrameLogic {
     SIMPLE_INJECTION(startMatch, 0x800dc590, "li r9, 0x2") {
         saveEffectGame();
         saveEffectMode();
+        saveEffectAttribute();
         SendGameStatus(EXIStatus::STATUS_MATCH_STARTED); } // when starting match
     SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") {
         resetEffectGame();
