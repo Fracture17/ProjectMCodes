@@ -45,6 +45,7 @@ EXIStatus effectItemSpawn(u16 numPlayers, u16 itemId, u16 amount, u16 throwType)
     // TODO: Check if item can be spawned in
     // TODO: Better spawning (maybe check if item is over a pit) getRandSafePosition
     // TODO: Give subvariants its own id
+    // TODO: implement Random item selection?
 
     // TODO: Reenable exploding capsules/boxes/party boxes
 
@@ -68,7 +69,7 @@ EXIStatus effectItemSpawn(u16 numPlayers, u16 itemId, u16 amount, u16 throwType)
                 float ySpeed = (_randf() * 2);
                 if (throwType > THROW_RANDOM) {
                     u16 targetPlayer = throwType - THROW_PLAYER_1;
-                    if (targetPlayer > MAX_PLAYERS) {
+                    if (targetPlayer >= numPlayers) {
                         targetPlayer = randi(numPlayers);
                     }
 
@@ -148,6 +149,38 @@ EXIStatus effectItemAttachGooey(u16 numPlayers, u16 targetPlayer, u16 amount) {
     }
     else {
         attachGooeyToPlayer(targetPlayer, amount);
+    }
+
+    return RESULT_EFFECT_SUCCESS;
+}
+
+//// Credit: fudgepop01, Kapedani
+EXIStatus effectItemThrow(u16 numPlayers, u16 targetPlayer, u16 amount) {
+
+    // TODO: Check if item can be thrown?
+    // TODO: play around with throwing values
+
+    u16 size = ITEM_MANAGER->baseItemArrayList.size();
+
+    for (u16 i = 0; i < size; i++) {
+        if (i >= amount) break;
+
+        BaseItem* item = *ITEM_MANAGER->baseItemArrayList.at(i);
+        soPostureModuleImpl* itemPos = item->modules->postureModule;
+
+        if (targetPlayer >= numPlayers) {
+            targetPlayer = randi(numPlayers);
+        }
+
+        soPostureModuleImpl* ftPos = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryIdFromIndex(targetPlayer))->modules->postureModule;
+        float xSpeed = (ftPos->xPos - itemPos->xPos) / 30;
+        float ySpeed = (ftPos->yPos - itemPos->yPos) / 30;
+
+
+        Vec3f speeds = Vec3f{xSpeed, ySpeed, 0};
+        item->throwAttack(&speeds);
+
+
     }
 
     return RESULT_EFFECT_SUCCESS;

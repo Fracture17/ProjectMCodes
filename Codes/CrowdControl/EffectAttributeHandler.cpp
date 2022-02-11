@@ -15,7 +15,7 @@ u32 gravityPlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
 u32 maxFallSpeedPlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
 u32 weightPlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
 u32 sizePlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
-#define INFINITE_SHIELD_PLAYER_Toggle ((s8*)(0x804E0C1B + 0x3B4*playerPort)) //P2 - 0x804E0FCF //P3 - 0x804E1383   difference = 0x3B4
+#define INFINITE_SHIELD_PLAYER_TOGGLE ((s8*)(0x804E0C1B + 0x3B4*playerPort)) //P2 - 0x804E0FCF //P3 - 0x804E1383   difference = 0x3B4
 u32 shieldPlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
 u32 itemThrowPlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
 //bool universalWalljumps = false;
@@ -112,7 +112,7 @@ void resetEffectAttribute() {
         weightPlayerDuration[targetPlayer] = 0;
         sizePlayerDuration[targetPlayer] = 0;
         int playerPort = targetPlayer;
-        *INFINITE_SHIELD_PLAYER_Toggle = false;
+        *INFINITE_SHIELD_PLAYER_TOGGLE = false;
         shieldPlayerDuration[targetPlayer] = 0;
         itemThrowPlayerDuration[targetPlayer] = 0;
         //universalWalljumps = false;
@@ -217,7 +217,7 @@ void setEffectAttributeShield(u16 targetPlayer, u16 duration, bool infiniteShiel
     ftParamCustomizeModuleImpl* paramCustomizeModule = fighter->modules->paramCustomizeModule;
     ftParam* param = FIGHTER_COMMON_DATA_ACCESSOR->getParam(fighter->getFtKind());
     auto playerPort = FIGHTER_MANAGER->getPlayerNo(FIGHTER_MANAGER->getEntryIdFromIndex(targetPlayer));
-    *INFINITE_SHIELD_PLAYER_Toggle = infiniteShield;
+    *INFINITE_SHIELD_PLAYER_TOGGLE = infiniteShield;
     paramCustomizeModule->shieldSize = shieldSizeMultiplier * param->shieldSize;
     paramCustomizeModule->shieldStrength = shieldStrengthMultiplier * param->shieldStrength;
     paramCustomizeModule->shieldBreakVel = shieldBreakVelMultiplier * param->shieldBreakVel;

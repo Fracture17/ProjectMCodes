@@ -12,6 +12,7 @@
 #include "EffectModeHandler.h"
 #include "EffectAttributeHandler.h"
 #include "EffectDrawHandler.h"
+#include "EffectStageHandler.h"
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
@@ -103,6 +104,7 @@ namespace FrameLogic {
             checkEffectModeDurationFinished();
             checkEffectAttributeDurationFinished(numPlayers);
             checkEffectDrawDurationFinished();
+            checkEffectStageDurationFinished();
             checkPositionResetCorrect();
             checkItemSpawnPokemonOrAssist();
 
@@ -121,6 +123,9 @@ namespace FrameLogic {
                     break;
                 case EFFECT_ITEM_ATTACH_GOOEY:
                     exiStatus = effectItemAttachGooey(numPlayers, effectRequest[1], effectRequest[2]);
+                    break;
+                case EFFECT_ITEM_THROW:
+                    exiStatus = effectItemThrow(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_STATUS_METAL:
                     exiStatus = effectStatusGiveMetal(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
@@ -184,8 +189,8 @@ namespace FrameLogic {
                 case EFFECT_MODE_BOMBRAIN:
                     exiStatus = effectModeBombRain(effectRequest[1]);
                     break;
-                case EFFECT_MODE_WILD:
-                    exiStatus = effectGameWild(effectRequest[1], effectRequest[2], effectRequest[3]);
+                case EFFECT_MODE_COIN:
+                    exiStatus = effectGameCoin(effectRequest[1]);
                     break;
                 case EFFECT_MODE_SPEED:
                     exiStatus = effectGameSpeed(effectRequest[1], effectRequest[2]);
@@ -283,6 +288,15 @@ namespace FrameLogic {
                 case EFFECT_DEBUG_VIEW:
                     exiStatus = effectDrawDebug(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
                     break;
+                //case EFFECT_DEBUG_CHARACTER_SWITCH:
+                //    exiStatus = effectGameSwitchCharacters(numPlayers, effectRequest[1], effectRequest[2]);
+                //    break;
+                case EFFECT_STAGE_WILD:
+                    exiStatus = effectStageWild(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_STAGE_BALLOONPOP:
+                    exiStatus = effectStageBalloonPop(effectRequest[1], effectRequest[2]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -295,7 +309,7 @@ namespace FrameLogic {
             if (testWaitDuration == 0) {//preloadedPokemonId < 0) {
 
                 if (padSystem->pads[0].buttons.LeftDPad) {
-                    //effectStatusGiveCurry(numPlayers, 0, 0);
+                    //effectStatusGiveCurry(numPlayers, 0, 1);
                     //effectStatusGiveMushroom(numPlayers, 0, 1, 0);
                     //effectActionChangeForce(numPlayers, 0, 0x10C);
                     //effectStatusGiveFinalSmash(numPlayers, 0, 0);
@@ -315,7 +329,7 @@ namespace FrameLogic {
                     //effectModeElement(12);
                     //effectModeZTD(12);
                     //effectModeBombRain(12);
-                    //effectGameWild(12, 6, true);
+                    //effectStageWild(12, 6, true);
                     //effectGameSpeed(12, 120);
                     //effectModeWar(12);
                     //effectModeRandomAngle(12);
@@ -336,8 +350,12 @@ namespace FrameLogic {
                     //effectGameSuddenDeath(numPlayers, 12, 0, 300.0);
                     //effectGameLockCamera(12);
                     //effectDrawDebug(12, 1, 1, 1, 1);
+                    //effectItemThrow(numPlayers, 0, 1);
+                    //effectGameCoin(12);
+                    //effectGameSwitchCharacters(numPlayers, 0, 5);
+                    //effectStageBalloonPop(12, 0);
 
-                    OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
+                    //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {
@@ -433,12 +451,14 @@ namespace FrameLogic {
         saveEffectGame();
         saveEffectMode();
         saveEffectAttribute();
+        saveEffectStage();
         SendGameStatus(EXIStatus::STATUS_MATCH_STARTED); } // when starting match
     SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") {
         resetEffectGame();
         resetEffectMode();
         resetEffectAttribute();
         resetEffectDraw();
+        resetEffectStage();
         SendGameStatus(EXIStatus::STATUS_MATCH_ENDED); } // when exiting match
     /*INJECTION("frameUpdate", 0x8001792c, R"(
     bl onUpdateFrame
