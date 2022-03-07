@@ -155,6 +155,7 @@ struct AIPredictions {
 struct AIPersonality { 
   AICEPac* AICEData;
   bool unlocked = true;
+  bool autoAdjust = true;
   float braveChance = 0;
   float baitChance = 0;
   float aggression = 0;

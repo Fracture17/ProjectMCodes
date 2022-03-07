@@ -25,7 +25,8 @@
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 #define _calcArraivePosX_aiStat ((double (*)(double time, aiStat * stat)) 0x80916884)
 #define _calcArraivePosY_aiStat ((double (*)(double time, aiStat * stat)) 0x809168c8)
-
+#define _danger_check_aiInput ((void (*)(aiInput* aiInputPtr, unsigned int unk1, unsigned int unk2)) 0x80906378)
+#define _act_change ((void (*)(aiScriptData * self, unsigned int nextScript, char* unk1, int unk2, int unk3)) 0x80918554)
 
 // Raycast ignore Nonetype collision [Eon]
 // that gal is a witch (in a good/cool way) I swear to god
@@ -131,6 +132,60 @@ STRING_WRITE(0x80902d58, "\x60\x00\x00\x00");
 STRING_WRITE(0x80902f7c, "\x60\x00\x00\x00");
 // FORCED_INPUT_FIX21
 STRING_WRITE(0x80903018, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX22
+STRING_WRITE(0x808fe930, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX23
+STRING_WRITE(0x808ff770, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX24
+STRING_WRITE(0x809017d0, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX25
+STRING_WRITE(0x80901934, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX26
+STRING_WRITE(0x809021d0, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX27
+STRING_WRITE(0x80902230, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX28
+STRING_WRITE(0x80902274, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX29
+STRING_WRITE(0x809022b4, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX30
+STRING_WRITE(0x80902358, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX31
+STRING_WRITE(0x80902418, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX32
+STRING_WRITE(0x80902668, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX33
+STRING_WRITE(0x80902704, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX34
+STRING_WRITE(0x80902930, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX35
+STRING_WRITE(0x80902a34, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX36
+STRING_WRITE(0x80902a40, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX37
+STRING_WRITE(0x80902a74, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX38
+STRING_WRITE(0x80902a80, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX39
+STRING_WRITE(0x80902b68, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX40
+STRING_WRITE(0x80902b9c, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX41
+STRING_WRITE(0x80902bf4, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX42
+STRING_WRITE(0x80902c4c, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX43
+STRING_WRITE(0x80902d54, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX44
+STRING_WRITE(0x80902d70, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX45
+STRING_WRITE(0x80902d7c, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX46
+STRING_WRITE(0x8090300c, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX47
+STRING_WRITE(0x80903094, "\x60\x00\x00\x00");
+// FORCED_INPUT_FIX48
+STRING_WRITE(0x809030a0, "\x60\x00\x00\x00");
 
 // SELF_TARGET_CHANGE_FIX1
 STRING_WRITE(0x808fe5f8, "\x60\x00\x00\x00");
@@ -140,6 +195,9 @@ STRING_WRITE(0x809073dc, "\x60\x00\x00\x00");
 STRING_WRITE(0x809188e0, "\x60\x00\x00\x00");
 // SELF_TARGET_CHANGE_FIX4
 STRING_WRITE(0x80900cb8, "\x60\x00\x00\x00");
+
+// FIX_AUTO_THROW_ROUTINE
+STRING_WRITE(0x808fe89c, "\x60\x00\x00\x00");
 
 signed char disabledMd[4] = {-1, -1, -1, -1};
 INJECTION("CPUForceMd", 0x80905204, R"(
@@ -163,7 +221,7 @@ extern "C" void CPUForceMd(aiInput * aiInput, unsigned int intent, int newAction
         OSReport("new md: %02x\n", intent);
 
         char pNum = _GetPlayerNo_aiChrIdx(&aiInput->cpuIdx);
-        if (intent <= 0xFFFF && pNum != -1 && intent != disabledMd[pNum]) {
+        if (intent <= 0xFFFF && pNum != -1 && intent != disabledMd[pNum] && intent != 0x2 && intent != 0x0) {
             aiInput->aiMd = intent;
         }
     }
@@ -193,10 +251,17 @@ extern "C" void filterMDCall(aiInput *aiInputInst,unsigned int newMode,unsigned 
 
 bool autoDefend[4] = {true, true, true, true};
 INJECTION("PREVENT_AUTO_DEFEND", 0x80900c60, "bl preventAutoDefend");
+INJECTION("PREVENT_AUTO_DANGER_CHECK", 0x80901514, "bl preventDangerCheck");
 
 extern "C" void preventAutoDefend(aiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5) {
-    if (autoDefend[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)] || newOrOldAction == 0x30E0) {
+    if (autoDefend[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)]) {
         change_md_aiInput(aiInputInst, newMode, param_3, newOrOldAction, param_5);
+    }
+    return;
+}
+extern "C" void preventDangerCheck(aiInput *aiInputInst,unsigned int thing1, unsigned int thing2) {
+    if (autoDefend[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)]) {
+        _danger_check_aiInput(aiInputInst, thing1, thing2);
     }
     return;
 }
@@ -348,11 +413,11 @@ extern "C" {
     double fn_result = 0;
     void trackActionChange(int action, soModuleAccessor * accesser) {
         if (action == -1) return;
-        // HOPEFULLY only actual fighters have a "controller" module implementation
-        // 0x80AEB140 = controllerModuleNull
-        if (***((void****)accesser->paramCustomizeModule) != (void*)0x80b0ad44) return;
+        // 0x6674 = "ft"
+        if (****((short****)accesser->paramCustomizeModule) != 0x6674) return;
         auto pNum = _GetPlayerNo_aiChrIdx(&((Fighter*) accesser->owner)->getOwner()->ftInputPtr->cpuIdx);
         if (pNum >= 4) return;
+
         movementTrackers[pNum].trackAction(action);
     }
     void aiFunctionHandlers(float unk_f10, aiStat* targetAiStat, unsigned int switchCase, aiScriptData* selfAi, u32 sp, u32 rtoc) {
@@ -370,9 +435,9 @@ extern "C" {
         bool shouldGetAiTarget = (switchCase & 0x0100) >> 8;
         if (shouldGetAiTarget) {
             switchCase -= 0x100;
-            targetFighterEntry = targetAiStat->input->ftEntryPtr;
+            targetFighterEntry = targetAiStat->param.input->ftEntryPtr;
             bool getChild = targetFighterEntry == nullptr;
-            targetPlayerNo = _GetPlayerNo_aiChrIdx(&targetAiStat->input->cpuIdx);
+            targetPlayerNo = _GetPlayerNo_aiChrIdx(&targetAiStat->param.input->cpuIdx);
             targetFighter = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(targetPlayerNo), getChild);
         } else {
             targetFighterEntry = selfAi->ftInputPtr->ftEntryPtr;
@@ -452,6 +517,7 @@ extern "C" {
         }
         if (switchCase == 0x52) {
             fn_result = targetPlayerNo;
+            fn_shouldReturnResult = 1;
             return;
         }
         if (switchCase == 0x53) {
@@ -734,7 +800,6 @@ SIMPLE_INJECTION(clearNoRepeatInstruction, 0x809171f4, "li r31, 0x0") {
 
 int* forcedNextInstruction = nullptr;
 int forcedNextScript = 0;
-#define _act_change ((void (*)(aiScriptData * self, unsigned int nextScript, char* unk1, int unk2, int unk3)) 0x80918554)
 extern "C" {
     void aiReqCalledAsFix() {
         if (originScript != 0) {
@@ -1047,18 +1112,16 @@ extern "C" {
                 change_md_aiInput(aiActInst->ftInputPtr, newMode, &dummy, newScript, 0);
                 return;
             }
-            case 0x42: { // SwitchTarget
-                auto entryCount = FIGHTER_MANAGER->getEntryCount();
-                int newTargetId = FIGHTER_MANAGER->getEntryIdFromIndex((int) (_randf() * entryCount) % entryCount);
-                
-                if (entryCount > 1) {
-                    int i = _randf() * entryCount * 1.5;
-                    while (i < 10 && FIGHTER_MANAGER->getOwner(newTargetId)->ownerDataPtr->team == aiActInst->ftInputPtr->ftEntryPtr->owner->ownerDataPtr->team) {
-                        newTargetId = FIGHTER_MANAGER->getEntryIdFromIndex(i % entryCount);
-                        i++;
-                    }
-                    aiActInst->ftInputPtr->aiTarget = FIGHTER_MANAGER->getPlayerNo(newTargetId);
-                }
+            case 0x42: { // SwitchTarget // 8055b284
+                OSReport("================\n");
+                OSReport("SWITCHING TARGET\n");
+                OSReport("SWITCHING TARGET\n");
+                OSReport("SWITCHING TARGET\n");
+                _target_check_aiInput(aiActInst->ftInputPtr);
+                OSReport("SWITCHING TARGET\n");
+                OSReport("SWITCHING TARGET\n");
+                OSReport("SWITCHING TARGET\n");
+                OSReport("================\n");
                 return;
             }
             case 0x43: { // Knockback Calculation
@@ -1246,7 +1309,7 @@ extern "C" {
                 // x = (v * 0.03) / 0.051
                 // v = (0.051 * x) / 0.03
 
-                float kbRatio = 0.051 / 0.03;
+                float kbRatio = (0.051 * 0.75) / 0.03;
                 float invKbRatio = 1 / kbRatio;
                 float xVelRequired = ((nearXBZ - OTopNX) * kbRatio);
                 float yVelRequired = ((TopBZ - OTopNY) * kbRatio);
@@ -1254,24 +1317,24 @@ extern "C" {
                 float multiplier = (xVelRequired > yVelRequired && moveAngle <= 180) ? moveYVelMultiplier : moveXVelMultiplier;
                 float moveCurrKnockback = calculateKnockback(ODamage, moveDamage, moveBaseKnockback, moveKnockbackGrowth, OWeight, moveIsWeightDependent);
                 OSReport("; KB: %.3f", moveCurrKnockback);
-                // OSReport("; XVelReq: %.3f; YVelReq: %.3f", xVelRequired, yVelRequired);
+                OSReport(";(KILL): XVelReq: %.3f; YVelReq: %.3f", xVelRequired, yVelRequired);
                 
                 float hitstun = moveCurrKnockback * 0.4;
                 float endlag = moveIASA - ((moveDuration / 2) + moveHitFrame);
 
                 if (xVelRequired < moveCurrKnockback * moveXVelMultiplier || yVelRequired < moveCurrKnockback * moveYVelMultiplier) {
                     OSReport("; KILLING");
-                    aiActInst->variables[varToMod] = 10;
+                    aiActInst->variables[varToMod] = 25;
                     return;
                 }
 
                 // will a move launch the target offstage
-                xVelRequired = ((stageWidth / 2 - OTopNX) * kbRatio);
+                xVelRequired = (((stageWidth + 25) / 2 - OTopNX) * kbRatio);
                 OSReport("; Launch XVelReq: %.3f", xVelRequired);
                 if (xVelRequired > 0) {
                     if (xVelRequired < moveCurrKnockback * moveXVelMultiplier) {
                         OSReport("; LAUNCHING");
-                        aiActInst->variables[varToMod] = 5;
+                        aiActInst->variables[varToMod] = 10;
                         return;
                     }
                 }
@@ -1500,6 +1563,12 @@ extern "C" {
                 return;
             }
 
+            // // get movement goal
+            // // will attack hit
+            // case 0x6D: {
+                
+            // }
+
             // item stuff
             case 0x70: {
                 int xPosDest = args[1];
@@ -1670,7 +1739,10 @@ extern "C" {
             case 0x90: {
                 int index = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
                 float amount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                float multiplier = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                amount *= multiplier;
                 int pNum = _GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->cpuIdx);
+                if (!playerTrainingData[pNum].aiData.personality.autoAdjust) amount = 0;
                 switch(index) {
                     case 0x0: {
                         playerTrainingData[pNum].aiData.personality.aggression += amount;

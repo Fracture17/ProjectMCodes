@@ -66,6 +66,7 @@ void AIPredictionPage::show() {
 void AIPersonalityPage::show() {
   ADD_UNPAUSE
   addOption(new BoolOption("unlocked?", data.aiData.personality.unlocked));
+  addOption(new BoolOption("autoAdjust?", data.aiData.personality.autoAdjust));
   addOption(new FloatOption("aggression", data.aiData.personality.aggression, -1, 2, 0.01f));
   addOption(new FloatOption("dashAwayChance", data.aiData.personality.bait_dashAwayChance, -1, 2, 0.01f));
   addOption(new FloatOption("wdashAwayChance", data.aiData.personality.bait_wdashAwayChance, -1, 2, 0.01f));

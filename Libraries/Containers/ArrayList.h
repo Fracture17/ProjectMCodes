@@ -85,7 +85,7 @@ T* ArrayList<T>::pop() {
 }
 
 template<class T>
-T* ArrayList<T>::clear() {
+void ArrayList<T>::clear() {
   return ((T* (*)(void* self)) this->vtable1->clearFn)(this);
 }
 
