@@ -7,7 +7,7 @@
 bool isPlayersTeleporting[] = {false, false, false, false};
 
 void checkPositionResetCorrect() {
-    for (int player = 0; player < MAX_PLAYERS; player++) {
+    for (u16 player = 0; player < MAX_PLAYERS; player++) {
         if (isPlayersTeleporting[player]) {
             getFighter(player)->modules->groundModule->setCorrect(5);
             isPlayersTeleporting[player] = false;
@@ -39,7 +39,7 @@ void setPlayerPosition(u16 targetPlayer, float xPos, float yPos) {
 }
 
 //// Credit: fudgepop01, Kapedani
-EXIStatus effectPositionWarpToPlayer(int numPlayers, u16 targetPlayer, u16 warpingPlayer) {
+EXIStatus effectPositionWarpToPlayer(u16 numPlayers, u16 targetPlayer, u16 warpingPlayer) {
     // TODO: use better random
     if (targetPlayer >= numPlayers) {
         if (warpingPlayer < numPlayers) {
@@ -80,7 +80,7 @@ EXIStatus effectPositionWarpToPlayer(int numPlayers, u16 targetPlayer, u16 warpi
 }
 
 //// Credit: fudgepop01, Kapedani
-EXIStatus effectPositionSwap(int numPlayers, u16 targetPlayer1, u16 targetPlayer2) {
+EXIStatus effectPositionSwap(u16 numPlayers, u16 targetPlayer1, u16 targetPlayer2) {
 
     // TODO: bool to swap direction facing too
 
@@ -117,7 +117,7 @@ EXIStatus effectPositionSwap(int numPlayers, u16 targetPlayer1, u16 targetPlayer
 
         for (u16 i = 0; i < numPlayers; i++) {
             u16 playerToTeleportTo = randomPlayerIndices[i];
-            int j = i + 1;
+            u8 j = i + 1;
             if (j >= numPlayers) j = 0;
             setPlayerPosition(randomPlayerIndices[j], allXPos[playerToTeleportTo], allYPos[playerToTeleportTo]);
         }

@@ -14,6 +14,10 @@ ftOwner* Fighter::getOwner() {
 	return getOwner_Fighter(this);
 }
 
+int Fighter::getFtKind() {
+    return _getFtKind_Fighter(this);
+}
+
 void Fighter::setMetal(double health, bool setEffect, int unk3) {
     setMetal_Fighter(this, health, setEffect, unk3);
 }

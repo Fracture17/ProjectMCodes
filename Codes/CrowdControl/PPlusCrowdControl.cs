@@ -442,7 +442,7 @@ public class PPlus : SimpleTCPPack
 		createEffectFolder("Spawn", "items_spawn", "items"),
 		
 		//// Spawn Regular Items
-		createEffect("Regular", "items_spawn_reg", 6, new[]{"items_reg", "#items"}, "items_spawn"),
+		createEffect("Regular", "items_spawn_reg", 6, new[]{"items_reg", "#items", "items_throwtype"}, "items_spawn"),
 		
 		//// Spawn Special Items
 		//new Effect("Special Items", "items_spawn_sp", new[]{"items_sp"}, "items_spawn"),
@@ -509,6 +509,19 @@ public class PPlus : SimpleTCPPack
         createEffect("War", "mode_war", 31, new[]{"war_duration"}, "mode"),
         createEffect("Random Angle", "mode_randomangle", 32, new[]{"randomangle_duration"}, "mode"),
         createEffect("Big Head", "mode_bighead", 33, new[]{"bighead_duration", "bighead_size", "growth"}, "mode"),
+        createEffect("Hitfall", "mode_hitfall", 34, new[]{"hitfall_duration"}, "mode"),
+        createEffect("Landing Lag", "mode_landinglag", 35, new[]{"landinglag_duration", "players", "set_alc", "landinglag_regular", "landinglag_cancelled"}, "mode"),
+
+        // Attributes
+        createEffectFolder("Attributes", "attribute"),
+
+        createEffect("Trip Rate", "attribute_triprate", 36, new[]{"slip_duration", "players", "slip_rate", "set_tripcooldown"}, "attribute"),
+        createEffect("Number of Jumps", "attribute_numjumps", 37, new[]{"numjumps_duration", "players", "#jumps"}, "attribute"),
+        createEffect("Jump Squat", "attribute_jumpsquat", 38, new[]{"jumpsquat_duration", "players", "jumpsquat_frames"}, "attribute"),
+        createEffect("Ground Friction", "attribute_groundfriction", 39, new[]{"groundfriction_duration", "players", "groundfriction_modifer"}, "attribute"),
+        createEffect("Gravity", "attribute_gravity", 40, new[]{"gravity_duration", "players", "gravity_modifer"}, "attribute"),
+        createEffect("Fast Fall Speed", "attribute_fastfallspeed", 41, new[]{"fastfallspeed_duration", "players", "fastfallspeed_modifier"}, "attribute"),
+        createEffect("Weight", "attribute_weight", 42, new[]{"weight_duration", "players", "weight_modifier"}, "attribute"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -537,6 +550,14 @@ public class PPlus : SimpleTCPPack
         createEffectSubItem("Decrease", "growth_decrease", 0, "growth"),
         createEffectSubItem("Increase", "growth_increase", 1, "growth"),
 
+		/// Set ALC
+        createEffectSubItem("ALC Off", "set_alc_off", 0, "set_alc"),
+        createEffectSubItem("ALC On", "set_alc_on", 1, "set_alc"),
+
+        /// Set Trip Cooldown
+        createEffectSubItem("Trip Cooldown Off", "set_tripcooldown_off", 0, "set_tripcooldown"),
+        createEffectSubItem("Trip Cooldown On", "set_tripcooldown_on", 1, "set_tripcooldown"),
+
 		// Action
 		createEffectSubItem("Bury", "action", (int)(ActionIds.Enter_Grounded), "actions"),
 		createEffectSubItem("Freeze", "action", (int)(ActionIds.Frozen), "actions"),
@@ -559,6 +580,16 @@ public class PPlus : SimpleTCPPack
 		/// Mushroom
         createEffectSubItem("Super", "mushroom_0", 0, "mushroom"),
         createEffectSubItem("Poison", "mushroom_1", 1, "mushroom"),
+
+        // Item Throw Type
+        createEffectSubItem("None", "item_throwtype", 0, "items_throwtype"),
+        createEffectSubItem("Drop", "item_throwtype", 1, "items_throwtype"),
+        createEffectSubItem("Random", "item_throwtype", 2, "items_throwtype"),
+        createEffectSubItem("Player 1", "item_throwtype", 3, "items_throwtype"),
+        createEffectSubItem("Player 2", "item_throwtype", 4, "items_throwtype"),
+        createEffectSubItem("Player 3", "item_throwtype", 5, "items_throwtype"),
+        createEffectSubItem("Player 4", "item_throwtype", 6, "items_throwtype"),
+        createEffectSubItem("Player Random", "item_throwtype", 7, "items_throwtype"),
 		
 		/// Regular Items
 		createEffectSubItem("Assist Trophy", "item_reg", (int)ItemIds.Assist_Trophy, "items_reg"),
@@ -671,7 +702,7 @@ public class PPlus : SimpleTCPPack
 		//createEffectSubItem("Unknown3", "item_sp", (int)ItemIds.Unknown3, "items_sp"),
 		//createEffectSubItem("Unknown4", "item_sp", (int)ItemIds.Unknown4, "items_sp"),
 		//createEffectSubItem("Unknown5", "item_sp", (int)ItemIds.Unknown5, "items_sp"),
-		
+
 		/// Pokemon
 		createEffectSubItem("Torchic", "item_pkmn", (int)ItemIds.Torchic, "items_pkmn"),
 		//createEffectSubItem("Celebi", "item_pkmn", (int)ItemIds.Cerebi, "items_pkmn"),
@@ -793,17 +824,39 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Random Angle Duration", "randomangle_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Big Head Duration", "bighead_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Big Head Size", "bighead_size", ItemType.Subtype.Slider, "{\"min\":0,\"max\":5}"),
+		new ItemType("Hitfall Duration", "hitfall_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Landing Lag Duration", "landinglag_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Landing Lag Regular", "landinglag_regular", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":5}"),
+		new ItemType("Landing Lag Cancelled", "landinglag_cancelled", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":5}"),
+		new ItemType("Slip Duration", "slip_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Slip Rate", "slip_rate", ItemType.Subtype.Slider, "{\"min\":0,\"max\":100}"),
+		new ItemType("#Jumps Duration", "numjumps_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("#Jumps", "#jumps, ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
+		new ItemType("Jump Squat Duration", "jumpsquat_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Jump Squat Frames", "jumpsquat_frames", ItemType.Subtype.Slider, "{\"min\":0,\"max\":15}"),
+        new ItemType("Ground Friction Duration", "groundfriction_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Ground Friction Modifier", "groundfriction_modifier", ItemType.Subtype.Slider, "{\"min\":-9,\"max\":10}"),
+        new ItemType("Gravity Duration", "gravity_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Gravity Modifier", "gravity_modifier", ItemType.Subtype.Slider, "{\"min\":-1,\"max\":10}"),
+        new ItemType("Fast Fall Speed Duration", "fastfallspeed_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Fast Fall Speed Modifier", "fastfallspeed_modifier", ItemType.Subtype.Slider, "{\"min\":-3,\"max\":10}"),
+        new ItemType("Weight Duration", "weight_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Weight Modifier", "weight_modifier", ItemType.Subtype.Slider, "{\"min\":-20,\"max\":20}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),
 		new ItemType("Set", "set", ItemType.Subtype.ItemList),
 		new ItemType("Growth", "growth", ItemType.Subtype.ItemList),
+		new ItemType("Set ALC", "set_alc", ItemType.Subtype.ItemList),
+		new ItemType("Trip Cooldown", "set_tripcooldown", ItemType.Subtype.ItemList),
 		new ItemType("Actions", "actions", ItemType.Subtype.ItemList),
         new ItemType("Mushroom", "mushroom", ItemType.Subtype.ItemList),
+        new ItemType("Throw Type", "items_throwtype", ItemType.Subtype.ItemList),
 		new ItemType("Regular Items", "items_reg", ItemType.Subtype.ItemList),
 		new ItemType("Equippable Items", "items_equip", ItemType.Subtype.ItemList),
 		//new ItemType("Special Items", "items_sp", ItemType.Subtype.ItemList),
 		new ItemType("Pokemon", "items_pkmn", ItemType.Subtype.ItemList),
 		new ItemType("Assist", "items_assist", ItemType.Subtype.ItemList)
+
     });
 }

@@ -23,7 +23,7 @@ void checkItemSpawnPokemonOrAssist() {
     if (preloadedPokemonId >= 0) {
         preloadedPokemonWaitFrames--;
         if (preloadedPokemonWaitFrames == 0) {
-            effectItemSpawn(preloadedPokemonId, preloadedPokemonAmount);
+            effectItemSpawn(0, preloadedPokemonId, preloadedPokemonAmount, 0);
             preloadedPokemonId = -1;
             preloadedPokemonAmount = 0;
         }
@@ -32,7 +32,7 @@ void checkItemSpawnPokemonOrAssist() {
     if (preloadedAssistId >= 0) {
         preloadedAssistWaitFrames--;
         if (preloadedAssistWaitFrames == 0) {
-            effectItemSpawn(preloadedAssistId, preloadedAssistAmount);
+            effectItemSpawn(0, preloadedAssistId, preloadedAssistAmount, 0);
             preloadedAssistId = -1;
             preloadedAssistAmount = 0;
         }
@@ -40,7 +40,7 @@ void checkItemSpawnPokemonOrAssist() {
 }
 
 //// Credit: fudgepop01
-EXIStatus effectItemSpawn(int itemId, u16 amount) {
+EXIStatus effectItemSpawn(u16 numPlayers, u16 itemId, u16 amount, u16 throwType) {
 
     // TODO: Check if item can be spawned in
     // TODO: Better spawning (maybe check if item is over a pit) getRandSafePosition
@@ -52,9 +52,34 @@ EXIStatus effectItemSpawn(int itemId, u16 amount) {
         auto freshItem = ITEM_MANAGER->createItem((itemIdName) itemId, 0);
         if (freshItem != nullptr) {
             float xLoc = (_randf() * 200) - 100;
-            float yLoc = (_randf() * 100) + 10;
+            float yLoc = (_randf() * 100) + 10;;
+            if (throwType == THROW_DROP) {
+                yLoc = 110;
+            }
+
             Vec3f spawnLocation = Vec3f{xLoc, yLoc, 0};
             freshItem->warp(&spawnLocation);
+
+            if (throwType == THROW_DROP) {
+                freshItem->modules->statusModule->changeStatusForce(5, freshItem->modules);
+            }
+            else if (throwType >= THROW_RANDOM) {
+                float xSpeed = (_randf() * 4) - 2;
+                float ySpeed = (_randf() * 2);
+                if (throwType > THROW_RANDOM) {
+                    u16 targetPlayer = throwType - THROW_PLAYER_1;
+                    if (targetPlayer > MAX_PLAYERS) {
+                        targetPlayer = randi(numPlayers);
+                    }
+
+                    soPostureModuleImpl* ftPos = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryIdFromIndex(targetPlayer))->modules->postureModule;
+                    xSpeed = (ftPos->xPos - xLoc) / 30;
+                    ySpeed = (ftPos->yPos - yLoc) / 30;
+
+                }
+                Vec3f speeds = Vec3f{xSpeed, ySpeed, 0};
+                freshItem->throwAttack(&speeds);
+            }
         }
     }
 
@@ -62,9 +87,9 @@ EXIStatus effectItemSpawn(int itemId, u16 amount) {
 }
 
 //// Credit: fudgepop01, Kapedani
-EXIStatus effectItemPreloadPokemon(int itemId, u16 amount) {
+EXIStatus effectItemPreloadPokemon(u16 itemId, u16 amount) {
     if (preloadedPokemonId < 0) {
-        ((int *(*)(void *it)) ITEM_MANAGER->itKindArrayList_vtable->pop)(&ITEM_MANAGER->itKindArrayList_vtable);
+        ITEM_MANAGER->itKindArrayList.pop();
         ITEM_MANAGER->preloadPokemon((itemIdName) itemId);
         preloadedPokemonId = itemId;
         preloadedPokemonAmount = amount;
@@ -77,7 +102,7 @@ EXIStatus effectItemPreloadPokemon(int itemId, u16 amount) {
 }
 
 //// Credit: fudgepop01, Kapedani
-EXIStatus effectItemPreloadAssist(int itemId, u16 amount) {
+EXIStatus effectItemPreloadAssist(u16 itemId, u16 amount) {
     // TODO: Investigate which Assists work (e.g. Nintendog and Devil don't)
     if (preloadedAssistId < 0) {
         ITEM_MANAGER->nextAssist = (itemIdName)0xffffffff;
@@ -104,7 +129,7 @@ void attachGooeyToPlayer(u16 targetPlayer, u16 amount) {
 }
 
 //// Credit: fudgepop01, Kapedani
-EXIStatus effectItemAttachGooey(int numPlayers, u16 targetPlayer, u16 amount) {
+EXIStatus effectItemAttachGooey(u16 numPlayers, u16 targetPlayer, u16 amount) {
     // TODO: Check if too many are already spawned (otherwise crashes) since stickied gooey's don't seem to despawn
     // TODO: Check if player is still alive
 

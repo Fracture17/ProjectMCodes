@@ -10,6 +10,7 @@
 #include "EffectGameHandler.h"
 #include "EffectPositionHandler.h"
 #include "EffectModeHandler.h"
+#include "EffectAttributeHandler.h"
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
@@ -95,19 +96,20 @@ namespace FrameLogic {
                 testWaitDuration--;
             }
 
+            int numPlayers = FIGHTER_MANAGER->getEntryCount();
+
             checkEffectGameDurationFinished();
             checkEffectModeDurationFinished();
+            checkEffectAttributeDurationFinished(numPlayers);
             checkPositionResetCorrect();
             checkItemSpawnPokemonOrAssist();
-
-            int numPlayers = FIGHTER_MANAGER->getEntryCount();
 
             switch (effectRequest[0]) {
                 case EFFECT_GIVE_DAMAGE:
                     exiStatus = effectGameGiveDamage(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
                 case EFFECT_ITEM_SPAWN_REGULAR:
-                    exiStatus = effectItemSpawn(effectRequest[1], effectRequest[2]);
+                    exiStatus = effectItemSpawn(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
                 case EFFECT_ITEM_SPAWN_POKEMON:
                     exiStatus = effectItemPreloadPokemon(effectRequest[1], effectRequest[2]);
@@ -192,6 +194,33 @@ namespace FrameLogic {
                 case EFFECT_MODE_BIGHEAD:
                     exiStatus = effectModeBigHead(effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
+                case EFFECT_MODE_HITFALL:
+                    exiStatus = effectGameHitfall(effectRequest[1]);
+                    break;
+                case EFFECT_MODE_LANDINGLAG:
+                    exiStatus = effectGameLandingLag(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_SLIP:
+                    exiStatus = effectAttributeSlip(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4]);
+                    break;
+                case EFFECT_ATTRIBUTE_NUMJUMPS:
+                    exiStatus = effectAttributeNumJumps(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_JUMPSQUAT:
+                    exiStatus = effectAttributeJumpSquat(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_GROUNDFRICTION:
+                    exiStatus = effectAttributeGroundFriction(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_GRAVITY:
+                    exiStatus = effectAttributeGravity(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_FASTFALLSPEED:
+                    exiStatus = effectAttributeFastFallSpeed(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_WEIGHT:
+                    exiStatus = effectAttributeWeight(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -209,10 +238,10 @@ namespace FrameLogic {
                     //effectActionChangeForce(numPlayers, 0, 0x10C);
                     //effectStatusGiveFinalSmash(numPlayers, 0, 0);
                     //effectStatusGiveSwap(4, 0, 1, 0, 12);
-                    //effectItemSpawn(0x0, 1); //0x78, 1); // 0x2A - Pokeball
+                    //effectItemSpawn(numPlayers, 0x29, 1, 3); //0x78, 1); // 0x2A - Pokeball
 
                     //effectItemPreloadPokemon(0x69, 1); // Deoxys
-                    //effectItemPreloadAssist(0x9D, 1); // Little Mac
+                    //effectItemPreloadAssist(0xAD, 1); // Tingle
 
                     //effectItemAttachGooey(numPlayers, 0, 1);
                     //effectPositionWarpToPlayer(numPlayers, 0, 1);
@@ -229,6 +258,17 @@ namespace FrameLogic {
                     //effectModeWar(12);
                     //effectModeRandomAngle(12);
                     //effectModeBigHead(12, 0, false);
+                    //effectGameHitfall(12);
+                    //effectGameLandingLag(numPlayers, 12, 0, false, 0, -2);
+                    //effectAttributeSlip(numPlayers, 12, 0, 100, false);
+                    //effectAttributeNumJumps(numPlayers, 12, 0, 1);
+                    //effectAttributeJumpSquat(numPlayers, 12, 0, 15);
+                    //effectAttributeGroundFriction(numPlayers, 12, 0, -9);
+                    //effectAttributeGravity(numPlayers, 12, 0, -1);
+                    //effectAttributeFastFallSpeed(numPlayers, 12, 0, -3);
+                    //effectAttributeWeight(numPlayers, 12, 1, 20);
+
+                    //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
                     testWaitDuration = 60;
 
                 } else if (padSystem->pads[0].buttons.RightDPad) {
@@ -270,14 +310,14 @@ namespace FrameLogic {
                 }
             }
 
-            int capacity = ((int (*)(void* it)) ITEM_MANAGER->itKindArrayList_vtable->capacity)(&ITEM_MANAGER->itKindArrayList_vtable);
+            /*int capacity = ITEM_MANAGER->itKindArrayList.capacity();
             for (int i = 0; i < capacity; i++) {
                 debugData->loadedPkmn[i] = 0;
-            }
+            }*/
 
-            int size = ((int (*)(void* it)) ITEM_MANAGER->itKindArrayList_vtable->size)(&ITEM_MANAGER->itKindArrayList_vtable);
+            int size = ITEM_MANAGER->itKindArrayList.size();
             for (int i = 0; i < size; i++) {
-                u32* pkmnPtr = ((u32* (*)(void* it, int i)) ITEM_MANAGER->itKindArrayList_vtable->at)(&ITEM_MANAGER->itKindArrayList_vtable, i);
+                u32* pkmnPtr = ITEM_MANAGER->itKindArrayList.at(i);
                 //u32* pkmnPtr = ((u32* (*)(void* it, int i)) ITEM_MANAGER->itArchiveArrayList_vtable->at)(&ITEM_MANAGER->itArchiveArrayList_vtable, i);
                 if (pkmnPtr != nullptr) debugData->loadedPkmn[i] = *pkmnPtr;
             }
