@@ -19,7 +19,19 @@ void MainPage::show() {
   addOption(p2PageLink);
   addOption(p3PageLink);
   addOption(p4PageLink);
+
+  FPSPage* fpsPage = new FPSPage(menu);
+  addOption(new PageLink(fpsPage->getTitle(), fpsPage));
+
   addOption(new FloatOption("opacity", menu->opacity, 0, 255));
+}
+
+void FPSPage::show() {
+  ADD_UNPAUSE
+  addOption(new FloatOption("max", maxFPS, false));   
+  addOption(new FloatOption("min", minFPS, false));     
+  addOption(new FloatOption("avg", averageFPS, false));
+  addOption(new IntOption("current", currentFPS, false));
 }
 
 void ComboTrainerPage::show() {

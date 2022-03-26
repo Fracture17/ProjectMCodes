@@ -9,7 +9,7 @@ enum RPS {
 };
 
 #define PATTERN_MAN_LENGTH 15
-#define PATTERN_MAN_MAX_IDX 4
+#define PATTERN_MAN_MAX_IDX PATTERN_MAN_LENGTH - 1
 
 class PatternManager {
 public:
@@ -53,7 +53,7 @@ void PatternManager::clear(int player) {
 
 void PatternManager::pushNew(int player, signed char option) {
     indexes[player] ++;
-    if (indexes[player] > PATTERN_MAN_MAX_IDX) indexes[player] = 0;
+    if (indexes[player] >= PATTERN_MAN_MAX_IDX) indexes[player] = 0;
     playerRPS[player][indexes[player]] = option;
 }
 

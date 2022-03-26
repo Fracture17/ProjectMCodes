@@ -408,6 +408,107 @@ void collectData(Fighter* fighter, int pNum) {
 //     }
 // }
 
+// #define _processFixPosition_StageObject ((void (*)(StageObject* so)) 0x8070ff50)
+// INJECTION("PHYSICS_DELAY_FIX_1", 0x8070ffbc, R"(
+//     bl fixer_repeat
+//     cmpwi r3, 1
+//     beq _PDF_END
+
+//     SAVE_REGS
+//     mr r3, r31
+//     bl fixer_full
+//     RESTORE_REGS
+
+// _PDF_END:
+//     lwz r3, 0x00D8(r31)
+// )")
+
+// INJECTION("ANIMCMD_FILTER", 0x80139778, R"(
+//     cmpwi r0, -0x1
+//     SAVE_REGS
+//     mr r4, r0
+//     bl fixer_filter
+//     RESTORE_REGS
+// )")
+
+
+// bool reProcess = false;
+// extern "C" bool fixer_repeat() {
+//     return reProcess;
+// }
+
+// struct {
+//     float frameSpeed = 0;
+//     soAnimCmd* currCommand = 0;
+//     soAnimCmd* CILStart = 0;
+//     soAnimCmd* latestWaitCommand = 0;
+//     float logicalFrame = 0;
+// } PDFixerThing[11];
+
+// char firstPass[] = {};
+
+// extern "C" {
+//     void fixer_filter(soAnimCmdInterpreter* interpreter, int unk) {
+//         auto scene = getScene();
+//         if ((scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS)) {
+//             if (interpreter != nullptr && interpreter->currCommand != nullptr) {
+//                 if (reProcess) {
+//                     // if (interpreter->currCommand->_module != 0x0E) asm("cmpwi r3, 0x4269");
+//                     asm("cmpwi r3, 0x4269");
+//                 } else {
+//                     // if (interpreter->currCommand->_module == 0x0E) asm("cmpw r3, r3");
+//                     // asm("cmpwi r3, 0x4269");
+//                 }
+//             }
+//         }
+//     }
+//     void fixer_p1(StageObject* so) {
+//         soInstanceUnitFullProperty_20soAnimCmdControlUnit* threads = so->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector.threadUnion.asArray;
+//         reProcess = true;
+//         for (int i = 0; i < 11; i++) {
+//             soAnimCmdInterpreter* interpreter = threads[i].cmdInterpreter;
+//             auto& currPDFixer = PDFixerThing[i];
+
+//             if ((unsigned int) interpreter >= (unsigned int) 0x80000000) {
+//                 currPDFixer.frameSpeed = interpreter->frameSpeed;
+//                 currPDFixer.currCommand = interpreter->currCommand;
+//                 currPDFixer.CILStart = interpreter->CILStart;
+//                 currPDFixer.latestWaitCommand = interpreter->latestWaitCommand;
+//                 currPDFixer.logicalFrame = interpreter->logicalFrame;
+
+//                 interpreter->logicalFrame += interpreter->frameSpeed;
+//             }
+//         }
+//     }
+//     void fixer_p2(StageObject* so) {
+//         soInstanceUnitFullProperty_20soAnimCmdControlUnit* threads = so->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector.threadUnion.asArray;
+//         reProcess = false;
+
+//         for (int i = 0; i < 11; i++) {
+//             soAnimCmdInterpreter* interpreter = threads[i].cmdInterpreter;
+//             auto& currPDFixer = PDFixerThing[i];
+
+//             if ((unsigned int) interpreter >= (unsigned int) 0x80000000) {
+//                 interpreter->frameSpeed = currPDFixer.frameSpeed;
+//                 interpreter->currCommand = currPDFixer.currCommand;
+//                 interpreter->CILStart = currPDFixer.CILStart;
+//                 interpreter->latestWaitCommand = currPDFixer.latestWaitCommand;
+//                 interpreter->logicalFrame = currPDFixer.logicalFrame;
+//             }
+//         }
+//     }
+//     void fixer_full(soModuleAccessor* soma) {
+//         StageObject* owner = soma->owner;
+//         fixer_p1(owner);
+//         OSReport("IN (%08x)\n", owner);
+//         _processFixPosition_StageObject(owner);
+//         OSReport("OUT\n");
+//         fixer_p2(owner);
+//     }
+// }
+
+
+
 // INJECTION("CMD_STEPPER", 0x8077be0c, R"(
 //     bl stepCommand
 //     cmpwi r12, 0
@@ -1070,10 +1171,12 @@ INJECTION("CPUForceBehavior", 0x809188B0, R"(
 extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
     // char pNum = _GetPlayerNo_aiChrIdx(&aiActPtr->ftInputPtr->cpuIdx);
     // if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {
-        // OSReport("   ::(intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
-        // OSReport("current: %04x; ", aiActPtr->aiScript);
-        // OSReport("intended: %04x; ", intendedScript);
-        // OSReport("next: %04x)::\n", param1);
+        if (param1 == 0x2050) {
+            OSReport("   ::(intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
+            OSReport("current: %04x; ", aiActPtr->aiScript);
+            OSReport("intended: %04x; ", intendedScript);
+            OSReport("next: %04x)::\n", param1);
+        }
         // aiActPtr->aiScript = intendedScript;
         if (param1 < 0x8000 && param1 != 0x1120) return (aiActPtr->aiScript != 0x0) ? aiActPtr->aiScript : 0x8000;
         return param1; // normal routine

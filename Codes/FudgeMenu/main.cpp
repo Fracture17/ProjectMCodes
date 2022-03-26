@@ -26,6 +26,7 @@
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
 #define strcmp ((int (*)(const char* str1, const char* str2)) 0x803fa3fc)
 #define atof ((float (*)(const char* buffer)) 0x803fbbf8)
+#define getTicksPerSecond ((u32 (*)()) 0x802806b0)
 
 extern TrainingData playerTrainingData[];
 extern char selectedPlayer;
@@ -309,74 +310,6 @@ void collectData(Fighter* fighter, int pNum) {
     }
 }
 
-// INJECTION("ALT_COLOR", 0x8016c3fc, R"(
-//     nop
-// )");
-
-// struct Color {
-//     unsigned char red;
-//     unsigned char green;
-//     unsigned char blue;
-// };
-
-// extern "C" Color* changeColor() {
-//     Color col = Color {
-//         0xFF,
-//         0x00,
-//         0xFF
-//     };
-//     return &col;
-// } 
-// INJECTION("PROCESS_ONLY_WITH_Z", 0x8002e614, R"(
-//     bl stopProcess
-// )");
-
-// unsigned short shouldAdvance = 0;
-// char procDelay = 0;
-// int procTimer = 5;
-// bool procInstant = true;
-// extern "C" void stopProcess(char** currTask, int kind) {
-//     if (kind == 0) {
-//         OSReport("task kind: %s\n", *currTask);
-//     }
-//     if (strcmp(*currTask, "FALCO") != 0) {
-//         ((void (*)(char** task, int processKind)) 0x8002dc74)(currTask, kind);
-//         return;
-//     }
-//     // OSReport("taskKind: %08x\n", kind);
-//     if (PREVIOUS_PADS[0].button.Z) {
-//         if (procTimer <= 0) {
-//             // process/[gfTask]
-//             ((void (*)(char** task, int processKind)) 0x8002dc74)(currTask, kind);    
-//             procInstant = false;
-//         }
-//     }
-// }
-
-// INJECTION("CMD_STEPPER", 0x8077be0c, R"(
-//     bl stepCommand
-//     cmpwi r12, 0
-//     bne _CMD_STEPPER_CONTINUE
-//     lis r12, 0x8077
-//     ori r12, r12, 0xBEA4
-//     mtctr r12
-//     bctr
-
-// _CMD_STEPPER_CONTINUE:
-//     lha r0, 0(r5)
-// )");
-
-// extern "C" void stepCommand() {
-//     asm("mr r12, %0"
-//         :
-//         : "r" (shouldAdvance));
-//     shouldAdvance ++;
-//     if (shouldAdvance >= 2) {
-//         shouldAdvance = 0;
-//     }
-// }
-
-
 INJECTION("forceVisMemPool", 0x80025dc8, R"(
     cmpwi r3, 69
 )");
@@ -426,6 +359,17 @@ INJECTION("frameUpdate", 0x8001792c, R"(
     addi r3, r30, 280
 )");
 
+float totalFPS = 0;
+float maxFPS = 0;
+float minFPS = 0;
+float averageFPS = 0;
+float frameCount = 0;
+s32 currentFPS = 0;
+u32 lastLastTick = 0;
+u32 lastTick = 0;
+bool inBattle = false;
+float TICKS_PER_FRAME = OSSecondsToTicks(1.0 / 60);
+
 extern "C" void updateOnFrame() {
     // if (collectedHeapData.size() > 0) {
     //     if (frame % collectedHeapData.size() == 0) {
@@ -437,7 +381,7 @@ extern "C" void updateOnFrame() {
     // }
     if (fudgeMenu == nullptr) {
         fudgeMenu = new Menu();
-        Page* mainPage = new MainPage(fudgeMenu);        
+        Page* mainPage = new MainPage(fudgeMenu);   
         fudgeMenu->nextPage(mainPage);
     }
     
@@ -850,6 +794,8 @@ extern "C" void updateOnFrame() {
         
         startNormalDraw();
         renderAllStoredHitboxes();
+    } else {
+        inBattle = false;
     }
 
     renderables.renderAll();
@@ -873,6 +819,8 @@ extern "C" void updateOnFrame() {
         cmdDelay += 1;
         // if (cmdDelay > 45) cmdDelay = 45;
     }
+    lastLastTick = lastTick;
+    lastTick = _OSGetTick();
 }
 
 SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
@@ -881,6 +829,28 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
     
     auto scene = getScene();
     if (scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
+        if (!inBattle) {
+            inBattle = true;
+            frameCount = 60 * -20;
+            totalFPS = 0;
+            maxFPS = 0;
+            minFPS = 60;
+        } else if (frameCount > 0) {
+            float frameTickCount = ((float) (lastTick - lastLastTick));
+            float ratioThisFrame = frameTickCount / TICKS_PER_FRAME;
+            ratioThisFrame *= 60.0;
+            
+            totalFPS += ratioThisFrame;
+
+            currentFPS = ratioThisFrame;
+            if (currentFPS < minFPS) minFPS = currentFPS;
+            else if (currentFPS > maxFPS) maxFPS = currentFPS;
+            if (maxFPS > 60.0) maxFPS = 60.0;
+
+            averageFPS = 60 - frameCount / (totalFPS);
+        }
+        frameCount += 1;
+
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
 
         for (int i = 0; i < entryCount; i++) {

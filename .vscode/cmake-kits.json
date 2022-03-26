@@ -49,7 +49,8 @@
       "FUDGE_MENU": 0,
       "SUPER_TRAINING": 1,
       "RANDOM_1_TO_1_ALTS": 0,
-      "DRAW_A_RECTANGLE": 0
+      "DRAW_A_RECTANGLE": 0,
+      "OGG_SUPPORT": 1
     }
   },
   {

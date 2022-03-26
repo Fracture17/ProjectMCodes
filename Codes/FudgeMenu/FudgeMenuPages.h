@@ -12,6 +12,16 @@ struct MainPage : public BasicPage {
   void show();
 };
 
+extern float minFPS;
+extern float averageFPS;
+extern float maxFPS;
+extern s32 currentFPS;
+struct FPSPage : public BasicPage {
+  FPSPage(Menu* myMenu)
+  : BasicPage(myMenu, "FPS Checker") {};
+  void show();
+};
+
 struct ComboTrainerPage : public BasicPage {
   ComboTrainerPage(Menu* myMenu, TrainingData& d) 
   : BasicPage(myMenu, "Combo Trainer"), data(d) {};

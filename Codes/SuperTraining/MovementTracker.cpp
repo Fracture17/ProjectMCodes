@@ -110,15 +110,17 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
   // create an offset to use instead of 
   int reactionPatchTime = timeTracker[idx];
   int reactionPatchIdx = idx;
-  while(reactionTime > 0) {
-    reactionPatchTime = timeTracker[reactionPatchIdx];
-    int difference = timeTracker[reactionPatchIdx] - reactionTime;
-    reactionTime -= timeTracker[reactionPatchIdx];
-    if (reactionTime <= 0) {
-      reactionPatchTime -= difference;
-    } else {
-      reactionPatchIdx -= 1;
-      if (reactionPatchIdx < 0) reactionPatchIdx += ACTION_COUNT;
+  if (offsets.size() > 0) {
+    while(reactionTime > 0) {
+      reactionPatchTime = timeTracker[reactionPatchIdx];
+      int difference = timeTracker[reactionPatchIdx] - reactionTime;
+      reactionTime -= timeTracker[reactionPatchIdx];
+      if (reactionTime <= 0) {
+        reactionPatchTime -= difference;
+      } else {
+        reactionPatchIdx -= 1;
+        if (reactionPatchIdx < 0) reactionPatchIdx += ACTION_COUNT;
+      }
     }
   }
 
