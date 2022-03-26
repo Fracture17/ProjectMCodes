@@ -107,6 +107,7 @@ namespace FrameLogic {
             checkEffectStageDurationFinished();
             checkPositionResetCorrect();
             checkItemSpawnPokemonOrAssist();
+            checkTransformStage();
 
             switch (effectRequest[0]) {
                 case EFFECT_GIVE_DAMAGE:
@@ -297,6 +298,15 @@ namespace FrameLogic {
                 case EFFECT_STAGE_BALLOONPOP:
                     exiStatus = effectStageBalloonPop(effectRequest[1], effectRequest[2]);
                     break;
+                case EFFECT_STAGE_TRANSLATE:
+                    exiStatus = effectStageTranslate(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_STAGE_ROTATE:
+                    exiStatus = effectStageRotate(effectRequest[1], effectRequest[2]);
+                    break;
+                case EFFECT_STAGE_SCALE:
+                    exiStatus = effectStageScale(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -354,6 +364,7 @@ namespace FrameLogic {
                     //effectGameCoin(12);
                     //effectGameSwitchCharacters(numPlayers, 0, 5);
                     //effectStageBalloonPop(12, 0);
+                    //effectStageRotate(12, 10);
 
                     //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
                     testWaitDuration = 60;
@@ -370,11 +381,13 @@ namespace FrameLogic {
 
                     //effectItemPreloadPokemon(0x6C, 1); // Staryu
                     //effectItemPreloadAssist(0x96, 1); // Hammer Bro
+                    //effectStageTranslate(12, 4, 4);
 
 
                 } else if (padSystem->pads[0].buttons.UpDPad) {
                     //effectItemPreloadPokemon(0x84, 1); // Suicune
                     //effectItemPreloadAssist(0xA2, 1); // Isaac
+                    //effectStageScale(12, -1, -1);
 
 
                 } else if (padSystem->pads[0].buttons.DownDPad) {

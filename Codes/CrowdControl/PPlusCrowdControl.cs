@@ -609,6 +609,9 @@ public class PPlus : SimpleTCPPack
 
         createEffect("Wild (Stage Speed)", "stage_wild", 65, new[]{"wild_duration", "stage_speed", "growth"}, "stage"),
         createEffect("Balloon Pop", "stage_balloonpop", 66, new[]{"balloonpop_duration", "balloonpop_behaviour"}, "stage"),
+        createEffect("Translate", "stage_translate", 67, new[]{"stagetranslation_duration", "stage_xtranslation, stage_ytranslation"}, "stage"),
+        createEffect("Rotate", "stage_rotate", 68, new[]{"stagerotation_duration", "stage_rotation"}, "stage"),
+        createEffect("Scale", "stage_scale", 69, new[]{"stagescale_duration", "stage_xscale, stage_yscale"}, "stage"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -1062,6 +1065,14 @@ public class PPlus : SimpleTCPPack
         new ItemType("Remove HUD Duration", "removehud_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
         new ItemType("Debug Duration", "debug_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
         new ItemType("Balloon Pop Behaviour Duration", "balloonpop_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Stage Translation Duration", "stagetranslation_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Stage X Translation", "stage_xtranslation", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":4}"),
+        new ItemType("Stage Y Translation", "stage_ytranslation", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":4}"),
+        new ItemType("Stage Rotation Duration", "stagerotation_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Stage Rotation", "stage_rotation", ItemType.Subtype.Slider, "{\"min\":-10,\"max\":10}"),
+        new ItemType("Stage Scale Duration", "stagescale_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Stage X Scale", "stage_xscale", ItemType.Subtype.Slider, "{\"min\":-1,\"max\":1}"),
+        new ItemType("Stage Y Scale", "stage_yscale", ItemType.Subtype.Slider, "{\"min\":-1,\"max\":1}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),

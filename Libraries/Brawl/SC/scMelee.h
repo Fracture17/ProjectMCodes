@@ -7,9 +7,15 @@
 
 
 #include <stddef.h>
+#include "Brawl/ST/stLoaderStage.h"
 
 struct scMelee {
-    char _spacer[0xD8];
+
+    char _spacer[0x24];
+
+    stLoaderStage* stageLoader;
+
+    char _spacer2[0xD8 - 0x24 - 4];
 
     //0xD8
     //0x20 is game end flag
@@ -20,6 +26,6 @@ struct scMelee {
 
 #define SC_MELEE_GAME_END_FLAG (0x20)
 
-#define SC_MELEE ((scMelee*) 0x90ff50c0)
+#define SC_MELEE ((scMelee*) 0x90ff50a0)
 
 #endif //PROJECTMCODES_SCMELEE_H

@@ -10,6 +10,21 @@ u32 wildDuration = 0;
 u8 balloonPopBehaviour = 0;
 u32 balloonPopDuration = 0;
 
+#define STAGE_ID ((u32*)0x8062B3B4)
+
+float targetRot = 0;
+#define MAX_ROT 85
+u32 rotationDuration = 0;
+
+float targetX = 0;
+float targetY = 0;
+u32 translateDuration = 0;
+
+#define SCALE_MARGIN 0.01
+float targetScaleX = 1;
+float targetScaleY = 1;
+u32 scaleDuration = 0;
+
 void saveEffectStage() {
     prev_wild_speed = GAME_GLOBAL->unk1->stageSpeed;
 }
@@ -20,6 +35,9 @@ void resetEffectStage() {
 
     balloonPopBehaviour = 0;
     balloonPopDuration = 0;
+
+    rotationDuration = 0;
+    targetRot = 0;
 }
 
 void checkEffectStageDurationFinished() {
@@ -34,6 +52,106 @@ void checkEffectStageDurationFinished() {
         balloonPopDuration--;
         if (balloonPopDuration == 0) {
             balloonPopBehaviour = 0;
+        }
+    }
+
+    if (rotationDuration > 0) {
+        rotationDuration--;
+        if (rotationDuration == 0) {
+            targetRot = 0;
+        }
+    }
+
+    if (translateDuration > 0) {
+        translateDuration--;
+        if (translateDuration == 0) {
+            targetX = 0;
+            targetY = 0;
+        }
+    }
+
+    if (scaleDuration > 0) {
+        scaleDuration--;
+        if (scaleDuration == 0) {
+            targetScaleX = 1;
+            targetScaleY = 1;
+        }
+    }
+}
+
+s16 getGroundId() {
+    switch (*STAGE_ID) {
+        case STAGE_BATTLEFIELD:
+            return 8;
+        case STAGE_FINALDESTINATION:
+        case STAGE_DELFINOSECRET:
+        case STAGE_METALCAVERN:
+        case STAGE_WARIOLAND:
+        case STAGE_GREENHILLZONE:
+        case STAGE_METROIDLAB:
+        case STAGE_YOSHISSTORY:
+            return 1;
+        case STAGE_SMASHVILLE:
+            return 2;
+        case STAGE_POKEMONSTADIUM2:
+            return 7;
+        case STAGE_SKYSANCTUARYZONE:
+            return 0;
+        default:
+            return -1;
+    }
+}
+
+// NOTE: Requires collision to be rigged to bone, noTransform flags removed, model to be the first model in the ModelData and platform to be set as a grMadein in the module
+void checkTransformStage(){
+    if (*STAGE_ID != 255) {
+        Stage* stage = SC_MELEE->stageLoader->stage;
+        if (stage != nullptr) {
+            s16 groundId = getGroundId();
+            if (groundId >= 0)
+            {
+                Vec3f *vec = new Vec3f();
+                grGimmick *ground = stage->getGround(groundId);
+
+                ground->getPos(vec);
+                float setX = vec->f1;
+                float setY = vec->f2 ;
+                if (setX < targetX) {
+                    setX += 1;
+                } else if (setX > targetX) {
+                    setX -= 1;
+                }
+                if (setY < targetY) {
+                    setY += 1;
+                } else if (setY > targetY) {
+                    setY -= 1;
+                }
+                ground->setPos(setX, setY, vec->f3);
+
+                ground->getRot(vec);
+                if (vec->f3 < targetRot) {
+                    ground->setRot(vec->f1, vec->f2, vec->f3 + 1);
+                } else if (vec->f3 > targetRot) {
+                    ground->setRot(vec->f1, vec->f2, vec->f3 - 1);
+                }
+
+                ground->getScale(vec);
+                setX = vec->f1;
+                setY = vec->f2;
+                if (setX < (targetScaleX - SCALE_MARGIN)) {
+                    setX += 0.05;
+                } else if (setX > (targetScaleX + SCALE_MARGIN)) {
+                    setX -= 0.05;
+                }
+                if (setY < (targetScaleY - SCALE_MARGIN)) {
+                    setY += 0.05;
+                } else if (setY > (targetScaleY + SCALE_MARGIN)) {
+                    setY -= 0.05;
+                }
+                ground->setScale(setX, setY, vec->f3);
+
+                delete (vec);
+            }
         }
     }
 }
@@ -53,11 +171,49 @@ EXIStatus effectStageWild(u16 duration, float stageSpeed, bool increase) {
 //// Credit: Eon
 EXIStatus effectStageBalloonPop(u16 duration, u16 behaviour) {
     // TODO: maybe keep on until a balloon gets hit?
+    // TODO: Check for st_village.rel module
 
     balloonPopBehaviour = behaviour + 1;
 
     balloonPopDuration += duration * 60;
     return RESULT_EFFECT_SUCCESS;
+}
+
+//// Credit: Kapedani
+EXIStatus effectStageTranslate(u16 duration, s16 x, s16 y) {
+    if (getGroundId() >= 0) {
+        targetX += (float)x;
+        targetY += (float)y;
+        translateDuration = duration * 60;
+
+        return RESULT_EFFECT_SUCCESS;
+    }
+    else return RESULT_EFFECT_UNAVAILABLE;
+}
+
+//// Credit: Kapedani
+EXIStatus effectStageRotate(u16 duration, s16 degrees) {
+    if (getGroundId() >= 0) {
+        targetRot += (float)degrees;
+        if (targetRot > MAX_ROT) targetRot = MAX_ROT;
+        else if (targetRot < -MAX_ROT) targetRot = -MAX_ROT;
+        rotationDuration = duration * 60;
+
+        return RESULT_EFFECT_SUCCESS;
+    }
+    else return RESULT_EFFECT_UNAVAILABLE;
+}
+
+//// Credit: Kapedani
+EXIStatus effectStageScale(u16 duration, s16 x, s16 y) {
+    if (getGroundId() >= 0) {
+        targetScaleX += ((float)x)/10;
+        targetScaleY += ((float)y)/10;
+        scaleDuration = duration * 60;
+
+        return RESULT_EFFECT_SUCCESS;
+    }
+    else return RESULT_EFFECT_UNAVAILABLE;
 }
 
 extern "C" void balloonPop() {

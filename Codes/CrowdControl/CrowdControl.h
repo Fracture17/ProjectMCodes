@@ -85,6 +85,10 @@ enum CCEffect
     EFFECT_DEBUG_CHARACTER_SWITCH = 64,
     EFFECT_STAGE_WILD = 65,
     EFFECT_STAGE_BALLOONPOP = 66,
+    EFFECT_STAGE_TRANSLATE = 67,
+    EFFECT_STAGE_ROTATE = 68,
+    EFFECT_STAGE_SCALE = 69,
+
 };
 
 //hacky way to check if in game
