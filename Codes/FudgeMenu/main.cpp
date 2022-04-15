@@ -499,19 +499,16 @@ extern "C" void updateOnFrame() {
                     instantResponse = false;
                     SOUND_SYSTEM->playSE(37);
                 }
-            } else if (!inputThing) {
-                instantResponse = true;
-                timer = 80;
-                cmdDelay = 0;
             }
         } else if (paused && btn.B) {
             paused = false;
             inputThing = true;
-        } else if (!inputThing) {
-            instantResponse = true;
-            timer = 80;
-            cmdDelay = 0;
         }
+    }
+    if (!inputThing) {
+        instantResponse = true;
+        timer = 80;
+        cmdDelay = 0;
     }
     if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {        
         auto entryCount = FIGHTER_MANAGER->getEntryCount();

@@ -187,6 +187,9 @@ STRING_WRITE(0x80903094, "\x60\x00\x00\x00");
 // FORCED_INPUT_FIX48
 STRING_WRITE(0x809030a0, "\x60\x00\x00\x00");
 
+// FORCED MD FIX
+STRING_WRITE(0x808fe864, "\x60\x60\x60\x60");
+
 // SELF_TARGET_CHANGE_FIX1
 STRING_WRITE(0x808fe5f8, "\x60\x00\x00\x00");
 // SELF_TARGET_CHANGE_FIX2
@@ -195,6 +198,11 @@ STRING_WRITE(0x809073dc, "\x60\x00\x00\x00");
 STRING_WRITE(0x809188e0, "\x60\x00\x00\x00");
 // SELF_TARGET_CHANGE_FIX4
 STRING_WRITE(0x80900cb8, "\x60\x00\x00\x00");
+
+// FIX_SWING_CHK_RESET
+STRING_WRITE(0x80905668, "\x4e\x80\x00\x20");
+// FIX_SWING_CHK_SET
+STRING_WRITE(0x80905690, "\x4e\x80\x00\x20");
 
 // FIX_AUTO_THROW_ROUTINE
 STRING_WRITE(0x808fe89c, "\x60\x00\x00\x00");
@@ -221,7 +229,7 @@ extern "C" void CPUForceMd(aiInput * aiInput, unsigned int intent, int newAction
         OSReport("new md: %02x\n", intent);
 
         char pNum = _GetPlayerNo_aiChrIdx(&aiInput->cpuIdx);
-        if (intent <= 0xFFFF && pNum != -1 && intent != disabledMd[pNum] && intent != 0x2 && intent != 0x0) {
+        if (intent <= 0xFFFF && pNum != -1 && intent != disabledMd[pNum] && intent != 0x2 && intent != 0x5 && intent != 0x0) {
             aiInput->aiMd = intent;
         }
     }
@@ -254,9 +262,9 @@ INJECTION("PREVENT_AUTO_DEFEND", 0x80900c60, "bl preventAutoDefend");
 INJECTION("PREVENT_AUTO_DANGER_CHECK", 0x80901514, "bl preventDangerCheck");
 
 extern "C" void preventAutoDefend(aiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5) {
-    if (autoDefend[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)]) {
-        change_md_aiInput(aiInputInst, newMode, param_3, newOrOldAction, param_5);
-    }
+    // if (autoDefend[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)]) {
+    //     change_md_aiInput(aiInputInst, newMode, param_3, newOrOldAction, param_5);
+    // }
     return;
 }
 extern "C" void preventDangerCheck(aiInput *aiInputInst,unsigned int thing1, unsigned int thing2) {
@@ -364,6 +372,7 @@ SIMPLE_INJECTION(clearPredictions, 0x800dc590, "li r9, 2") {
     for (int i = 0; i < 0x10; i++) {
         if (i < 4) {
             movementTrackers[i].reset();
+            movementTrackers[i].trackAction(0x0);
             disabledSwitch[i] = false;
             disabledMd[i] = -1;
             autoDefend[i] = true;
@@ -647,6 +656,7 @@ extern "C" {
             case 0x88: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.platChance; return;
             case 0x89: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.SDIChance; return;
             case 0x8A: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.wall_chance; return;
+            case 0x8B: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.reactionTime; return;
             default:
                 fn_shouldReturnResult = 0;
         }
@@ -1285,10 +1295,10 @@ extern "C" {
                 
                 float XTerminalVelocity = _get_script_value_aiScriptData(aiActInst, *(int *) &args[12], 0);
                 float jumpVelocity = _get_script_value_aiScriptData(aiActInst, *(int *) &args[13], 0);
-                bool OInCombo = _get_script_value_aiScriptData(aiActInst, *(int *) &args[14], 0);
+                float OEndLag = _get_script_value_aiScriptData(aiActInst, *(int *) &args[14], 0);
                 float OTopNY = _get_script_value_aiScriptData(aiActInst, *(int *) &args[15], 0);
                 float OTopNX = _get_script_value_aiScriptData(aiActInst, *(int *) &args[16], 0);
-                float TopNY = _get_script_value_aiScriptData(aiActInst, *(int *) &args[17], 0);
+                float EstOYDistFloor = _get_script_value_aiScriptData(aiActInst, *(int *) &args[17], 0);
                 float TopNX = _get_script_value_aiScriptData(aiActInst, *(int *) &args[18], 0);
                 float TopBZ = _get_script_value_aiScriptData(aiActInst, *(int *) &args[19], 0);
                 float nearXBZ = _get_script_value_aiScriptData(aiActInst, *(int *) &args[20], 0);
@@ -1309,10 +1319,14 @@ extern "C" {
                 // x = (v * 0.03) / 0.051
                 // v = (0.051 * x) / 0.03
 
+                if (moveDamage < 10) moveDamage = 10;
+                aiActInst->variables[varToMod] = moveDamage * 0.25;
+
                 float kbRatio = (0.051 * 0.75) / 0.03;
                 float invKbRatio = 1 / kbRatio;
-                float xVelRequired = ((nearXBZ - OTopNX) * kbRatio);
-                float yVelRequired = ((TopBZ - OTopNY) * kbRatio);
+
+                float xVelRequired = ((nearXBZ - OTopNX) * kbRatio) * 0.65;
+                float yVelRequired = ((TopBZ - OTopNY) * kbRatio) * 0.7;
                 
                 float multiplier = (xVelRequired > yVelRequired && moveAngle <= 180) ? moveYVelMultiplier : moveXVelMultiplier;
                 float moveCurrKnockback = calculateKnockback(ODamage, moveDamage, moveBaseKnockback, moveKnockbackGrowth, OWeight, moveIsWeightDependent);
@@ -1321,48 +1335,60 @@ extern "C" {
                 
                 float hitstun = moveCurrKnockback * 0.4;
                 float endlag = moveIASA - ((moveDuration / 2) + moveHitFrame);
-
-                if (xVelRequired < moveCurrKnockback * moveXVelMultiplier || yVelRequired < moveCurrKnockback * moveYVelMultiplier) {
+                aiActInst->variables[varToMod] += (hitstun - endlag) * 0.1;
+                if ((OEndLag > moveHitFrame || (stageWidth / 2 - OTopNX < 0)) && (xVelRequired < moveCurrKnockback * moveXVelMultiplier || yVelRequired < moveCurrKnockback * moveYVelMultiplier) && (moveAngle <= 210 || moveAngle >= 330)) {
                     OSReport("; KILLING");
-                    aiActInst->variables[varToMod] = 25;
+                    aiActInst->variables[varToMod] += 1000;
                     return;
                 }
 
                 // will a move launch the target offstage
-                xVelRequired = (((stageWidth + 25) / 2 - OTopNX) * kbRatio);
+                xVelRequired = (((stageWidth + 50) / 2 - OTopNX) * kbRatio);
                 OSReport("; Launch XVelReq: %.3f", xVelRequired);
                 if (xVelRequired > 0) {
-                    if (xVelRequired < moveCurrKnockback * moveXVelMultiplier) {
+                    if ((moveAngle >= 75 && moveAngle <= 105) && moveYVelMultiplier * moveCurrKnockback > 130) {
+                        OSReport("; (+ launch-high)");
+                        aiActInst->variables[varToMod] += 6;
+                    } 
+                    if ((moveAngle >= 230 && moveAngle <= 310) && moveYVelMultiplier * moveCurrKnockback > 70 && EstOYDistFloor > 20) {
+                        OSReport("; (+ launch-low)");
+                        aiActInst->variables[varToMod] += 8;
+                    }
+                    float approxKB = moveCurrKnockback * moveXVelMultiplier;
+                    if (xVelRequired < approxKB && moveCurrKnockback > 140) {
                         OSReport("; LAUNCHING");
-                        aiActInst->variables[varToMod] = 10;
+                        aiActInst->variables[varToMod] += 30 + (approxKB - xVelRequired) * 0.1;
                         return;
                     }
+                } else if ((moveAngle >= 250 && moveAngle <= 290) && moveYVelMultiplier * moveCurrKnockback > 80) {
+                    OSReport("; (+ launch-low)");
+                    aiActInst->variables[varToMod] += 35;
                 }
 
                 // will a move combo
-                if (moveCurrKnockback > 80) {
-                    endlag -= 4;
+                if (moveCurrKnockback > 90) {
+                    endlag -= 10;
                 }
-                endlag += OTopNY;
+                endlag *= 2;
+                hitstun *= 0.7;
                 if (endlag < hitstun) {
-                    if ((moveAngle >= 230 && moveAngle <= 310) || (moveAngle > 45 && moveAngle < 135)) {
-                        if (jumpVelocity * hitstun > moveYVelMultiplier * moveCurrKnockback && XTerminalVelocity * hitstun * 0.5 > moveXVelMultiplier * moveCurrKnockback) {
+                    if ((moveAngle >= 220 && moveAngle <= 320) || (moveAngle > 75 && moveAngle < 105)) {
+                        if (jumpVelocity * hitstun * 20 > moveYVelMultiplier * moveCurrKnockback && XTerminalVelocity * hitstun * 3 > moveXVelMultiplier * moveCurrKnockback) {
                             OSReport("; COMBOING (vert)");
-                            aiActInst->variables[varToMod] = 3;
-                            return;
+                            aiActInst->variables[varToMod] += 20;
+                            if ((moveAngle >= 220 && moveAngle <= 320)) aiActInst->variables[varToMod] += EstOYDistFloor * 0.15;
                         }      
-                    } else if (moveCurrKnockback * 0.4 > 20) {
-                        if (XTerminalVelocity * hitstun * 0.75 > moveXVelMultiplier * moveCurrKnockback) {
+                    } else if (hitstun > 20) {
+                        if (XTerminalVelocity * hitstun * 10 > moveXVelMultiplier * moveCurrKnockback) {
                             OSReport("; COMBOING (horiz)");
-                            if (moveAngle <= 20 || moveAngle >= 160) aiActInst->variables[varToMod] = 2.5;
-                            else aiActInst->variables[varToMod] = 1.75;
-                            return;
+                            if (moveYVelMultiplier * moveCurrKnockback > 20 || moveCurrKnockback <= 80) aiActInst->variables[varToMod] += 11;
+                            else if (!(moveAngle <= 20 && moveAngle >= 160)) aiActInst->variables[varToMod] += 13;
+                            else aiActInst->variables[varToMod] += 9;
+                            aiActInst->variables[varToMod] += 15 * (1 - (moveXVelMultiplier * moveCurrKnockback / 100));
                         }
                     }
+                    aiActInst->variables[varToMod] *= 1 + (hitstun / 100);
                 }
-
-                if (moveDamage < 10) moveDamage = 10;
-                aiActInst->variables[varToMod] = moveDamage * 0.05;
                 return;
             }
             // Push to Trackers
@@ -1414,7 +1440,12 @@ extern "C" {
             case 0x58: {
                 int varToMod = args[1];
                 int levelValue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                aiActInst->variables[varToMod] = movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->aiTarget)].approxChance((float) levelValue);
+                float result = 0;
+                result = movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->aiTarget)].approxChance((float) levelValue, MOV_ATTACK);
+                float grabRes = movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->aiTarget)].approxChance((float) levelValue, MOV_GRAB);
+                if (grabRes > result) result = grabRes;
+                result -= (movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->ftInputPtr->aiTarget)].approxChance((float) levelValue, MOV_SHIELD) * 0.2);
+                aiActInst->variables[varToMod] = result;
                 return;
             }
             // approximateSpecifcAction
@@ -1746,73 +1777,73 @@ extern "C" {
                 switch(index) {
                     case 0x0: {
                         playerTrainingData[pNum].aiData.personality.aggression += amount;
-                        if (playerTrainingData[pNum].aiData.personality.aggression > 2) playerTrainingData[pNum].aiData.personality.aggression = 2;
+                        if (playerTrainingData[pNum].aiData.personality.aggression > 10) playerTrainingData[pNum].aiData.personality.aggression = 10;
                         else if (playerTrainingData[pNum].aiData.personality.aggression < -1) playerTrainingData[pNum].aiData.personality.aggression = -1;
                         return;
                     }
                     case 0x1: {
                         playerTrainingData[pNum].aiData.personality.bait_dashAwayChance += amount;
-                        if (playerTrainingData[pNum].aiData.personality.bait_dashAwayChance > 2) playerTrainingData[pNum].aiData.personality.bait_dashAwayChance = 2;
+                        if (playerTrainingData[pNum].aiData.personality.bait_dashAwayChance > 10) playerTrainingData[pNum].aiData.personality.bait_dashAwayChance = 10;
                         else if (playerTrainingData[pNum].aiData.personality.bait_dashAwayChance < -1) playerTrainingData[pNum].aiData.personality.bait_dashAwayChance = -1;
                         return;
                     }
-                    case 0x2: {
+                    case 0x10: {
                         playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance += amount;
-                        if (playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance > 2) playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance = 2;
+                        if (playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance > 10) playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance = 10;
                         else if (playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance < -1) playerTrainingData[pNum].aiData.personality.bait_wdashAwayChance = -1;
                         return;
                     }
                     case 0x3: {
                         playerTrainingData[pNum].aiData.personality.baitChance += amount;
-                        if (playerTrainingData[pNum].aiData.personality.baitChance > 2) playerTrainingData[pNum].aiData.personality.baitChance = 2;
+                        if (playerTrainingData[pNum].aiData.personality.baitChance > 10) playerTrainingData[pNum].aiData.personality.baitChance = 10;
                         else if (playerTrainingData[pNum].aiData.personality.baitChance < -1) playerTrainingData[pNum].aiData.personality.baitChance = -1;
                         return;
                     }
                     case 0x4: {
                         playerTrainingData[pNum].aiData.personality.braveChance += amount;
-                        if (playerTrainingData[pNum].aiData.personality.braveChance > 2) playerTrainingData[pNum].aiData.personality.braveChance = 2;
+                        if (playerTrainingData[pNum].aiData.personality.braveChance > 10) playerTrainingData[pNum].aiData.personality.braveChance = 10;
                         else if (playerTrainingData[pNum].aiData.personality.braveChance < -1) playerTrainingData[pNum].aiData.personality.braveChance = -1;
                         return;
                     }
                     case 0x5: {
                         playerTrainingData[pNum].aiData.personality.circleCampChance += amount;
-                        if (playerTrainingData[pNum].aiData.personality.circleCampChance > 2) playerTrainingData[pNum].aiData.personality.circleCampChance = 2;
+                        if (playerTrainingData[pNum].aiData.personality.circleCampChance > 10) playerTrainingData[pNum].aiData.personality.circleCampChance = 10;
                         else if (playerTrainingData[pNum].aiData.personality.circleCampChance < -1) playerTrainingData[pNum].aiData.personality.circleCampChance = -1;
                         return;
                     }
                     case 0x6: {
                         playerTrainingData[pNum].aiData.personality.djumpiness += amount;
-                        if (playerTrainingData[pNum].aiData.personality.djumpiness > 2) playerTrainingData[pNum].aiData.personality.djumpiness = 2;
+                        if (playerTrainingData[pNum].aiData.personality.djumpiness > 10) playerTrainingData[pNum].aiData.personality.djumpiness = 10;
                         else if (playerTrainingData[pNum].aiData.personality.djumpiness < -1) playerTrainingData[pNum].aiData.personality.djumpiness = -1;
                         return;
                     }
                     case 0x7: {
                         playerTrainingData[pNum].aiData.personality.jumpiness += amount;
-                        if (playerTrainingData[pNum].aiData.personality.jumpiness > 2) playerTrainingData[pNum].aiData.personality.jumpiness = 2;
+                        if (playerTrainingData[pNum].aiData.personality.jumpiness > 10) playerTrainingData[pNum].aiData.personality.jumpiness = 10;
                         else if (playerTrainingData[pNum].aiData.personality.jumpiness < -1) playerTrainingData[pNum].aiData.personality.jumpiness = -1;
                         return;
                     }
                     case 0x8: {
                         playerTrainingData[pNum].aiData.personality.platChance += amount;
-                        if (playerTrainingData[pNum].aiData.personality.platChance > 2) playerTrainingData[pNum].aiData.personality.platChance = 2;
+                        if (playerTrainingData[pNum].aiData.personality.platChance > 10) playerTrainingData[pNum].aiData.personality.platChance = 10;
                         else if (playerTrainingData[pNum].aiData.personality.platChance < -1) playerTrainingData[pNum].aiData.personality.platChance = -1;
                         return;
                     }
                     case 0x9: {
                         playerTrainingData[pNum].aiData.personality.SDIChance += amount;
-                        if (playerTrainingData[pNum].aiData.personality.SDIChance > 2) playerTrainingData[pNum].aiData.personality.SDIChance = 2;
+                        if (playerTrainingData[pNum].aiData.personality.SDIChance > 10) playerTrainingData[pNum].aiData.personality.SDIChance = 10;
                         else if (playerTrainingData[pNum].aiData.personality.SDIChance < -1) playerTrainingData[pNum].aiData.personality.SDIChance = -1;
                         return;
                     }
                     case 0xA: {
                         playerTrainingData[pNum].aiData.personality.wall_chance += amount;
-                        if (playerTrainingData[pNum].aiData.personality.wall_chance > 2) playerTrainingData[pNum].aiData.personality.wall_chance = 2;
+                        if (playerTrainingData[pNum].aiData.personality.wall_chance > 10) playerTrainingData[pNum].aiData.personality.wall_chance = 10;
                         else if (playerTrainingData[pNum].aiData.personality.wall_chance < -1) playerTrainingData[pNum].aiData.personality.wall_chance = -1;
                         return;
                     }
                     case 0xB: {
                         playerTrainingData[pNum].aiData.personality.reactionTime += amount;
-                        if (playerTrainingData[pNum].aiData.personality.reactionTime > 2) playerTrainingData[pNum].aiData.personality.reactionTime = 2;
+                        if (playerTrainingData[pNum].aiData.personality.reactionTime > 10) playerTrainingData[pNum].aiData.personality.reactionTime = 10;
                         else if (playerTrainingData[pNum].aiData.personality.reactionTime < -1) playerTrainingData[pNum].aiData.personality.reactionTime = -1;
                         return;
                     }

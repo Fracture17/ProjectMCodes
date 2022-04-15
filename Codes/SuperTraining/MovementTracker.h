@@ -49,14 +49,14 @@ private:
     20, // NONE
     90, // IDLE
     0, // WALK
-    80, // RUN
+    60, // RUN
     120, // DASH
     0, // DASHTURN
     100, // CROUCH
     120, // JUMP
     130, // DJUMP
     100, // FALL
-    170, // SHIELD 
+    160, // SHIELD 
     80, // AIRDODGE 
     115, // ROLL 
     110, // TECH 

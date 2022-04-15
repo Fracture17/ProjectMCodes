@@ -11,7 +11,7 @@ void MovementTracker::reset() {
 };
 
 unsigned char actionToMov(int action) {
-  if (0x24 <= action && action <= 0x33 || action > 0x112) return MOV_ATTACK;
+  if ((0x24 <= action && action <= 0x33) || action > 0x112) return MOV_ATTACK;
   switch (action) {
     case 0x0: return MOV_IDLE;
     // case 0x1: return MOV_WALK;
@@ -132,13 +132,16 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
   for (int i = 0; i < offsets.size(); i++) {
     int startTracker = reactionPatchIdx;
     // because reasons
-    if (actionTracker[startTracker] == actionType) startTracker -= 1;
+    int looked = 0;
+    if (actionTracker[startTracker] == actionType) {
+      // looked = 1;
+      startTracker -= 1;
+    }
     int offsetTracker = offsets[i] - 1;
     
     // scoreMultiplier decrements each time to a fraction of lookAmount. This makes the
     // influence of patterns deteriorate over time
     float scoreMultiplier = 1;
-    int looked = 0;
     while(offsetTracker != idx && looked < lookAmount) {
       if (i != offsets.size() && offsetTracker == offsets[i + 1]) break;
       if (startTracker < 0) startTracker = ACTION_COUNT - 1;
@@ -149,14 +152,21 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
       // OSReport("i: %d; mov @ idx: %d; mov @ tracker: %d\n", i, actionTracker[startTracker], actionTracker[offsetTracker]);
 
       // a value (toAdd) is calculated based on the weight and the scoremultiplier
-      float toAdd = ((float) weights[actionTracker[offsetTracker]] / 100) * scoreMultiplier;
+      float toAdd = ((float) weights[actionTracker[offsetTracker]] / 100);
+      // skips over if inconsequential
+      // if (toAdd * timeTracker[offsetTracker] < 30 && actionTracker[startTracker] != actionTracker[offsetTracker]) {
+      //   offsetTracker++;
+      //   continue;
+      // }
+      toAdd *= scoreMultiplier;
+
       // ...the difference in time is then calculated, and the absolute value is taken
       float timeDifference = ((looked == 0) ? reactionPatchTime : timeTracker[startTracker]) - timeTracker[offsetTracker];
       if (timeDifference < 0) timeDifference *= -1;
       // finally, toAdd is MULTIPLIED by 80 MINUS the time difference times the scoreMultiplier (again)
       // This effecitvely means "take this into account if the time difference is less than 80 frames",
       // and also says "the less the difference in time, the greater the score increase"
-      toAdd *= (80 - timeDifference) * scoreMultiplier;
+      toAdd *= (200 - timeDifference) * scoreMultiplier;
       // this here effectively limits the influence of a time difference greater than 80, which would
       // be negative
       if (toAdd < 0) toAdd = 0;

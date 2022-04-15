@@ -10,6 +10,7 @@ void WeightedDie::addValue(WeightedValue weight) {
     if (weights[i]->value == weight.value) {
       // OSReport("found value\n");
       weights[i]->weight += weight.weight;
+      if (weights[i]->weight < 0) weights[i]->weight = 0;
       return;
     } 
   }

@@ -12,20 +12,20 @@ Menu* fudgeMenu;
 
 extern MovementTracker movementTrackers[4]; 
 void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
-  // predictions.IDLE = movementTrackers[pNum].approxChance(100, MOV_IDLE);
-  // predictions.WALK = movementTrackers[pNum].approxChance(100, MOV_WALK);
-  predictions.RUN = movementTrackers[pNum].approxChance(100, MOV_RUN);
-  predictions.DASH = movementTrackers[pNum].approxChance(100, MOV_DASH);
-  // predictions.CROUCH = movementTrackers[pNum].approxChance(100, MOV_CROUCH);
-  predictions.JUMP = movementTrackers[pNum].approxChance(100, MOV_JUMP);
-  predictions.DJUMP = movementTrackers[pNum].approxChance(100, MOV_DJUMP);
-  // predictions.FALL = movementTrackers[pNum].approxChance(100, MOV_FALL);
-  predictions.SHIELD = movementTrackers[pNum].approxChance(100, MOV_SHIELD);
-  // predictions.AIRDODGE = movementTrackers[pNum].approxChance(100, MOV_AIRDODGE);
-  predictions.ROLL = movementTrackers[pNum].approxChance(100, MOV_ROLL);
-  // predictions.TECH = movementTrackers[pNum].approxChance(100, MOV_TECH);
-  predictions.ATTACK = movementTrackers[pNum].approxChance(100, MOV_ATTACK);
-  predictions.GRAB = movementTrackers[pNum].approxChance(100, MOV_GRAB);
+  // predictions.IDLE = movementTrackers[pNum].approxChance(101, MOV_IDLE);
+  // predictions.WALK = movementTrackers[pNum].approxChance(101, MOV_WALK);
+  predictions.RUN = movementTrackers[pNum].approxChance(101, MOV_RUN);
+  predictions.DASH = movementTrackers[pNum].approxChance(101, MOV_DASH);
+  // predictions.CROUCH = movementTrackers[pNum].approxChance(101, MOV_CROUCH);
+  predictions.JUMP = movementTrackers[pNum].approxChance(101, MOV_JUMP);
+  predictions.DJUMP = movementTrackers[pNum].approxChance(101, MOV_DJUMP);
+  // predictions.FALL = movementTrackers[pNum].approxChance(101, MOV_FALL);
+  predictions.SHIELD = movementTrackers[pNum].approxChance(101, MOV_SHIELD);
+  // predictions.AIRDODGE = movementTrackers[pNum].approxChance(101, MOV_AIRDODGE);
+  predictions.ROLL = movementTrackers[pNum].approxChance(101, MOV_ROLL);
+  // predictions.TECH = movementTrackers[pNum].approxChance(101, MOV_TECH);
+  predictions.ATTACK = movementTrackers[pNum].approxChance(101, MOV_ATTACK);
+  predictions.GRAB = movementTrackers[pNum].approxChance(101, MOV_GRAB);
   KVPair<float> toSort[8] = {
     // {"idle", predictions.IDLE, 0xFFFFFFFF}, 
     // {"walk", predictions.WALK, 0xFFFFFFFF},

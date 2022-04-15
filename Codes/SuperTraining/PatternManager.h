@@ -52,9 +52,9 @@ void PatternManager::clear(int player) {
 }
 
 void PatternManager::pushNew(int player, signed char option) {
+    playerRPS[player][indexes[player]] = option;
     indexes[player] ++;
     if (indexes[player] >= PATTERN_MAN_MAX_IDX) indexes[player] = 0;
-    playerRPS[player][indexes[player]] = option;
 }
 
 void PatternManager::runCalc(int * attackChance, int * grabChance, int * defendChance, int player, int lookAmount) {

@@ -67,18 +67,18 @@ void AIPersonalityPage::show() {
   ADD_UNPAUSE
   addOption(new BoolOption("unlocked?", data.aiData.personality.unlocked));
   addOption(new BoolOption("autoAdjust?", data.aiData.personality.autoAdjust));
-  addOption(new FloatOption("aggression", data.aiData.personality.aggression, -1, 2, 0.01f));
-  addOption(new FloatOption("dashAwayChance", data.aiData.personality.bait_dashAwayChance, -1, 2, 0.01f));
-  addOption(new FloatOption("wdashAwayChance", data.aiData.personality.bait_wdashAwayChance, -1, 2, 0.01f));
-  addOption(new FloatOption("baitChance", data.aiData.personality.baitChance, -1, 2, 0.01f));
-  addOption(new FloatOption("braveChance", data.aiData.personality.braveChance, -1, 2, 0.01f));
-  addOption(new FloatOption("circleCampChance", data.aiData.personality.circleCampChance, -1, 2, 0.01f));
-  addOption(new FloatOption("djumpiness", data.aiData.personality.djumpiness, -1, 2, 0.01f));
-  addOption(new FloatOption("jumpiness", data.aiData.personality.jumpiness, -1, 2, 0.01f));
-  addOption(new FloatOption("platChance", data.aiData.personality.platChance, -1, 2, 0.01f));
-  addOption(new FloatOption("reactionTimeMult", data.aiData.personality.reactionTime, -1, 2, 0.01f));
-  addOption(new FloatOption("SDIChance", data.aiData.personality.SDIChance, -1, 2, 0.01f));
-  addOption(new FloatOption("wall_chance", data.aiData.personality.wall_chance, -1, 2, 0.01f));
+  addOption(new FloatOption("aggression", data.aiData.personality.aggression, -1, 10, 0.05f));
+  addOption(new FloatOption("dashAwayChance", data.aiData.personality.bait_dashAwayChance, -1, 10, 0.05f));
+  addOption(new FloatOption("wdashAwayChance", data.aiData.personality.bait_wdashAwayChance, -1, 10, 0.05f));
+addOption(new FloatOption("baitChance", data.aiData.personality.baitChance, -1, 10, 0.05f));
+  addOption(new FloatOption("braveChance", data.aiData.personality.braveChance, -1, 10, 0.05f));
+  addOption(new FloatOption("circleCampChance", data.aiData.personality.circleCampChance, -1, 10, 0.05f));
+  addOption(new FloatOption("djumpiness", data.aiData.personality.djumpiness, -1, 10, 0.05f));
+  addOption(new FloatOption("jumpiness", data.aiData.personality.jumpiness, -1, 10, 0.05f));
+  addOption(new FloatOption("platChance", data.aiData.personality.platChance, -1, 10, 0.05f));
+  addOption(new FloatOption("reactionTimeMult", data.aiData.personality.reactionTime, -1, 10, 0.05f));
+  addOption(new FloatOption("SDIChance", data.aiData.personality.SDIChance, -1, 10, 0.05f));
+  addOption(new FloatOption("wall_chance", data.aiData.personality.wall_chance, -1, 10, 0.05f));
 }
 
 void PSADataPage::show() {
