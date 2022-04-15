@@ -5,46 +5,6 @@
 #include "Brawl/IT/BaseItem.h"
 #include "Containers/ArrayList.h"
 
-struct itManager_itArchiveArrayList_vtable {
-    char _spacer[0x8];
-    void** isNull;
-    void** at;
-    void** at_7;
-    void** size;
-    void** isEmpty;
-    void** __dt;
-    void** shift;
-    void** pop;
-    void** clear;
-    void** unshift;
-    void** push;
-    void** insert;
-    void** erase;
-    void** capacity;
-    void** isFull;
-    void** set;
-};
-
-struct itManager_itKindArrayList_vtable {
-    char _spacer[0x8];
-    void** isNull;
-    void** at;
-    void** at_7;
-    void** size;
-    void** isEmpty;
-    void** __dt;
-    void** shift;
-    void** pop;
-    void** clear;
-    void** unshift;
-    void** push;
-    void** insert;
-    void** erase;
-    void** capacity;
-    void** isFull;
-    void** set;
-};
-
 struct itArchive {};
 
 // TODO: Use ArrayVector wrapper

@@ -10,8 +10,8 @@ cmake-build*/
 Dolphin/
 pf/
 rp/
-st/
 *.gct
+Tourney+/
 
 # User-specific files
 *.rsuser

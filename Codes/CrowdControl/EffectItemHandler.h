@@ -29,6 +29,6 @@ EXIStatus effectItemSpawn(u16 numPlayers, u16 itemId, u16 amount, u16 throwType)
 EXIStatus effectItemPreloadPokemon(u16 itemId, u16 amount);
 EXIStatus effectItemPreloadAssist(u16 itemId, u16 amount);
 EXIStatus effectItemAttachGooey(u16 numPlayers, u16 targetPlayer, u16 amount);
-
+EXIStatus effectItemThrow(u16 numPlayers, u16 targetPlayer, u16 amount);
 
 #endif //PROJECTMCODES_EFFECTITEMHANDLER_H

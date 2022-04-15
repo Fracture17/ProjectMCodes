@@ -167,3 +167,26 @@ EXIStatus effectPositionSwap(u16 numPlayers, u16 targetPlayer1, u16 targetPlayer
 
     return RESULT_EFFECT_SUCCESS;
 }
+
+// Credit: fudgepop01
+EXIStatus effectPositionSwitchDirection(u16 numPlayers, u16 targetPlayer) {
+
+    if (targetPlayer == MAX_PLAYERS) {
+        targetPlayer = randi(numPlayers);
+    }
+
+    if (targetPlayer == MAX_PLAYERS + 1) {
+        // give all players equipment
+        for (u16 targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
+            getFighter(targetPlayer)->modules->postureModule->direction *= -1;
+        }
+    }
+    else if (targetPlayer >= numPlayers) {
+        return RESULT_EFFECT_UNAVAILABLE;
+    }
+    else {
+        getFighter(targetPlayer)->modules->postureModule->direction *= -1;
+    }
+
+    return RESULT_EFFECT_SUCCESS;
+}

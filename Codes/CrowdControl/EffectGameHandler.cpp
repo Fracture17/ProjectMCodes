@@ -4,8 +4,7 @@
 
 #include "EffectGameHandler.h"
 
-float prev_wild_speed = 1;
-u32 wildDuration = 0;
+u32 coinDuration = 0;
 
 u16 prev_game_speed = 60;
 u32 speedDuration = 0;
@@ -20,6 +19,16 @@ u32 playerALC[MAX_PLAYERS] = {(u32)*ALC_TOGGLE, (u32)*ALC_TOGGLE, (u32)*ALC_TOGG
 float playerLandingLagRegular[MAX_PLAYERS] = {LANDING_LAG_MULTIPLIER_DEFAULT, LANDING_LAG_MULTIPLIER_DEFAULT, LANDING_LAG_MULTIPLIER_DEFAULT, LANDING_LAG_MULTIPLIER_DEFAULT};
 float playerLandingLagCancelled[MAX_PLAYERS] = {LC_LANDING_LAG_MULTIPLIER_DEFAULT, LC_LANDING_LAG_MULTIPLIER_DEFAULT, LC_LANDING_LAG_MULTIPLIER_DEFAULT, LC_LANDING_LAG_MULTIPLIER_DEFAULT};
 
+double playerPercentBeforeSuddenDeath[MAX_PLAYERS] = {0, 0, 0, 0};
+u32 suddenDeathPlayerDuration[MAX_PLAYERS] = {0, 0, 0, 0};
+
+#define PAUSE_TOGGLE ((s16*) 0x805B8A0A)
+
+#define CAMERA_LOCK_TOGGLE ((s8*)0x804E0B37)
+u32 cameraLockDuration = 0;
+
+#define CHARACTER_SELECT_TOGGLE ((u8*)(0x804E0C57 + 0x3B4*playerPort))
+
 void setEffectGameLandingCancel(u16 targetPlayer, u16 duration, bool alcOn, float landingLagMultiplier, float lcLandingLagMultiplier) {
     // TODO: should the value get overridden if currently active?
 
@@ -29,19 +38,27 @@ void setEffectGameLandingCancel(u16 targetPlayer, u16 duration, bool alcOn, floa
     playerLandingLagCancelled[targetPlayer] = lcLandingLagMultiplier;
 }
 
+void setEffectGameSuddenDeath(u16 targetPlayer, u16 duration, double percent) {
+
+    suddenDeathPlayerDuration[targetPlayer] = duration*60;
+    ftOwner* ftOwner = getFtOwner(targetPlayer);
+
+    playerPercentBeforeSuddenDeath[targetPlayer] = ftOwner->getDamage();
+    ftOwner->setDamage(percent, 0);
+}
+
 void saveEffectGame() {
-    prev_wild_speed = GAME_GLOBAL->unk1->stageSpeed;
     prev_game_speed = GF_APPLICATION->frameSpeed;
 }
 
 void resetEffectGame() {
-    GAME_GLOBAL->unk1->stageSpeed = prev_wild_speed;
-    wildDuration = 0;
-
     GF_APPLICATION->frameSpeed = prev_game_speed;
     speedDuration = 0;
 
     hitfallDuration = 0;
+
+    *CAMERA_LOCK_TOGGLE = false;
+    cameraLockDuration = 0;
 
     for (u16 targetPlayer = 0; targetPlayer < MAX_PLAYERS; targetPlayer++) {
         setEffectGameLandingCancel(targetPlayer,
@@ -49,15 +66,14 @@ void resetEffectGame() {
                                    *ALC_TOGGLE,
                                    LANDING_LAG_MULTIPLIER_DEFAULT,
                                    LC_LANDING_LAG_MULTIPLIER_DEFAULT);
+
+        suddenDeathPlayerDuration[targetPlayer] = 0;
     }
 }
 
 void checkEffectGameDurationFinished() {
-    if (wildDuration > 0) {
-        wildDuration--;
-        if (wildDuration == 0) {
-            GAME_GLOBAL->unk1->stageSpeed = prev_wild_speed;
-        }
+    if (coinDuration > 0) {
+        coinDuration--;
     }
 
     if (speedDuration > 0) {
@@ -71,6 +87,13 @@ void checkEffectGameDurationFinished() {
         hitfallDuration--;
     }
 
+    if (cameraLockDuration > 0) {
+        cameraLockDuration--;
+        if (cameraLockDuration == 0) {
+            *CAMERA_LOCK_TOGGLE = false;
+        }
+    }
+
     for (u16 targetPlayer = 0; targetPlayer < MAX_PLAYERS; targetPlayer++) {
         if (landingLagPlayerDuration[targetPlayer] > 0) {
             landingLagPlayerDuration[targetPlayer]--;
@@ -80,6 +103,14 @@ void checkEffectGameDurationFinished() {
                                            *ALC_TOGGLE,
                                            LANDING_LAG_MULTIPLIER_DEFAULT,
                                            LC_LANDING_LAG_MULTIPLIER_DEFAULT);
+            }
+        }
+
+        if (suddenDeathPlayerDuration[targetPlayer] > 0) {
+            suddenDeathPlayerDuration[targetPlayer]--;
+            if (suddenDeathPlayerDuration[targetPlayer] == 0) {
+                ftOwner* ftOwner = getFtOwner(targetPlayer);
+                getFtOwner(targetPlayer)->setDamage(min(ftOwner->getDamage(), playerPercentBeforeSuddenDeath[targetPlayer]), 0);
             }
         }
     }
@@ -114,6 +145,29 @@ EXIStatus effectGameGiveDamage(u16 numPlayers, u16 targetPlayer, double percent,
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: fudgepop01
+EXIStatus effectGameSuddenDeath(u16 numPlayers, u16 duration, u16 targetPlayer, double percent) {
+
+    if (targetPlayer == MAX_PLAYERS) {
+        targetPlayer = randi(numPlayers);
+    }
+
+    if (targetPlayer == MAX_PLAYERS + 1) {
+        // give all players metal
+        for (u16 targetPlayer = 0; targetPlayer < numPlayers; targetPlayer++) {
+            setEffectGameSuddenDeath(targetPlayer, duration, percent);
+        }
+    }
+    else if (targetPlayer >= numPlayers) {
+        return RESULT_EFFECT_UNAVAILABLE;
+    }
+    else {
+        setEffectGameSuddenDeath(targetPlayer, duration, percent);
+    }
+
+    return RESULT_EFFECT_SUCCESS;
+}
+
 /*
 EXIStatus effectGameGiveTime(u16 seconds, bool giveTime) {
     // TODO: doesn't currently work
@@ -132,15 +186,9 @@ EXIStatus effectGameGiveTime(u16 seconds, bool giveTime) {
 
 }*/
 
-//// Credit: DukeItOut
-EXIStatus effectGameWild(u16 duration, float stageSpeed, bool increase) {
-
-    // TODO: should the value get overridden if currently active?
-
-    if (increase && stageSpeed == 0) GAME_GLOBAL->unk1->stageSpeed = stageSpeed;
-    else GAME_GLOBAL->unk1->stageSpeed = 1 / stageSpeed;
-
-    wildDuration += duration * 60;
+//// Credit: Eon
+EXIStatus effectGameCoin(u16 duration) {
+    coinDuration += duration * 60;
     return RESULT_EFFECT_SUCCESS;
 }
 
@@ -190,6 +238,58 @@ EXIStatus effectGameLandingLag(u16 numPlayers, u16 duration, u16 targetPlayer, b
     return RESULT_EFFECT_SUCCESS;
 }
 
+//// Credit: Eon
+EXIStatus effectGamePause() {
+    *PAUSE_TOGGLE = 1;
+    return RESULT_EFFECT_SUCCESS;
+}
+
+//// Credit: Eon
+EXIStatus effectGameLockCamera(u16 duration) {
+    // TODO: Set camera position / rotation?
+    // TODO: Moving camera? follow a player?
+
+    cameraLockDuration += duration*60;
+    *CAMERA_LOCK_TOGGLE = true;
+    return RESULT_EFFECT_SUCCESS;
+}
+
+//// Credit: Fracture
+/*
+EXIStatus effectGameSwitchCharacters(u16 numPlayers, u16 targetPlayer, u16 characterId) {
+
+    // TODO: Need to force reload (since switching characters only happens when code menu closes)
+
+    if (targetPlayer >= numPlayers) {
+        targetPlayer = randi(numPlayers);
+    }
+
+    auto playerPort = FIGHTER_MANAGER->getPlayerNo(FIGHTER_MANAGER->getEntryIdFromIndex(targetPlayer));
+    *CHARACTER_SELECT_TOGGLE = characterId;
+
+    return RESULT_EFFECT_SUCCESS;
+}
+*/
+
+extern "C" void coinMode(){
+    //// Everyone always drops coins [Eon]
+    asm(R"(
+    beq+ isCoinMode
+    cmplwi %0, 0
+    bgt- isCoinMode
+notCoinMode:
+    # original branch to instruction
+    lis r12, 0x8084
+    ori r12, r12, 0x195c
+    mtctr r12
+    bctr
+isCoinMode:
+
+            )"
+    :
+    : "r" (coinDuration));
+}
+
 extern "C" void hitfallMode(){
     //// Enable fastfall on aerial hit [Eon]
     asm(R"(
@@ -197,7 +297,7 @@ extern "C" void hitfallMode(){
 
     lwz r31, 0x1C(r1)           # Original instr
 
-    cmpwi %0, 0                 # / Skip if (codemenu var == 0)
+    cmplwi %0, 0                 # / Skip if (codemenu var == 0)
     beq hitfallEnd
 
     lwz r3, 0x10(r1)            # If hitstun/SDI-able code, just jump out its not worth it
@@ -452,6 +552,10 @@ alcEnd:
     : "r" (playerLandingLagCancelled));
 }
 
+INJECTION("COIN_MODE", 0x8084170c, R"(
+  bl coinMode
+)");
+
 INJECTION("HITFALL_MODE_SUPPLEMENTARY", 0x8077e8d4, R"(
   stw r3, 0x10(r1)
   cmpwi r3, 0
@@ -460,7 +564,6 @@ INJECTION("HITFALL_MODE_SUPPLEMENTARY", 0x8077e8d4, R"(
 INJECTION("HITFALL_MODE", 0x8077e8f4, R"(
   b hitfallMode
 )");
-
 
 INJECTION("ALC_MODE", 0x8087459C, R"(
   b alcMode

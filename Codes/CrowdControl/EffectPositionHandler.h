@@ -13,6 +13,7 @@ void checkPositionResetCorrect();
 
 EXIStatus effectPositionWarpToPlayer(u16 numPlayers, u16 targetPlayer, u16 warpingPlayer);
 EXIStatus effectPositionSwap(u16 numPlayers, u16 targetPlayer1, u16 targetPlayer2);
+EXIStatus effectPositionSwitchDirection(u16 numPlayers, u16 targetPlayer);
 
 
 #endif //PROJECTMCODES_EFFECTPOSITIONHANDLER_H

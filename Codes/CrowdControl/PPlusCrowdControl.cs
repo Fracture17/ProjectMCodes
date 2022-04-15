@@ -390,6 +390,56 @@ public class PPlus : SimpleTCPPack
         Final_Smash = 0x116,
         Special_Extra = 0x117
     }
+
+    private enum CharacterIds : int
+    {
+        Bowser = 0x00,
+		Captain_Falcon = 0x01,
+		Charizard = 0x02,
+		Dedede = 0x03,
+		Diddy_Kong = 0x04,
+		Donkey_Kong = 0x05,
+		Falco = 0x06,
+		Fox = 0x07,
+		Ganondorf = 0x08,
+		Giga_Bowser = 0x09,
+		Ice_Climbers = 0x0A,
+		Ike = 0x0B,
+		Ivysaur = 0x0C,
+		Jigglypuff = 0x0D,
+		Kirby = 0x0E,
+		Knuckles = 0x0F,
+		Link = 0x10,
+		Lucario = 0x11,
+		Lucas = 0x12,
+		Luigi = 0x13,
+		Mario = 0x14,
+		Marth = 0x15,
+		Meta_Knight = 0x16,
+		Mewtwo = 0x17,
+		Mr_Game_and_Watch = 0x18,
+		Ness = 0x19,
+		Olimar = 0x1A,
+		Peach = 0x1B,
+		Pikachu = 0x1C,
+		Pit = 0x1D,
+		ROB = 0x1E,
+		Roy = 0x1F,
+		Samus = 0x20,
+		Sheik = 0x21,
+		Snake = 0x22,
+		Sonic = 0x23,
+		Sopo = 0x24,
+		Squirtle = 0x25,
+		Toon_Link = 0x26,
+		Wario = 0x27,
+		Warioman = 0x28,
+		Wolf = 0x29,
+		Yoshi = 0x2A,
+		Zelda = 0x2B,
+		Zero_Suit_Samus = 0x2C,
+		Random = 0xFF
+    }
 	
 	private Effect createEffect(string name, string code, int codeID, string[] parameters)
 	{
@@ -457,7 +507,10 @@ public class PPlus : SimpleTCPPack
 		createEffectFolder("Attach", "items_attach", "items"),
 
         //// Attach Gooey
-		createEffect("Attach Gooey", "item_attach_gooey", 9, new[]{"players, #gooey"}, "items_attach")
+		createEffect("Attach Gooey", "item_attach_gooey", 9, new[]{"players, #gooey"}, "items_attach"),
+
+		/// Throw Items
+        createEffect("Throw Items", "item_throw", 10, new[]{"players, #itemsthrow"}, "items"),
 		
 		/// TODO: Item rain selection e.g. active Gooey, active Boxes active Pokeballs, carpet bob-ombs where one opening like booksquirm, maybe hold them in place like random landmines
 
@@ -467,61 +520,98 @@ public class PPlus : SimpleTCPPack
 
 		createEffectFolder("Status", "status"),
 
-		createEffect("Metal", "status_metal", 10, new[]{"players", "set", "%percent"}, "status"),
-		createEffect("Curry", "status_curry", 11, new[]{"players", "set"}, "status"),
-		createEffect("Hammer", "status_hammer", 12, new[]{"players", "set"}, "status"),
-		createEffect("SuperStar", "status_superstar", 13, new[]{"players", "set"}, "status"),
-		createEffect("Flower", "status_flower", 14, new[]{"players", "flower_rate", "flower_size"}, "status"),
-		createEffect("Heart", "status_heart", 15, new[]{"players", "players"}, "status"),
-		createEffect("Slow", "status_slow", 16, new[]{"players", "set", "slow_strength", "slow_duration"}, "status"),
-		createEffect("Mushroom", "status_mushroom", 17, new[]{"players", "set", "mushroom"}, "status"),
-		createEffect("Equip", "status_equip", 18, new[]{"players", "items_equip"}, "status"),
-		createEffect("Swap", "status_swap", 19, new[]{"players_specific", "players_specific", "set", "swap_duration"}, "status"),
-		createEffect("Final Smash", "status_finalsmash", 20, new[]{"players"}, "status"),
+		createEffect("Metal", "status_metal", 11, new[]{"players", "set", "%percent"}, "status"),
+		createEffect("Curry", "status_curry", 12, new[]{"players", "set"}, "status"),
+		createEffect("Hammer", "status_hammer", 13, new[]{"players", "set"}, "status"),
+		createEffect("SuperStar", "status_superstar", 14, new[]{"players", "set"}, "status"),
+		createEffect("Flower", "status_flower", 15, new[]{"players", "flower_rate", "flower_size"}, "status"),
+		createEffect("Heart", "status_heart", 16, new[]{"players", "players"}, "status"),
+		createEffect("Slow", "status_slow", 17, new[]{"players", "set", "slow_strength", "slow_duration"}, "status"),
+		createEffect("Mushroom", "status_mushroom", 18, new[]{"players", "set", "mushroom"}, "status"),
+		createEffect("Equip", "status_equip", 19, new[]{"players", "items_equip"}, "status"),
+		createEffect("Swap", "status_swap", 20, new[]{"players_specific", "players_specific", "set", "swap_duration"}, "status"),
+		createEffect("Final Smash", "status_finalsmash", 21, new[]{"players"}, "status"),
 
 		// Force Action
-		createEffect("Action", "action", 21, new[]{"players", "actions"}),
+		createEffect("Action", "action", 22, new[]{"players", "actions"}),
 		// TODO: Maybe have some actions cost more?
 
         // Warp
         createEffectFolder("Warp", "warp"),
 
         /// Warp to Player
-        createEffect("Warp to Player", "warp_toplayer", 22, new[]{"players", "players"}, "warp"),
+        createEffect("Warp to Player", "warp_toplayer", 23, new[]{"players", "players"}, "warp"),
 
         // TODO: Blob of terror (have characters stuck to each other for a period of time)
 
-        /// Warp to Player
-        createEffect("Swap Positions", "warp_swap", 23, new[]{"players", "players"}, "warp"),
+        /// Swap Positions
+        createEffect("Swap Positions", "warp_swap", 24, new[]{"players", "players"}, "warp"),
 
         // TODO: Random safe warp
+
+        /// Switch Directions
+        createEffect("Switch Directions", "warp_switchdirections", 25, new[]{"players"}, "warp"),
 
         // Modes
         createEffectFolder("Modes", "mode"),
 
-        createEffect("Flight", "mode_flight", 24, new[]{"flight_duration", "flight_xmaxspeed", "flight_ymaxspeed", "flight_xaccel", "flight_yaccel"}, "mode"),
-        createEffect("Borderless", "mode_borderless", 25, new[]{"borderless_duration"}, "mode"),
-        createEffect("Random Element", "mode_element", 26, new[]{"element_duration"}, "mode"),
-        createEffect("Zero to Death", "mode_ztd", 27, new[]{"ztd_duration"}, "mode"),
-        createEffect("Bomb Rain", "mode_bombrain", 28, new[]{"bombrain_duration"}, "mode"),
-        createEffect("Wild (Stage Speed)", "mode_wild", 29, new[]{"wild_duration", "stage_speed", "growth"}, "mode"),
-        createEffect("Game Speed", "mode_speed", 30, new[]{"speed_duration", "game_speed"}, "mode"),
-        createEffect("War", "mode_war", 31, new[]{"war_duration"}, "mode"),
-        createEffect("Random Angle", "mode_randomangle", 32, new[]{"randomangle_duration"}, "mode"),
-        createEffect("Big Head", "mode_bighead", 33, new[]{"bighead_duration", "bighead_size", "growth"}, "mode"),
-        createEffect("Hitfall", "mode_hitfall", 34, new[]{"hitfall_duration"}, "mode"),
-        createEffect("Landing Lag", "mode_landinglag", 35, new[]{"landinglag_duration", "players", "set_alc", "landinglag_regular", "landinglag_cancelled"}, "mode"),
+        createEffect("Flight", "mode_flight", 26, new[]{"flight_duration", "flight_xmaxspeed", "flight_ymaxspeed", "flight_xaccel", "flight_yaccel"}, "mode"),
+        createEffect("Borderless", "mode_borderless", 27, new[]{"borderless_duration"}, "mode"),
+        createEffect("Random Element", "mode_element", 28, new[]{"element_duration"}, "mode"),
+        createEffect("Zero to Death", "mode_ztd", 29, new[]{"ztd_duration"}, "mode"),
+        createEffect("Bomb Rain", "mode_bombrain", 30, new[]{"bombrain_duration"}, "mode"),
+        createEffect("Coin", "mode_coin", 31, new[]{"coin_duration"}, "mode"),
+        createEffect("Game Speed", "mode_speed", 32, new[]{"speed_duration", "game_speed"}, "mode"),
+        createEffect("War", "mode_war", 33, new[]{"war_duration"}, "mode"),
+        createEffect("Random Angle", "mode_randomangle", 34, new[]{"randomangle_duration"}, "mode"),
+        createEffect("Big Head", "mode_bighead", 35, new[]{"bighead_duration", "bighead_size", "growth"}, "mode"),
+        createEffect("Hitfall", "mode_hitfall", 36, new[]{"hitfall_duration"}, "mode"),
+        createEffect("Landing Lag", "mode_landinglag", 37, new[]{"landinglag_duration", "players", "set_alc", "landinglag_regular", "landinglag_cancelled"}, "mode"),
+        createEffect("Sudden Death", "mode_suddendeath", 38, new[]{"suddendeath_duration", "players"}, "mode"),
 
         // Attributes
         createEffectFolder("Attributes", "attribute"),
 
-        createEffect("Trip Rate", "attribute_triprate", 36, new[]{"slip_duration", "players", "slip_rate", "set_tripcooldown"}, "attribute"),
-        createEffect("Number of Jumps", "attribute_numjumps", 37, new[]{"numjumps_duration", "players", "#jumps"}, "attribute"),
-        createEffect("Jump Squat", "attribute_jumpsquat", 38, new[]{"jumpsquat_duration", "players", "jumpsquat_frames"}, "attribute"),
-        createEffect("Ground Friction", "attribute_groundfriction", 39, new[]{"groundfriction_duration", "players", "groundfriction_modifer"}, "attribute"),
-        createEffect("Gravity", "attribute_gravity", 40, new[]{"gravity_duration", "players", "gravity_modifer"}, "attribute"),
-        createEffect("Fast Fall Speed", "attribute_fastfallspeed", 41, new[]{"fastfallspeed_duration", "players", "fastfallspeed_modifier"}, "attribute"),
-        createEffect("Weight", "attribute_weight", 42, new[]{"weight_duration", "players", "weight_modifier"}, "attribute"),
+        createEffect("Trip Rate", "attribute_triprate", 39, new[]{"slip_duration", "players", "slip_rate", "set_tripcooldown"}, "attribute"),
+        createEffect("Number of Jumps", "attribute_numjumps", 40, new[]{"numjumps_duration", "players", "#jumps"}, "attribute"),
+        createEffect("Jump Squat", "attribute_jumpsquat", 41, new[]{"jumpsquat_duration", "players", "jumpsquat_frames"}, "attribute"),
+        createEffect("Ground Friction", "attribute_groundfriction", 42, new[]{"groundfriction_duration", "players", "groundfriction_modifer"}, "attribute"),
+        createEffect("Gravity", "attribute_gravity", 43, new[]{"gravity_duration", "players", "gravity_modifer"}, "attribute"),
+        createEffect("Fast Fall Speed", "attribute_fastfallspeed", 44, new[]{"fastfallspeed_duration", "players", "fastfallspeed_modifier"}, "attribute"),
+        createEffect("Weight", "attribute_weight", 45, new[]{"weight_duration", "players", "weight_modifier"}, "attribute"),
+        createEffect("Size", "attribute_size", 46, new[]{"size_duration", "players", "size_modifier"}, "attribute"),
+        createEffect("Shield", "attribute_shield", 47, new[]{"shield_duration", "players", "shieldsize_modifier", "shieldstrength_modifier", "shieldbreak_modifier"}, "attribute"),
+        createEffect("Item Throw", "attribute_itemthrow", 48, new[]{"itemthrow_duration", "players", "itemthrowstrength_modifier", "itemmovespeed_modifier", "itemmovespeeddashf_modifier"}, "attribute"),
+        //createEffect("Walljump", "attribute_walljump", 49, new[]{"walljump_duration", "set_universalwalljumps", "players", "walljumpxvel_modifier", "walljumpyvel_modifier"}, "attribute"),
+        createEffect("Walk", "attribute_walk", 50, new[]{"walk_duration", "players", "walkInitVel_modifier", "walkAccel_modifier", "walkMaxVel_modifier"}, "attribute"),
+        createEffect("Dash", "attribute_dash", 51, new[]{"dash_duration", "players", "dashInitVel_modifier", "dashRunAcc_modifier", "dashRunTermVel_modifier"}, "attribute"),
+        createEffect("Jump", "attribute_jump", 52, new[]{"jump_duration", "players", "jumpXInitVel_modifier", "jumpXVelGroundMult_modifier", "jumpXInitTermVel_modifier"}, "attribute"),
+        createEffect("Air Jump", "attribute_airjump", 53, new[]{"airjump_duration", "players", "airJumpYMult_modifier"}, "attribute"),
+
+        /// Global attributes
+        createEffect("Hit", "attribute_hit", 54, new[]{"hit_duration", "hitstun_modifier", "hitlag_modifier", "electrichitlag_modifier", "hitlagmax_modifier"}, "attribute"),
+        createEffect("SDI", "attribute_sdi", 55, new[]{"sdi_duration", "sdi_modifier", "asdi_modifier"}, "attribute"),
+        createEffect("Shield Global", "attribute_shieldglobal", 56, new[]{"shieldglobal_duration", "shielddamage_modifier", "baseshielddamage_modifier", "shielddecay_modifier", "shieldregen_modifier"}, "attribute"),
+        createEffect("Shield Pushback", "attribute_shieldpushback", 57, new[]{"shieldpushback_duration", "shieldpushback_modifier", "powershieldpushback_modifier", "attackersheildpushback_modifier_modifier", "powershield_window"}, "attribute"),
+        createEffect("Knockback", "attribute_knockback", 58, new[]{"knockback_duration", "wallbounceknockback_modifier", "knockbackdecay_modifier", "chargedsmash_modifier", "crouchknockback_modifier"}, "attribute"),
+        createEffect("Ledge", "attribute_ledge", 59, new[]{"ledge_duration", "ledgeinvincibility_window"}, "attribute"),
+
+        // Debug
+        createEffectFolder("Debug", "debug"),
+        createEffect("Pause", "debug_pause", 60, "debug"),
+        createEffect("Camera Lock", "debug_cameralock", 61, new[]{"cameralock_duration"}, "debug"), // TODO: Set camera angle and position / matrix
+        //createEffect("Remove HUD", "debug_removehud", 62, new[]{"removehud_duration"}, "debug"),
+        createEffect("Debug Display", "debug_display", 63, new[]{"debug_duration", "hitbox_display", "collision_display", "stagecollision_display", "di_display"}, "debug"),
+        //createEffect("Character Switch", "debug_characterswitch", 64, new[]{"players", "characters"}, "debug"),
+
+        // Attributes
+        createEffectFolder("Stage", "stage"),
+
+        createEffect("Wild (Stage Speed)", "stage_wild", 65, new[]{"wild_duration", "stage_speed", "growth"}, "stage"),
+        createEffect("Balloon Pop", "stage_balloonpop", 66, new[]{"balloonpop_duration", "balloonpop_behaviour"}, "stage"),
+        createEffect("Translate", "stage_translate", 67, new[]{"stagetranslation_duration", "stage_xtranslation, stage_ytranslation"}, "stage"),
+        createEffect("Rotate", "stage_rotate", 68, new[]{"stagerotation_duration", "stage_rotation"}, "stage"),
+        createEffect("Scale", "stage_scale", 69, new[]{"stagescale_duration", "stage_xscale, stage_yscale"}, "stage"),
 
         // TODO: ??? Mystery Box of random effects
 		// TODO: Secret ??? e.g. change character to a hidden Ex character
@@ -557,6 +647,10 @@ public class PPlus : SimpleTCPPack
         /// Set Trip Cooldown
         createEffectSubItem("Trip Cooldown Off", "set_tripcooldown_off", 0, "set_tripcooldown"),
         createEffectSubItem("Trip Cooldown On", "set_tripcooldown_on", 1, "set_tripcooldown"),
+
+        /// Set Universal Walljumps
+        createEffectSubItem("Universal Walljumps Off", "set_universalwalljumps_off", 0, "set_universalwalljumps"),
+        createEffectSubItem("Universal Walljumps On", "set_universalwalljumps_on", 1, "set_universalwalljumps"),
 
 		// Action
 		createEffectSubItem("Bury", "action", (int)(ActionIds.Enter_Grounded), "actions"),
@@ -787,8 +881,78 @@ public class PPlus : SimpleTCPPack
 		createEffectSubItem("Waluigi", "item_assist", (int)ItemIds.Waluigi, "items_assist"),
 		createEffectSubItem("Dr. Wright", "item_assist", (int)ItemIds.Dr_Wright, "items_assist"),
 		createEffectSubItem("Wright Buildings", "item_assist", (int)ItemIds.Wright_Buildings, "items_assist"),
-		createEffectSubItem("Random", "item_assist", (int)ItemIds.Random, "items_assist")
-		
+		createEffectSubItem("Random", "item_assist", (int)ItemIds.Random, "items_assist"),
+
+        /// Characters
+		createEffectSubItem("Bowser", "character", (int)CharacterIds.Bowser, "characters"),
+		createEffectSubItem("Captain Falcon' Shot", "character", (int)CharacterIds.Captain_Falcon, "characters"),
+		createEffectSubItem("Charizard", "character", (int)CharacterIds.Charizard, "characters"),
+		createEffectSubItem("Dedede", "character", (int)CharacterIds.Dedede, "characters"),
+		createEffectSubItem("Diddy Kong", "character", (int)CharacterIds.Diddy_Kong, "characters"),
+		createEffectSubItem("Donkey Kong", "character", (int)CharacterIds.Donkey_Kong, "characters"),
+		createEffectSubItem("Falco", "character", (int)CharacterIds.Falco, "characters"),
+		createEffectSubItem("Fox", "character", (int)CharacterIds.Fox, "characters"),
+		createEffectSubItem("Ganondorf", "character", (int)CharacterIds.Ganondorf, "characters"),
+		createEffectSubItem("Giga Bowser", "character", (int)CharacterIds.Giga_Bowser, "characters"),
+		createEffectSubItem("Ice Climbers", "character", (int)CharacterIds.Ice_Climbers, "characters"),
+		createEffectSubItem("Ike", "character", (int)CharacterIds.Ike, "characters"),
+		createEffectSubItem("Ivysaur", "character", (int)CharacterIds.Ivysaur, "characters"),
+		createEffectSubItem("Jigglypuff", "character", (int)CharacterIds.Jigglypuff, "characters"),
+		createEffectSubItem("Kirby", "character", (int)CharacterIds.Kirby, "characters"),
+		createEffectSubItem("Knuckles", "character", (int)CharacterIds.Knuckles, "characters"),
+		createEffectSubItem("Link", "character", (int)CharacterIds.Link, "characters"),
+		createEffectSubItem("Lucario", "character", (int)CharacterIds.Lucario, "characters"),
+		createEffectSubItem("Lucas", "character", (int)CharacterIds.Lucas, "characters"),
+		createEffectSubItem("Luigi", "character", (int)CharacterIds.Luigi, "characters"),
+		createEffectSubItem("Mario", "character", (int)CharacterIds.Mario, "characters"),
+		createEffectSubItem("Marth", "character", (int)CharacterIds.Marth, "characters"),
+		createEffectSubItem("Meta Knight", "character", (int)CharacterIds.Meta_Knight, "characters"),
+		createEffectSubItem("Mewtwo", "character", (int)CharacterIds.Mewtwo, "characters"),
+		createEffectSubItem("Mr. Game and Watch", "character", (int)CharacterIds.Mr_Game_and_Watch, "characters"),
+		createEffectSubItem("Ness", "character", (int)CharacterIds.Ness, "characters"),
+		createEffectSubItem("Olimar", "character", (int)CharacterIds.Olimar, "characters"),
+		createEffectSubItem("Peach", "character", (int)CharacterIds.Peach, "characters"),
+		createEffectSubItem("Pikachu", "character", (int)CharacterIds.Pikachu, "characters"),
+		createEffectSubItem("Pit", "character", (int)CharacterIds.Pit, "characters"),
+		createEffectSubItem("R.O.B.", "character", (int)CharacterIds.ROB, "characters"),
+		createEffectSubItem("Roy", "character", (int)CharacterIds.Roy, "characters"),
+		createEffectSubItem("Samus", "character", (int)CharacterIds.Samus, "characters"),
+		createEffectSubItem("Sheik", "character", (int)CharacterIds.Sheik, "characters"),
+		createEffectSubItem("Snake", "character", (int)CharacterIds.Snake, "characters"),
+		createEffectSubItem("Sonic", "character", (int)CharacterIds.Sonic, "characters"),
+		createEffectSubItem("Sopo", "character", (int)CharacterIds.Sopo, "characters"),
+		createEffectSubItem("Squirtle", "character", (int)CharacterIds.Squirtle, "characters"),
+		createEffectSubItem("Toon Link", "character", (int)CharacterIds.Toon_Link, "characters"),
+		createEffectSubItem("Wario", "character", (int)CharacterIds.Wario, "characters"),
+		createEffectSubItem("Warioman", "character", (int)CharacterIds.Warioman, "characters"),
+		createEffectSubItem("Wolf", "character", (int)CharacterIds.Wolf, "characters"),
+		createEffectSubItem("Yoshi", "character", (int)CharacterIds.Yoshi, "characters"),
+		createEffectSubItem("Zelda", "character", (int)CharacterIds.Zelda, "characters"),
+		createEffectSubItem("Zero Suit Samus", "character", (int)CharacterIds.Zero_Suit_Samus, "characters"),
+		createEffectSubItem("Random", "character", (int)CharacterIds.Random, "characters"),
+
+        /// Hitbox Display
+		createEffectSubItem("Off", "hitbox_display_off", 0, "hitbox_display"),
+		createEffectSubItem("On", "hitbox_display_on", 1, "hitbox_display"),
+		createEffectSubItem("Models Off", "hitbox_display_modelsoff", 2, "hitbox_display"),
+
+		/// Collision Display
+        createEffectSubItem("Off", "collision_display_off", 0, "collision_display"),
+        createEffectSubItem("On", "collision_display_on", 1, "collision_display"),
+
+		/// Stage Collisions
+        createEffectSubItem("Off", "stagecollision_display_off", 0, "stagecollision_display"),
+        createEffectSubItem("On", "stagecollision_display_on", 1, "stagecollision_display"),
+        createEffectSubItem("Background Off", "stagecollision_display_backgroundoff", 2, "stagecollision_display"),
+
+        /// Draw DI
+        createEffectSubItem("Off", "di_display_off", 0, "di_display"),
+        createEffectSubItem("On", "di_display_on", 1, "di_display"),
+
+        /// Balloon Pop Behaviour
+        createEffectSubItem("Remove Stock", "balloonpop_behaviour_removestock", 0, "balloonpop_behaviour"),
+        createEffectSubItem("Give Stock", "balloonpop_behaviour_givestock", 1, "balloonpop_behaviour")
+
     };
 
     //Slider ranges need to be defined
@@ -802,6 +966,7 @@ public class PPlus : SimpleTCPPack
 		new ItemType("#Pkmn", "#pkmn", ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
 		new ItemType("#Assist", "#assist", ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
 		new ItemType("#Gooey", "#gooey", ItemType.Subtype.Slider, "{\"min\":1,\"max\":3}"),
+		new ItemType("#Items to Throw", "#itemsthrow", ItemType.Subtype.Slider, "{\"min\":1,\"max\":50}"),
 		new ItemType("Flower Rate", "flower_rate", ItemType.Subtype.Slider, "{\"min\":1,\"max\":1000}"),
 		new ItemType("Flower Size", "flower_size", ItemType.Subtype.Slider, "{\"min\":1,\"max\":10}"),
 		new ItemType("Slow Strength", "slow_strength", ItemType.Subtype.Slider, "{\"min\":2,\"max\":8}"),
@@ -818,6 +983,7 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Bomb Rain Duration", "bombrain_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Wild Duration", "wild_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Stage Speed", "stage_speed", ItemType.Subtype.Slider, "{\"min\":0,\"max\":12}"),
+		new ItemType("Coin Duration", "coin_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Speed Duration", "speed_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Game Speed", "game_speed", ItemType.Subtype.Slider, "{\"min\":30,\"max\":120}"),
 		new ItemType("War Duration", "war_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
@@ -825,9 +991,10 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Big Head Duration", "bighead_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Big Head Size", "bighead_size", ItemType.Subtype.Slider, "{\"min\":0,\"max\":5}"),
 		new ItemType("Hitfall Duration", "hitfall_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
-		new ItemType("Landing Lag Duration", "landinglag_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+		new ItemType("Landing Lag Modifier Duration", "landinglag_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Landing Lag Regular", "landinglag_regular", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":5}"),
 		new ItemType("Landing Lag Cancelled", "landinglag_cancelled", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":5}"),
+		new ItemType("Sudden Death Duration", "suddendeath_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Slip Duration", "slip_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
 		new ItemType("Slip Rate", "slip_rate", ItemType.Subtype.Slider, "{\"min\":0,\"max\":100}"),
 		new ItemType("#Jumps Duration", "numjumps_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
@@ -842,6 +1009,70 @@ public class PPlus : SimpleTCPPack
         new ItemType("Fast Fall Speed Modifier", "fastfallspeed_modifier", ItemType.Subtype.Slider, "{\"min\":-3,\"max\":10}"),
         new ItemType("Weight Duration", "weight_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
         new ItemType("Weight Modifier", "weight_modifier", ItemType.Subtype.Slider, "{\"min\":-20,\"max\":20}"),
+        new ItemType("Size Duration", "size_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Size Modifier", "size_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+        new ItemType("Shield Modifier Duration", "shield_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Shield Size Modifier", "shieldsize_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+        new ItemType("Shield Strength Modifier", "shieldstrength_modifier", ItemType.Subtype.Slider, "{\"min\":1,\"max\":2}"),
+        new ItemType("Shield Break Vel Modifier", "shieldbreak_modifier", ItemType.Subtype.Slider, "{\"min\":1,\"max\":1}"),
+        new ItemType("Item Throw Modifier Duration", "itemthrow_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Item Throw Strength Modifier", "itemthrowstrength_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+        new ItemType("Item Move Speed Modifier", "itemmovespeed_modifier", ItemType.Subtype.Slider, "{\"min\":-20,\"max\":20}"),
+        new ItemType("Item Move Speed Dash Modifier", "itemmovespeeddashf_modifier", ItemType.Subtype.Slider, "{\"min\":-25,\"max\":20}"),
+        new ItemType("Walljump Duration", "walljump_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Walljump X Velocity Modifier", "walljumpxvel_modifier", ItemType.Subtype.Slider, "{\"min\":-5,\"max\":5}"),
+        new ItemType("Walljump Y Velocity Modifier", "walljumpyvel_modifier", ItemType.Subtype.Slider, "{\"min\":0,\"max\":10}"),
+        new ItemType("Walk Modifier Duration", "walk_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Walk Initial Velocity Modifier", "walkInitVel_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Walk Acceleration Modifier", "walkAccel_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Walk Max Velocity Modifier", "walkMaxVel_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Dash Modifier Duration", "dash_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Dash Initial Velocity Modifier", "dashInitVel_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Dash Run Acceleration Modifier", "dashRunAcc_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Dash Run Term Velocity Modifier", "dashRunTermVel_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Jump Modifier Duration", "jump_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Jump X Initiial Velocity Modifier", "jumpXInitVel_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Jump X Velocity Ground Modifier", "jumpXVelGroundMult_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Jump X Initial Term Velocity Modifier", "jumpXInitTermVel_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Air Jump Modifier Duration", "airjump_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Air Jump Y Modifier", "airJumpYMult_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Hit Modifier Duration", "hit_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Hitstun Modifier", "hitstun_modifier", ItemType.Subtype.Slider, "{\"min\":-10,\"max\":3}"),
+        new ItemType("Hitlag Modifier", "hitlag_modifier", ItemType.Subtype.Slider, "{\"min\":-10,\"max\":10}"),
+        new ItemType("Electric Hitlag Modifier", "electrichitlag_modifier", ItemType.Subtype.Slider, "{\"min\":-20,\"max\":10}"),
+        new ItemType("Hitlax Max Modifier", "hitlagmax_modifier", ItemType.Subtype.Slider, "{\"min\":-30,\"max\":3}"),
+        new ItemType("SDI Modifier Duration", "sdi_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("SDI Modifier", "sdi_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("ASDI Modifier", "asdi_modifier", ItemType.Subtype.Slider, "{\"min\":-50,\"max\":50}"),
+        new ItemType("Shield Global Modifier Duration", "shieldglobal_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Shield Damage Modifier", "shielddamage_modifier", ItemType.Subtype.Slider, "{\"min\":-100,\"max\":100}"),
+        new ItemType("Base Shield Damage Modifier", "baseshielddamage_modifier", ItemType.Subtype.Slider, "{\"min\":-20,\"max\":20}"),
+        new ItemType("Shield Decay Modifier", "shielddecay_modifier", ItemType.Subtype.Slider, "{\"min\":-20,\"max\":20}"),
+        new ItemType("Shield Regen Modifier", "shieldregen_modifier", ItemType.Subtype.Slider, "{\"min\":-10,\"max\":10}"),
+        new ItemType("Shield Pushback Modifier Duration", "shieldpushback_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Shield Pushback Modifier", "shieldpushback_modifier", ItemType.Subtype.Slider, "{\"min\":-200,\"max\":200}"),
+        new ItemType("Powershield Pushback Modifier", "powershieldpusback_modifier", ItemType.Subtype.Slider, "{\"min\":-100,\"max\":100}"),
+        new ItemType("Attacker Shield Pushback Modifier", "attackersheildpushback_modifier", ItemType.Subtype.Slider, "{\"min\":-100,\"max\":100}"),
+        new ItemType("Powershield Window", "powershield_window", ItemType.Subtype.Slider, "{\"min\":0,\"max\":1000}"),
+        new ItemType("Knockback Modifier Duration", "knockback_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Wallbounce Knockback Modifier", "wallbounceknockback_modifier", ItemType.Subtype.Slider, "{\"min\":-1000,\"max\":1000}"),
+        new ItemType("Knockback Decay Modifier", "knockbackdecay_modifier", ItemType.Subtype.Slider, "{\"min\":-1000,\"max\":1000}"),
+        new ItemType("Charged Smash Modifier", "chargedsmash_modifier", ItemType.Subtype.Slider, "{\"min\":-10,\"max\":10}"),
+        new ItemType("Ledge Modifier Duration", "ledge_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Ledge Invincibility Window", "ledgeinvincibility_window", ItemType.Subtype.Slider, "{\"min\":0,\"max\":60}"),
+        new ItemType("Crouch Knockback Modifier", "crouchknockback_modifier", ItemType.Subtype.Slider, "{\"min\":-10,\"max\":10}"),
+        new ItemType("Camera Lock Duration", "cameralock_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Remove HUD Duration", "removehud_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Debug Duration", "debug_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Balloon Pop Behaviour Duration", "balloonpop_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Stage Translation Duration", "stagetranslation_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Stage X Translation", "stage_xtranslation", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":4}"),
+        new ItemType("Stage Y Translation", "stage_ytranslation", ItemType.Subtype.Slider, "{\"min\":-4,\"max\":4}"),
+        new ItemType("Stage Rotation Duration", "stagerotation_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Stage Rotation", "stage_rotation", ItemType.Subtype.Slider, "{\"min\":-10,\"max\":10}"),
+        new ItemType("Stage Scale Duration", "stagescale_duration", ItemType.Subtype.Slider, "{\"min\":1,\"max\":12}"),
+        new ItemType("Stage X Scale", "stage_xscale", ItemType.Subtype.Slider, "{\"min\":-1,\"max\":1}"),
+        new ItemType("Stage Y Scale", "stage_yscale", ItemType.Subtype.Slider, "{\"min\":-1,\"max\":1}"),
 
 		new ItemType("Players", "players", ItemType.Subtype.ItemList),
 		new ItemType("Players", "players_specific", ItemType.Subtype.ItemList),
@@ -849,6 +1080,7 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Growth", "growth", ItemType.Subtype.ItemList),
 		new ItemType("Set ALC", "set_alc", ItemType.Subtype.ItemList),
 		new ItemType("Trip Cooldown", "set_tripcooldown", ItemType.Subtype.ItemList),
+		new ItemType("Universal Walljumps", "set_universalwalljumps", ItemType.Subtype.ItemList),
 		new ItemType("Actions", "actions", ItemType.Subtype.ItemList),
         new ItemType("Mushroom", "mushroom", ItemType.Subtype.ItemList),
         new ItemType("Throw Type", "items_throwtype", ItemType.Subtype.ItemList),
@@ -856,7 +1088,11 @@ public class PPlus : SimpleTCPPack
 		new ItemType("Equippable Items", "items_equip", ItemType.Subtype.ItemList),
 		//new ItemType("Special Items", "items_sp", ItemType.Subtype.ItemList),
 		new ItemType("Pokemon", "items_pkmn", ItemType.Subtype.ItemList),
-		new ItemType("Assist", "items_assist", ItemType.Subtype.ItemList)
-
+		new ItemType("Characters", "characters", ItemType.Subtype.ItemList),
+		new ItemType("Hitbox Display", "hitbox_display", ItemType.Subtype.ItemList),
+		new ItemType("Collision Display", "collision_display", ItemType.Subtype.ItemList),
+		new ItemType("Stage Collisions", "stagecollision_display", ItemType.Subtype.ItemList),
+		new ItemType("Draw DI", "di_display", ItemType.Subtype.ItemList),
+		new ItemType("Balloon Pop Behaviour", "balloonpop_behaviour", ItemType.Subtype.ItemList)
     });
 }

@@ -36,5 +36,5 @@ wiiztec
 As well as a special thanks to:
 
 [FaultyPine](https://github.com/FaultyPine/) for sending/receiving data to/from Dolphin using Exi  
-[Sammi Husky](https://github.com/Sammi-Husky) for managing and hosting the Ghidra server
+[Sammi Husky](https://github.com/Sammi-Husky) for RE help
 

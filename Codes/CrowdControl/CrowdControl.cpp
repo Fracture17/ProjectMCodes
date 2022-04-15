@@ -11,6 +11,8 @@
 #include "EffectPositionHandler.h"
 #include "EffectModeHandler.h"
 #include "EffectAttributeHandler.h"
+#include "EffectDrawHandler.h"
+#include "EffectStageHandler.h"
 #include "Brawl/GF/gfPadSystem.h"
 
 namespace FrameLogic {
@@ -101,8 +103,11 @@ namespace FrameLogic {
             checkEffectGameDurationFinished();
             checkEffectModeDurationFinished();
             checkEffectAttributeDurationFinished(numPlayers);
+            checkEffectDrawDurationFinished();
+            checkEffectStageDurationFinished();
             checkPositionResetCorrect();
             checkItemSpawnPokemonOrAssist();
+            checkTransformStage();
 
             switch (effectRequest[0]) {
                 case EFFECT_GIVE_DAMAGE:
@@ -119,6 +124,9 @@ namespace FrameLogic {
                     break;
                 case EFFECT_ITEM_ATTACH_GOOEY:
                     exiStatus = effectItemAttachGooey(numPlayers, effectRequest[1], effectRequest[2]);
+                    break;
+                case EFFECT_ITEM_THROW:
+                    exiStatus = effectItemThrow(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
                 case EFFECT_STATUS_METAL:
                     exiStatus = effectStatusGiveMetal(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
@@ -163,6 +171,9 @@ namespace FrameLogic {
                 case EFFECT_WARP_SWAP:
                     exiStatus = effectPositionSwap(numPlayers, effectRequest[1], effectRequest[2]);
                     break;
+                case EFFECT_WARP_SWITCHDIRECTIONS:
+                    exiStatus = effectPositionSwitchDirection(numPlayers, effectRequest[1]);
+                    break;
                 case EFFECT_MODE_FLIGHT:
                     // TODO: Package the new Dolphin with increased packet size
                     exiStatus = effectModeFlight(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
@@ -179,8 +190,8 @@ namespace FrameLogic {
                 case EFFECT_MODE_BOMBRAIN:
                     exiStatus = effectModeBombRain(effectRequest[1]);
                     break;
-                case EFFECT_MODE_WILD:
-                    exiStatus = effectGameWild(effectRequest[1], effectRequest[2], effectRequest[3]);
+                case EFFECT_MODE_COIN:
+                    exiStatus = effectGameCoin(effectRequest[1]);
                     break;
                 case EFFECT_MODE_SPEED:
                     exiStatus = effectGameSpeed(effectRequest[1], effectRequest[2]);
@@ -199,6 +210,9 @@ namespace FrameLogic {
                     break;
                 case EFFECT_MODE_LANDINGLAG:
                     exiStatus = effectGameLandingLag(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_MODE_SUDDENDEATH:
+                    exiStatus = effectGameSuddenDeath(numPlayers, effectRequest[1], effectRequest[2], 300.0);
                     break;
                 case EFFECT_ATTRIBUTE_SLIP:
                     exiStatus = effectAttributeSlip(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4]);
@@ -221,6 +235,78 @@ namespace FrameLogic {
                 case EFFECT_ATTRIBUTE_WEIGHT:
                     exiStatus = effectAttributeWeight(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
                     break;
+                case EFFECT_ATTRIBUTE_SIZE:
+                    exiStatus = effectAttributeSize(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_SHIELD:
+                    exiStatus = effectAttributeShield(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_ITEMTHROWSTRENGTH:
+                    exiStatus = effectAttributeItemThrow(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                //case EFFECT_ATTRIBUTE_WALLJUMP:
+                //    exiStatus = effectAttributeWalljump(numPlayers, false, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4]);
+                //    break;
+                case EFFECT_ATTRIBUTE_WALK:
+                    exiStatus = effectAttributeWalk(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_DASH:
+                    exiStatus = effectAttributeDash(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_JUMP:
+                    exiStatus = effectAttributeJump(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_AIRJUMP:
+                    exiStatus = effectAttributeAirJump(numPlayers, effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_HIT:
+                    exiStatus = effectAttributeHit(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_SDI:
+                    exiStatus = effectAttributeSDI(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_ATTRIBUTE_SHIELD_GLOBAL:
+                    exiStatus = effectAttributeShieldGlobal(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_SHIELD_PUSHBACK:
+                    exiStatus = effectAttributeShieldPushback(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_KNOCKBACK:
+                    exiStatus = effectAttributeKnockback(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                case EFFECT_ATTRIBUTE_LEDGE:
+                    exiStatus = effectAttributeLedge(effectRequest[1], effectRequest[2]);
+                    break;
+                case EFFECT_DEBUG_PAUSE:
+                    exiStatus = effectGamePause();
+                    break;
+                case EFFECT_DEBUG_LOCK_CAMERA:
+                    exiStatus = effectGameLockCamera(effectRequest[1]);
+                    break;
+                //case EFFECT_DEBUG_REMOVE_HUD:
+                //    exiStatus = effectDrawRemoveHUD(effectRequest[1]);
+                //    break;
+                case EFFECT_DEBUG_VIEW:
+                    exiStatus = effectDrawDebug(effectRequest[1], effectRequest[2], effectRequest[3], effectRequest[4], effectRequest[5]);
+                    break;
+                //case EFFECT_DEBUG_CHARACTER_SWITCH:
+                //    exiStatus = effectGameSwitchCharacters(numPlayers, effectRequest[1], effectRequest[2]);
+                //    break;
+                case EFFECT_STAGE_WILD:
+                    exiStatus = effectStageWild(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_STAGE_BALLOONPOP:
+                    exiStatus = effectStageBalloonPop(effectRequest[1], effectRequest[2]);
+                    break;
+                case EFFECT_STAGE_TRANSLATE:
+                    exiStatus = effectStageTranslate(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
+                case EFFECT_STAGE_ROTATE:
+                    exiStatus = effectStageRotate(effectRequest[1], effectRequest[2]);
+                    break;
+                case EFFECT_STAGE_SCALE:
+                    exiStatus = effectStageScale(effectRequest[1], effectRequest[2], effectRequest[3]);
+                    break;
                 case EFFECT_NOT_CONNECTED:
                 case EFFECT_NONE:
                 case EFFECT_UNKNOWN:
@@ -233,8 +319,8 @@ namespace FrameLogic {
             if (testWaitDuration == 0) {//preloadedPokemonId < 0) {
 
                 if (padSystem->pads[0].buttons.LeftDPad) {
-                    //effectStatusGiveCurry(numPlayers, 0, 0);
-                    //effectStatusGiveMushroom(numPlayers, 0, 1, 1);
+                    //effectStatusGiveCurry(numPlayers, 0, 1);
+                    //effectStatusGiveMushroom(numPlayers, 0, 1, 0);
                     //effectActionChangeForce(numPlayers, 0, 0x10C);
                     //effectStatusGiveFinalSmash(numPlayers, 0, 0);
                     //effectStatusGiveSwap(4, 0, 1, 0, 12);
@@ -253,7 +339,7 @@ namespace FrameLogic {
                     //effectModeElement(12);
                     //effectModeZTD(12);
                     //effectModeBombRain(12);
-                    //effectGameWild(12, 6, true);
+                    //effectStageWild(12, 6, true);
                     //effectGameSpeed(12, 120);
                     //effectModeWar(12);
                     //effectModeRandomAngle(12);
@@ -267,6 +353,18 @@ namespace FrameLogic {
                     //effectAttributeGravity(numPlayers, 12, 0, -1);
                     //effectAttributeFastFallSpeed(numPlayers, 12, 0, -3);
                     //effectAttributeWeight(numPlayers, 12, 1, 20);
+                    //effectAttributeSize(numPlayers, 12, 0, -5);
+                    //effectPositionSwitchDirection(numPlayers, 0);
+                    //effectAttributeShield(numPlayers, 12, 0, 1, 2, 1);
+                    //effectAttributeItemThrow(numPlayers, 12, 0, 0, 0, 0);
+                    //effectGameSuddenDeath(numPlayers, 12, 0, 300.0);
+                    //effectGameLockCamera(12);
+                    //effectDrawDebug(12, 1, 1, 1, 1);
+                    //effectItemThrow(numPlayers, 0, 1);
+                    //effectGameCoin(12);
+                    //effectGameSwitchCharacters(numPlayers, 0, 5);
+                    //effectStageBalloonPop(12, 0);
+                    //effectStageRotate(12, 10);
 
                     //OSReport("paramCustomizeModule Address: %08x\n", getFighter(0)->modules->paramCustomizeModule);
                     testWaitDuration = 60;
@@ -283,11 +381,13 @@ namespace FrameLogic {
 
                     //effectItemPreloadPokemon(0x6C, 1); // Staryu
                     //effectItemPreloadAssist(0x96, 1); // Hammer Bro
+                    //effectStageTranslate(12, 4, 4);
 
 
                 } else if (padSystem->pads[0].buttons.UpDPad) {
                     //effectItemPreloadPokemon(0x84, 1); // Suicune
                     //effectItemPreloadAssist(0xA2, 1); // Isaac
+                    //effectStageScale(12, -1, -1);
 
 
                 } else if (padSystem->pads[0].buttons.DownDPad) {
@@ -363,10 +463,15 @@ namespace FrameLogic {
     SIMPLE_INJECTION(startMatch, 0x800dc590, "li r9, 0x2") {
         saveEffectGame();
         saveEffectMode();
+        saveEffectAttribute();
+        saveEffectStage();
         SendGameStatus(EXIStatus::STATUS_MATCH_STARTED); } // when starting match
     SIMPLE_INJECTION(endMatch, 0x806d4844, "li r4, 0") {
         resetEffectGame();
         resetEffectMode();
+        resetEffectAttribute();
+        resetEffectDraw();
+        resetEffectStage();
         SendGameStatus(EXIStatus::STATUS_MATCH_ENDED); } // when exiting match
     /*INJECTION("frameUpdate", 0x8001792c, R"(
     bl onUpdateFrame
