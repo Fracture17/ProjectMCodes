@@ -86,6 +86,19 @@ private:
   bool canModify = false;
 };
 
+class AIPersonalityPresetOption : public StandardOption {
+public:
+  AIPersonalityPresetOption(TrainingData& d, AIPersonality& s, int i): data(d), settings(s), index(i) {}
+  void modify(float amount) {}
+  void select();
+  void deselect() { }
+  void render(TextPrinter *printer, char *buffer);
+
+  TrainingData& data;
+  AIPersonality& settings;
+  int index;
+}
+
 struct PSAData {
   int threadIdx = 0;
   int scriptLocation = -1;
@@ -152,10 +165,7 @@ struct AIPredictions {
   float GRAB = 0;
 };
 
-struct AIPersonality { 
-  AICEPac* AICEData;
-  bool unlocked = true;
-  bool autoAdjust = true;
+struct AIPersonality {
   float braveChance = 0;
   float baitChance = 0;
   float aggression = 0;
@@ -168,6 +178,14 @@ struct AIPersonality {
   float platChance = 0;
   float SDIChance = 0;
   float reactionTime = 0;
+}
+
+struct AIPersonalityOptions { 
+  AICEPac* AICEData;
+  bool unlocked = true;
+  bool autoAdjust = true;
+  int personalityIndex = 0;
+  AIPersonality personality;
 };
 
 struct AIData {
@@ -186,7 +204,7 @@ struct AIData {
   bool AIDebug = false;
 
   AIPredictions predictions;
-  AIPersonality personality;
+  AIPersonalityOptions personality;
 };
 
 struct TrajectoryOptions {

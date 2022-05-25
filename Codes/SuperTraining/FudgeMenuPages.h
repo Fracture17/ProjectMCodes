@@ -47,6 +47,23 @@ struct AIPersonalityPage : public BasicPage {
   TrainingData& data;
 };
 
+struct AIPersonalityPreset {
+  const char* name;
+  AIPersonality personality;
+}
+struct AIPersonalityPresetPage : public BasicPage {
+  AIPersonalityPresetPage(Menu* myMenu, TrainingData& d)
+  : BasicPage(myMenu, "AI Presets"), data(d) {};
+  void show();
+  TrainingData& data;
+
+  static constexpr AIPersonalityPreset presets[] = {
+    // names
+    {"thing", {}}
+  }
+
+}
+
 struct PSADataPage : public BasicPage {
   PSADataPage(Menu* myMenu, TrainingData& d) 
   : BasicPage(myMenu, "PSA Data"), data(d) {};

@@ -63,6 +63,15 @@ void AIPredictionPage::show() {
   addOption(new AIPredictionOption(pNum, data.aiData.predictions));
 }
 
+void AIPersonalityPresetPage::show() {
+  ADD_UNPAUSE
+
+  Page* AIPersonalityPage AIPP = new AIPersonalityPage(menu, data);
+  this->addOption(new PageLink(AIPersonalityPage->getTitle(), AIPersonalityPage));
+
+  
+}
+
 void AIPersonalityPage::show() {
   ADD_UNPAUSE
   addOption(new BoolOption("unlocked?", data.aiData.personality.unlocked));
@@ -70,7 +79,7 @@ void AIPersonalityPage::show() {
   addOption(new FloatOption("aggression", data.aiData.personality.aggression, -1, 10, 0.05f));
   addOption(new FloatOption("dashAwayChance", data.aiData.personality.bait_dashAwayChance, -1, 10, 0.05f));
   addOption(new FloatOption("wdashAwayChance", data.aiData.personality.bait_wdashAwayChance, -1, 10, 0.05f));
-addOption(new FloatOption("baitChance", data.aiData.personality.baitChance, -1, 10, 0.05f));
+  addOption(new FloatOption("baitChance", data.aiData.personality.baitChance, -1, 10, 0.05f));
   addOption(new FloatOption("braveChance", data.aiData.personality.braveChance, -1, 10, 0.05f));
   addOption(new FloatOption("circleCampChance", data.aiData.personality.circleCampChance, -1, 10, 0.05f));
   addOption(new FloatOption("djumpiness", data.aiData.personality.djumpiness, -1, 10, 0.05f));

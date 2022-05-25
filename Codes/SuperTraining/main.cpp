@@ -1107,7 +1107,7 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
                         currData.debug.noclipInternal = true; 
                         fighter->modules->groundModule->setCorrect(0);
                     }
-                    if (!((action >= 0x4E && action <= 0x64) || (action >= 0x3D && action <= 0x42))) {    
+                    if (!((action >= 0x4A && action <= 0x64) || (action >= 0x3D && action <= 0x42) || action )) {    
                         currData.debug.comboTimer--;
                         if (currData.debug.comboTimer == 0) {
                             currData.debug.noclipInternal = true;

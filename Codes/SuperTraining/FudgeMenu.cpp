@@ -147,6 +147,17 @@ void AITrainingScriptSubmenu::render(TextPrinter* printer, char* buffer) {
   }
 }
 
+void AIPersonalityPresetOption::select() {
+  data.aiData.personality.personalityIndex = index;
+  memcpy(&data.aiData.personality.personality, &settings, sizeof(AIPersonality));
+}
+
+void AIPersonalityPresetOption::render(TextPrinter* printer, char* buffer) {
+  sprintf(buffer, "%s", name);
+  if (data.aiData.personality.personalityIndex == index) printer->setTextColor(0x00AA00FF);
+  printer->printLine(buffer);
+}
+
 void AITrainingScriptSubmenu::addDefault(AITrainingDefaultVal* defVal) { 
   defaultValues.push(defVal); 
 }
@@ -189,8 +200,8 @@ void PlayerPage::show() {
     Page* predictionPage = new AIPredictionPage(menu, data, playerNum);
     this->addOption(new PageLink(predictionPage->getTitle(), predictionPage));
 
-    Page* AIPP = new AIPersonalityPage(menu, data);
-    this->addOption(new PageLink(AIPP->getTitle(), AIPP));
+    Page* AIPPP = new AIPersonalityPresetPage(menu, data);
+    this->addOption(new PageLink(AIPPP->getTitle(), AIPPP));
 
     this->addOption(new BoolOption("actionable overlay", data.actionableOverlay));
     this->addOption(new IntOption("actionable sound", data.actionableSE, -1, 0xFF));
