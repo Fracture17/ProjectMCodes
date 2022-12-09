@@ -4,8 +4,8 @@
 #include "Containers/vector.h"
 
 struct WeightedValue {
-  WeightedValue(int value, float weight) : value(value), weight(weight) {};
-  int value;
+  WeightedValue(float value, float weight) : value(value), weight(weight) {};
+  float value;
   float weight;
 };
 
@@ -19,8 +19,8 @@ public:
   void addValue(WeightedValue value);
   void clear();
 
-  int roll();
-  int rollAndRemove();
+  float roll();
+  float rollAndRemove();
   float getWeight();
 };
 

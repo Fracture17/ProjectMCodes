@@ -2,6 +2,6 @@
 
 #include "aiParam.h"
 
-ATKDContent* aiParam::searchAtkData(short subactionID) {
+ATKDContent* AiParam::searchAtkData(short subactionID) {
   return _searchAtkData_ATKDHead(this->ATKDPtr, subactionID);
 }

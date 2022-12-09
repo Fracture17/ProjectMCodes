@@ -22,6 +22,20 @@ void MainPage::show() {
   addOption(new FloatOption("opacity", menu->opacity, 0, 255));
 }
 
+void AIDebugPage::show() {
+  ADD_UNPAUSE
+  addOption(new BoolOption("AI DEBUG?", data.aiData.AIDebug));
+  addOption(new IntOption("target", data.aiData.target, false));
+  addOption(new AIScriptPathOption(data.aiData.scriptPath));
+  addOption(new HexObserver("current script", data.aiData.scriptID, HexSize::SHORT));
+  addOption(new FloatOption("stick X", data.aiData.lstickX, false));
+  addOption(new FloatOption("stick Y", data.aiData.lstickY, false));
+
+  addOption(new HexObserver("action", data.debug.psaData.action, HexSize::SHORT));
+  addOption(new HexObserver("subaction", data.debug.psaData.subaction, HexSize::SHORT));
+  addOption(new StringOption("subaction name", data.debug.psaData.currSubactionName));
+}
+
 void ComboTrainerPage::show() {
   ADD_UNPAUSE
   addOption(new BoolOption("enabled", data.debug.enabled));
@@ -50,26 +64,25 @@ void TrajectoryLinePage::show() {
   addOption(new IntOption("segment length", data.trajectoryOpts.segmentLength, 1, 20));
 }
 
+extern FudgeAIHitbox fudgeAI;
 void HeatmapPage::show() {
   ADD_UNPAUSE
   addOption(new BoolOption("enabled", data.heatmapOpts.active));
   addOption(new IntOption("lifetime", data.heatmapOpts.lifetime, 0, 0x7FFFFFFF));
   addOption(new IntOption("opacity", data.heatmapOpts.opacity, 0, 255));
   addOption(new IntOption("color change frame", data.heatmapOpts.colorChangeFrame, 0, 255));
+
+  addOption(new FloatOption("xmin", fudgeAI.trueXMin, false));
+  addOption(new FloatOption("ymin", fudgeAI.trueYMin, false));
+  addOption(new FloatOption("width", fudgeAI.width, false));
+  addOption(new FloatOption("height", fudgeAI.height, false));
+  addOption(new FloatOption("xmax", fudgeAI.trueXMax, false));
+  addOption(new FloatOption("ymax", fudgeAI.trueYMax, false));
 }
 
 void AIPredictionPage::show() {
   ADD_UNPAUSE
   addOption(new AIPredictionOption(pNum, data.aiData.predictions));
-}
-
-void AIPersonalityPresetPage::show() {
-  ADD_UNPAUSE
-
-  Page* AIPersonalityPage AIPP = new AIPersonalityPage(menu, data);
-  this->addOption(new PageLink(AIPersonalityPage->getTitle(), AIPersonalityPage));
-
-  
 }
 
 void AIPersonalityPage::show() {
@@ -97,6 +110,7 @@ void PSADataPage::show() {
 
   addOption(new HexObserver("action", data.debug.psaData.action, HexSize::SHORT));
   addOption(new HexObserver("prev action", data.debug.psaData.prevAction, HexSize::SHORT));
+  addOption(new FloatOption("action timer", data.debug.psaData.actionTimer, false));
   addOption(new HexObserver("subaction", data.debug.psaData.subaction, HexSize::SHORT));
   addOption(new StringOption("subaction name", data.debug.psaData.currSubactionName));
   addOption(new FloatOption("current frame", data.debug.psaData.currentFrame, false));
@@ -127,9 +141,16 @@ void PSAScriptPage::show() {
   addOption(new PSAScriptOption(data.debug.psaData.fullScript, data.debug.psaData.scriptLocation));
 }
 
+const char* ControllerInfoPage::dataType[] = {
+  "Off",
+  "Raw",
+  "Game"
+};
+
 void ControllerInfoPage::show() {
   ADD_UNPAUSE
-  addOption(new BoolOption("display:", data.inputDisplay));
+  addOption(new IntOption("input display", data.inputDisplayType, 0, 2));
+  addOption(new NamedIndexOption("type", ControllerInfoPage::dataType, data.inputDisplayType, 3));
   addOption(new StringOption("", "raw values"));
   addOption(new IntOption("LStickX", data.controllerData.stickX, false));
   addOption(new IntOption("LStickY", data.controllerData.stickY, false));

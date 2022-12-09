@@ -23,7 +23,7 @@
 #define MOV_CACHE_RESET -1
 
 // number of actions to be tracked
-#define ACTION_COUNT 0xFF
+#define ACTION_COUNT 0x80
 
 template<class T>
 struct KVPair {
@@ -37,7 +37,7 @@ public:
   MovementTracker() {};
 
   void reset();
-  void trackAction(int action);
+  void trackAction(int action, u8 yDistFloor, u8 distance = 0);
   float approxChance(float levelValue);
   float approxChance(float levelValue, char actionType);
   void incrementTimer();
@@ -68,6 +68,8 @@ private:
   unsigned short idx = 0;
   unsigned char actionTracker[ACTION_COUNT] = {};
   unsigned char timeTracker[ACTION_COUNT] = {};
+  unsigned char yDistFloorTracker[ACTION_COUNT] = {};
+  unsigned char distanceTracker[ACTION_COUNT] = {};
   float actionCache[MOV_LEN] = {};
 };
 

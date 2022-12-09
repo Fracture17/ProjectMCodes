@@ -1,7 +1,7 @@
 #include "Fighter.h"
 
 
-// Fighter* Fighter::ct(entryID id, int a, int b) {
+// Fighter* Fighter::ct(EntryID id, int a, int b) {
 // 	//TODO: make module accesser
 // 	//ct_Fighter(this, id, a, b, )
 // }
@@ -10,7 +10,7 @@
 // 	return getInput_Fighter(this);
 // }
 
-ftOwner* Fighter::getOwner() {
+FtOwner* Fighter::getOwner() {
 	return getOwner_Fighter(this);
 }
 
@@ -38,7 +38,7 @@ void Fighter::setFlower(double rate, bool setEffect, int unk3, double size, int 
     setFlower_Fighter(this, rate, setEffect, unk3, size, unk5);
 }
 
-void Fighter::setHeartSwap(entryID givingPlayerEntryId, int unk2, bool setEffect) {
+void Fighter::setHeartSwap(EntryID givingPlayerEntryId, int unk2, bool setEffect) {
     setHeartSwap_Fighter(this, givingPlayerEntryId, unk2, setEffect);
 }
 

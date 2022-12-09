@@ -6,26 +6,26 @@
 #define PROJECTMCODES_FTMANAGER_H
 
 #include "Fighter.h"
-#include "Brawl/IP/Inputs.h"
-#include "Brawl/AI/aiScriptData.h"
-#include "ftOwner.h"
-#include "brawl/AI/aiInput.h"
-#include "ftEntryManager.h"
+
+struct FtOwner;
+struct AiInput;
+struct FtOwner;
+struct ftEntryManager;
 
 //the port of the fighter
 typedef char playerNumber;
 
-struct ftManager {
-    playerNumber getPlayerNo(entryID entry);
-    ftOwner* getOwner(entryID entry);
-    entryID getEntryId(playerNumber playerNo);
-    entryID getEntryIdFromIndex(int index);
-    Fighter* getFighter(entryID entry, bool getFollower=false);
-    unsigned int getFighterCount(entryID entry);
-    aiInput* getInput(entryID entry);
+struct FtManager {
+    playerNumber getPlayerNo(EntryID entry);
+    FtOwner* getOwner(EntryID entry);
+    EntryID getEntryId(playerNumber playerNo);
+    EntryID getEntryIdFromIndex(int index);
+    Fighter* getFighter(EntryID entry, bool getFollower=false);
+    unsigned int getFighterCount(EntryID entry);
+    AiInput* getInput(EntryID entry);
     void setSlow(int excludeTeam, int unknown, int slowStrength, int durationInFrames);
     int getEntryCount();
-    bool isCpuActive(entryID entry);
+    bool isCpuActive(EntryID entry);
 
     char _spacer[0x154];
     ftEntryManager* entryManager;
@@ -34,26 +34,26 @@ struct ftManager {
 
 };
 
-//static location of global ftManager object
-#define FIGHTER_MANAGER ((ftManager*) 0x80629a00)
+//static location of global FtManager object
+#define FIGHTER_MANAGER ((FtManager*) 0x80629a00)
 
-#define _getPlayerNo_ftManager ((playerNumber (*)(ftManager * self, entryID entry)) 0x80815ad0)
-#define _getOwner_ftManager ((ftOwner* const (*)(ftManager * This, entryID entry)) 0x808159e4)
-#define _getEntryID_ftManager ((entryID (*)(ftManager * self, playerNumber playerNo)) 0x80815c40)
-#define _getEntryIDFromIndex_ftManager ((entryID (*)(ftManager * self, int index)) 0x80815bf8)
+#define _getPlayerNo_ftManager ((playerNumber (*)(FtManager * self, EntryID entry)) 0x80815ad0)
+#define _getOwner_ftManager ((FtOwner* const (*)(FtManager * This, EntryID entry)) 0x808159e4)
+#define _getEntryID_ftManager ((EntryID (*)(FtManager * self, playerNumber playerNo)) 0x80815c40)
+#define _getEntryIDFromIndex_ftManager ((EntryID (*)(FtManager * self, int index)) 0x80815bf8)
 //fighterNo: -1 for load option from ftEntry, 0 for main fighter, 1 for follower
-#define _getFighter_ftManager ((Fighter* (*)(ftManager * self, entryID entry, int fighterNo)) 0x80814f20)
+#define _getFighter_ftManager ((Fighter* (*)(FtManager * self, EntryID entry, int fighterNo)) 0x80814f20)
 
 //gets the number of fighters attached to the given fighter entryid (ex. ice climbers = 1)
-#define _getFighterCount_ftManager ((unsigned int (*)(ftManager * self, entryID entry)) 0x80814ec4)
+#define _getFighterCount_ftManager ((unsigned int (*)(FtManager * self, EntryID entry)) 0x80814ec4)
 
-#define _getInput_ftManager ((aiInput* (*)(ftManager * self, entryID entry)) 0x80815a38)
+#define _getInput_ftManager ((AiInput* (*)(FtManager * self, EntryID entry)) 0x80815a38)
 
 //gets the number of fighters in a match
-#define _getEntryCount_ftManager ((int (*)(ftManager * self)) 0x80815be4)
+#define _getEntryCount_ftManager ((int (*)(FtManager * self)) 0x80815be4)
 
-#define _setSlow_ftManager ((void (*)(ftManager * self, int excludeTeam, int unknown, int slowStrength, int durationInFrames)) 0x80817c48)
+#define _setSlow_ftManager ((void (*)(FtManager * self, int excludeTeam, int unknown, int slowStrength, int durationInFrames)) 0x80817c48)
 
-#define _isCpuActive_ftManager ((bool (*)(ftManager * self, entryID entry)) 0x80814e5c)
+#define _isCpuActive_ftManager ((bool (*)(FtManager * self, EntryID entry)) 0x80814e5c)
 
 #endif //PROJECTMCODES_FTMANAGER_H

@@ -10,8 +10,8 @@
 union xyDouble {
     double asDouble;
     struct {
-        float xPos;
-        float yPos;
+        float xPos = 0;
+        float yPos = 0;
     };
 };
 

@@ -9,8 +9,18 @@
 #include "soGeneralWorkSimple.h"
 
 enum VarType {
+    IC = 0x00000000,
     LA = 0x10000000,
     RA = 0x20000000
+};
+
+enum VarDataType {
+    // aka 'Basic'
+    VDT_INT = 0x00000000,
+    // aka 'Float'
+    VDT_FLOAT = 0x01000000,
+    // aka 'Bool'
+    VDT_BOOL = 0x02000000
 };
 
 class soWorkManageModuleImpl {

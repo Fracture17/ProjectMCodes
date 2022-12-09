@@ -50,6 +50,8 @@ struct FudgeAIHitbox {
   float yMax = 0;
   float trueXMin = 0;
   float trueYMin = 0;
+  float trueXMax = 0;
+  float trueYMax = 0;
   float width = 0;
   float height = 0;
   GXColor color = GXColor(0x00FF0088);

@@ -5,14 +5,13 @@
 #ifndef PROJECTMCODES_AIACT_H
 #define PROJECTMCODES_AIACT_H
 
-#include "Brawl/AI/aiInput.h"
-#include "aiStat.h"
-#include "AICEPac.h"
-
-struct aiInput;
 struct AICEPac;
-struct aiStat;
-struct aiScriptData {
+struct AiInput;
+struct AiStat;
+// p2 @ 812ddbc0
+// p2 act id @ 812ddc38
+// p2 currInst @ 812ddc28
+struct AiScriptData {
     // 0x00
     float variables[24];
     // 0x60
@@ -27,10 +26,10 @@ struct aiScriptData {
     char _spacer2[0x70 - 0x68 - 4];
 
     // 0x70
-    aiInput* ftInputPtr;
+    AiInput* aiInputPtr;
 
     // 0x74
-    aiStat* scriptValues;
+    AiStat* scriptValues;
 
     // 0x78
     unsigned short aiScript;

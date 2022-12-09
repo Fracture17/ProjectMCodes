@@ -22,7 +22,7 @@ void WeightedDie::clear() {
   weights.clear();
 }
 
-int WeightedDie::roll() {
+float WeightedDie::roll() {
   float value = _randf() * getWeight();
   for (int i = 0; i < weights.size(); i++) {
     value -= weights[i]->weight;
@@ -33,7 +33,7 @@ int WeightedDie::roll() {
   return weights[weights.size() - 1]->value;
 }
 
-int WeightedDie::rollAndRemove() {
+float WeightedDie::rollAndRemove() {
   float value = _randf() * getWeight();
   for (int i = 0; i < weights.size(); i++) {
     value -= weights[i]->weight;

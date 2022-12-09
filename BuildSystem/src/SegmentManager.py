@@ -61,6 +61,7 @@ class SegmentManager:
         #         raise Exception(f"{func=} Couldn't fit")
 
     def assignExtraAddresses(self, allSections):
+        allSections = sorted(allSections, key=lambda sec : sec.address)
         extraSections = []
         #extraSections.append(section)
         #continue
@@ -75,11 +76,15 @@ class SegmentManager:
                 extraSections.append(section)
 
         for section in extraSections:
+            print(f'ex: {section}')
             for segment in self.extraSegments:
                 if segment.canInsert(section):
+                    print(segment.name)
                     segment.insert(section)
                     break
             else:
+                # for segment in self.extraSegments:
+                #     print(segment)
                 raise Exception(f'''{section} has no home''')
 
 #     def assignFunctionAddresses--- This code section failed: ---

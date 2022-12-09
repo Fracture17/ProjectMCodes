@@ -140,6 +140,8 @@ void TextPrinter::startBoundingBox() {
     lineStart = message.xPos;
     lastPadLocation = message.xPos;
     maxWidth = 0;
+    if (renderPre) bboxIdx = renderables.items.preFrame.size();
+    else bboxIdx = renderables.items.frame.size();
 }
 
 void TextPrinter::saveBoundingBox(int id, GXColor color, float boxPadding) {
@@ -159,7 +161,8 @@ void TextPrinter::saveBoundingBox(int id, GXColor color, float boxPadding) {
             is2D
     };
     // OSReport("Rect in (t, b, l, r): %.3f, %.3f, %.3f, %.3f\n", r.top, r.bottom, r.left, r.right);
-    renderables.items.frame.push(r);
+    if (renderPre) renderables.items.preFrame.insert(r, bboxIdx);
+    else renderables.items.frame.insert(r, bboxIdx);
     setup();
 }
 

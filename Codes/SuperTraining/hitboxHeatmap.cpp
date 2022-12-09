@@ -1,6 +1,9 @@
 #include "Assembly.h"
 #include "Memory.h"
 #include "Brawl/FT/Fighter.h"
+#include "Brawl/FT/ftOwner.h"
+#include "Brawl/FT/ftInput.h"
+#include "Brawl/AI/aiInput.h"
 #include "Containers/vector.h"
 #include "Graphics/Drawable.h"
 
@@ -152,57 +155,59 @@ INJECTION("display_clSphere", 0x8070de4c, R"(
 extern TrainingData playerTrainingData[];
 #define displayBubble ((void (*)(double radius, float scaleMatrix[3][4], float pos1[3], float pos2[3], unsigned int* colour1, unsigned int* colour2, float viewingMatrix[3][4])) 0x80541fa0)
 
-// void initializeAITargetingData(int currPlayerAction, soPostureModuleImpl* postureModule) {
-//   if (((currPlayerAction >= 0x24 && currPlayerAction <= 0x38) || currPlayerAction >= 0x112)) {
-//     if (fudgeAI.overwrite) {
-//       if (fudgeAI.xMin != 0) {
-//         renderables.items.tick.push(new RectOutline(
-//           0,
-//           60,
-//           GXColor(0xFFFF0088),
-//           fudgeAI.yMax,
-//           fudgeAI.yMin,
-//           fudgeAI.xMin,
-//           fudgeAI.xMax,
-//           42,
-//           false
-//         ));
-//       }
+void initializeAITargetingData(int currPlayerAction, soPostureModuleImpl* postureModule) {
+  if (((currPlayerAction >= 0x24 && currPlayerAction <= 0x38) || currPlayerAction >= 0x112)) {
+    if (fudgeAI.overwrite) {
+      if (fudgeAI.xMin != 0) {
+        renderables.items.tick.push(new RectOutline(
+          0,
+          60,
+          GXColor(0xFFFF0088),
+          fudgeAI.yMax,
+          fudgeAI.yMin,
+          fudgeAI.xMin,
+          fudgeAI.xMax,
+          42,
+          false
+        ));
+      }
 
-//       OSReport("xPos, yPos: %.3f; %.3f\n", postureModule->xPos, postureModule->yPos);
-//       fudgeAI.xMin = 500;
-//       fudgeAI.yMin = 500;
-//       fudgeAI.xMax = -500;
-//       fudgeAI.yMax = -500;
-//       fudgeAI.xOrigin = postureModule->xPos;
-//       fudgeAI.yOrigin = postureModule->yPos;
-//       fudgeAI.overwrite = false;
-//     }
-//   } else {
-//     fudgeAI.overwrite = true;
-//   }
-// }
-// void collectAITargetingData(double radius, float pos1[3], float pos2[3], unsigned int* colour) {
-//   if (currPlayerNum == 0 && !playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].heatmapOpts.active && (*colour == hitboxColour || *colour == grabboxColour)) {
-//     OSReport("R: %.3f; XOffs: %.3f; YOffs: %.3f; ZOffs: %.3f\n", radius, pos1[0] - fudgeAI.xOrigin, pos1[1] - fudgeAI.yOrigin, pos1[2]);
-//     if (-radius < pos1[2] && pos1[2] < radius) {
-//       if (pos1[0] - radius < fudgeAI.xMin) fudgeAI.xMin = pos1[0] - radius;
-//       if (pos1[0] + radius > fudgeAI.xMax) fudgeAI.xMax = pos1[0] + radius;
-//       if (pos1[1] - radius < fudgeAI.yMin) fudgeAI.yMin = pos1[1] - radius;
-//       if (pos1[1] + radius > fudgeAI.yMax) fudgeAI.yMax = pos1[1] + radius;
-//     }
-//     if (-radius < pos2[2] && pos2[2] < radius) {
-//       if (pos2[0] - radius < fudgeAI.xMin) fudgeAI.xMin = pos2[0] - radius;
-//       if (pos2[0] + radius > fudgeAI.xMax) fudgeAI.xMax = pos2[0] + radius;
-//       if (pos2[1] - radius < fudgeAI.yMin) fudgeAI.yMin = pos2[1] - radius;
-//       if (pos2[1] + radius > fudgeAI.yMax) fudgeAI.yMax = pos2[1] + radius;
-//     }
-//     fudgeAI.trueXMin = fudgeAI.xMin - fudgeAI.xOrigin;
-//     fudgeAI.trueYMin = (fudgeAI.yMin - fudgeAI.yOrigin) * -1;
-//     fudgeAI.width = (fudgeAI.xMax - fudgeAI.xMin) / 2;
-//     fudgeAI.height = (fudgeAI.yMax - fudgeAI.yMin) / 2;
-//   }
-// }
+      // OSReport("xPos, yPos: %.3f; %.3f\n", postureModule->xPos, postureModule->yPos);
+      fudgeAI.xMin = 500;
+      fudgeAI.yMin = 500;
+      fudgeAI.xMax = -500;
+      fudgeAI.yMax = -500;
+      fudgeAI.xOrigin = postureModule->xPos;
+      fudgeAI.yOrigin = postureModule->yPos;
+      fudgeAI.overwrite = false;
+    }
+  } else {
+    fudgeAI.overwrite = true;
+  }
+}
+void collectAITargetingData(double radius, float pos1[3], float pos2[3], unsigned int* colour) {
+  if (currPlayerNum == 0 && !playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].heatmapOpts.active && (*colour == hitboxColour || *colour == grabboxColour)) {
+    OSReport("R: %.3f; XOffs: %.3f; YOffs: %.3f; ZOffs: %.3f\n", radius, pos1[0] - fudgeAI.xOrigin, pos1[1] - fudgeAI.yOrigin, pos1[2]);
+    if (-radius < pos1[2] && pos1[2] < radius) {
+      if (pos1[0] - radius < fudgeAI.xMin) fudgeAI.xMin = pos1[0] - radius;
+      if (pos1[0] + radius > fudgeAI.xMax) fudgeAI.xMax = pos1[0] + radius;
+      if (pos1[1] - radius < fudgeAI.yMin) fudgeAI.yMin = pos1[1] - radius;
+      if (pos1[1] + radius > fudgeAI.yMax) fudgeAI.yMax = pos1[1] + radius;
+    }
+    if (-radius < pos2[2] && pos2[2] < radius) {
+      if (pos2[0] - radius < fudgeAI.xMin) fudgeAI.xMin = pos2[0] - radius;
+      if (pos2[0] + radius > fudgeAI.xMax) fudgeAI.xMax = pos2[0] + radius;
+      if (pos2[1] - radius < fudgeAI.yMin) fudgeAI.yMin = pos2[1] - radius;
+      if (pos2[1] + radius > fudgeAI.yMax) fudgeAI.yMax = pos2[1] + radius;
+    }
+    fudgeAI.trueXMin = fudgeAI.xMin - fudgeAI.xOrigin;
+    fudgeAI.trueYMin = (fudgeAI.yMin - fudgeAI.yOrigin) * -1;
+    fudgeAI.width = (fudgeAI.xMax - fudgeAI.xMin) / 2;
+    fudgeAI.height = (fudgeAI.yMax - fudgeAI.yMin) / 2;
+    fudgeAI.trueXMax = fudgeAI.trueXMin + fudgeAI.width * 2;
+    fudgeAI.trueYMax = fudgeAI.trueYMin * -1 + fudgeAI.height * 2;
+  }
+}
 void displayFudgeAIData() {
   auto ro = new RectOutline(
     0,
@@ -221,7 +226,9 @@ void displayFudgeAIData() {
 
 extern "C" {
   void storePlayerData(Fighter* fighter) {
-    currPlayerNum = _GetPlayerNo_aiChrIdx(&fighter->getOwner()->ftInputPtr->cpuIdx);
+    AiInput* aiInputMain = fighter->getOwner()->aiInputPtr;
+    if (aiInputMain == nullptr) return;
+    currPlayerNum = _GetPlayerNo_aiChrIdx(&aiInputMain->cpuIdx);
     playersProcessed[currPlayerNum] = false;
     currPlayerAction = fighter->modules->statusModule->action;
     currPlayerAnimFrame = fighter->modules->motionModule->mainAnimationData.animFrame;
@@ -231,13 +238,13 @@ extern "C" {
     } else if (framesAfterActionableGround[currPlayerNum] < 255) {
       framesAfterActionableGround[currPlayerNum] += 1;
     }
-    // if (currPlayerNum == 0) {
-    //   displayFudgeAIData();
-    //   initializeAITargetingData(currPlayerAction, fighter->modules->postureModule);
-    // }
+    if (currPlayerNum == 0) {
+      displayFudgeAIData();
+      initializeAITargetingData(currPlayerAction, fighter->modules->postureModule);
+    }
   }
   void storeRenderingData(double radius, float scaleMatrix[3][4], float pos1[3], float pos2[3], unsigned int* colour1, unsigned int* colour2, float viewingMatrix[3][4]) {
-    // collectAITargetingData(radius, pos1, pos2, colour1);
+    collectAITargetingData(radius, pos1, pos2, colour1);
     
     if (!playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].heatmapOpts.active && *colour1 == hitboxColour) {
       auto opts = playerTrainingData[currPlayerNum].heatmapOpts;

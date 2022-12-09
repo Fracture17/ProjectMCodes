@@ -31,16 +31,36 @@ typedef unsigned int size_t;
 struct Position2D {
     f32 x;
     f32 y;
+
+    constexpr Position2D& operator*=(float rhs) {
+        x *= rhs;
+        y *= rhs;
+        return *this;
+    }
 };
 
 struct Position3D {
     f32 x;
     f32 y;
     f32 z;
+    
+    constexpr Position3D& operator-=(Position3D rhs) {
+        x -= rhs.x; y -= rhs.y; z -= rhs.z;
+        return *this;
+    }
+    constexpr Position3D& operator+=(Position3D rhs) {
+        x += rhs.x; y += rhs.y; z += rhs.z;
+        return *this;
+    }
+    constexpr Position3D& operator*=(float rhs) {
+        x *= rhs; y *= rhs; z *= rhs;
+        return *this;
+    }
 };
 
 #define offsetof(type, member) (__builtin_offsetof(type, member))
 #define _randf ((double (*)()) 0x8003fb64)
+// #define NOP() "\x60\x00\x00\x00"
 
 // template<class> class function; // not defined
  

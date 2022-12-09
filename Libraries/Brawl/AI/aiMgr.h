@@ -6,8 +6,6 @@
 #define PROJECTMCODES_AIMGR_H
 
 #include "Brawl/FT/Fighter.h"
-#include "aiWeaponMgr.h"
-#include "AICEPac.h"
 
 struct ATKDEntry {
     short moveID;
@@ -28,15 +26,21 @@ struct aiReferParEntryArray {
     aiReferParEntry entries[0x35];
 };
 
+
+struct AiWeaponManager;
 struct AICEPac;
-// size: 0x157
-struct aiManager {
-    entryID getAiCpuTarget(entryID fighter);
+struct AiStat;
+// size: 0x388
+struct AiManager {
+    EntryID getAiCpuTarget(EntryID fighter);
     ATKDEntry* searchAtkData(int targetCharID, int subactionID);
-    char _spacer[0xfc];
+    char _spacer[0xf8];
+
+    // 0xF8
+    AiStat* aiStatArray;
 
     // 0xFC
-    aiWeaponManager* weaponManager;
+    AiWeaponManager* weaponManager;
     char _spacer2[0x134 - 0xFC - 4];
 
     // 0x134
@@ -51,12 +55,12 @@ struct aiManager {
 };
 
 // vBrawl: 0x80b89a20
-#define AI_MANAGER ((aiManager *) 0x80622d20)
+#define AI_MANAGER ((AiManager *) 0x80622d20)
 
 // gets the AI's target
-#define _getAiCpuTarget_aiManager ((entryID (*)(aiManager * self, int port_number)) 0x808fd740)
+#define _getAiCpuTarget_aiManager ((EntryID (*)(AiManager * self, int port_number)) 0x808fd740)
 
 #define _renderDebug_aiManager ((int) )
 
-#define _searchAtkData_aiManager ((ATKDEntry* (*)(aiManager * self, int targetCharID, int subactionID)) 0x808fd780)
+#define _searchAtkData_aiManager ((ATKDEntry* (*)(AiManager * self, int targetCharID, int subactionID)) 0x808fd780)
 #endif //PROJECTMCODES_AIMGR_H

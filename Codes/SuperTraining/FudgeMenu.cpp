@@ -26,6 +26,7 @@ void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
   // predictions.TECH = movementTrackers[pNum].approxChance(101, MOV_TECH);
   predictions.ATTACK = movementTrackers[pNum].approxChance(101, MOV_ATTACK);
   predictions.GRAB = movementTrackers[pNum].approxChance(101, MOV_GRAB);
+  
   KVPair<float> toSort[8] = {
     // {"idle", predictions.IDLE, 0xFFFFFFFF}, 
     // {"walk", predictions.WALK, 0xFFFFFFFF},
@@ -147,16 +148,31 @@ void AITrainingScriptSubmenu::render(TextPrinter* printer, char* buffer) {
   }
 }
 
-void AIPersonalityPresetOption::select() {
-  data.aiData.personality.personalityIndex = index;
-  memcpy(&data.aiData.personality.personality, &settings, sizeof(AIPersonality));
+void AIScriptPathOption::render(TextPrinter* printer, char* buffer) {
+  printer->printLine("script path:");
+  for (char i = 0; i < scripts.size(); i++) {
+    printer->setTextColor(0x00FF00DD);
+    s8 depth = scripts[i]->depth;
+    if (depth < 0) {
+      printer->setTextColor(0xFF0000DD);
+      depth = depth * -1 - 1;
+    }
+    printer->padToWidth((RENDER_X_SPACING / 5 * (depth + 1)));
+    sprintf(buffer, "%03x", scripts[i]->scriptID);
+    printer->printLine(buffer);
+  }
 }
 
-void AIPersonalityPresetOption::render(TextPrinter* printer, char* buffer) {
-  sprintf(buffer, "%s", name);
-  if (data.aiData.personality.personalityIndex == index) printer->setTextColor(0x00AA00FF);
-  printer->printLine(buffer);
-}
+// void AIPersonalityPresetOption::select() {
+//   data.aiData.personality.personalityIndex = index;
+//   memcpy(&data.aiData.personality.personality, &settings, sizeof(AIPersonality));
+// }
+
+// void AIPersonalityPresetOption::render(TextPrinter* printer, char* buffer) {
+//   sprintf(buffer, "%s", name);
+//   if (data.aiData.personality.personalityIndex == index) printer->setTextColor(0x00AA00FF);
+//   printer->printLine(buffer);
+// }
 
 void AITrainingScriptSubmenu::addDefault(AITrainingDefaultVal* defVal) { 
   defaultValues.push(defVal); 
@@ -186,7 +202,8 @@ void PlayerPage::show() {
     //   this->addOption(new PageLink("AIRangeFinder", AIRangePage));
     // }
     
-    this->addOption(new BoolOption("AI DEBUG?", this->data.aiData.AIDebug));
+    Page* AIDP = new AIDebugPage(menu, data);
+    this->addOption(new PageLink(AIDP->getTitle(), AIDP));
 
     Page* comboTrainerPage = new ComboTrainerPage(menu, data);
     this->addOption(new PageLink(comboTrainerPage->getTitle(), comboTrainerPage));
@@ -200,12 +217,13 @@ void PlayerPage::show() {
     Page* predictionPage = new AIPredictionPage(menu, data, playerNum);
     this->addOption(new PageLink(predictionPage->getTitle(), predictionPage));
 
-    Page* AIPPP = new AIPersonalityPresetPage(menu, data);
-    this->addOption(new PageLink(AIPPP->getTitle(), AIPPP));
+    Page* AIPP = new AIPersonalityPage(menu, data);
+    this->addOption(new PageLink(AIPP->getTitle(), AIPP));
 
     this->addOption(new BoolOption("actionable overlay", data.actionableOverlay));
     this->addOption(new IntOption("actionable sound", data.actionableSE, -1, 0xFF));
-    this->addOption(new BoolOption("input display", data.inputDisplay));
+    this->addOption(new IntOption("input display", data.inputDisplayType, 0, 2));
+    this->addOption(new NamedIndexOption("type", ControllerInfoPage::dataType, data.inputDisplayType, 3));
 
     Page* PSAData = new PSADataPage(menu, data);
     // this->data->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);

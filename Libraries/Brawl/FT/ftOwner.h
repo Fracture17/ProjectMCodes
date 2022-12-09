@@ -5,16 +5,13 @@
 #ifndef PROJECTMCODES_FTOWNER_H
 #define PROJECTMCODES_FTOWNER_H
 
-#include "Brawl/AI/aiInput.h"
-#include "Fighter.h"
-
-struct staleMoveEntry {
+struct StaleMoveEntry {
     unsigned int num;
     unsigned int attack;
     unsigned int didConnect;
 };
 
-struct ftOwnerData {
+struct FtOwnerData {
     // 0x0
     int team;
     char _spacer[0x110 - 4];
@@ -34,19 +31,21 @@ struct ftOwnerData {
     char _spacer3[0xC50 - 0xC40 - 4];
 
     // 0xC50
-    staleMoveEntry staleMoveQueue[9];
+    StaleMoveEntry staleMoveQueue[9];
 };
 
-struct aiInput;
-struct ftOwner {
+
+struct AiInput;
+struct FtOwner {
     double getDamage();
     void setDamage(double newValue, int shouldLog);
     bool isCpu();
+    bool hasCurry();
 
     // 0x0
-    ftOwnerData* ownerDataPtr;
+    FtOwnerData* ownerDataPtr;
     // 0x4
-    aiInput* ftInputPtr;
+    AiInput* aiInputPtr;
 
     char _spacer[0x4d0 - 0x4 - 0x4];
     // 0x4d0
@@ -61,12 +60,11 @@ struct ftOwner {
     char _spacer3[0x83C - 0x4e0 - 0x1];
     // 0x83C
     float slipMulSeal;
-
-
-
 };
 
-#define _getDamage_ftOwner ((double (*)(ftOwner * owner)) 0x8081c264)
-#define _setDamage_ftOwner ((void (*)(double newValue, ftOwner * owner, int shouldLog)) 0x8081bdcc)
-#define _isOperationCpu_ftOwner ((bool (*)(ftOwner * self)) 0x8081bdb0)
+#define _getDamage_ftOwner ((double (*)(FtOwner * owner)) 0x8081c264)
+#define _setDamage_ftOwner ((void (*)(double newValue, FtOwner * owner, int shouldLog)) 0x8081bdcc)
+#define _isOperationCpu_ftOwner ((bool (*)(FtOwner * self)) 0x8081bdb0)
+#define _getCurry_ftOwner ((bool (*)(FtOwner * self)) 0x8081c874)
+
 #endif //PROJECTMCODES_FTOWNER_H

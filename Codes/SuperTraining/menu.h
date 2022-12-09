@@ -62,7 +62,7 @@ struct Page {
   char currentOption = 0;
   bool isSelected = false;
   Menu* menu;
-private:
+protected:
   char* title;
 };
 
@@ -72,7 +72,7 @@ struct BasicPage : public Page {
   void deselect();
   const char* getTitle();
   virtual void show() = 0;
-private:
+protected:
   const char* title;
 };
 
@@ -137,7 +137,7 @@ public:
   void deselect();
   void render(TextPrinter* printer, char* buffer);
 
-private:
+protected:
   int& value;
   int max = NUMERIC_DEFAULT;
   int min = NUMERIC_DEFAULT;
@@ -186,7 +186,7 @@ public:
 
   ~FloatOption() {}
 
-private:
+protected:
   float& value;
   float max = NUMERIC_DEFAULT;
   float min = NUMERIC_DEFAULT;
@@ -208,7 +208,7 @@ public:
   void deselect();
   void render(TextPrinter* printer, char* buffer);
 
-private:
+protected:
   bool& value;
 };
 
@@ -230,7 +230,7 @@ public:
   void deselect();
   void render(TextPrinter* printer, char* buffer);
 
-private:
+protected:
   u32& value;
   HexSize size;
 };
@@ -246,7 +246,7 @@ public:
   void deselect();
   void render(TextPrinter* printer, char* buffer);
 
-private:
+protected:
   bool& value;
 };
 
@@ -262,7 +262,7 @@ public:
   void deselect();
   void render(TextPrinter* printer, char* buffer);
 
-private:
+protected:
   char* value;
 };
 
@@ -280,7 +280,7 @@ public:
   void deselect();
   void render(TextPrinter* printer, char* buffer);
 
-private:
+protected:
   const char** nameArray;
   int& index;
   int arrayLength;
@@ -356,7 +356,7 @@ public:
   void deselect() {}
   void render(TextPrinter* printer, char* buffer);
 
-private:
+protected:
   float& max;
   float& min = this->defaultMin;
   float defaultMin = 0;

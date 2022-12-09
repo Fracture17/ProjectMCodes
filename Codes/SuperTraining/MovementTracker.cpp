@@ -6,6 +6,8 @@ void MovementTracker::reset() {
   for (int i = 0; i < ACTION_COUNT; i++) {
     actionTracker[i] = 0;
     timeTracker[i] = 0;
+    distanceTracker[i] = 0;
+    yDistFloorTracker[i] = 0;
   }
   idx = 0;
 };
@@ -43,10 +45,11 @@ unsigned char actionToMov(int action) {
 void MovementTracker::incrementTimer() {
   for (int i = 0; i < MOV_LEN; i++) actionCache[i] = MOV_CACHE_RESET;
   timeTracker[idx] += 1;
-  if (timeTracker[idx] >= 0xFF) {
+  if (timeTracker[idx] >= ACTION_COUNT) {
     copyLatest(actionTracker[idx]);
   }
 }
+
 
 void MovementTracker::copyLatest(char copy) {
   if (copy != MOV_NONE) {
@@ -57,13 +60,15 @@ void MovementTracker::copyLatest(char copy) {
   }
 };
 
-void MovementTracker::trackAction(int action) {
+void MovementTracker::trackAction(int action, u8 yDistFloor, u8 distance) {
   char MOV = actionToMov(action);
   if (MOV != MOV_NONE) {
     idx += 1;
     if (idx >= ACTION_COUNT) idx = 0;
     actionTracker[idx] = MOV;
     timeTracker[idx] = 0;
+    yDistFloorTracker[idx] = yDistFloor;
+    distanceTracker[idx] = distance;
   }
 };
 
@@ -152,31 +157,42 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
       // OSReport("i: %d; mov @ idx: %d; mov @ tracker: %d\n", i, actionTracker[startTracker], actionTracker[offsetTracker]);
 
       // a value (toAdd) is calculated based on the weight and the scoremultiplier
-      float toAdd = ((float) weights[actionTracker[offsetTracker]] / 100);
+      float toAdd = ((float) (200 - weights[actionTracker[offsetTracker]]) / 100);
       // skips over if inconsequential
       // if (toAdd * timeTracker[offsetTracker] < 30 && actionTracker[startTracker] != actionTracker[offsetTracker]) {
       //   offsetTracker++;
       //   continue;
       // }
+
       toAdd *= scoreMultiplier;
 
       // ...the difference in time is then calculated, and the absolute value is taken
       float timeDifference = ((looked == 0) ? reactionPatchTime : timeTracker[startTracker]) - timeTracker[offsetTracker];
+      float yDistFloorDiff = yDistFloorTracker[startTracker] - yDistFloorTracker[offsetTracker];
+      float xDistDiff = distanceTracker[startTracker] - distanceTracker[offsetTracker];
       if (timeDifference < 0) timeDifference *= -1;
-      // finally, toAdd is MULTIPLIED by 80 MINUS the time difference times the scoreMultiplier (again)
+      if (yDistFloorDiff < 0) yDistFloorDiff *= -1;
+      if (xDistDiff < 0) xDistDiff *= -1;
+      // finally, toAdd is MULTIPLIED by 200 MINUS the time difference times the scoreMultiplier (again)
       // This effecitvely means "take this into account if the time difference is less than 80 frames",
       // and also says "the less the difference in time, the greater the score increase"
-      toAdd *= (200 - timeDifference) * scoreMultiplier;
+      toAdd *= (200 - timeDifference) * (30 - yDistFloorDiff) * (70 - xDistDiff) * scoreMultiplier * 0.01;
+
+      // if (actionType == MOV_ATTACK) {
+      //   // OSReport("action tracker val: %d; offsetTracker: %d\n", actionTracker[offsetTracker], offsetTracker);
+      //   // if (actionTracker[offsetTracker] == MOV_ATTACK)
+      //     OSReport("toAdd: %.3f, score: %.3f, totalScore: %.3f\n", toAdd, score, totalScore);
+      // }
       // this here effectively limits the influence of a time difference greater than 80, which would
       // be negative
       if (toAdd < 0) toAdd = 0;
 
       // if the action is the same, then add it to the score
       if (actionTracker[startTracker] == actionTracker[offsetTracker]) {
-        score += toAdd;
+        score += toAdd * scoreMultiplier;
       }
       // no matter what, we'll add the score to the tracked total
-      totalScore += toAdd;
+      totalScore += toAdd * scoreMultiplier;
       
       // this just sets the score multiplier to a value less than it was before, spaced evenly down to 0
       scoreMultiplier = (float) (lookAmount - looked) / (float) lookAmount;

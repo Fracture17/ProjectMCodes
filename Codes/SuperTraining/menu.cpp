@@ -112,6 +112,7 @@ void Menu::down() { getCurrentPage()->down(); }
 void Menu::modify(float amount) { getCurrentPage()->modify(amount); }
 
 void Menu::render(TextPrinter* printer, char* buffer) {  
+  printer->renderPre = true;
   printer->startBoundingBox();
   char amt = path.size();
   printer->print(" > ");
@@ -365,7 +366,7 @@ void BarOption::render(TextPrinter* printer, char* buffer) {
   float yPos = printer->message.yPos + 2;
   
   renderables.items.frame.push(new Rect(
-    GXColor(0x00000088),
+    GXColor(0x000000CC),
     yPos - 1,
     yPos + printer->message.fontScaleY * 18 + 1,
     xPos - 1,

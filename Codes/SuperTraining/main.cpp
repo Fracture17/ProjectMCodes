@@ -12,9 +12,16 @@
 #include "Containers/ArrayVector.h"
 
 #include "Brawl/FT/ftManager.h"
+#include "Brawl/FT/ftOwner.h"
+#include "Brawl/FT/ftEntry.h"
+#include "Brawl/FT/ftInput.h"
+#include "Brawl/FT/ftCancelModule.h"
 #include "Brawl/FT/ftControllerModuleImpl.h"
 #include "Brawl/AI/aiMgr.h"
+#include "Brawl/AI/aiInput.h"
+#include "Brawl/AI/aiStat.h"
 #include "Brawl/AI/aiScriptData.h"
+#include "Brawl/IP/IpHuman.h"
 #include "Brawl/sndSystem.h"
 
 #include "Graphics/Draw.h"
@@ -26,7 +33,10 @@
 #include "./hitboxHeatmap.h"
 #include "./MovementTracker.h"
 
+#define _checkTransition_soStatusModule ((void (*)(soStatusModuleImpl* self, soModuleAccessor* accesser)) 0x80780098)
+
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
+#define snprintf ((int (*)(char* buffer, size_t maxSize, const char* format, ...)) 0x803f8924)
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
 #define strcmp ((int (*)(const char* str1, const char* str2)) 0x803fa3fc)
 #define atof ((float (*)(const char* buffer)) 0x803fbbf8)
@@ -128,14 +138,14 @@ void getRandSafePosition(Vec3f* pos, bool onGround) {
     pos->f2 = yRand;
 }
 
-void setPosition(TrainingData& data, Fighter *fighter, aiInput *input, u8 numPlayers) {
+void setPosition(TrainingData& data, Fighter *fighter, AiInput *input) {
     if (data.debug.settingPosition) {
         if (PREVIOUS_PADS[0].stickX < -5 || 5 < PREVIOUS_PADS[0].stickX)
-            data.debug.xPos += (float) PREVIOUS_PADS[0].stickX * 3 / (float) (127 * numPlayers);
+            data.debug.xPos += (float) PREVIOUS_PADS[0].stickX * 3 / (float) (127 * 2);
         data.debug.airGroundState = fighter->modules->groundModule->unk1->unk1->airGroundState;
         if (data.debug.airGroundState != 1) {
             if (PREVIOUS_PADS[0].stickY < -5 || 5 < PREVIOUS_PADS[0].stickY)
-                data.debug.yPos += (float) PREVIOUS_PADS[0].stickY * 3 / (float) (127 * numPlayers);
+                data.debug.yPos += (float) PREVIOUS_PADS[0].stickY * 3 / (float) (127 * 2);
         }
     }
 
@@ -148,6 +158,28 @@ void setPosition(TrainingData& data, Fighter *fighter, aiInput *input, u8 numPla
     }
 }
 
+// NANA FIX BASED ON THE FOLLOWING CODE:
+//
+// Nana falling edge inputs [Eon]
+// HOOK @ $8090484C
+// {
+//   lwz r0, 0xC(r23)  #get inputs
+//   not r0, r0        #invert inputs 
+//   xori r0, r0, 8    #reinvert shield input coz its a hold input
+//   stw r0, 0xC(r23)  #store inputs
+//   mr r4, r24        #original operation
+// }
+// op li r4, 0 @ $80903414 #0 input delay instead of standard 6
+
+// INJECTION("NANA_GRAB_CONTROL_FIX", 0x8090484C, R"(
+//     SAVE_REGS
+//     bl nanaGrabControlFix
+//     RESTORE_REGS
+// )");
+// extern "C" void nanaGrabControlFix() {
+    
+// }
+
 INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
     SAVE_REGS
     mr r3, r31
@@ -158,16 +190,19 @@ INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
 
 // // const char* STR_DEFAULT = "DEFAULT"; 
 #define _GetPlayerNo_aiChrIdx ((int (*)(char* chrIdx)) 0x808fd68c)
-extern "C" void initAiTrainingScripts(ftEntry* fighterEntry) {
-    auto AIData = fighterEntry->owner->ftInputPtr->aiActPtr->AIScriptPac;
+extern "C" void initAiTrainingScripts(FtEntry* fighterEntry) {
+    AiInput* aiInput = fighterEntry->owner->aiInputPtr;
+    if (aiInput == nullptr) return; 
+    auto AIData = aiInput->aiActPtr->AIScriptPac;
     if (AIData == nullptr) return;
     int numEntries = AIData->numEntries;
     int pNum = FIGHTER_MANAGER->getPlayerNo(fighterEntry->entryId);
-    OSReport("=========PNum: %d; addr: %08x==========\n", pNum, &fighterEntry->input->cpuIdx);
+    // 90181014 p2FtInput
+    OSReport("=========PNum: %d; addr: %08x==========\n", pNum, &fighterEntry->ftInput );
     if (pNum > 3) return;
 
-    if (playerTrainingData[pNum].aiData.personality.unlocked && fighterEntry->owner->ftInputPtr->fighterId != playerTrainingData[pNum].aiData.fighterID) {
-        playerTrainingData[pNum].aiData.fighterID = fighterEntry->owner->ftInputPtr->fighterId;
+    if (playerTrainingData[pNum].aiData.personality.unlocked && fighterEntry->owner->aiInputPtr->fighterId != playerTrainingData[pNum].aiData.fighterID) {
+        playerTrainingData[pNum].aiData.fighterID = fighterEntry->owner->aiInputPtr->fighterId;
         playerTrainingData[pNum].aiData.personality.AICEData = AIData;
 
         for (int i = 0; i < numEntries; i++) {
@@ -285,6 +320,7 @@ void collectData(Fighter* fighter, int pNum) {
     }
     currData.debug.psaData.prevAction = prevAction;
     currData.debug.psaData.action = fighter->modules->statusModule->action;
+    currData.debug.psaData.actionTimer = fighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector.threadUnion.ActionMain.cmdInterpreter->logicalFrame;
     currData.debug.psaData.subaction = fighter->modules->motionModule->subAction;
 
     // OSReport("%s: %d\n", __FILE__, __LINE__);
@@ -311,7 +347,7 @@ void collectData(Fighter* fighter, int pNum) {
         }
     }
     // OSReport("%s: %d\n", __FILE__, __LINE__);
-    auto& aiInput = fighter->getOwner()->ftInputPtr;
+    auto& aiInput = fighter->getOwner()->aiInputPtr;
 
     currData.aiData.currentScript = aiInput->aiActPtr->aiScript;
     currData.aiData.frameCount = aiInput->aiActPtr->framesSinceScriptChanged;
@@ -325,15 +361,32 @@ void collectData(Fighter* fighter, int pNum) {
         currData.debug.prevFrameShieldstun = currData.debug.shieldstun;
         currData.debug.shieldstun = RABasicsArr[0x5];
         if (currData.debug.shieldstun != currData.debug.prevFrameShieldstun - 1 && currData.debug.shieldstun != 0) {
+            currData.debug.DI.xPos = currData.aiData.lstickX;
+            currData.debug.DI.yPos = currData.aiData.lstickY;
             currData.debug.maxShieldstun = RABasicsArr[0x5];
         }
 
         auto LABasicsArr = (*(int (*)[workModule->LAVariables->basicsSize])workModule->LAVariables->basics);
-        auto remainingHitstun = LABasicsArr[56];
+        auto remainingHitlag = fighter->modules->ftStopModule->hitlagMaybe;
+        int remainingHitstun = 0;
+        if (LABasicsArr[56] > 0) {
+            remainingHitstun = remainingHitlag > 0 ? remainingHitlag : LABasicsArr[56];
+        }
+        
         currData.debug.prevFrameHitstun = currData.debug.hitstun;
         currData.debug.hitstun = remainingHitstun;
         if (currData.debug.hitstun != currData.debug.prevFrameHitstun - 1 && currData.debug.hitstun != 0) {
+            currData.debug.DI.xPos = currData.aiData.lstickX;
+            currData.debug.DI.yPos = currData.aiData.lstickY;
             currData.debug.maxHitstun = remainingHitstun;
+        }
+
+        float vecLen = currData.debug.DI.xPos * currData.debug.DI.xPos 
+            + currData.debug.DI.yPos * currData.debug.DI.yPos;
+        if (vecLen > 1) {
+            float clamp = 1.0 / vecLen;
+            currData.debug.DI.xPos *= clamp;
+            currData.debug.DI.yPos *= clamp;
         }
 
         auto& grModule = fighter->modules->groundModule;
@@ -577,12 +630,79 @@ INJECTION("forceVisMemPool", 0x80025dc8, R"(
 //     }
 // }
 
-INJECTION("frameUpdate", 0x8001792c, R"(
-    bl updateOnFrame
-    addi r3, r30, 280
+bool updateFrame = false;
+// INJECTION("frameUpdate", 0x8001792c, R"(
+//     bl updatePreFrame
+//     addi r3, r30, 280
+// )");
+
+// INJECTION("PHYSICS_TEST", 0x8002dc74, R"(
+//     SAVE_REGS
+//     bl checkUpdateFighterProcess
+//     RESTORE_REGS
+//     cmpwi r4, 0x8
+// )");
+
+// INJECTION("FORCE_DELAY_POSTURE", 0x8070ef84, R"(
+//     stw r0, -0x0004 (r1)
+//     mflr r0
+//     bl checkForceDelayPosture
+//     mtlr r0
+//     lwz r0, -0x0004 (r1)
+//     cmpwi r3, 0x0
+//     beqlr
+//     stwu r1, -0xc0(r1)
+// )");
+
+// bool allowPostureUpdate = false;
+// extern "C" void checkUpdateFighterProcess(gfTask* currTask, unsigned int taskID) {
+//     if ((unsigned int)currTask->taskName >= 0x80b0af68 && (unsigned int)currTask->taskName <= 0x80b0b15c) {
+//         // OSReport("CURR TASK: %s\n", currTask->taskName);
+//         Fighter* asFighter = (Fighter*) currTask;
+//         // OSReport("POSTURE: %08x; GROUND: %08x\n", &asFighter->modules->postureModule->xPos, &asFighter->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos);
+//         if (taskID == 0x7) {
+//             asFighter->processFixPosition();
+//             allowPostureUpdate = true;
+//             _updatePosture_StageObject(asFighter, true);
+//         }
+//     }
+// }
+
+// extern "C" StageObject* checkForceDelayPosture(StageObject* self) {
+//     if (!allowPostureUpdate && (unsigned int)self->taskName >= 0x80b0af68 && (unsigned int)self->taskName <= 0x80b0b15c) {
+//         return nullptr;
+//     }
+//     allowPostureUpdate = false;
+//     return self;
+// }
+
+INJECTION("UPDATE_POST_FRAME", 0x800177b0, R"(
+    SAVE_REGS
+    bl updatePreFrame
+    RESTORE_REGS
+    or r0, r0, r3
 )");
 
-extern "C" void updateOnFrame() {
+// physics test
+// INJECTION("PHYSICS_TEST", 0x8070fc98, R"(
+//     SAVE_REGS
+    
+//     lwz r4, 0xd8(r29)
+//     subi r0, r3, 0x1
+//     cntlzw r0, r0
+//     lwz	r3, 0x0010 (r4)
+//     rlwinm r4, r0, 0x1b, 0x5, 0x1f
+//     lwz r12, 0x8(r3)
+//     lwz r12, 0x34(r12)
+//     mtctr r12
+//     bctrl
+
+//     RESTORE_REGS
+
+//     lwz r3, 0x00D8 (r29)
+// )");
+
+extern "C" void updatePreFrame() {
     // if (collectedHeapData.size() > 0) {
     //     if (frame % collectedHeapData.size() == 0) {
     //         OSReport("========== HEAP INFOS ==========\n");
@@ -603,7 +723,7 @@ extern "C" void updateOnFrame() {
     // OSReport("size: %d (%08x)\n", sizeof(MEMiHeapHead), sizeof(MEMiHeapHead));
 
     printer.setup();
-    printer.drawBoundingBoxes(0);
+    renderables.renderPre();
 
     startNormalDraw();
 
@@ -733,10 +853,6 @@ extern "C" void updateOnFrame() {
 
             if (fighter == nullptr) continue;
 
-            if (selectedPlayer == playerNum) {
-                collectData(fighter, playerNum);
-            }
-
             auto action = fighter->modules->statusModule->action;
             auto prevAction = fighter->modules->statusModule->previousAction;
             auto& currData = playerTrainingData[playerNum];
@@ -779,9 +895,9 @@ extern "C" void updateOnFrame() {
             auto xPos = (playerNum + 0.5) * (640 / 4);
             auto yPos = 75;
             #define IP_DISPLAY_SCALE 3
-            if (currData.inputDisplay) {
+            if (currData.inputDisplayType > 0) {
                 auto isHuman = !fighter->getOwner()->isCpu();
-                auto& ipbtn = input->buttons;
+                auto& ipbtn = currData.aiData.aiButtons;
                 renderables.items.frame.push(new Rect (
                     xPos + (2) * IP_DISPLAY_SCALE,
                     yPos - (7.5) * IP_DISPLAY_SCALE,
@@ -841,12 +957,22 @@ extern "C" void updateOnFrame() {
                     true,
                     GXColor(0x777777FF)
                 ));
+                
+                // for effect
+                renderables.items.frame.push(new Rect (
+                    xPos - (5 - 2 * (float)input->inputs.stickX / 2.5) * IP_DISPLAY_SCALE,
+                    yPos - (10 + 2 * (float)input->inputs.stickY / 2.5) * IP_DISPLAY_SCALE,
+                    (1.2) * IP_DISPLAY_SCALE,
+                    (1.2) * IP_DISPLAY_SCALE,
+                    true,
+                    GXColor(0x444444FF)
+                ));
 
                 renderables.items.frame.push(new Rect (
-                    xPos - (5 - 2 * input->leftStickX) * IP_DISPLAY_SCALE,
-                    yPos - (10 + 2 * input->leftStickY) * IP_DISPLAY_SCALE,
-                    (1.5) * IP_DISPLAY_SCALE,
-                    (1.5) * IP_DISPLAY_SCALE,
+                    xPos - (5 - 2 * input->inputs.stickX) * IP_DISPLAY_SCALE,
+                    yPos - (10 + 2 * input->inputs.stickY) * IP_DISPLAY_SCALE,
+                    (2) * IP_DISPLAY_SCALE,
+                    (2) * IP_DISPLAY_SCALE,
                     true,
                     GXColor(0xFFFFFFFF)
                 ));
@@ -862,8 +988,8 @@ extern "C" void updateOnFrame() {
                     ));
 
                     renderables.items.frame.push(new Rect (
-                        xPos + (5 + 2 * currData.playerInputs.substickX / 100) * IP_DISPLAY_SCALE,
-                        yPos - (2 + 2 * currData.playerInputs.substickY / 100) * IP_DISPLAY_SCALE,
+                        xPos + (5 + 2 * (float)currData.playerInputs.substickX / 150.0) * IP_DISPLAY_SCALE,
+                        yPos - (2 + 2 * (float)currData.playerInputs.substickY / 150.0) * IP_DISPLAY_SCALE,
                         (1.5) * IP_DISPLAY_SCALE,
                         (1.5) * IP_DISPLAY_SCALE,
                         true,
@@ -972,7 +1098,7 @@ extern "C" void updateOnFrame() {
                     case 3: playerColor.value = 0xFFFF00DD; break;
                     default: playerColor.value = 0x222222DD; break;
                 }
-                auto sv = fighter->getOwner()->ftInputPtr->aiActPtr->scriptValues;
+                auto sv = fighter->getOwner()->aiInputPtr->aiActPtr->scriptValues;
                 auto fgm = fighter->modules->groundModule;
                 float prevPosX = fgm->unk1->unk1->unk1->landingCollisionBottomXPos;
                 float prevPosY = fgm->unk1->unk1->unk1->landingCollisionBottomYPos;
@@ -1026,53 +1152,63 @@ extern "C" void updateOnFrame() {
         cmdDelay += 1;
         // if (cmdDelay > 45) cmdDelay = 45;
     }
+
+    updateFrame = true;
 }
 
+// 0x8001792c
 extern MovementTracker movementTrackers[4];
-SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
-    renderables.updateTick();
-    storedHitboxTick();
+INJECTION("UPDATE_UNPAUSED", 0x8076541c, R"(
+    SAVE_REGS
+    mr r3, r28
+    mr r4, r30
+    bl updateUnpaused
+    RESTORE_REGS
+    psq_l 31, 72(r1), 0, 0
+)");
 
-    for (int i = 0; i < 4; i++) {
-        movementTrackers[i].incrementTimer();
+extern "C" void updateUnpaused(AiInput* targetAiInput, soControllerImpl* targetController) {
+    if (updateFrame) {
+        renderables.updateTick();
+        storedHitboxTick();
+
+        for (int i = 0; i < 4; i++) {
+            movementTrackers[i].incrementTimer();
+            // OSReport("(%d): %d;", i + 1, playerTrainingData[i].aiData.scriptPath.size());
+            playerTrainingData[i].aiData.scriptPath.clear();
+        }
+        // OSReport("\n");
+        updateFrame = false;
+        
     }
-    
-    auto scene = getScene();
-    if (scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {
-        auto entryCount = FIGHTER_MANAGER->getEntryCount();
+        
+    Fighter* fighter = FIGHTER_MANAGER->getFighter(targetAiInput->fighterId, false);
+    auto pNum = _GetPlayerNo_aiChrIdx(&targetAiInput->cpuIdx);
 
-        for (int i = 0; i < entryCount; i++) {
-            auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
+    auto& currData = playerTrainingData[pNum];
+    currData.playerInputs = PREVIOUS_PADS[pNum];
 
-            auto fighter = FIGHTER_MANAGER->getFighter(id);
+    // currData.aiData.scriptPath[0] = 0;
+    currData.aiData.scriptID = targetAiInput->aiActPtr->aiScript;
+    currData.aiData.md = targetAiInput->aiMd;
+    currData.aiData.target = FIGHTER_MANAGER->getPlayerNo(targetAiInput->aiTarget);
 
-            if (fighter == nullptr) continue;
-
-            auto input = FIGHTER_MANAGER->getInput(id);
-            auto pNum = FIGHTER_MANAGER->getPlayerNo(id);
-
-            auto& currData = playerTrainingData[pNum];
-            currData.playerInputs = PREVIOUS_PADS[pNum];
-
-            auto& aiInput = fighter->getOwner()->ftInputPtr;
-    
-            currData.aiData.md = aiInput->aiMd;
-            currData.aiData.target = aiInput->aiTarget;
-            auto btn = aiInput->buttons;
-            sprintf(currData.aiData.buttons, "");
-            if (btn.attack == 1) strcat(currData.aiData.buttons, "A; "); 
-            if (btn.special == 1) strcat(currData.aiData.buttons, "B; "); 
-            if (btn.jump == 1) strcat(currData.aiData.buttons, "X; "); 
-            if (btn.shield == 1) strcat(currData.aiData.buttons, "R; "); 
-            if (btn.dTaunt == 1) strcat(currData.aiData.buttons, "DT; "); 
-            if (btn.uTaunt == 1) strcat(currData.aiData.buttons, "UT; "); 
-            if (btn.sTaunt == 1) strcat(currData.aiData.buttons, "ST; "); 
-            currData.aiData.aiButtons = aiInput->buttons;
-            currData.aiData.lstickX = aiInput->leftStickX;
-            currData.aiData.lstickY = aiInput->leftStickY;
-            currData.controllerData.stickX = aiInput->leftStickX;
-            currData.controllerData.stickY = aiInput->leftStickY;
-            currData.controllerData.cStick = aiInput->buttons.cStick;
+    // if (currData.inputDisplayType > 0) {
+        if (fighter->getOwner()->isCpu() || currData.inputDisplayType == 2) {
+            currData.aiData.aiButtons = targetController->inputs;
+            currData.aiData.lstickX = targetAiInput->inputs.stickX;
+            currData.aiData.lstickY = targetAiInput->inputs.stickY;
+            
+            currData.controllerData.stickX = targetController->stickX;
+            currData.controllerData.stickY = targetController->stickY;
+            currData.controllerData.substickX = targetController->cStickX;
+            currData.controllerData.substickY = targetController->cStickY;
+            currData.controllerData.triggerLeft = PREVIOUS_PADS[pNum].triggerLeft;
+            currData.controllerData.triggerRight = PREVIOUS_PADS[pNum].triggerRight;
+        } else {
+            currData.aiData.aiButtons = targetAiInput->inputs.buttons;
+            currData.aiData.lstickX = targetAiInput->inputs.stickX;
+            currData.aiData.lstickY = targetAiInput->inputs.stickY;
 
             currData.controllerData.stickX = PREVIOUS_PADS[pNum].stickX;
             currData.controllerData.stickY = PREVIOUS_PADS[pNum].stickY;
@@ -1080,69 +1216,159 @@ SIMPLE_INJECTION(updateUnpaused, 0x8082f140, "lwz r4, 0xc(r3)") {
             currData.controllerData.substickY = PREVIOUS_PADS[pNum].substickY;
             currData.controllerData.triggerLeft = PREVIOUS_PADS[pNum].triggerLeft;
             currData.controllerData.triggerRight = PREVIOUS_PADS[pNum].triggerRight;
+        }
+    // }
+    collectData(fighter, pNum);
 
-            // [0] = snapback enabled
-            // [1] = leniency
-            if (currData.aiData.scriptID == 0x8201 && ai_customFnInjection[0] > 0) {
-                if (fighter->modules->statusModule->action == 0x1D) {
-                    currData.aiData.snapbackShieldtimer = ai_customFnInjection[1];
-                } else {
-                    if (currData.aiData.snapbackShieldtimer <= 0) {
-                        auto LAVars = fighter->modules->workModule->LAVariables;
-                        auto LAFloatArr = (*(float (*)[LAVars->floatsSize])LAVars->floats);
-                        LAFloatArr[0x3] = 50;
-                    } else { 
-                        currData.aiData.snapbackShieldtimer --; 
-                    }
+    // // [0] = snapback enabled
+    // // [1] = leniency
+    // if (currData.aiData.scriptID == 0x8201 && ai_customFnInjection[0] > 0) {
+    //     if (fighter->modules->statusModule->action == 0x1D) {
+    //         currData.aiData.snapbackShieldtimer = ai_customFnInjection[1];
+    //     } else {
+    //         if (currData.aiData.snapbackShieldtimer <= 0) {
+    //             auto LAVars = fighter->modules->workModule->LAVariables;
+    //             auto LAFloatArr = (*(float (*)[LAVars->floatsSize])LAVars->floats);
+    //             LAFloatArr[0x3] = 50;
+    //         } else { 
+    //             currData.aiData.snapbackShieldtimer --; 
+    //         }
+    //     }
+    // }
+    
+    if (currData.debug.enabled) {
+        xyDouble fPos = fighter->modules->groundModule->getUpPos();
+        fPos.yPos += 10;
+        xyDouble sPos = fPos;
+        sPos.yPos += 5;
+        const bool isShieldstun = currData.debug.shieldstun > 0;
+        const float width = 15;
+        const float height = 3;
+        const float min = 0;
+        const float max = isShieldstun ? currData.debug.maxShieldstun : currData.debug.maxHitstun;
+        const float curr = isShieldstun ? currData.debug.shieldstun : currData.debug.hitstun;
+        const bool isHitlag = fighter->modules->ftStopModule->hitlagMaybe > 0 && curr > 0;
+        renderables.items.tick.push(new Rect(
+            fPos.xPos,
+            fPos.yPos,
+            width + 1,
+            height + 1,
+            false,
+            GXColor(curr > 0 ? 0xFFFFFFFF : 0xFFFFFF44)
+        ));
+        renderables.items.tick.push(new Rect(
+            fPos.xPos,
+            fPos.yPos,
+            width + 0.5,
+            height + 0.5,
+            false,
+            GXColor(curr > 0 ? 0x000000FF : 0x00000044)
+        ));
+
+        renderables.items.tick.push(new CircleWithBorder(
+            sPos.xPos,
+            sPos.yPos,
+            3,
+            8,
+            false,
+            GXColor((!isHitlag && curr > 0) ? 0xCCCCCCFF : 0xCCCCCC44),
+            0.25,
+            GXColor((!isHitlag && curr > 0) ? 0x000000FF : 0x00000044)
+        ));
+        if (!isHitlag && curr > 0) {
+            renderables.items.tick.push(new Line{
+                GXColor(0x000000FF),
+                sPos.xPos,
+                sPos.yPos,
+                sPos.xPos + 3 * currData.debug.DI.xPos,
+                sPos.yPos + 3 * currData.debug.DI.yPos,
+                12,
+                false
+            });
+
+            renderables.items.tick.push(new Point{
+                GXColor(0xFFFFFFFF),
+                sPos.xPos,
+                sPos.yPos,
+                18,
+                false
+            });
+
+            renderables.items.tick.push(new Point{
+                GXColor(0x000000FF),
+                sPos.xPos + 3 * currData.debug.DI.xPos,
+                sPos.yPos + 3 * currData.debug.DI.yPos,
+                30,
+                false
+            });
+
+            renderables.items.tick.push(new Point{
+                GXColor(0xFF8800FF),
+                sPos.xPos + 3 * currData.debug.DI.xPos,
+                sPos.yPos + 3 * currData.debug.DI.yPos,
+                24,
+                false
+            });
+        }
+        
+        float widthPercentage = (((curr - min) <= 0) ? 0 : (curr - min) / max);
+        if (isHitlag) widthPercentage = 1 - widthPercentage;
+        const float barWidth = width * widthPercentage;
+        renderables.items.tick.push(new Rect(
+            fPos.xPos - (width - barWidth) * 0.5,
+            fPos.yPos,
+            barWidth,
+            height,
+            false,
+            GXColor(isHitlag ? 0x00CC00FF : (isShieldstun ? 0x0088FFFF : 0xFF8800FF))
+        ));
+        
+        if (currData.debug.fixPosition || currData.debug.settingPosition) {
+            auto LAVars = fighter->modules->workModule->LAVariables;
+            auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
+            auto remainingHitstun = LABasicsArr[56];
+            if (remainingHitstun == 0 || remainingHitstun + currData.debug.comboTimerAdjustment <= 0) {
+                auto action = fighter->modules->statusModule->action;
+                if (currData.debug.noclip) { 
+                    currData.debug.noclipInternal = true; 
+                    fighter->modules->groundModule->setCorrect(0);
                 }
-            }
-            
-            if (currData.debug.enabled && (currData.debug.fixPosition || currData.debug.settingPosition)) {
-                auto LAVars = fighter->modules->workModule->LAVariables;
-                auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
-                auto remainingHitstun = LABasicsArr[56];
-                if (remainingHitstun == 0 || remainingHitstun + currData.debug.comboTimerAdjustment <= 0) {
-                    auto action = fighter->modules->statusModule->action;
-                    if (currData.debug.noclip) { 
-                        currData.debug.noclipInternal = true; 
+                if (!((action >= 0x4A && action <= 0x64) || (action >= 0x3D && action <= 0x42))) {    
+                    currData.debug.comboTimer--;
+                    if (currData.debug.comboTimer == 0) {
+                        currData.debug.noclipInternal = true;
                         fighter->modules->groundModule->setCorrect(0);
-                    }
-                    if (!((action >= 0x4A && action <= 0x64) || (action >= 0x3D && action <= 0x42) || action )) {    
-                        currData.debug.comboTimer--;
-                        if (currData.debug.comboTimer == 0) {
-                            currData.debug.noclipInternal = true;
-                            fighter->modules->groundModule->setCorrect(0);
-                            if (currData.debug.randomizeDamage) { currData.debug.randDmg = ((int)(_randf() * 100)); }
-                            if (currData.debug.randomizePosition) { 
-                                Vec3f pos;
-                                getRandSafePosition(&pos, currData.debug.randOnGround);
-                                currData.debug.randXPos = pos.f1;
-                                currData.debug.randYPos = pos.f2;
-                            }
-                        }
-                        if (currData.debug.comboTimer <= 0) {
-                            setPosition(currData, fighter, input, entryCount);
-                            if (fighter->modules->statusModule->action == 0x10) {
-                                fighter->modules->statusModule->changeStatusForce(0xE, fighter->modules);
-                            }
-                            FIGHTER_MANAGER->getOwner(id)->setDamage(currData.debug.randomizeDamage ? currData.debug.randDmg : currData.debug.damage, 0);
-                            currData.debug.comboTimer = 0;
-                            if (!currData.debug.noclip && currData.debug.noclipInternal && currData.debug.comboTimer == -1) {
-                                currData.debug.noclipInternal = false;
-                                fighter->modules->groundModule->setCorrect(5);
-                            }
+                        if (currData.debug.randomizeDamage) { currData.debug.randDmg = ((int)(_randf() * 100)); }
+                        if (currData.debug.randomizePosition) { 
+                            Vec3f pos;
+                            getRandSafePosition(&pos, currData.debug.randOnGround);
+                            currData.debug.randXPos = pos.f1;
+                            currData.debug.randYPos = pos.f2;
                         }
                     }
-                } else {
-                    currData.debug.comboTimer = remainingHitstun + currData.debug.comboTimerAdjustment;
+                    if (currData.debug.comboTimer <= 0) {
+                        setPosition(currData, fighter, targetAiInput);
+                        if (fighter->modules->statusModule->action == 0x10) {
+                            fighter->modules->statusModule->changeStatusForce(0xE, fighter->modules);
+                        }
+                        FIGHTER_MANAGER->getOwner(targetAiInput->fighterId)->setDamage(currData.debug.randomizeDamage ? currData.debug.randDmg : currData.debug.damage, 0);
+                        currData.debug.comboTimer = 0;
+                        if (!currData.debug.noclip && currData.debug.noclipInternal && currData.debug.comboTimer == -1) {
+                            currData.debug.noclipInternal = false;
+                            fighter->modules->groundModule->setCorrect(5);
+                        }
+                    }
                 }
-            } else if (currData.debug.enabled && currData.debug.damage != 0) {
-                FIGHTER_MANAGER->getOwner(id)->setDamage(currData.debug.damage, 0);
+            } else {
+                currData.debug.comboTimer = remainingHitstun + currData.debug.comboTimerAdjustment;
             }
+        } else if (currData.debug.enabled && currData.debug.damage != 0) {
+            FIGHTER_MANAGER->getOwner(targetAiInput->fighterId)->setDamage(currData.debug.damage, 0);
         }
     }
-
 }
+
+
 
 int intendedScript = 0;
 INJECTION("CPUStoreIntentionASM", 0x80918570, R"(
@@ -1165,7 +1391,7 @@ INJECTION("CPUForceBehavior", 0x809188B0, R"(
     sth r26, 120(r25)
     RESTORE_REGS
 )");
-extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
+extern "C" short CPUForceBehavior(int param1, AiScriptData * aiActPtr) {
     // char pNum = _GetPlayerNo_aiChrIdx(&aiActPtr->ftInputPtr->cpuIdx);
     // if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {
         if (param1 == 0x2050) {
@@ -1175,7 +1401,7 @@ extern "C" short CPUForceBehavior(int param1, aiScriptData * aiActPtr) {
             OSReport("next: %04x)::\n", param1);
         }
         // aiActPtr->aiScript = intendedScript;
-        if (param1 < 0x8000 && param1 != 0x1120) return (aiActPtr->aiScript != 0x0) ? aiActPtr->aiScript : 0x8000;
+        if (param1 < 0x8000 && param1 != 0x1120 && param1 != 0x6100) return (aiActPtr->aiScript != 0x0) ? aiActPtr->aiScript : 0x8000;
         return param1; // normal routine
     // }
 

@@ -12,6 +12,13 @@ struct MainPage : public BasicPage {
   void show();
 };
 
+struct AIDebugPage : public BasicPage {
+  AIDebugPage(Menu* myMenu, TrainingData& d) 
+  : BasicPage(myMenu, "AI Debug"), data(d) {};
+  void show();
+  TrainingData& data;
+};
+
 struct ComboTrainerPage : public BasicPage {
   ComboTrainerPage(Menu* myMenu, TrainingData& d) 
   : BasicPage(myMenu, "Combo Trainer"), data(d) {};
@@ -29,7 +36,8 @@ struct TrajectoryLinePage : public BasicPage {
 struct HeatmapPage : public BasicPage {
   HeatmapPage(Menu* myMenu, TrainingData& d) 
   : BasicPage(myMenu, "Heatmap"), data(d) {};
-  void show(); TrainingData& data;
+  void show(); 
+  TrainingData& data;
 };
 
 struct AIPredictionPage : public BasicPage {
@@ -46,23 +54,6 @@ struct AIPersonalityPage : public BasicPage {
   void show();
   TrainingData& data;
 };
-
-struct AIPersonalityPreset {
-  const char* name;
-  AIPersonality personality;
-}
-struct AIPersonalityPresetPage : public BasicPage {
-  AIPersonalityPresetPage(Menu* myMenu, TrainingData& d)
-  : BasicPage(myMenu, "AI Presets"), data(d) {};
-  void show();
-  TrainingData& data;
-
-  static constexpr AIPersonalityPreset presets[] = {
-    // names
-    {"thing", {}}
-  }
-
-}
 
 struct PSADataPage : public BasicPage {
   PSADataPage(Menu* myMenu, TrainingData& d) 
@@ -81,6 +72,8 @@ struct PSAScriptPage : public BasicPage {
 };
 
 struct ControllerInfoPage : public BasicPage {
+  static const char* dataType[];
+
   ControllerInfoPage(Menu* myMenu, TrainingData& d) 
   : BasicPage(myMenu, "Controller Info"), data(d) {};
   void show();

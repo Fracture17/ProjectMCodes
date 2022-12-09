@@ -29,6 +29,8 @@ struct TextPrinter {
     float startY;
     float lastPadLocation;
     bool is2D = false;
+    bool renderPre = false;
+    u32 bboxIdx = 0;
 };
 
 extern TextPrinter printer;

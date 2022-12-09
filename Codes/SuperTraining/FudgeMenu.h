@@ -4,6 +4,8 @@
 
 #include "menu.h"
 #include "Containers/vector.h"
+#include "Brawl/AI/AICEPac.h"
+#include "Brawl/IP/Inputs.h"
 #include "Brawl/FT/Fighter.h"
 #include "Brawl/SO/soAnimCmdModuleImpl.h"
 #include "Brawl/IT/BaseItem.h"
@@ -60,7 +62,7 @@ public:
     }
   }
 
-private: 
+protected: 
   vector<soAnimCmd*>& data;
   int& currLine;
   int scrollPoint = 0;
@@ -73,37 +75,58 @@ public:
   char pNum = -1;
   
   AIPredictions& predictions;
-  AIPredictionOption(char pNum, AIPredictions& predictions) : 
-    pNum(pNum), predictions(predictions) {}
+  AIPredictionOption(char pNum, AIPredictions& predictions) :
+    pNum(pNum), predictions(predictions) {
+      canModify = false;
+    }
 
   void modify(float amount) {}
   void select() { }
   void deselect() { }
   void render(TextPrinter *printer, char *buffer);
 
-private: 
+protected: 
   bool selected = false;
-  bool canModify = false;
 };
 
-class AIPersonalityPresetOption : public StandardOption {
-public:
-  AIPersonalityPresetOption(TrainingData& d, AIPersonality& s, int i): data(d), settings(s), index(i) {}
+struct AIScriptCache;
+struct AIScriptPathOption : public StandardOption {
+public:  
+
+  AIScriptPathOption(vector<AIScriptCache*>& scripts) : 
+    scripts(scripts) {
+      canModify = false;
+    }
+
   void modify(float amount) {}
-  void select();
+  void select() { }
   void deselect() { }
   void render(TextPrinter *printer, char *buffer);
 
-  TrainingData& data;
-  AIPersonality& settings;
-  int index;
-}
+protected: 
+  vector<AIScriptCache*>& scripts;
+  bool selected = false;
+};
+
+// class AIPersonalityPresetOption : public StandardOption {
+// public:
+//   AIPersonalityPresetOption(TrainingData& d, AIPersonality& s, int i): data(d), settings(s), index(i) {}
+//   void modify(float amount) {}
+//   void select();
+//   void deselect() { }
+//   void render(TextPrinter *printer, char *buffer);
+
+//   TrainingData& data;
+//   AIPersonality& settings;
+//   int index;
+// };
 
 struct PSAData {
   int threadIdx = 0;
   int scriptLocation = -1;
   vector<soAnimCmd*> fullScript;
   unsigned int action = -1;
+  float actionTimer = -1;
   unsigned int prevAction = -1;
   unsigned int subaction = -1;
   float frameSpeedModifier = 1;
@@ -141,6 +164,8 @@ struct debugData {
   float maxShieldstun = 0;
   float prevFrameShieldstun = 0;
 
+  xyDouble DI;
+
   float shieldValue = 0;
   float maxShieldValue = 50;
 
@@ -166,6 +191,10 @@ struct AIPredictions {
 };
 
 struct AIPersonality {
+  AICEPac* AICEData;
+  bool unlocked = true;
+  bool autoAdjust = true;
+  int personalityIndex = 0;
   float braveChance = 0;
   float baitChance = 0;
   float aggression = 0;
@@ -178,24 +207,21 @@ struct AIPersonality {
   float platChance = 0;
   float SDIChance = 0;
   float reactionTime = 0;
-}
-
-struct AIPersonalityOptions { 
-  AICEPac* AICEData;
-  bool unlocked = true;
-  bool autoAdjust = true;
-  int personalityIndex = 0;
-  AIPersonality personality;
 };
 
+#define SCRIPTPATH_LEN 0x20
+struct AIScriptCache {
+  unsigned short scriptID = 0; 
+  char depth = 0;
+};
 struct AIData {
-  int scriptID = 0xFFFF;
+  vector<AIScriptCache*> scriptPath;
+  unsigned int scriptID = 0xFFFF;
   int fighterID = -1;
   int target = -1;
   unsigned int currentScript = -1;
   int frameCount = -1;
   unsigned int md = -1;
-  char buttons[25] = {};
   Inputs aiButtons;
   float lstickX = 0;
   float lstickY = 0;
@@ -204,7 +230,7 @@ struct AIData {
   bool AIDebug = false;
 
   AIPredictions predictions;
-  AIPersonalityOptions personality;
+  AIPersonality personality;
 };
 
 struct TrajectoryOptions {
@@ -260,7 +286,7 @@ struct TrainingData {
   PADStatus playerInputs;
   bool actionableOverlay = false; 
   int actionableSE = -1;
-  bool inputDisplay = false;
+  int inputDisplayType = 0;
   bool hasPlayedSE = false;
   PositionalData posData;
   TrajectoryOptions trajectoryOpts;
@@ -278,7 +304,7 @@ public:
   void render(TextPrinter* printer, char* buffer);
 
   virtual ~AITrainingScriptOption() {}
-private:
+protected:
   unsigned int id;
   char playerNum;
 };
@@ -301,7 +327,7 @@ public:
     defaultValues.clear();
   }
 
-private:
+protected:
   unsigned int id;
   char playerNum;
   vector<AITrainingDefaultVal *> defaultValues = vector<AITrainingDefaultVal *>();
@@ -332,7 +358,7 @@ public:
   void render(TextPrinter* printer, char* buffer);
 
   virtual ~ItemSelectOption() {}
-private:
+protected:
   short id;
 };
 
@@ -345,7 +371,7 @@ public:
   void render(TextPrinter* printer, char* buffer);
 
   virtual ~ItemSpawnOption() {}
-private:
+protected:
   unsigned int id;
 };
 

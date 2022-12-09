@@ -4,14 +4,18 @@
 
 #include "ftOwner.h"
 
-double ftOwner::getDamage() {
+double FtOwner::getDamage() {
     return _getDamage_ftOwner(this);
 }
 
-void ftOwner::setDamage(double newValue, int shouldLog) {
+void FtOwner::setDamage(double newValue, int shouldLog) {
     _setDamage_ftOwner(newValue, this, shouldLog);
 }
 
-bool ftOwner::isCpu() {
+bool FtOwner::isCpu() {
     return _isOperationCpu_ftOwner(this);
+}
+
+bool FtOwner::hasCurry() {
+    return _getCurry_ftOwner(this);
 }

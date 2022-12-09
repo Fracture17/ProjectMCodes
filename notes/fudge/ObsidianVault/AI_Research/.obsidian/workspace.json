@@ -1,0 +1,113 @@
+{
+  "main": {
+    "id": "93fc6e5c9a8b6d14",
+    "type": "split",
+    "children": [
+      {
+        "id": "51656c0d6f7545f2",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5c406d3b26f130af",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Update aiInput.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "56584b33f2f44c98",
+    "type": "split",
+    "children": [
+      {
+        "id": "b01408d7c7200017",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ccfdc5d566df4c07",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "b23d28d9624860b7",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "bf7638ad772945d2",
+    "type": "split",
+    "children": [
+      {
+        "id": "d3cd172de299225f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ac9e0454c4b403ed",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Update aiInput.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "6b20f6c591927d9b",
+            "type": "leaf",
+            "state": {
+              "type": "Saved Queries View",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "ribbon": {
+    "mostRecentAction": ""
+  },
+  "active": "ccfdc5d566df4c07",
+  "lastOpenFiles": [
+    "Update aiInput.md"
+  ]
+}

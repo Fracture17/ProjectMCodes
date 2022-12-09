@@ -7,6 +7,7 @@
 
 #include "Ground.h"
 
+struct Vec3f;
 struct grGimmick : public Ground {
     void getPos(Vec3f* pos);
     void getRot(Vec3f* rot);

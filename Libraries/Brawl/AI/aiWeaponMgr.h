@@ -8,7 +8,7 @@
 struct Weapon;
 
 // size: 0x64
-struct aiWeaponManagerEntry {
+struct AiWeaponManagerEntry {
     // increments once for each article/item spawned throughout the match
     // 0x0
     int itemNo;
@@ -64,8 +64,8 @@ struct aiWeaponManagerEntry {
 };
 
 // size: 0x1920
-struct aiWeaponManager {
-    aiWeaponManagerEntry entries[0x1920 / sizeof(aiWeaponManagerEntry)];
+struct AiWeaponManager {
+    AiWeaponManagerEntry entries[0x1920 / sizeof(AiWeaponManagerEntry)];
 };
 
 #endif //PROJECTMCODES_AIWEAPONMGR_H

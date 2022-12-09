@@ -30,6 +30,7 @@ public:
     bool operator<=(const vector<T>& other);
     bool operator>=(const vector<T>& other);*/
     bool push(const T& val);
+    bool insert(const T& val, u32 index);
     void pop_back();
     size_t size() const;
     bool reallocate(size_t newSize);
@@ -108,9 +109,23 @@ bool vector<T>::push(const T& val) {
 }
 
 template<class T>
+bool vector<T>::insert(const T& val, u32 index) {
+    if (length >= maxLength) {
+        if (!reallocate(maxLength * 2)) {
+            return false;
+        };
+    }
+    for (u32 i = length; i > index; i--) {
+        Array[i + 1] = Array[i];
+    }
+    Array[index] = val;
+    length++;
+    return true;
+}
+
+template<class T>
 void vector<T>::pop_back() {
-    delete Array[length];
-    length--;
+    delete Array[--length];
 }
 
 template<class T>

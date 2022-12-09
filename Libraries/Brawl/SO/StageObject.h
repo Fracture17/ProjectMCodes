@@ -5,17 +5,9 @@
 #ifndef PROJECTMCODES_STAGEOBJECT_H
 #define PROJECTMCODES_STAGEOBJECT_H
 
-#include "soModuleAccessor.h"
+#include "Brawl/GF/gfTask.h"
 
-//temp
-struct gfTask {
-
-};
-
-
-typedef int entryID;
 struct soModuleAccessor;
-
 struct StageObject : public gfTask {
     //a bunch of arguments
     inline static auto ct = (StageObject* (*)()) 0x8070e274;
@@ -26,4 +18,6 @@ struct StageObject : public gfTask {
     
 };
 
-#endif //PROJECTMCODES_STAGEOBJECT_H
+#define _updatePosture_StageObject ((void (*)(StageObject* self, bool interpolate)) 0x8070ef84)
+
+#endif //PROJECTMCODES_STAGEOBJECT_Hrec

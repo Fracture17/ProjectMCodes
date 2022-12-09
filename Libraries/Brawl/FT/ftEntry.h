@@ -5,22 +5,19 @@
 #ifndef PROJECTMCODES_FTENTRY_H
 #define PROJECTMCODES_FTENTRY_H
 
-
-#include "Brawl/SO/StageObject.h"
-#include "ftOwner.h"
 #include "Fighter.h"
 
-struct aiInput;
-struct ftOwner;
-struct Fighter;
+struct FtOwner;
+struct FtInput;
+
 // size: 0x244
-struct ftEntry {
+struct FtEntry {
     // unsigned int getTeam();
     void setFinal(int unk1);
 
     char _spacer[0x4];
     // 0x04
-    int entryId;
+    EntryID entryId;
 
     //0xD
     //0 seems to mean hasn't started loading, 1 seems to mean is ready, but won't load in replays
@@ -33,30 +30,38 @@ struct ftEntry {
 
     char _spacer3[0x28 - 0x18 - 4];
     // 0x28
-    ftOwner* owner;
+    FtOwner* owner;
     // 0x2C
-    aiInput* input;
+    FtInput* ftInput;
 
-    char _spacer4[0x34 - 0x2C - 4];
+    unsigned int charId;
     // 0x34
     Fighter* ftStageObject;
-    char _spacer5[0x58 - 0x34 - 4];
+    char _spacer5[0x50 - 0x34 - 4];
 
-    //TODO determine which playernum is correct
+    // 0x50
+    int ftEntryNumber;
+
+    char _spacer6[0x58 - 0x50 - 4];
+
     // 0x58
-    unsigned int playerNum;
-    char _loadStatus;
+    unsigned int team;
+
+    // 0x5C
+    unsigned int subCharID;
+
+    char _spacer7[0x70 - 0x5C - 4];
 
 
     //0x70
     //0 based, + 0x10 for replays
-    //int playerNum;
+    int playerNum;
     
     // fills the rest of the space (array compatibility)
-    char _spacer6[0x244 - 0x5D - 1];
+    char _spacer_fill[0x244 - 0x70 - 4];
 };
 
-#define _getTeam_ftEntry ((unsigned int (*)(ftEntry* self, )) 0x80821974)
-#define setFinal_ftEntry ((void (*)(ftEntry* self, int unk3)) 0x8082037c)
+#define _getTeam_ftEntry ((unsigned int (*)(FtEntry* self, )) 0x80821974)
+#define setFinal_ftEntry ((void (*)(FtEntry* self, int unk3)) 0x8082037c)
 
 #endif //PROJECTMCODES_FTENTRY_H

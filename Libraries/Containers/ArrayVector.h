@@ -46,6 +46,7 @@ struct ArrayVector {
 
   ArrayVecVTable* vtable1;
   ArrayVecVTable2* vtable2;
+  int maxLen;
 };
 
 template<class T>

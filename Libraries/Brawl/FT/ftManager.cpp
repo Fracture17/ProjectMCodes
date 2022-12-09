@@ -4,42 +4,42 @@
 
 #include "ftManager.h"
 
-playerNumber ftManager::getPlayerNo(entryID entry) {
+playerNumber FtManager::getPlayerNo(EntryID entry) {
     return _getPlayerNo_ftManager(this, entry);
 }
 
-entryID ftManager::getEntryId(playerNumber playerNo) {
+EntryID FtManager::getEntryId(playerNumber playerNo) {
     return _getEntryID_ftManager(this, playerNo);
 }
 
-ftOwner * ftManager::getOwner(entryID entry) {
+FtOwner * FtManager::getOwner(EntryID entry) {
     return _getOwner_ftManager(this, entry);
 }
 
-entryID ftManager::getEntryIdFromIndex(int index) {
+EntryID FtManager::getEntryIdFromIndex(int index) {
     return _getEntryIDFromIndex_ftManager(this, index);
 }
 
-Fighter* ftManager::getFighter(entryID entry, bool getFollower) {
+Fighter* FtManager::getFighter(EntryID entry, bool getFollower) {
     return _getFighter_ftManager(this, entry, getFollower);
 }
 
-unsigned int ftManager::getFighterCount(entryID entry) {
+unsigned int FtManager::getFighterCount(EntryID entry) {
     return _getFighterCount_ftManager(this, entry);
 }
 
-aiInput* ftManager::getInput(entryID entry) {
+AiInput* FtManager::getInput(EntryID entry) {
     return _getInput_ftManager(this, entry);
 }
 
-int ftManager::getEntryCount() {
+int FtManager::getEntryCount() {
     return _getEntryCount_ftManager(this);
 }
 
-void ftManager::setSlow(int excludeTeam, int unknown, int slowStrength, int durationInFrames) {
+void FtManager::setSlow(int excludeTeam, int unknown, int slowStrength, int durationInFrames) {
     return _setSlow_ftManager(this, excludeTeam, unknown, slowStrength, durationInFrames);
 }
 
-bool ftManager::isCpuActive(entryID entry) {
+bool FtManager::isCpuActive(EntryID entry) {
     return _isCpuActive_ftManager(this, entry);
 }

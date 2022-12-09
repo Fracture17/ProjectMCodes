@@ -5,7 +5,7 @@
 #ifndef PROJECTMCODES_SOMODULEACCESSOR_H
 #define PROJECTMCODES_SOMODULEACCESSOR_H
 
-
+#include "Brawl/GF/gfTask.h"
 #include "Brawl/SO/StageObject.h"
 #include "soControllerModuleImpl.h"
 #include "soWorkManageModuleImpl.h"
@@ -34,7 +34,7 @@ struct soStatusModuleImpl;
 struct soModuleAccessor {
     char _spacer[8];
     //0x8
-    StageObject* owner;
+    StageObject* owningObject;
     //There should be an soModuleEnummeration class here, but I'm just going to list the modules directly for now
     //0x0 + 0xC = 0xC
     soResourceModuleImpl* resourceModule;
