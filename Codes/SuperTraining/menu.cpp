@@ -28,7 +28,7 @@ void Page::deselect() {
 }
 
 void Page::select() {
-  isSelected = true;
+  // isSelected = true;
   options[currentOption]->select();
 }
 
@@ -70,6 +70,7 @@ void Page::render(TextPrinter* printer, char* buffer) {
     else if (i == currentOption) printer->setTextColor(0xFFFFFFFF);
     else printer->setTextColor(0xFFFFFF88);
     printer->padToWidth(RENDER_X_SPACING / 5);
+    options[i]->isCurrent = (i == currentOption);
     options[i]->render(printer, buffer);
   }
 }
@@ -146,7 +147,7 @@ void PageLink::select() {
 }
 void PageLink::deselect() {}
 void PageLink::render(TextPrinter* printer, char* buffer) {
-  sprintf(buffer, "%s >", name);
+  sprintf(buffer, (isCurrent) ? "(A) %s >" : "%s >", name);
   printer->printLine(buffer);
 }
 
@@ -161,7 +162,7 @@ void IntOption::modify(float amount) {
 void IntOption::select() {}
 void IntOption::deselect() {}
 void IntOption::render(TextPrinter* printer, char* buffer) {
-  sprintf(buffer, "%s: %03d", name, value);
+  sprintf(buffer, (isCurrent) ? "%s: < %03d >" : "%s: %03d", name, value);
   printer->printLine(buffer);
 }
 
@@ -221,6 +222,7 @@ void HexObserver::render(TextPrinter* printer, char* buffer) {
 void ControlOption::modify(float amount) {}
 void ControlOption::select() {
   value = true;
+  this->parent->isSelected = true;
   this->parent->menu->paused = false;
 }
 void ControlOption::deselect() {

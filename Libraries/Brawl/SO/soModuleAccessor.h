@@ -13,6 +13,7 @@
 #include "soMotionModule.h"
 #include "soStatusModuleImpl.h"
 #include "soCollisionAttackModuleImpl.h"
+#include "soCollisionHitModuleImpl.h"
 #include "soKineticModuleGenericImpl.h"
 #include "soGroundModuleImpl.h"
 #include "soGenerateArticleManageModuleImpl.h"
@@ -52,8 +53,9 @@ struct soModuleAccessor {
     char _spacer3[0x28 - 0x1C - 4];
     //0x1C + 0xC = 0x28
     soCollisionAttackModuleImpl* collisionAttackModule;
-
-    char _spacer4[0x50 - 0x28 - 4];
+    //0x1C + 0xC = 0x2C
+    soCollisionHitModuleImpl* collisionHitModule;
+    char _spacer4[0x50 - 0x2C - 4];
     // 0x44 + 0xC = 0x50
     ftStopModuleImpl* ftStopModule;
 

@@ -132,6 +132,9 @@ struct PSAData {
   float frameSpeedModifier = 1;
   float currentFrame = 0;
   float currentEndFrame = -1;
+  u8 currSubactIntag[8] = {};
+  float intanProgBar = 0;
+  s16 maxGlobalIntanRemaining = -1;
   char currSubactionName[20] = {};
   SubpageOption* subactionSwitcher;
 };

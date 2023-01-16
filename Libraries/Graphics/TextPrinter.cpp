@@ -37,8 +37,41 @@ void TextPrinter::setup() {
     _GXSetCullMode(GXCullMode::GX_CULL_NONE);
 //    message.setObjZCompare(GXCompare::GX_EQUAL, true);
 
-    message.font = MELEE_FONT;
+    // message.font = MELEE_FONT;
+    // other fonts include: 
+    // - font_latin12.arc
+    // - font_latin1.arc
+    // - font_watch.arc
 
+    // // BLANK (0) (enc: 3; fmt: )
+    // message.font = (FontData*) 0x80497d2c;
+    // OSReport("0 enc: %08x\n", message.font->GetGlyph());
+    // // MELEE STANDARD (1) / DEFAULT (enc: 0; fmt: )
+    // message.font = (FontData*) 0x80497d54;
+    // OSReport("1 enc: %08x\n", message.font->GetGlyph());
+    // // Hiranga Font (2) (starts @ 0x32) (USA Tags) (enc: 0; fmt: )
+    // message.font = (FontData*) 0x80497da4;
+    // OSReport("2 enc: %08x\n", message.font->GetGlyph());
+    // // Ending Font (3) (enc: 0; fmt: )
+    // message.font = (FontData*) 0x80497dcc;
+    // OSReport("3 enc: %08x\n", message.font->GetGlyph());
+    // // Melee Font (4) (MELEE MONO) (enc: 0; fmt: )
+    // message.font = (FontData*) 0x80497e44;
+    // OSReport("4 enc: %08x\n", message.font->GetGlyph());
+    // // Resant Font (5) (enc: 0; fmt: )
+    // message.font = (FontData*) 0x80497df4;
+    // OSReport("5 enc: %08x\n", message.font->GetGlyph());
+    // // Fox Font (6) (enc: 0; fmt: )
+    // message.font = (FontData*) 0x80497e1c;
+    // OSReport("6 enc: %08x\n", message.font->GetGlyph());
+    // // Alert Font(?) (7) (enc: 0; fmt: )
+    // message.font = (FontData*) 0x80497e6c;
+    // OSReport("7 enc: %08x\n", message.font->GetGlyph());
+    // // USA MAIN MENU (8) (enc: 0; fmt: )
+    // message.font = (FontData*) 0x80497d7c;
+    // OSReport("8 enc: %08x\n", message.font->GetGlyph());
+
+    message.font = MELEE_FONT;
     //restore font values
     *_FONT_THING1 = savedFont1;
     *_FONT_THING2 = savedFont2;
@@ -115,6 +148,7 @@ void TextPrinter::print(const char *chars) {
         }
         else {
             message.printChar(*chars);
+            // message.printChar(0xFF00 | *chars);
         }
     }
 

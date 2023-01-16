@@ -1,5 +1,8 @@
 #pragma once
 
+#define VTABLE_METHOD(RET_TYPE, FN_NAME, ARGS...) \
+RET_TYPE FN_NAME() { return ((RET_TYPE (*)(ARGS)) this->vtable->fn__ ## FN_NAME)(ARGS); }
+
 typedef signed char s8;
 typedef signed short s16;
 typedef signed int s32;

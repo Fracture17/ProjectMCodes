@@ -7,7 +7,7 @@ int soAnimCmdArgument::asInt() {
 }
 
 float soAnimCmdArgument::asScalar() {
-  return *(float *) value / 60000.0;
+  return ((float)(int ) value) / 60000.0;
 }
 
 void* soAnimCmdArgument::asOffset() {

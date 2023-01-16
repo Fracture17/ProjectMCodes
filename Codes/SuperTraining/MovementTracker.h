@@ -32,6 +32,17 @@ struct KVPair {
   GXColor color;
 };
 
+struct MarkovInput {
+  u8 tolerence;
+  float weight;
+};
+
+struct MarkovInputs {
+  static constexpr MarkovInput time = { 200, 2 }; 
+  static constexpr MarkovInput yDistFloor = { 35, 1 }; 
+  static constexpr MarkovInput xDist = { 75, 4 }; 
+};
+
 class MovementTracker {
 public:
   MovementTracker() {};

@@ -86,11 +86,55 @@ struct CharWriterTextColor {
     GXColor color5;
 }__attribute__((packed, aligned(4)));
 
-//FontData may not be the real name, and may not be used completly correctly
-struct FontData {
-
+struct FontDataVTable {
+    void** FontData_descriptor_8059c4f0;
+    void* offset_fix;
+    void** fn___dt;
+    void** fn__GetWidth;
+    void** fn__GetHeight;
+    void** fn__GetAscent;
+    void** fn__GetDescent;
+    void** fn__GetBaselinePos;
+    void** fn__GetCellHeight;
+    void** fn__GetCellWidth;
+    void** fn__GetMaxCharWidth;
+    void** fn__GetType;
+    void** fn__GetTextureFormat;
+    void** fn__GetLineFeed;
+    void** fn__GetDefaultCharWidths;
+    void** fn__SetDefaultCharWidths;
+    void** fn__SetAlternateChar;
+    void** fn__SetLineFeed;
+    void** fn__GetCharWidth;
+    void** fn__GetCharWidths;
+    void** fn__GetGlyph;
+    void** fn__GetEncoding;
 };
 
+//FontData may not be the real name, and may not be used completly correctly
+struct FontData {
+    VTABLE_METHOD(s32, GetWidth)
+    VTABLE_METHOD(s32, GetHeight)
+    VTABLE_METHOD(s32, GetAscent)
+    VTABLE_METHOD(s32, GetDescent)
+    VTABLE_METHOD(s32, GetBaselinePos)
+    VTABLE_METHOD(s32, GetCellHeight)
+    VTABLE_METHOD(s32, GetCellWidth)
+    VTABLE_METHOD(s32, GetMaxCharWidth)
+    VTABLE_METHOD(s32, GetType)
+    VTABLE_METHOD(s32, GetTextureFormat)
+    VTABLE_METHOD(s32, GetLineFeed)
+    VTABLE_METHOD(s32, GetDefaultCharWidths)
+    VTABLE_METHOD(s32, SetDefaultCharWidths)
+    VTABLE_METHOD(s32, SetAlternateChar)
+    VTABLE_METHOD(s32, SetLineFeed)
+    VTABLE_METHOD(s32, GetCharWidth)
+    VTABLE_METHOD(s32, GetCharWidths)
+    VTABLE_METHOD(s32, GetGlyph)
+    VTABLE_METHOD(s32, GetEncoding)
+
+    FontDataVTable* vtable;
+};
 
 typedef u16 UTF16;
 
@@ -115,9 +159,6 @@ struct Message {
     void printGlyph(double xpos, double ypos, double zpos, FontData * TextureIndex);
     void setObjZCompare(int unk1, bool active);
     void allocMsgBuffer(int bufferSize, int unk1, HEAPTYPE heaptype);
-
-
-
 
     //0
     //seems to be a boolean flag for GX color mapping

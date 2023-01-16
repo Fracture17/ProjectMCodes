@@ -148,7 +148,7 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
     // influence of patterns deteriorate over time
     float scoreMultiplier = 1;
     while(offsetTracker != idx && looked < lookAmount) {
-      if (i != offsets.size() && offsetTracker == offsets[i + 1]) break;
+      if (i + 1 != offsets.size() && offsetTracker == offsets[i + 1]) break;
       if (startTracker < 0) startTracker = ACTION_COUNT - 1;
       if (offsetTracker < 0) offsetTracker = ACTION_COUNT - 1;
       // pointless to continue because MOV_NONE effectively means uninitalized
@@ -158,42 +158,31 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
 
       // a value (toAdd) is calculated based on the weight and the scoremultiplier
       float toAdd = ((float) (200 - weights[actionTracker[offsetTracker]]) / 100);
-      // skips over if inconsequential
-      // if (toAdd * timeTracker[offsetTracker] < 30 && actionTracker[startTracker] != actionTracker[offsetTracker]) {
-      //   offsetTracker++;
-      //   continue;
-      // }
 
       toAdd *= scoreMultiplier;
-
-      // ...the difference in time is then calculated, and the absolute value is taken
-      float timeDifference = ((looked == 0) ? reactionPatchTime : timeTracker[startTracker]) - timeTracker[offsetTracker];
-      float yDistFloorDiff = yDistFloorTracker[startTracker] - yDistFloorTracker[offsetTracker];
-      float xDistDiff = distanceTracker[startTracker] - distanceTracker[offsetTracker];
-      if (timeDifference < 0) timeDifference *= -1;
-      if (yDistFloorDiff < 0) yDistFloorDiff *= -1;
-      if (xDistDiff < 0) xDistDiff *= -1;
-      // finally, toAdd is MULTIPLIED by 200 MINUS the time difference times the scoreMultiplier (again)
-      // This effecitvely means "take this into account if the time difference is less than 80 frames",
-      // and also says "the less the difference in time, the greater the score increase"
-      toAdd *= (200 - timeDifference) * (30 - yDistFloorDiff) * (70 - xDistDiff) * scoreMultiplier * 0.01;
-
-      // if (actionType == MOV_ATTACK) {
-      //   // OSReport("action tracker val: %d; offsetTracker: %d\n", actionTracker[offsetTracker], offsetTracker);
-      //   // if (actionTracker[offsetTracker] == MOV_ATTACK)
-      //     OSReport("toAdd: %.3f, score: %.3f, totalScore: %.3f\n", toAdd, score, totalScore);
-      // }
-      // this here effectively limits the influence of a time difference greater than 80, which would
-      // be negative
-      if (toAdd < 0) toAdd = 0;
+      totalScore += toAdd;
 
       // if the action is the same, then add it to the score
       if (actionTracker[startTracker] == actionTracker[offsetTracker]) {
-        score += toAdd * scoreMultiplier;
+        float timeDiff = ((looked == 0) ? reactionPatchTime : timeTracker[startTracker]) - timeTracker[offsetTracker];
+        float yDistFloorDiff = yDistFloorTracker[startTracker] - yDistFloorTracker[offsetTracker];
+        float xDistDiff = distanceTracker[startTracker] - distanceTracker[offsetTracker];
+        if (timeDiff < 0) timeDiff *= -1;
+        if (yDistFloorDiff < 0) yDistFloorDiff *= -1;
+        if (xDistDiff < 0) xDistDiff *= -1;
+
+        using m = MarkovInputs;
+        #define BIAS(name) m::name.weight * (m::name.tolerence - name ## Diff) / m::name.tolerence
+        toAdd *= (
+            BIAS(time)
+          + BIAS(yDistFloor)
+          + BIAS(xDist)
+        ) / 3;
+        #undef BIAS
+        if (toAdd < 0) toAdd = 0;
+        score += toAdd;
       }
-      // no matter what, we'll add the score to the tracked total
-      totalScore += toAdd * scoreMultiplier;
-      
+
       // this just sets the score multiplier to a value less than it was before, spaced evenly down to 0
       scoreMultiplier = (float) (lookAmount - looked) / (float) lookAmount;
       startTracker -= 1;
@@ -208,6 +197,41 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
   actionCache[actionType] = score / totalScore;
   return score / totalScore;
 };
+
+/**
+ * CURRENT_PROCESS:
+ * total = 0
+ * score = 0
+ * 
+ * for each segment:
+ *   for each action:
+ *     max = action weight
+ *     currDiff = diff of now + then
+ *     curr *= max * currDiff
+ *     if action then == now:
+ *       score += curr
+ *     total += max
+ * 
+ * out = score / total
+ * 
+ * | GOAL |
+ * combine each segment somehow, then evalueate curr against that 
+ * 
+ * FASTER_PLAN:
+ * total = 0
+ * score = 0
+ * 
+ * for each segment:
+ *   for each action:
+ *     max = action weight
+ *     if action then == now:
+ *       currDiff = diff of now + then
+ *       curr *= max * currDiff
+ *       score += curr
+ *     total += max
+ * 
+ * out = score / total
+*/
 
 float MovementTracker::approxChance(float CPULevel) {
   return approxChance(CPULevel, MOV_ATTACK);

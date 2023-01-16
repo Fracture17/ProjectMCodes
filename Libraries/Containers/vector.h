@@ -10,6 +10,7 @@
 #include "CLibs/InitializerList.h"
 
 
+// the most scuffed vector implementation of all time
 template<class T>
 class vector {
 public:
@@ -146,7 +147,6 @@ void vector<T>::erase(size_t index) {
     }
     length--;
 }
-
 
 template<class T>
 bool vector<T>::reallocate(size_t newSize) {

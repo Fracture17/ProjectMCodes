@@ -511,7 +511,7 @@ WeightedDie dynamicDice[2] = {
 extern "C" {
     double fn_result = 0;
     void trackActionChange(int action, soModuleAccessor * accesser) {
-        if (action == -1) return;
+        if (action == -1 || (action >= 0x10E && action <= 0x110)) return;
         // necessary because this will also pick up articles
         // checking the base type for the "ft" prefix ensures it's an actual fighter
         // 0x6674 = "ft"

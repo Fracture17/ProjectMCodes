@@ -315,16 +315,30 @@ void collectData(Fighter* fighter, int pNum) {
     currData.debug.psaData.currentFrame = anmData.animFrame;
     currData.debug.psaData.frameSpeedModifier = anmData.frameSpeedModifier;
     auto prevAction = fighter->modules->statusModule->previousAction;
+    // NOTE clear sub/action-dependant data when an action changes
     if (currData.debug.psaData.action == prevAction) {
         currData.hasPlayedSE = false;
+        currData.debug.psaData.currSubactIntag[0] = 255;
+        currData.debug.psaData.intanProgBar = 0;
     }
     currData.debug.psaData.prevAction = prevAction;
     currData.debug.psaData.action = fighter->modules->statusModule->action;
     currData.debug.psaData.actionTimer = fighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector.threadUnion.ActionMain.cmdInterpreter->logicalFrame;
     currData.debug.psaData.subaction = fighter->modules->motionModule->subAction;
 
+    // NOTE get remaining timed body intangibility 
+    // OSReport("(ADDR: %08x) REMAINING INTAN: %d\n", 
+    if (fighter->modules->collisionHitModule->mainHitGroup->at(0)->remainingIntangibility == 0) {
+        currData.debug.psaData.maxGlobalIntanRemaining = 1;
+    } else if (fighter->modules->collisionHitModule->mainHitGroup->at(0)->remainingIntangibility > currData.debug.psaData.maxGlobalIntanRemaining) {
+        currData.debug.psaData.maxGlobalIntanRemaining = fighter->modules->collisionHitModule->mainHitGroup->at(0)->remainingIntangibility;
+    }
+
+
     // OSReport("%s: %d\n", __FILE__, __LINE__);
     // OSReport("Free Size: %08x\n", getFreeSize(mainHeap));
+
+    // NOTE simply store PSA data for each character 
     currData.debug.psaData.fullScript.reallocate(0);
     currData.debug.psaData.fullScript.reallocate(1);
     auto* threads = &fighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector;
@@ -336,7 +350,6 @@ void collectData(Fighter* fighter, int pNum) {
         while (currCommand != nullptr && !(currCommand->_module == 0 && currCommand->code == 0) && !(currCommand->_module == 0xFF && currCommand->code == 0xFF)) {
             if (currCommand->_module != 0xFA && currCommand->_module != 0xFF) {
                 currData.debug.psaData.fullScript.push(currCommand);
-                // OSReport("Idx: %d; psaVecSize: %d\n", commandIdx, currData.debug.psaData.fullScript->size());
             } else {
                 break;
             }
@@ -346,12 +359,56 @@ void collectData(Fighter* fighter, int pNum) {
             }
         }
     }
+    // NOTE grab body state changes
+    if (currData.debug.psaData.currSubactIntag[0] == 255 && (&threads->threadUnion.SubactionMain) != nullptr) {
+        currData.debug.psaData.currSubactIntag[0] = 254;
+        soAnimCmd* currCommand = threads->threadUnion.SubactionMain.getCommand(0);
+        u8 frame = 0;
+        int commandIdx = 0;
+        u8 intagIdx = 0;
+        bool currIntag = false;
+        while (intagIdx < 8 && currCommand != nullptr && !(currCommand->_module == 0 && currCommand->code == 0) && !(currCommand->_module == 0xFF && currCommand->code == 0xFF)) {
+            soAnimCmdArgument* cmdArgs = *(soAnimCmdArgument (*)[currCommand->numArguments]) currCommand->argumentOffset;
+            if (currCommand->_module == 0x00 && currCommand->numArguments > 0) {
+                switch (currCommand->code) {
+                    case 1: frame += cmdArgs[0].asScalar(); break;
+                    case 2: frame = cmdArgs[0].asScalar(); break;
+                }
+            } else if (currCommand->_module == 0x06 && currCommand->code == 0x05 && currIntag != (cmdArgs[0].asOffset() != 0)) {
+                currIntag = (cmdArgs[0].asOffset() != 0);
+                currData.debug.psaData.currSubactIntag[intagIdx] = (u8) frame;
+                intagIdx += 1;
+            }
+            currCommand = threads->threadUnion.SubactionMain.getCommand(++commandIdx);
+        }
+    }
+    // calculate time until/remaining duration of intangibility
+    if (currData.debug.psaData.currSubactIntag[0] < 254 && currData.debug.psaData.currentFrame < 253) {
+        u8 nextIdx = 255;
+        for (u8 i = 0; i < 8; i++) {
+            if (currData.debug.psaData.currentFrame < currData.debug.psaData.currSubactIntag[i]) {
+                nextIdx = i; break;
+            }
+            // OSReport("idx[%d] = %d\n", i, currData.debug.psaData.currSubactIntag[i]);
+        }
+        if (nextIdx == 255) { 
+            currData.debug.psaData.currSubactIntag[0] = 254;
+            currData.debug.psaData.intanProgBar = 0;
+        } else if (currData.debug.psaData.frameSpeedModifier != 0) {
+            float framesLeft = (currData.debug.psaData.currSubactIntag[nextIdx] - currData.debug.psaData.currentFrame - 1) / currData.debug.psaData.frameSpeedModifier;
+            float timeTotal = currData.debug.psaData.currSubactIntag[nextIdx] - ((nextIdx == 0) ? 0 : currData.debug.psaData.currSubactIntag[nextIdx - 1]) / currData.debug.psaData.frameSpeedModifier;
+            if (nextIdx % 2 == 0) framesLeft *= -1;
+            currData.debug.psaData.intanProgBar = framesLeft / timeTotal;
+            if (framesLeft == 0 && nextIdx % 2 == 0) currData.debug.psaData.intanProgBar = 1;
+        }
+    }
     // OSReport("%s: %d\n", __FILE__, __LINE__);
     auto& aiInput = fighter->getOwner()->aiInputPtr;
 
     currData.aiData.currentScript = aiInput->aiActPtr->aiScript;
     currData.aiData.frameCount = aiInput->aiActPtr->framesSinceScriptChanged;
 
+    // NOTE get various things to do with fighter PSA variables
     auto workModule = fighter->modules->workModule;
     if (workModule != nullptr) {
         auto RABasicsArr = (*(int (*)[workModule->RAVariables->basicsSize])workModule->RAVariables->basics);
@@ -1239,9 +1296,15 @@ extern "C" void updateUnpaused(AiInput* targetAiInput, soControllerImpl* targetC
     if (currData.debug.enabled) {
         xyDouble fPos = fighter->modules->groundModule->getUpPos();
         fPos.yPos += 10;
-        xyDouble sPos = fPos;
-        sPos.yPos += 5;
+        xyDouble iPos = fPos;
+        iPos.yPos += 2.5;
+        xyDouble sPos = iPos;
+        sPos.yPos += 3;
         const bool isShieldstun = currData.debug.shieldstun > 0;
+        const float intanBarProgress = currData.debug.psaData.intanProgBar;
+        const float externalIntanBarProgress = (float) fighter->modules->collisionHitModule->mainHitGroup->at(0)->remainingIntangibility / (float) currData.debug.psaData.maxGlobalIntanRemaining;
+        const float intanHeight = 2;
+        const float intanWidth = 12;
         const float width = 15;
         const float height = 3;
         const float min = 0;
@@ -1321,6 +1384,48 @@ extern "C" void updateUnpaused(AiInput* targetAiInput, soControllerImpl* targetC
             height,
             false,
             GXColor(isHitlag ? 0x00CC00FF : (isShieldstun ? 0x0088FFFF : 0xFF8800FF))
+        ));
+
+        renderables.items.tick.push(new Rect(
+            iPos.xPos,
+            iPos.yPos,
+            intanWidth + 0.5,
+            intanHeight + 0.5,
+            false,
+            GXColor(intanBarProgress != 0 ? 0xFFFFFFFF : 0xFFFFFF44)
+        ));
+        renderables.items.tick.push(new Rect(
+            iPos.xPos,
+            iPos.yPos,
+            intanWidth + 0.25,
+            intanHeight + 0.25,
+            false,
+            GXColor(intanBarProgress != 0 ? 0x000000FF : 0x00000044)
+        ));
+
+        float intanBarWidth = intanBarProgress;
+        GXColor intanColor = GXColor(0x0088DDFF);
+        if (intanBarProgress < 0) {
+            intanBarWidth += 1;
+            intanColor = GXColor(0xCC0000FF);
+        }
+        intanBarWidth *= intanWidth;
+        renderables.items.tick.push(new Rect(
+            iPos.xPos - (intanWidth - intanBarWidth) * 0.5,
+            iPos.yPos,
+            intanBarWidth,
+            intanHeight,
+            false,
+            intanColor
+        ));
+        intanBarWidth = intanWidth * externalIntanBarProgress;
+        renderables.items.tick.push(new Rect(
+            iPos.xPos - (intanWidth - intanBarWidth) * 0.5,
+            iPos.yPos,
+            intanBarWidth,
+            intanHeight * ((intanBarProgress > 0) ? 0.5 : 1),
+            false,
+            GXColor(0x00CC00CC)
         ));
         
         if (currData.debug.fixPosition || currData.debug.settingPosition) {

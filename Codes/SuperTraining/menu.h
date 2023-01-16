@@ -34,12 +34,15 @@ struct OptionType {
   Page* parent;
   SubpageOption* subParent = nullptr;
   bool canModify = true;
+  bool isCurrent = false;
 };
 
 struct StandardOption : public OptionType {
   void up() { modify(1); }
   void down() { modify(-1); }
   void setParentPage(Page* p) { this->parent = p; }
+  virtual void select() {}
+  virtual void deselect() {}
   virtual ~StandardOption() {}
 };
 
