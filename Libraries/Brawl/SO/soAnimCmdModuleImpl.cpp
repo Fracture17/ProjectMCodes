@@ -3,7 +3,7 @@
 #include "soWorkManageModuleImpl.h"
 
 int soAnimCmdArgument::asInt() {
-  return *(int *) value;
+  return (int)value;
 }
 
 float soAnimCmdArgument::asScalar() {

@@ -162,7 +162,8 @@ void IntOption::modify(float amount) {
 void IntOption::select() {}
 void IntOption::deselect() {}
 void IntOption::render(TextPrinter* printer, char* buffer) {
-  sprintf(buffer, (isCurrent) ? "%s: < %03d >" : "%s: %03d", name, value);
+  if (min == -1 && value == -1) sprintf(buffer, (isCurrent) ? "%s: < off >" : "%s: off", name);
+  else sprintf(buffer, (isCurrent) ? "%s: < %03d >" : "%s: %03d", name, value);
   printer->printLine(buffer);
 }
 
@@ -177,7 +178,8 @@ void FloatOption::modify(float amount) {
 void FloatOption::select() {}
 void FloatOption::deselect() {}
 void FloatOption::render(TextPrinter* printer, char* buffer) {
-  sprintf(buffer, "%s: %.3f", name, value);
+  if (min == -1.1 && value < 0) sprintf(buffer, (isCurrent) ? "%s: < off >" : "%s: off", name);
+  else sprintf(buffer, (isCurrent) ? "%s: < %.3f >" : "%s: %.3f", name, value);
   printer->printLine(buffer);
 }
 
@@ -194,6 +196,22 @@ void BoolOption::render(TextPrinter* printer, char* buffer) {
   sprintf(buffer, "%s: %s", name, value ? "on" : "off");
   printer->printLine(buffer);
 }
+
+//////////////////////////////////
+// BitOption
+//////////////////////////////////
+void BitOption::modify(float amount) {
+  // clears and sets the bit appropriately
+  value &= ~(1 << bitNum);
+  // "amount > 0" evaluates to 1 or 0
+  value ^= ((amount > 0) << bitNum);
+}
+void BitOption::render(TextPrinter* printer, char* buffer) {
+  sprintf(buffer, "%s: %s", name, (value & (1 << bitNum)) ? "on" : "off");
+  printer->printLine(buffer);
+}
+
+
 
 //////////////////////////////////
 // HexObserver
@@ -244,6 +262,18 @@ void StringOption::render(TextPrinter* printer, char* buffer) {
   sprintf(buffer, "%s: %s", name, value);
   printer->printLine(buffer);
 }
+
+//////////////////////////////////
+// TempLogOption
+//////////////////////////////////
+extern FudgeAIHitbox fudgeAI;
+void TempLogOption::modify(float amount) {};
+void TempLogOption::select() { OSReport("xOffset = %.3f\nyOffset = %.3f\nxRange = %.3f\nyRange = %.3f\n", fudgeAI.trueXMin, fudgeAI.trueYMin, fudgeAI.width, fudgeAI.height); };
+void TempLogOption::deselect() {};
+void TempLogOption::render(TextPrinter* printer, char* buffer) {
+  sprintf(buffer, (isCurrent) ? "(A) %s !" : "%s !", name);
+  printer->printLine(buffer);
+};
 
 //////////////////////////////////
 // NamedIndexOption

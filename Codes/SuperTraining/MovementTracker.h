@@ -41,6 +41,12 @@ struct MarkovInputs {
   static constexpr MarkovInput time = { 200, 2 }; 
   static constexpr MarkovInput yDistFloor = { 35, 1 }; 
   static constexpr MarkovInput xDist = { 75, 4 }; 
+  // these two add a little extra "YOMI"
+  // the AI's own chance of being in an attacking state
+  static constexpr MarkovInput attackChance = { 125, 2 }; 
+  // the AI's own chance of being in an defending state
+  static constexpr MarkovInput shieldChance = { 125, 2 }; 
+  static constexpr MarkovInput xPos = { 250, 3 }; 
 };
 
 class MovementTracker {
@@ -48,7 +54,7 @@ public:
   MovementTracker() {};
 
   void reset();
-  void trackAction(int action, u8 yDistFloor, u8 distance = 0);
+  void trackAction(int action, bool isAction, u8 yDistFloor, u8 xPos, u8 distance = 0, u8 attackChance = 0, u8 shieldChance = 0);
   float approxChance(float levelValue);
   float approxChance(float levelValue, char actionType);
   void incrementTimer();
@@ -81,7 +87,11 @@ private:
   unsigned char timeTracker[ACTION_COUNT] = {};
   unsigned char yDistFloorTracker[ACTION_COUNT] = {};
   unsigned char distanceTracker[ACTION_COUNT] = {};
+  unsigned char attackChanceTracker[ACTION_COUNT] = {};
+  unsigned char shieldChanceTracker[ACTION_COUNT] = {};
+  unsigned char xPosTracker[ACTION_COUNT] = {};
   float actionCache[MOV_LEN] = {};
+  unsigned char attackGuess = 0;
 };
 
 unsigned char actionToMov(int action);

@@ -14,4 +14,9 @@ struct Ground : public gfTask {
 
 #define updateG3dProcCalcWorldForce_Ground ((void (*)(Ground* self)) 0x8096aacc)
 
+struct CollisionManager : public gfTask {
+};
+
+#define COLLISION_MANAGER ((CollisionManager*) 0x80b92548)
+
 #endif //PROJECTMCODES_GROUND_H

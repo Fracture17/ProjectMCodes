@@ -56,7 +56,6 @@ struct FudgeAIHitbox {
   float height = 0;
   GXColor color = GXColor(0x00FF0088);
 };
-
 extern FudgeAIHitbox fudgeAI;
 // void storeRenderingData();
 // void storePlayerData();

@@ -60,9 +60,9 @@ class Compiler:
             print(">>> STARTING")
             output = cmdLineOutput(compileCommand)
             output = filterUselessWarnings(output)
-            print(output)
-            if output:
-                print(output)
+            # print(output)
+            # if output:
+                # print(output)
         except Exception as e:
             print(">>> SOME EXCEPTION OCCURED??")
             print(["error", e])

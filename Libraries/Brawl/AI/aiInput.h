@@ -30,35 +30,35 @@ struct AiInput {
     void* pacData;
     
     // 0x3C
-    // union VariousAIInfoUnion {
-    //     unsigned short raw;
-    //     struct VariousAIInfos {
-    //         unsigned isHumanPlayer : 1;
-    //         unsigned unk15 : 1;
-    //         unsigned unk14 : 1;
-    //         unsigned unk13 : 1;
-    //         unsigned unk12 : 1;
-    //         unsigned unk11 : 1;
-    //         unsigned unk10 : 1;
-    //         unsigned unk9 : 1;
+    union VariousAIInfoUnion {
+        unsigned short raw;
+        struct VariousAIInfos {
+            bool isHumanPlayer : 1;
+            bool unk15 : 1;
+            bool unk14 : 1;
+            bool unk13 : 1;
+            bool unk12 : 1;
+            bool unk11 : 1;
+            bool unk10 : 1;
+            bool unk9 : 1;
 
-    //         // change_md => 0
-    //         unsigned unk8 : 1;
-    //         unsigned unk7 : 1; // pacRegist/[aiInput] if this is on then unk5 and unk6 get toggled off, otherwise this gets toggled on
-    //         // change_md => 0
-    //         unsigned unk6 : 1; // pacRegist/[aiInput]
-    //         unsigned unk5 : 1; // pacRegist/[aiInput]
-    //         unsigned unk4 : 1;
-    //         // change_md => 0
-    //         unsigned unk3 : 1;
-    //         // change_md => 0
-    //         unsigned unk2 : 1;
-    //         unsigned unk1 : 1;
-    //     } infos;
-    // };
+            // change_md => 0
+            bool isChildAi : 1;
+            bool unk7 : 1; // pacRegist/[aiInput] if this is on then unk5 and unk6 get toggled off, otherwise this gets toggled on
+            // change_md => 0
+            bool unk6 : 1; // pacRegist/[aiInput]
+            bool unk5 : 1; // pacRegist/[aiInput]
+            bool unk4 : 1;
+            // change_md => 0
+            bool unk3 : 1;
+            // change_md => 0
+            bool unk2 : 1;
+            bool unk1 : 1;
+        } infos;
+    } infoUnion;
 
     // contains ARC data
-    char _spacer4[0x40 - 0x38 - 4];
+    char _spacer4[0x40 - 0x3C - 2];
 
     // 0x40
     char swingChkByte1;
@@ -98,7 +98,6 @@ struct AiInput {
     // 0x144
     FtEntry* ftEntryPtr;
 };
-
 
 static_assert(sizeof(AiInput) == 0x148);
 

@@ -354,7 +354,7 @@ def makeMap(symbols, dest: File):
 def makeFilesFile(compiledCodes: Library, files: list):
     data = bytearray()
     s = [s for s in compiledCodes.sections if s.name == '_INITIALIZE___text__']
-    print(s)
+    # print(s)
     assert len(s) == 1, (f"{s}")
     data.extend(s[0].address.to_bytes(4, 'big'))
     data.extend(settings.INITIALIZER_INFO_ADDRESS.to_bytes(4, 'big'))
@@ -371,7 +371,7 @@ def makeFilesFile(compiledCodes: Library, files: list):
 def extractFiles(linkedCodes: Library, segmentList: SegmentManager):
     files = []
     for s in segmentList.segments.values():
-        print(s)
+        # print(s)
         if s.sections:
             extractedCodes = linkedCodes.extractSections(s.sections, File(f"IntermediateFiles/{s.name}"))
             outputCodes = extractedCodes.compress(File(f"Output/{s.name}"))
@@ -458,7 +458,7 @@ def makeDataWriteInfo(compiledCodes: Library):
             address = int((w[1]), base=16).to_bytes(4, 'big')
             data = int((w[2]), base=16)
             data = data.to_bytes(ceil((len(w[2]) - 2) / 2), 'big')
-            if w[4].startswith('0x'):
+            if w[3].startswith('0x'):
                 repeats = int((w[3]), base=16)
             else:
                 repeats = int(w[3])

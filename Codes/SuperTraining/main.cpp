@@ -11,7 +11,9 @@
 #include "Containers/vector.h"
 #include "Containers/ArrayVector.h"
 
+#include "Brawl/GF/gfApplication.h"
 #include "Brawl/FT/ftManager.h"
+#include "Brawl/FT/ftEntryManager.h"
 #include "Brawl/FT/ftOwner.h"
 #include "Brawl/FT/ftEntry.h"
 #include "Brawl/FT/ftInput.h"
@@ -24,6 +26,7 @@
 #include "Brawl/IP/IpHuman.h"
 #include "Brawl/sndSystem.h"
 
+#include "Brawl/GR/Ground.h"
 #include "Graphics/Draw.h"
 #include "Brawl/Message.h"
 
@@ -44,39 +47,25 @@
 extern float ai_customFnInjection[0x10];
 extern bool ai_customFnInjectionToggle[0x10];
 extern TrainingData playerTrainingData[];
+extern GlobalCustomData GCD;
 extern char selectedPlayer;
 extern Menu* fudgeMenu;
 
 //unsigned int BASE_SCALE = CAMERA_MANAGER->cameras[0].scale;
 
-//hacky way to check if in game
-enum SCENE_TYPE {
-    MAIN_MENU = 0x1,
-    HRC_CSS = 0x2,
-    DIFFICULTY_TRAINING_CSS = 0x4,
-    CSS_HRC = 0x5,
-    DIFFICULTY_TRAINING_SSS_EVT_CSS = 0x6,
-    SSS_BTT = 0x7,
-    TRAINING_MODE_MMS = 0x8,
-    VS = 0xA
-};
-
-//hacky way to check if in game
-unsigned int getScene() {
-    u32* ptr = (u32*) (0x805b4fd8 + 0xd4);
-    ptr = (u32*) *ptr;
-    if(ptr < (u32*)0xA0000000) {
-        ptr = (u32*) *(ptr + (0x10 / 4));
-        if(ptr != nullptr) {
-            u32 scene = *(ptr + (8 / 4));
-            return scene;
-        }
-    }
-    return false;
-}
-
 bool isUnPaused() {
     return (*(char*)0x805B50C5) & 0x01;
+}
+
+u16 playerNumBitfield = 0;
+u8 getPlayerCount() {
+    int pCount = 0;
+    u8 activeNums = playerNumBitfield;
+    while (activeNums) {
+        pCount += activeNums >> 0x1u;
+        activeNums >>= 1;
+    }
+    return pCount + 1;
 }
 
 // global variables for the injection down-below
@@ -95,12 +84,17 @@ int md_debugTarget = 0;
 
 #define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
 #define _randf ((double (*)()) 0x8003fb64)
-void getRandSafePosition(Vec3f* pos, bool onGround) {
+enum RandPosType : int {
+    RANDOM,
+    SAFE,
+    OFFSTAGE
+};
+void getRandPosition(Vec3f* pos, bool onGround, RandPosType posType = RandPosType::SAFE) {
     float xRand;
     float yRand;
 
     for (int i = 0; i < 100; i++) {
-        xRand = _randf() * 300 - 150;
+        xRand = _randf() * (246 * 2) - 246;
         yRand = _randf() * 150;
 
         Vec3f startPos {
@@ -130,26 +124,32 @@ void getRandSafePosition(Vec3f* pos, bool onGround) {
             Vec3f ret1 {-1,-1,-1};
             _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
             // OSReport("INSIDE: %.3f, %.3f\n", ret1.f1, ret1.f2);
-            if (ret1.f1 == -1 && ret1.f2 == -1) { break; }
+            switch(posType) {
+                case RANDOM: goto $endFn; break;
+                case SAFE: if (ret1.f1 == -1 && ret1.f2 == -1) { goto $endFn; } break;
+                case OFFSTAGE: if (ret1.f1 != -1 && ret1.f2 != -1) { goto $endFn; } break;
+            }
+            
         }
     }
+    $endFn:
     
     pos->f1 = xRand;
     pos->f2 = yRand;
 }
 
-void setPosition(TrainingData& data, Fighter *fighter, AiInput *input) {
+void setPosition(TrainingData& data, Fighter *fighter) {
     if (data.debug.settingPosition) {
         if (PREVIOUS_PADS[0].stickX < -5 || 5 < PREVIOUS_PADS[0].stickX)
             data.debug.xPos += (float) PREVIOUS_PADS[0].stickX * 3 / (float) (127 * 2);
-        data.debug.airGroundState = fighter->modules->groundModule->unk1->unk1->airGroundState;
+        data.debug.airGroundState = fighter->modules->groundModule->groundShapeImplVec->at(0)->airGroundState;
         if (data.debug.airGroundState != 1) {
             if (PREVIOUS_PADS[0].stickY < -5 || 5 < PREVIOUS_PADS[0].stickY)
                 data.debug.yPos += (float) PREVIOUS_PADS[0].stickY * 3 / (float) (127 * 2);
         }
     }
 
-    if (data.debug.randomizePosition) {
+    if (data.debug.randomizePosition || data.debug.recoveryTrainer) {
         fighter->modules->postureModule->xPos = data.debug.randXPos;
         fighter->modules->postureModule->yPos = data.debug.randYPos;
     } else {
@@ -309,6 +309,78 @@ extern "C" void checkMenuPaused(char* gfTaskSchedulerInst) {
 void collectData(Fighter* fighter, int pNum) {
     auto& currData = playerTrainingData[pNum];
     auto& anmData = fighter->modules->motionModule->mainAnimationData;
+    auto& groundModule = fighter->modules->groundModule;
+    auto& posModule = fighter->modules->postureModule;
+    auto& kinModule = fighter->modules->kineticModule;
+    auto& statMod = fighter->modules->statusModule;
+    
+    float vertSpeed = kinModule->energyMotion.getSpeed().yPos;
+    // OSReport("posY (prev, now): (%.3f. %.3f)\n", posModule->prevYPos, posModule->yPos);
+    // OSReport("PosY Addr: %08x\n", &posModule->yPos);
+    if (GCD.smoothWavedashes 
+    && anmData.animFrame == 0 
+    && statMod->action == 0x21
+    && statMod->previousAction != 0x72
+    && vertSpeed < -0.001) {
+
+        xyDouble sPos = groundModule->getDownPos();
+        Vec3f startPos = {sPos.xPos, sPos.yPos};
+        // groundModule->groundShapeImplVec->at(0)->offset.y += vertSpeed;
+        // renderables.items.tick.push(new Rect(startPos.f1, startPos.f2, 1, 1, false, GXColor(0xFF0000FF)));
+        
+        Vec3f destPos = {
+            0,
+            (float)(-1),
+            0
+        };
+        Vec3f ret1 = {-1,-1,-1};
+        Vec3f ret2 = {-1,-1,-1};
+        int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+        if (rayResult) {
+            
+            for (int i = 0; i < 1; i++) {
+                groundModule->attachGround();
+                groundModule->apply();
+                fighter->processAnim();
+                fighter->processUpdate();
+                fighter->processPreMapCorrection();
+                fighter->processMapCorrection();
+                // Vec2f newPos = {ret1.f1, ret1.f2};
+                // groundModule->groundShapeImplVec->at(0)->collStatus->currCollShape->setDownPos(&newPos);
+                fighter->processFixPosition();
+                fighter->processPreCollision();
+                fighter->processCollision();
+            }
+
+            Vec3f originalPos = startPos;
+            sPos = groundModule->getDownPos();
+            startPos = {sPos.xPos, sPos.yPos};
+            // OSReport("original: %.3f, %.3f; new: %.3f, %.3f\n", originalPos.f1, originalPos.f2, startPos.f1, startPos.f2);
+            destPos = {0, startPos.f2 - originalPos.f2, 0};
+            rayResult = _stRayCheck_vec3f(&originalPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            if (rayResult) { 
+                OSReport("isInGround\n");
+                // posModule->yPos = ret1.f2;
+                Vec2f newPos = {ret1.f1, ret1.f2};
+                groundModule->groundShapeImplVec->at(0)->collStatus->currCollShape->setDownPos(&newPos);;
+                // groundModule->attachGround();
+            }
+            // renderables.items.tick.push(new Rect(startPos.f1, startPos.f2, 1, 1, false, GXColor(0x00FF00FF)));
+
+            xyDouble rPos = groundModule->getRightPos();
+            startPos = {rPos.xPos, rPos.yPos, 0};
+            destPos = {-5, 0, 0};
+            rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            if (rayResult) { posModule->xPos = posModule->prevXPos; }
+
+            xyDouble lPos = groundModule->getLeftPos();
+            startPos = {lPos.xPos, lPos.yPos, 0};
+            destPos = {5, 0, 0};
+            rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            if (rayResult) { posModule->xPos = posModule->prevXPos; }
+        }
+    }
+
     
     currData.debug.psaData.currentEndFrame = (anmData.resPtr == nullptr) ? -1 : anmData.resPtr->CHR0Ptr->animLength;
     sprintf(currData.debug.psaData.currSubactionName, "%.19s", (anmData.resPtr == nullptr) ? "" : anmData.resPtr->CHR0Ptr->getString());
@@ -362,11 +434,14 @@ void collectData(Fighter* fighter, int pNum) {
     // NOTE grab body state changes
     if (currData.debug.psaData.currSubactIntag[0] == 255 && (&threads->threadUnion.SubactionMain) != nullptr) {
         currData.debug.psaData.currSubactIntag[0] = 254;
+        currData.debug.psaData.throwFrame = -1;
+        currData.debug.psaData.currSubactIASA = 255;
         soAnimCmd* currCommand = threads->threadUnion.SubactionMain.getCommand(0);
         u8 frame = 0;
         int commandIdx = 0;
         u8 intagIdx = 0;
         bool currIntag = false;
+        s32 throwAngles[5] = {}; 
         while (intagIdx < 8 && currCommand != nullptr && !(currCommand->_module == 0 && currCommand->code == 0) && !(currCommand->_module == 0xFF && currCommand->code == 0xFF)) {
             soAnimCmdArgument* cmdArgs = *(soAnimCmdArgument (*)[currCommand->numArguments]) currCommand->argumentOffset;
             if (currCommand->_module == 0x00 && currCommand->numArguments > 0) {
@@ -378,9 +453,24 @@ void collectData(Fighter* fighter, int pNum) {
                 currIntag = (cmdArgs[0].asOffset() != 0);
                 currData.debug.psaData.currSubactIntag[intagIdx] = (u8) frame;
                 intagIdx += 1;
+            } else if (currCommand->_module == 0x06 && currCommand->code == 0x0E) {
+                // OSReport("throw id: %d; angle: %d\n", cmdArgs[0].asInt(), cmdArgs[3].asInt());
+                throwAngles[cmdArgs[0].asInt()] = cmdArgs[3].asInt();
+            } else if (currCommand->_module == 0x06 && currCommand->code == 0x0F) {
+                currData.debug.psaData.throwFrame = frame;
+
+                int id = cmdArgs[0].asInt();
+                // OSReport("id: %d, angles: [%d, %d, %d, %d, %d]\n", id, throwAngles[0], throwAngles[1], throwAngles[2], throwAngles[3], throwAngles[4]);
+                int angle = throwAngles[id];
+                currData.debug.psaData.shouldTechThrow = angle >= 170 || angle <= 10;
+            } else if (currCommand->_module == 0x64 && currCommand->code == 0x00) {
+                currData.debug.psaData.currSubactIASA = frame;
             }
             currCommand = threads->threadUnion.SubactionMain.getCommand(++commandIdx);
         }
+        if ((currData.debug.psaData.action >= 0x24 && currData.debug.psaData.action <= 0x3C || currData.debug.psaData.action >= 0x112) && currData.debug.psaData.currSubactIASA == 255) {
+            currData.debug.psaData.currSubactIASA = currData.debug.psaData.currentEndFrame;
+        } 
     }
     // calculate time until/remaining duration of intangibility
     if (currData.debug.psaData.currSubactIntag[0] < 254 && currData.debug.psaData.currentFrame < 253) {
@@ -401,6 +491,16 @@ void collectData(Fighter* fighter, int pNum) {
             currData.debug.psaData.intanProgBar = framesLeft / timeTotal;
             if (framesLeft == 0 && nextIdx % 2 == 0) currData.debug.psaData.intanProgBar = 1;
         }
+    }
+    if (currData.debug.psaData.currSubactIASA < 255) {
+        float framesLeft = (currData.debug.psaData.currSubactIASA - currData.debug.psaData.currentFrame - 1) / currData.debug.psaData.frameSpeedModifier;
+        currData.debug.psaData.subactIASAProgBar = framesLeft / currData.debug.psaData.currSubactIASA;
+        if (currData.debug.psaData.subactIASAProgBar < 0) {
+            framesLeft = (currData.debug.psaData.currentEndFrame - currData.debug.psaData.currentFrame - 1) / currData.debug.psaData.frameSpeedModifier;
+            float framesPostIASA = (currData.debug.psaData.currentEndFrame - currData.debug.psaData.currSubactIASA - 1) / currData.debug.psaData.frameSpeedModifier;
+            currData.debug.psaData.subactIASAProgBar = -1 * framesLeft / framesPostIASA;
+        }
+        if (currData.debug.psaData.subactIASAProgBar > 1) currData.debug.psaData.subactIASAProgBar = 1;
     }
     // OSReport("%s: %d\n", __FILE__, __LINE__);
     auto& aiInput = fighter->getOwner()->aiInputPtr;
@@ -446,29 +546,26 @@ void collectData(Fighter* fighter, int pNum) {
             currData.debug.DI.yPos *= clamp;
         }
 
-        auto& grModule = fighter->modules->groundModule;
-        auto& posModule = fighter->modules->postureModule;
-        auto& kinModule = fighter->modules->kineticModule;
-
         currData.posData.xPos = posModule->xPos;
         currData.posData.yPos = posModule->yPos;
         currData.posData.totalXVel = currData.posData.xPos - posModule->prevXPos;
         currData.posData.totalYVel = currData.posData.yPos - posModule->prevYPos;
+        currData.posData.kineticModule = kinModule;
         // currData.posData.KBXVel = kinModule->intermediateThing->valContThing->kbXVel;
         // currData.posData.KBYVel = kinModule->intermediateThing->valContThing->kbYVel;
         // currData.posData.CHRXVel = currData.posData.totalXVel - currData.posData.KBXVel;
         // currData.posData.CHRYVel = currData.posData.totalYVel - currData.posData.KBYVel;
 
-        xyDouble ECBRes = grModule->getDownPos();
+        xyDouble ECBRes = groundModule->getDownPos();
         currData.posData.ECBBX = ECBRes.xPos;
         currData.posData.ECBBY = ECBRes.yPos;
-        ECBRes = grModule->getLeftPos();
+        ECBRes = groundModule->getLeftPos();
         currData.posData.ECBLX = ECBRes.xPos;
         currData.posData.ECBLY = ECBRes.yPos;
-        ECBRes = grModule->getUpPos();
+        ECBRes = groundModule->getUpPos();
         currData.posData.ECBTX = ECBRes.xPos;
         currData.posData.ECBTY = ECBRes.yPos;
-        ECBRes = grModule->getRightPos();
+        ECBRes = groundModule->getRightPos();
         currData.posData.ECBRX = ECBRes.xPos;
         currData.posData.ECBRY = ECBRes.yPos;
     }
@@ -671,6 +768,7 @@ INJECTION("forceVisMemPool", 0x80025dc8, R"(
 //     RESTORE_REGS
 //     li r0, 1
 // )");
+
 // extern "C" void getHeapOffset(unsigned int heapOffset) {
 //     collectedHeapData[collectedHeapData.size() - 1]->heapOffset = heapOffset;
 // }
@@ -716,7 +814,7 @@ bool updateFrame = false;
 //     if ((unsigned int)currTask->taskName >= 0x80b0af68 && (unsigned int)currTask->taskName <= 0x80b0b15c) {
 //         // OSReport("CURR TASK: %s\n", currTask->taskName);
 //         Fighter* asFighter = (Fighter*) currTask;
-//         // OSReport("POSTURE: %08x; GROUND: %08x\n", &asFighter->modules->postureModule->xPos, &asFighter->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos);
+//         // OSReport("POSTURE: %08x; GROUND: %08x\n", &asFighter->modules->postureModule->xPos, &asFighter->modules->groundModule->collStatus->collStatus->collStatus->landingCollisionBottomXPos);
 //         if (taskID == 0x7) {
 //             asFighter->processFixPosition();
 //             allowPostureUpdate = true;
@@ -760,6 +858,8 @@ INJECTION("UPDATE_POST_FRAME", 0x800177b0, R"(
 // )");
 
 extern "C" void updatePreFrame() {
+    // renderables.clearAll();
+    // return;
     // if (collectedHeapData.size() > 0) {
     //     if (frame % collectedHeapData.size() == 0) {
     //         OSReport("========== HEAP INFOS ==========\n");
@@ -903,12 +1003,22 @@ extern "C" void updatePreFrame() {
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
         for (int i = 0; i < entryCount; i++) {
             auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
-
-            auto fighter = FIGHTER_MANAGER->getFighter(id);
-            auto input = FIGHTER_MANAGER->getInput(id);
             auto playerNum = FIGHTER_MANAGER->getPlayerNo(id);
 
+            FtEntry* entry = &(*(FIGHTER_MANAGER->entryManager->ftEntryArray))[id & 0xFFFF];
+            // OSReport("IDX: %d; ID: %08x; ENTRY: %08x\n", i, id, entry);
+            if (entry == nullptr) continue;
+            bool isNana = false;
+
+            // label used for instances of ice climbers
+            $_isNana:
+            auto fighter = entry->ftStageObject;
+            auto input = (isNana) ? entry->ftInput->aiInputSub : FIGHTER_MANAGER->getInput(id);
+
+            playerNumBitfield |= (1 << playerNum);
+
             if (fighter == nullptr) continue;
+            
 
             auto action = fighter->modules->statusModule->action;
             auto prevAction = fighter->modules->statusModule->previousAction;
@@ -951,10 +1061,16 @@ extern "C" void updatePreFrame() {
             }
             auto xPos = (playerNum + 0.5) * (640 / 4);
             auto yPos = 75;
-            #define IP_DISPLAY_SCALE 3
+            float IP_DISPLAY_SCALE = 3;
+            if (isNana) {
+                yPos = 125;
+                IP_DISPLAY_SCALE = 2.25;
+            }
+            
             if (currData.inputDisplayType > 0) {
-                auto isHuman = !fighter->getOwner()->isCpu();
+                auto isHuman = !fighter->getOwner()->isCpu() && !isNana;
                 auto& ipbtn = currData.aiData.aiButtons;
+                if (isNana) ipbtn = currData.aiData.nana_aiButtons;
                 renderables.items.frame.push(new Rect (
                     xPos + (2) * IP_DISPLAY_SCALE,
                     yPos - (7.5) * IP_DISPLAY_SCALE,
@@ -1146,6 +1262,8 @@ extern "C" void updatePreFrame() {
                     GXColor(ipbtn.dTaunt ? 0xFFFFFFFF : 0x777777FF)
                 ));
             }
+            if (isNana) continue;
+            
             if (currData.trajectoryOpts.active && fighter->modules->motionModule->mainAnimationData.animFrame >= 3) {
                 GXColor playerColor;
                 switch(playerNum) {
@@ -1157,8 +1275,10 @@ extern "C" void updatePreFrame() {
                 }
                 auto sv = fighter->getOwner()->aiInputPtr->aiActPtr->scriptValues;
                 auto fgm = fighter->modules->groundModule;
-                float prevPosX = fgm->unk1->unk1->unk1->landingCollisionBottomXPos;
-                float prevPosY = fgm->unk1->unk1->unk1->landingCollisionBottomYPos;
+                Vec3f correctPos = {};
+                fgm->getCorrectPos(&correctPos);
+                float prevPosX = correctPos.f1;
+                float prevPosY = correctPos.f2;
                 float calcPosX;
                 float calcPosY;
                 int time = currData.trajectoryOpts.segmentLength;
@@ -1182,12 +1302,20 @@ extern "C" void updatePreFrame() {
                     time += currData.trajectoryOpts.segmentLength;
                 }
             }
+            if (entry->charId == CHAR_ID::Popo) {
+                fighter = FIGHTER_MANAGER->getFighter(id, true);
+                isNana = true;
+                goto $_isNana;
+            }
+
         }
         
         startNormalDraw();
         renderAllStoredHitboxes();
     }
-
+    else {
+        playerNumBitfield = 0;
+    }
     renderables.renderAll();
     startNormalDraw();
     if (infoLevel >= 1 && visible) {
@@ -1213,18 +1341,23 @@ extern "C" void updatePreFrame() {
     updateFrame = true;
 }
 
-// 0x8001792c
+
+// pre - 0x8076541c
+// processFixPosition
+// post - 0x8083a3ac
 extern MovementTracker movementTrackers[4];
-INJECTION("UPDATE_UNPAUSED", 0x8076541c, R"(
+INJECTION("UPDATE_UNPAUSED", 0x8083a3ac, R"(
     SAVE_REGS
     mr r3, r28
-    mr r4, r30
     bl updateUnpaused
     RESTORE_REGS
-    psq_l 31, 72(r1), 0, 0
+    psq_l 31, 104(r1), 0, 0
 )");
 
-extern "C" void updateUnpaused(AiInput* targetAiInput, soControllerImpl* targetController) {
+extern "C" void updateUnpaused(soModuleAccessor* accessor) {
+    // renderables.clearAll();
+    // return;
+    
     if (updateFrame) {
         renderables.updateTick();
         storedHitboxTick();
@@ -1236,36 +1369,46 @@ extern "C" void updateUnpaused(AiInput* targetAiInput, soControllerImpl* targetC
         }
         // OSReport("\n");
         updateFrame = false;
-        
     }
-        
-    Fighter* fighter = FIGHTER_MANAGER->getFighter(targetAiInput->fighterId, false);
-    auto pNum = _GetPlayerNo_aiChrIdx(&targetAiInput->cpuIdx);
 
+    Fighter* fighter = (Fighter*) accessor->owningObject;
+    auto& targetAiInput = *fighter->getOwner()->aiInputPtr;
+    auto& targetController = *((ftControllerModuleImpl*)accessor->controllerModule)->controllerPtr;
+
+    auto pNum = _GetPlayerNo_aiChrIdx(&targetAiInput.cpuIdx);
     auto& currData = playerTrainingData[pNum];
+
+    // nana
+    if ((u32) FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(pNum), true)->modules == (u32) accessor) {
+        currData.aiData.nana_aiButtons = targetController.inputs;
+        currData.aiData.nana_lstickX = targetAiInput.inputs.stickX;
+        currData.aiData.nana_lstickY = targetAiInput.inputs.stickY;
+        return;
+    } 
+
     currData.playerInputs = PREVIOUS_PADS[pNum];
 
     // currData.aiData.scriptPath[0] = 0;
-    currData.aiData.scriptID = targetAiInput->aiActPtr->aiScript;
-    currData.aiData.md = targetAiInput->aiMd;
-    currData.aiData.target = FIGHTER_MANAGER->getPlayerNo(targetAiInput->aiTarget);
+    currData.aiData.scriptID = targetAiInput.aiActPtr->aiScript;
+    currData.aiData.md = targetAiInput.aiMd;
+    currData.aiData.target = FIGHTER_MANAGER->getPlayerNo(targetAiInput.aiTarget);
 
     // if (currData.inputDisplayType > 0) {
         if (fighter->getOwner()->isCpu() || currData.inputDisplayType == 2) {
-            currData.aiData.aiButtons = targetController->inputs;
-            currData.aiData.lstickX = targetAiInput->inputs.stickX;
-            currData.aiData.lstickY = targetAiInput->inputs.stickY;
+            currData.aiData.aiButtons = targetController.inputs;
+            currData.aiData.lstickX = targetAiInput.inputs.stickX;
+            currData.aiData.lstickY = targetAiInput.inputs.stickY;
             
-            currData.controllerData.stickX = targetController->stickX;
-            currData.controllerData.stickY = targetController->stickY;
-            currData.controllerData.substickX = targetController->cStickX;
-            currData.controllerData.substickY = targetController->cStickY;
+            currData.controllerData.stickX = targetController.stickX;
+            currData.controllerData.stickY = targetController.stickY;
+            currData.controllerData.substickX = targetController.cStickX;
+            currData.controllerData.substickY = targetController.cStickY;
             currData.controllerData.triggerLeft = PREVIOUS_PADS[pNum].triggerLeft;
             currData.controllerData.triggerRight = PREVIOUS_PADS[pNum].triggerRight;
         } else {
-            currData.aiData.aiButtons = targetAiInput->inputs.buttons;
-            currData.aiData.lstickX = targetAiInput->inputs.stickX;
-            currData.aiData.lstickY = targetAiInput->inputs.stickY;
+            currData.aiData.aiButtons = targetAiInput.inputs.buttons;
+            currData.aiData.lstickX = targetAiInput.inputs.stickX;
+            currData.aiData.lstickY = targetAiInput.inputs.stickY;
 
             currData.controllerData.stickX = PREVIOUS_PADS[pNum].stickX;
             currData.controllerData.stickY = PREVIOUS_PADS[pNum].stickY;
@@ -1294,140 +1437,225 @@ extern "C" void updateUnpaused(AiInput* targetAiInput, soControllerImpl* targetC
     // }
     
     if (currData.debug.enabled) {
-        xyDouble fPos = fighter->modules->groundModule->getUpPos();
-        fPos.yPos += 10;
-        xyDouble iPos = fPos;
-        iPos.yPos += 2.5;
-        xyDouble sPos = iPos;
-        sPos.yPos += 3;
-        const bool isShieldstun = currData.debug.shieldstun > 0;
-        const float intanBarProgress = currData.debug.psaData.intanProgBar;
+        const auto& enabledMeters = currData.debug.psaData.enabledMeters.bits;
+        const bool isMainBarEnabled = enabledMeters.hitlag || enabledMeters.hitstun || enabledMeters.shieldStun || enabledMeters.timeUntilIASA;
+        const bool isIntanBarEnabled = enabledMeters.intangibility || enabledMeters.ledgeIntangibility;
+
+        xyDouble mainBarPos = fighter->modules->groundModule->getUpPos();
+        mainBarPos.yPos += 7;
+        mainBarPos.yPos += (isMainBarEnabled*3);
+        
+        xyDouble intaBarPos = mainBarPos;
+        intaBarPos.yPos += (isIntanBarEnabled*2.5);
+        
+        xyDouble stickDisplayPosition = intaBarPos;
+        stickDisplayPosition.yPos += (enabledMeters.DI*3);
+
+
+        const bool isShieldstun = enabledMeters.shieldStun && currData.debug.shieldstun > 0;
+        const bool hasIASA = enabledMeters.timeUntilIASA && currData.debug.psaData.currSubactIASA < 255;
+        float intanBarProgress = currData.debug.psaData.intanProgBar;
         const float externalIntanBarProgress = (float) fighter->modules->collisionHitModule->mainHitGroup->at(0)->remainingIntangibility / (float) currData.debug.psaData.maxGlobalIntanRemaining;
         const float intanHeight = 2;
         const float intanWidth = 12;
         const float width = 15;
         const float height = 3;
         const float min = 0;
-        const float max = isShieldstun ? currData.debug.maxShieldstun : currData.debug.maxHitstun;
-        const float curr = isShieldstun ? currData.debug.shieldstun : currData.debug.hitstun;
-        const bool isHitlag = fighter->modules->ftStopModule->hitlagMaybe > 0 && curr > 0;
-        renderables.items.tick.push(new Rect(
-            fPos.xPos,
-            fPos.yPos,
-            width + 1,
-            height + 1,
-            false,
-            GXColor(curr > 0 ? 0xFFFFFFFF : 0xFFFFFF44)
-        ));
-        renderables.items.tick.push(new Rect(
-            fPos.xPos,
-            fPos.yPos,
-            width + 0.5,
-            height + 0.5,
-            false,
-            GXColor(curr > 0 ? 0x000000FF : 0x00000044)
-        ));
+        const float max = hasIASA ? currData.debug.psaData.currSubactIASA : (isShieldstun ? currData.debug.maxShieldstun : currData.debug.maxHitstun);
+        const float curr = hasIASA ? currData.debug.psaData.subactIASAProgBar : (isShieldstun ? currData.debug.shieldstun : currData.debug.hitstun);
+        const bool isHitlag = enabledMeters.hitlag && fighter->modules->ftStopModule->hitlagMaybe > 0 && curr > 0;
+        const bool isHitstun = enabledMeters.hitstun && currData.debug.hitstun > 0 && !(isHitlag || hasIASA || isShieldstun);
+        if (isMainBarEnabled) {
+            renderables.items.tick.push(new Rect(
+                mainBarPos.xPos,
+                mainBarPos.yPos,
+                width + 1,
+                height + 1,
+                false,
+                GXColor(curr != 0 ? 0xFFFFFFFF : 0xFFFFFF44)
+            ));
+            renderables.items.tick.push(new Rect(
+                mainBarPos.xPos,
+                mainBarPos.yPos,
+                width + 0.5,
+                height + 0.5,
+                false,
+                GXColor(curr != 0 ? 0x000000FF : 0x00000044)
+            ));
+        }
+        if (enabledMeters.DI) {
+            renderables.items.tick.push(new CircleWithBorder(
+                stickDisplayPosition.xPos,
+                stickDisplayPosition.yPos,
+                3,
+                8,
+                false,
+                GXColor((isHitstun) ? 0xCCCCCCFF : 0xCCCCCC44),
+                0.25,
+                GXColor((isHitstun) ? 0x000000FF : 0x00000044)
+            ));
+            if (isHitstun) {
+                renderables.items.tick.push(new Line{
+                    GXColor(0x000000FF),
+                    stickDisplayPosition.xPos,
+                    stickDisplayPosition.yPos,
+                    stickDisplayPosition.xPos + 3 * currData.debug.DI.xPos,
+                    stickDisplayPosition.yPos + 3 * currData.debug.DI.yPos,
+                    12,
+                    false
+                });
 
-        renderables.items.tick.push(new CircleWithBorder(
-            sPos.xPos,
-            sPos.yPos,
-            3,
-            8,
-            false,
-            GXColor((!isHitlag && curr > 0) ? 0xCCCCCCFF : 0xCCCCCC44),
-            0.25,
-            GXColor((!isHitlag && curr > 0) ? 0x000000FF : 0x00000044)
-        ));
-        if (!isHitlag && curr > 0) {
-            renderables.items.tick.push(new Line{
-                GXColor(0x000000FF),
-                sPos.xPos,
-                sPos.yPos,
-                sPos.xPos + 3 * currData.debug.DI.xPos,
-                sPos.yPos + 3 * currData.debug.DI.yPos,
-                12,
-                false
-            });
+                renderables.items.tick.push(new Point{
+                    GXColor(0xFFFFFFFF),
+                    stickDisplayPosition.xPos,
+                    stickDisplayPosition.yPos,
+                    18,
+                    false
+                });
 
-            renderables.items.tick.push(new Point{
-                GXColor(0xFFFFFFFF),
-                sPos.xPos,
-                sPos.yPos,
-                18,
-                false
-            });
+                renderables.items.tick.push(new Point{
+                    GXColor(0x000000FF),
+                    stickDisplayPosition.xPos + 3 * currData.debug.DI.xPos,
+                    stickDisplayPosition.yPos + 3 * currData.debug.DI.yPos,
+                    30,
+                    false
+                });
 
-            renderables.items.tick.push(new Point{
-                GXColor(0x000000FF),
-                sPos.xPos + 3 * currData.debug.DI.xPos,
-                sPos.yPos + 3 * currData.debug.DI.yPos,
-                30,
-                false
-            });
+                renderables.items.tick.push(new Point{
+                    GXColor(0xFF8800FF),
+                    stickDisplayPosition.xPos + 3 * currData.debug.DI.xPos,
+                    stickDisplayPosition.yPos + 3 * currData.debug.DI.yPos,
+                    24,
+                    false
+                });
+            }
+        }
 
-            renderables.items.tick.push(new Point{
-                GXColor(0xFF8800FF),
-                sPos.xPos + 3 * currData.debug.DI.xPos,
-                sPos.yPos + 3 * currData.debug.DI.yPos,
-                24,
-                false
-            });
+        if (isMainBarEnabled) {
+            float widthPercentage = hasIASA ? currData.debug.psaData.subactIASAProgBar : (((curr - min) <= 0) ? 0 : (curr - min) / max);
+            bool hasFlipped = false;
+            if (isHitlag) widthPercentage = 1 - widthPercentage;
+            if (hasIASA && widthPercentage < 0) {
+                widthPercentage = 1 + widthPercentage;
+                hasFlipped = true;
+            }
+            const float barWidth = width * widthPercentage;
+            renderables.items.tick.push(new Rect(
+                mainBarPos.xPos - (width - barWidth) * 0.5,
+                mainBarPos.yPos,
+                barWidth,
+                height,
+                false,
+                GXColor(hasIASA ? (
+                    (hasFlipped) ? 0x00CC00FF // in IASA
+                    : 0xCCFF00FF) // pre IASA
+                : (isHitlag ? 0x00CC00FF  // hitlag
+                : (isShieldstun ? 0x0088FFFF // shieldstun
+                : 0xFF8800FF))) // hitstun
+            ));
+        }
+
+        if (isIntanBarEnabled) {
+            // setup
+            renderables.items.tick.push(new Rect(
+                intaBarPos.xPos,
+                intaBarPos.yPos,
+                intanWidth + 0.5,
+                intanHeight + 0.5,
+                false,
+                GXColor((intanBarProgress || externalIntanBarProgress) ? 0xFFFFFFFF : 0xFFFFFF44)
+            ));
+            renderables.items.tick.push(new Rect(
+                intaBarPos.xPos,
+                intaBarPos.yPos,
+                intanWidth + 0.25,
+                intanHeight + 0.25,
+                false,
+                GXColor((intanBarProgress || externalIntanBarProgress) ? 0x000000FF : 0x00000044)
+            ));
+
+            // meter
+            if (!enabledMeters.intangibility) intanBarProgress = 0;
+            float intanBarWidth = intanBarProgress;
+            GXColor intanColor = GXColor(0x0088DDFF);
+            if (intanBarProgress < 0) {
+                intanBarWidth += 1;
+                intanColor = GXColor(0xCC0000FF);
+            }
+            intanBarWidth *= intanWidth;
+            renderables.items.tick.push(new Rect(
+                intaBarPos.xPos - (intanWidth - intanBarWidth) * 0.5,
+                intaBarPos.yPos,
+                intanBarWidth,
+                intanHeight,
+                false,
+                intanColor
+            ));
+            if (enabledMeters.ledgeIntangibility) {
+                intanBarWidth = intanWidth * externalIntanBarProgress;
+                renderables.items.tick.push(new Rect(
+                    intaBarPos.xPos - (intanWidth - intanBarWidth) * 0.5,
+                    intaBarPos.yPos,
+                    intanBarWidth,
+                    intanHeight * ((intanBarProgress > 0) ? 0.5 : 1),
+                    false,
+                    GXColor(0x00CC00CC)
+                ));
+            }
         }
         
-        float widthPercentage = (((curr - min) <= 0) ? 0 : (curr - min) / max);
-        if (isHitlag) widthPercentage = 1 - widthPercentage;
-        const float barWidth = width * widthPercentage;
-        renderables.items.tick.push(new Rect(
-            fPos.xPos - (width - barWidth) * 0.5,
-            fPos.yPos,
-            barWidth,
-            height,
-            false,
-            GXColor(isHitlag ? 0x00CC00FF : (isShieldstun ? 0x0088FFFF : 0xFF8800FF))
-        ));
-
-        renderables.items.tick.push(new Rect(
-            iPos.xPos,
-            iPos.yPos,
-            intanWidth + 0.5,
-            intanHeight + 0.5,
-            false,
-            GXColor(intanBarProgress != 0 ? 0xFFFFFFFF : 0xFFFFFF44)
-        ));
-        renderables.items.tick.push(new Rect(
-            iPos.xPos,
-            iPos.yPos,
-            intanWidth + 0.25,
-            intanHeight + 0.25,
-            false,
-            GXColor(intanBarProgress != 0 ? 0x000000FF : 0x00000044)
-        ));
-
-        float intanBarWidth = intanBarProgress;
-        GXColor intanColor = GXColor(0x0088DDFF);
-        if (intanBarProgress < 0) {
-            intanBarWidth += 1;
-            intanColor = GXColor(0xCC0000FF);
+        Fighter* subfighter = nullptr;
+        bool isPopo = false;
+        if (targetAiInput.aiActPtr->scriptValues->character == CHAR_ID::Popo) {
+            isPopo = true;
+            subfighter = FIGHTER_MANAGER->getSubFighter(targetAiInput.ftEntryPtr->entryId);
         }
-        intanBarWidth *= intanWidth;
-        renderables.items.tick.push(new Rect(
-            iPos.xPos - (intanWidth - intanBarWidth) * 0.5,
-            iPos.yPos,
-            intanBarWidth,
-            intanHeight,
-            false,
-            intanColor
-        ));
-        intanBarWidth = intanWidth * externalIntanBarProgress;
-        renderables.items.tick.push(new Rect(
-            iPos.xPos - (intanWidth - intanBarWidth) * 0.5,
-            iPos.yPos,
-            intanBarWidth,
-            intanHeight * ((intanBarProgress > 0) ? 0.5 : 1),
-            false,
-            GXColor(0x00CC00CC)
-        ));
-        
+
+        if (currData.debug.recoveryTrainer) {
+            if (currData.debug.noclipInternal) {
+                currData.debug.noclipInternal = false;
+                fighter->modules->groundModule->setCorrect(5);
+                if (isPopo) subfighter->modules->groundModule->setCorrect(5);
+            }
+            
+            // for PS2
+            auto currAct = fighter->modules->statusModule->action;
+            if (fighter->modules->groundModule->getCorrectPos().yPos < -115 || currAct == 0x74 || currAct == 0x75) {
+                currData.debug.randXPos = 0;
+                currData.debug.randYPos = 10;
+                currData.debug.noclipInternal = true;
+                fighter->modules->groundModule->setCorrect(0);
+                setPosition(currData, fighter);
+                if (isPopo) {
+                    setPosition(currData, subfighter);
+                    subfighter->modules->groundModule->setCorrect(0);
+                }
+            }
+            if (!(currAct >= 0xB && currAct <= 0x10) && currAct <= 0x19) {
+                Vec3f pos;
+                
+                float rangeX = 150 + 50;
+                float baseX = 43;
+                float outside = 93;
+                float rangeY = 180;
+                float baseY = -70;
+
+                pos.f1 = baseX + _randf() * rangeX; 
+                if (pos.f1 < outside) rangeY = 40;
+                pos.f1 *= (_randf() > 0.5) ? 1 : -1;
+                pos.f2 = baseY + _randf() * rangeY; 
+                
+                currData.debug.randXPos = pos.f1;
+                currData.debug.randYPos = pos.f2;
+                currData.debug.noclipInternal = true;
+                fighter->modules->groundModule->setCorrect(0);
+                setPosition(currData, fighter);
+                if (isPopo) {
+                    setPosition(currData, subfighter);
+                    subfighter->modules->groundModule->setCorrect(0);
+                }
+            }
+        }
         if (currData.debug.fixPosition || currData.debug.settingPosition) {
             auto LAVars = fighter->modules->workModule->LAVariables;
             auto LABasicsArr = (*(int (*)[LAVars->basicsSize])LAVars->basics);
@@ -1437,6 +1665,9 @@ extern "C" void updateUnpaused(AiInput* targetAiInput, soControllerImpl* targetC
                 if (currData.debug.noclip) { 
                     currData.debug.noclipInternal = true; 
                     fighter->modules->groundModule->setCorrect(0);
+                    if (isPopo) {
+                        subfighter->modules->groundModule->setCorrect(0);
+                    }
                 }
                 if (!((action >= 0x4A && action <= 0x64) || (action >= 0x3D && action <= 0x42))) {    
                     currData.debug.comboTimer--;
@@ -1446,29 +1677,35 @@ extern "C" void updateUnpaused(AiInput* targetAiInput, soControllerImpl* targetC
                         if (currData.debug.randomizeDamage) { currData.debug.randDmg = ((int)(_randf() * 100)); }
                         if (currData.debug.randomizePosition) { 
                             Vec3f pos;
-                            getRandSafePosition(&pos, currData.debug.randOnGround);
+                            getRandPosition(&pos, currData.debug.randOnGround);
                             currData.debug.randXPos = pos.f1;
                             currData.debug.randYPos = pos.f2;
                         }
                     }
                     if (currData.debug.comboTimer <= 0) {
-                        setPosition(currData, fighter, targetAiInput);
+                        setPosition(currData, fighter);
                         if (fighter->modules->statusModule->action == 0x10) {
                             fighter->modules->statusModule->changeStatusForce(0xE, fighter->modules);
+                            if (isPopo) {
+                                subfighter->modules->statusModule->changeStatusForce(0xE, subfighter->modules);
+                            }
                         }
-                        FIGHTER_MANAGER->getOwner(targetAiInput->fighterId)->setDamage(currData.debug.randomizeDamage ? currData.debug.randDmg : currData.debug.damage, 0);
+                        FIGHTER_MANAGER->getOwner(targetAiInput.fighterId)->setDamage(currData.debug.randomizeDamage ? currData.debug.randDmg : currData.debug.damage, 0);
                         currData.debug.comboTimer = 0;
                         if (!currData.debug.noclip && currData.debug.noclipInternal && currData.debug.comboTimer == -1) {
                             currData.debug.noclipInternal = false;
                             fighter->modules->groundModule->setCorrect(5);
+                            if (isPopo) {
+                                subfighter->modules->groundModule->setCorrect(5);
+                            }
                         }
                     }
                 }
             } else {
                 currData.debug.comboTimer = remainingHitstun + currData.debug.comboTimerAdjustment;
             }
-        } else if (currData.debug.enabled && currData.debug.damage != 0) {
-            FIGHTER_MANAGER->getOwner(targetAiInput->fighterId)->setDamage(currData.debug.damage, 0);
+        } else if (currData.debug.enabled && currData.debug.damage >= 0) {
+            FIGHTER_MANAGER->getOwner(targetAiInput.fighterId)->setDamage(currData.debug.damage, 0);
         }
     }
 }
@@ -1506,6 +1743,13 @@ extern "C" short CPUForceBehavior(int param1, AiScriptData * aiActPtr) {
             OSReport("next: %04x)::\n", param1);
         }
         // aiActPtr->aiScript = intendedScript;
+        if (aiActPtr->scriptValues->character == CHAR_ID::Nana) {
+            // TODO: compile and test
+            if (aiActPtr->scriptValues->currAction == 0x39 && (param1 == 0x0 || param1 == 0x1120)) return aiActPtr->aiScript;
+            OSReport("curr nana ai script: %04x\n", aiActPtr->aiScript);
+            OSReport("next nana ai script: %04x\n", param1);
+            return param1;
+        }
         if (param1 < 0x8000 && param1 != 0x1120 && param1 != 0x6100) return (aiActPtr->aiScript != 0x0) ? aiActPtr->aiScript : 0x8000;
         return param1; // normal routine
     // }

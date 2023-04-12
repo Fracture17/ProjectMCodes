@@ -30,6 +30,15 @@ struct VariableArg {
 };
 
 // MAIN COMPONENTS
+// enum soAnimCmdType : int {
+//   INT,
+//   SCALAR,
+//   OFFSET,
+//   BOOL,
+//   FILE,
+//   VARIABLE,
+//   REQUIREMENT
+// };
 
 struct soAnimCmdArgument {
   int asInt();

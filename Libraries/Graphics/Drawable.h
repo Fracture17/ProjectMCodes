@@ -24,7 +24,7 @@ struct Drawable {
 
 struct Point : Drawable {
     Point(GXColor color, float x, float y, int thickness, bool is2D) :
-        Point(0, 0, color, x, y, thickness, is2D) {}
+        Point(0, 1, color, x, y, thickness, is2D) {}
 
     Point(int delay, int lifetime, GXColor color, float x, float y, int thickness, bool is2D) {
         drawKind = 0;
@@ -45,7 +45,7 @@ struct Point : Drawable {
 
 struct Line : Drawable {
     Line(GXColor color, float x1, float y1, float x2, float y2, int thickness, bool is2D) :
-        Line(0, 0, color, x1, y1, x2, y2, thickness, is2D) {};
+        Line(0, 1, color, x1, y1, x2, y2, thickness, is2D) {};
 
     Line(int delay, int lifetime, GXColor color, float x1, float y1, float x2, float y2, int thickness, bool is2D) {
         drawKind = 1;
@@ -70,7 +70,7 @@ struct Line : Drawable {
 
 struct RectOutline : Drawable {
     RectOutline(GXColor color, float top, float bottom, float left, float right, int thickness, bool is2D) :
-        RectOutline(0, 0, color, top, bottom, left, right, thickness, is2D) {} ;
+        RectOutline(0, 1, color, top, bottom, left, right, thickness, is2D) {} ;
 
     RectOutline(int delay, int lifetime, GXColor color, float top, float bottom, float left, float right, int thickness, bool is2D) {
         drawKind = 2;
@@ -95,7 +95,7 @@ struct RectOutline : Drawable {
 
 struct Rect : Drawable {
     Rect(GXColor color, float top, float bottom, float left, float right, bool is2D) :
-        Rect(0, 0, color, top, bottom, left, right, is2D) {};
+        Rect(0, 1, color, top, bottom, left, right, is2D) {};
 
     Rect(int delay, int lifetime, GXColor color, float top, float bottom, float left, float right, bool is2D) {
         drawKind = 3;
@@ -195,6 +195,7 @@ struct Renderables {
     void renderPre();
     void renderAll();
     void updateTick();
+    void clearAll();
 
     RenderTimes<Drawable *> items;
 };

@@ -77,7 +77,7 @@ void drawItem(Drawable * item) {
 void Renderables::renderAll() {
     for (int i = 0; i < items.frame.size(); i++) {
         drawItem(items.frame[i]);
-        if (items.frame[i]->lifeTime == 0) {
+        if (items.frame[i]->lifeTime <= 0) {
             // delete items.frame[i];
             items.frame.erase(i); 
             i -= 1;
@@ -91,7 +91,7 @@ void Renderables::renderAll() {
 void Renderables::renderPre() {
     for (int i = 0; i < items.preFrame.size(); i++) {
         drawItem(items.preFrame[i]);
-        if (items.preFrame[i]->lifeTime == 0) {
+        if (items.preFrame[i]->lifeTime <= 0) {
             // delete items.preFrame[i];
             items.preFrame.erase(i); 
             i -= 1;
@@ -112,4 +112,10 @@ void Renderables::updateTick() {
             items.tick[i]->delay --;
         }
     }
+}
+
+void Renderables::clearAll() {
+    items.frame.clear();
+    items.preFrame.clear();
+    items.tick.clear();
 }

@@ -3,6 +3,7 @@
 
 #include "Containers/vector.h"
 #include <Graphics/TextPrinter.h>
+#include "./hitboxHeatmap.h"
 
 #define strcat ((int (*)(char* destination, const char* source)) 0x803fa384)
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
@@ -215,6 +216,20 @@ protected:
   bool& value;
 };
 
+class BitOption : public IntOption {
+public:
+  BitOption(const char* name, int& value, bool canModify, u8 shiftAmount) 
+  : IntOption(name, value, 0, 1, canModify) {
+    this->bitNum = shiftAmount;
+  }
+
+  void modify(float amount);
+  void render(TextPrinter* printer, char* buffer);
+
+protected:
+  u8 bitNum = 0;
+};
+
 enum HexSize {
   CHAR = 1,
   SHORT = 2,
@@ -255,7 +270,7 @@ protected:
 
 class StringOption : public StandardOption { 
 public:
-  StringOption(const char* name, char* value) : value(value) {
+  StringOption(const char* name, const char* value) : value(value) {
     this->name = name;
     this->canModify = false;
   }
@@ -266,7 +281,22 @@ public:
   void render(TextPrinter* printer, char* buffer);
 
 protected:
-  char* value;
+  const char* value;
+};
+
+class TempLogOption : public StandardOption { 
+public:
+  TempLogOption() {
+    this->name = "log to console";
+  }
+
+  void modify(float amount);
+  void select();
+  void deselect();
+  void render(TextPrinter* printer, char* buffer);
+
+protected:
+  const char* name;
 };
 
 class NamedIndexOption : public StandardOption {

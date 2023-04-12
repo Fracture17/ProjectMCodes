@@ -32,6 +32,34 @@ public:
   };
 };
 
+class KineticObserverOption : public StandardOption {
+public:
+  KineticObserverOption(soKineticModuleImpl* kinModule) :
+    kinModule(kinModule) {}
+  void modify(float _) {};
+  void deselect() {};
+  void select() {};
+  void render(TextPrinter *printer, char *buffer) {
+    printer->printLine("energies");
+    if (kinModule != nullptr) {
+      int limit = kinModule->kineticEnergyVector->energies.size();
+      for (int i = 0; i < limit; i++) {
+        soKineticEnergyNormal* energy = *(kinModule->kineticEnergyVector->energies.at(i));
+        printer->padToWidth(RENDER_X_SPACING / 5);
+        sprintf(buffer, "%d: %s: [%.3f, %.3f]", i + 1, *energy->vtable->objDescriptor, energy->xVel, energy->yVel);
+        printer->printLine(buffer);
+      }
+    } else {
+      printer->padToWidth(RENDER_X_SPACING / 5);
+      printer->setTextColor(0xFFAAAADD);
+      printer->printLine("N/A");
+    }
+  };
+
+protected:
+  soKineticModuleImpl* kinModule;
+};
+
 class PSAScriptOption : public StandardOption {
 public:
   PSAScriptOption(vector<soAnimCmd*>& data, int& currLine) : data(data), currLine(currLine) {}
@@ -132,8 +160,27 @@ struct PSAData {
   float frameSpeedModifier = 1;
   float currentFrame = 0;
   float currentEndFrame = -1;
+
+  union {
+    int fullValue = 0xFFFFFFFF;
+    struct {
+      bool _PADDING: 25;
+      bool intangibility: 1;
+      bool ledgeIntangibility: 1;
+      bool timeUntilIASA: 1;
+      bool DI: 1;
+      bool shieldStun: 1;
+      bool hitstun: 1;
+      bool hitlag: 1;
+    } bits;
+  } enabledMeters;
+
   u8 currSubactIntag[8] = {};
+  s16 throwFrame = -1;
+  bool shouldTechThrow = false;
   float intanProgBar = 0;
+  float currSubactIASA = 0;
+  float subactIASAProgBar = 0;
   s16 maxGlobalIntanRemaining = -1;
   char currSubactionName[20] = {};
   SubpageOption* subactionSwitcher;
@@ -148,14 +195,15 @@ struct debugData {
   bool randomizePosition = false;
   bool randOnGround = false;
   bool randomizeDamage = false;
+  char airGroundState = 0;
+  bool recoveryTrainer = false;
   float randXPos = 0;
   float randYPos = 0;
   float randDmg = 0;
 
-  char airGroundState = 0;
   float xPos = 0;
   float yPos = 0;
-  float damage = 0;
+  float damage = -1;
   int comboTimer = 0;
   int comboTimerAdjustment = 0;
 
@@ -228,6 +276,9 @@ struct AIData {
   Inputs aiButtons;
   float lstickX = 0;
   float lstickY = 0;
+  Inputs nana_aiButtons;
+  float nana_lstickX = 0;
+  float nana_lstickY = 0;
 
   float snapbackShieldtimer = 0;
   bool AIDebug = false;
@@ -265,6 +316,7 @@ struct ControllerData {
 };
 
 struct PositionalData {
+  soKineticModuleImpl* kineticModule = nullptr;
   float xPos = 0;
   float yPos = 0;
   float totalXVel = 0;
@@ -292,10 +344,15 @@ struct TrainingData {
   int inputDisplayType = 0;
   bool hasPlayedSE = false;
   PositionalData posData;
+  
   TrajectoryOptions trajectoryOpts;
   HeatmapOptions heatmapOpts;
   debugData debug;
   ControllerData controllerData;
+};
+
+struct GlobalCustomData {
+  bool smoothWavedashes = false;
 };
 
 class AITrainingScriptOption : public StandardOption {
@@ -314,8 +371,8 @@ protected:
 
 struct AITrainingDefaultVal {
   char index;
-  float value;
   ~AITrainingDefaultVal() {}
+  float value;
 };
 
 class AITrainingScriptSubmenu : public SubpageOption {

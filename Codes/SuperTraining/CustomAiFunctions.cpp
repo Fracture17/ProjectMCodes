@@ -3,6 +3,9 @@
 //
 
 #include "Assembly.h"
+#include "stddef.h"
+#include "Brawl/GF/gfApplication.h"
+#include "Brawl/GF/GameGlobal.h"
 #include "Brawl/AI/aiScriptData.h"
 #include "Brawl/AI/aiMgr.h"
 #include "Brawl/AI/aiStat.h"
@@ -76,6 +79,17 @@ INJECTION("POKE_AIINPUT_UPDATE_2", 0x809017B0, R"(
     bctr
 )")
 
+// INJECTION("POKE_AIINPUT_UPDATE", 0x808FE598, R"(
+//     SAVE_REGS
+//     mr r3, r31
+//     bl initAIFrame
+//     RESTORE_REGS
+//     lis r12, 0x8090
+//     ori r12, r12, 0x17A0
+//     mtctr r12
+//     bctr
+// )");
+
 // INJECTION("POKE_AIACT_UPDATE", 0x80918264, R"(
 //     lis r12, 0x8091
 //     ori r12, r12, 0x84FC
@@ -89,10 +103,11 @@ extern "C" void stickModMul(Vec2f* thing) {
 }
 
 extern "C" void initAIFrame(AiInput * aiInput) {
-    if (aiInput->charId != CHAR_ID::Nana && (aiInput->aiActPtr->aiScript < 0x8000 || (aiInput->aiMd != 0x1))) {
+    if (aiInput->aiActPtr->scriptValues->character != CHAR_ID::Nana && (aiInput->aiActPtr->aiScript < 0x8000 || (aiInput->aiMd != 0x1))) {
         aiInput->aiMd = 1;
         _act_change(aiInput->aiActPtr, 0x8100, &aiInput->aiTarget, 0, 0);
     }
+    
     aiInput->aiTarget = 0;
     _target_check_aiInput(aiInput);
     // OSReport("AI Script: %d\n", aiInput->aiTarget);
@@ -141,160 +156,412 @@ INJECTION("mdThreeFix", 0x80909b98, R"(
     nop
 )");
 
+// 0x60000000 = nop
+
 // FORCED_JUMP_FIX
-STRING_WRITE(0x809028dc, "\x60\x00\x00\x00");
+DATA_WRITE(0x809028dc, 0x60000000);
 // FORCED_JUMP_FIX2
-STRING_WRITE(0x8090272c, "\x60\x00\x00\x00");
+DATA_WRITE(0x8090272c, 0x60000000);
 // FORCED_JUMP_FIX3
-STRING_WRITE(0x80902110, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902110, 0x60000000);
 // // FORCED_JUMP_FIX4// 
-// STRING_WRITE(0x80902f9c, "\x60\x00\x00\x00");
+// DATA_WRITE(0x80902f9c, 0x60000000);
 // FORCED_JUMP_FIX4
-STRING_WRITE(0x80901db0, "\x60\x00\x00\x00");
+DATA_WRITE(0x80901db0, 0x60000000);
 // FORCED_JUMP_FIX5
-STRING_WRITE(0x809019cc, "\x60\x00\x00\x00");
+DATA_WRITE(0x809019cc, 0x60000000);
 // FORCED_JUMP_FIX6
-STRING_WRITE(0x80901a1c, "\x60\x00\x00\x00");
+DATA_WRITE(0x80901a1c, 0x60000000);
 // FORCED_JUMP_FIX7// 
-STRING_WRITE(0x809025ec, "\x60\x00\x00\x00");
+DATA_WRITE(0x809025ec, 0x60000000);
 // FORCED_JUMP_FIX8// 
-STRING_WRITE(0x80902610, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902610, 0x60000000);
 
 // FORCED_AIRDODGE_FIX
-STRING_WRITE(0x80902f9c, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902f9c, 0x60000000);
+// // FORCED_AIRDODGE_FIX2
+// DATA_WRITE(0x80765758, 0x60000000);
+
 
 // FORCED_INPUT_FIX1
-STRING_WRITE(0x808fe93c, "\x60\x00\x00\x00");
+DATA_WRITE(0x808fe93c, 0x60000000);
 // FORCED_INPUT_FIX2
-STRING_WRITE(0x808ff77c, "\x60\x00\x00\x00");
+DATA_WRITE(0x808ff77c, 0x60000000);
 // FORCED_INPUT_FIX3
-STRING_WRITE(0x809017dc, "\x60\x00\x00\x00");
+DATA_WRITE(0x809017dc, 0x60000000);
 // FORCED_INPUT_FIX4
-STRING_WRITE(0x80901940, "\x60\x00\x00\x00");
+DATA_WRITE(0x80901940, 0x60000000);
 // FORCED_INPUT_FIX5
-STRING_WRITE(0x80902710, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902710, 0x60000000);
 // FORCED_INPUT_FIX6
-STRING_WRITE(0x80902674, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902674, 0x60000000);
 // FORCED_INPUT_FIX7
-STRING_WRITE(0x80902280, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902280, 0x60000000);
 // FORCED_INPUT_FIX8
-STRING_WRITE(0x809021dc, "\x60\x00\x00\x00");
+DATA_WRITE(0x809021dc, 0x60000000);
 // FORCED_INPUT_FIX9
-STRING_WRITE(0x80902428, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902428, 0x60000000);
 // FORCED_INPUT_FIX10
-STRING_WRITE(0x80902364, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902364, 0x60000000);
 // FORCED_INPUT_FIX11
-STRING_WRITE(0x8090293c, "\x60\x00\x00\x00");
+DATA_WRITE(0x8090293c, 0x60000000);
 // FORCED_INPUT_FIX12
-STRING_WRITE(0x80902e38, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902e38, 0x60000000);
 // FORCED_INPUT_FIX13
-STRING_WRITE(0x80902f0c, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902f0c, 0x60000000);
 // FORCED_INPUT_FIX14
-STRING_WRITE(0x80902cb0, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902cb0, 0x60000000);
 // FORCED_INPUT_FIX15
-STRING_WRITE(0x80902ba0, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902ba0, 0x60000000);
 // FORCED_INPUT_FIX16
-STRING_WRITE(0x80902c50, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902c50, 0x60000000);
 // FORCED_INPUT_FIX17
-STRING_WRITE(0x80902bf8, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902bf8, 0x60000000);
 // FORCED_INPUT_FIX18
-STRING_WRITE(0x80902d80, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902d80, 0x60000000);
 // FORCED_INPUT_FIX19
-STRING_WRITE(0x80902d58, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902d58, 0x60000000);
 // FORCED_INPUT_FIX20
-STRING_WRITE(0x80902f7c, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902f7c, 0x60000000);
 // FORCED_INPUT_FIX21
-STRING_WRITE(0x80903018, "\x60\x00\x00\x00");
+DATA_WRITE(0x80903018, 0x60000000);
 // FORCED_INPUT_FIX22
-STRING_WRITE(0x808fe930, "\x60\x00\x00\x00");
+DATA_WRITE(0x808fe930, 0x60000000);
 // FORCED_INPUT_FIX23
-STRING_WRITE(0x808ff770, "\x60\x00\x00\x00");
+DATA_WRITE(0x808ff770, 0x60000000);
 // FORCED_INPUT_FIX24
-STRING_WRITE(0x809017d0, "\x60\x00\x00\x00");
+DATA_WRITE(0x809017d0, 0x60000000);
 // FORCED_INPUT_FIX25
-STRING_WRITE(0x80901934, "\x60\x00\x00\x00");
+DATA_WRITE(0x80901934, 0x60000000);
 // FORCED_INPUT_FIX26
-STRING_WRITE(0x809021d0, "\x60\x00\x00\x00");
+DATA_WRITE(0x809021d0, 0x60000000);
 // FORCED_INPUT_FIX27
-STRING_WRITE(0x80902230, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902230, 0x60000000);
 // FORCED_INPUT_FIX28
-STRING_WRITE(0x80902274, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902274, 0x60000000);
 // FORCED_INPUT_FIX29
-STRING_WRITE(0x809022b4, "\x60\x00\x00\x00");
+DATA_WRITE(0x809022b4, 0x60000000);
 // FORCED_INPUT_FIX30
-STRING_WRITE(0x80902358, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902358, 0x60000000);
 // FORCED_INPUT_FIX31
-STRING_WRITE(0x80902418, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902418, 0x60000000);
 // FORCED_INPUT_FIX32
-STRING_WRITE(0x80902668, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902668, 0x60000000);
 // FORCED_INPUT_FIX33
-STRING_WRITE(0x80902704, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902704, 0x60000000);
 // FORCED_INPUT_FIX34
-STRING_WRITE(0x80902930, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902930, 0x60000000);
 // FORCED_INPUT_FIX35
-STRING_WRITE(0x80902a34, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902a34, 0x60000000);
 // FORCED_INPUT_FIX36
-STRING_WRITE(0x80902a40, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902a40, 0x60000000);
 // FORCED_INPUT_FIX37
-STRING_WRITE(0x80902a74, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902a74, 0x60000000);
 // FORCED_INPUT_FIX38
-STRING_WRITE(0x80902a80, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902a80, 0x60000000);
 // FORCED_INPUT_FIX39
-STRING_WRITE(0x80902b68, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902b68, 0x60000000);
 // FORCED_INPUT_FIX40
-STRING_WRITE(0x80902b9c, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902b9c, 0x60000000);
 // FORCED_INPUT_FIX41
-STRING_WRITE(0x80902bf4, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902bf4, 0x60000000);
 // FORCED_INPUT_FIX42
-STRING_WRITE(0x80902c4c, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902c4c, 0x60000000);
 // FORCED_INPUT_FIX43
-STRING_WRITE(0x80902d54, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902d54, 0x60000000);
 // FORCED_INPUT_FIX44
-STRING_WRITE(0x80902d70, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902d70, 0x60000000);
 // FORCED_INPUT_FIX45
-STRING_WRITE(0x80902d7c, "\x60\x00\x00\x00");
+DATA_WRITE(0x80902d7c, 0x60000000);
 // FORCED_INPUT_FIX46
-STRING_WRITE(0x8090300c, "\x60\x00\x00\x00");
+DATA_WRITE(0x8090300c, 0x60000000);
 // FORCED_INPUT_FIX47
-STRING_WRITE(0x80903094, "\x60\x00\x00\x00");
+DATA_WRITE(0x80903094, 0x60000000);
 // FORCED_INPUT_FIX48
-STRING_WRITE(0x809030a0, "\x60\x00\x00\x00");
+DATA_WRITE(0x809030a0, 0x60000000);
 
 // FORCED MD FIX
-STRING_WRITE(0x808fe864, "\x60\x60\x60\x60");
+DATA_WRITE(0x808fe864, 0x60606060);
 
 // SELF_TARGET_CHANGE_FIX1
-STRING_WRITE(0x808fe5f8, "\x60\x00\x00\x00");
+DATA_WRITE(0x808fe5f8, 0x60000000);
 // SELF_TARGET_CHANGE_FIX2
-STRING_WRITE(0x809073dc, "\x60\x00\x00\x00");
+DATA_WRITE(0x809073dc, 0x60000000);
 // SELF_TARGET_CHANGE_FIX3
-STRING_WRITE(0x809188e0, "\x60\x00\x00\x00");
+DATA_WRITE(0x809188e0, 0x60000000);
 // SELF_TARGET_CHANGE_FIX4
-STRING_WRITE(0x80900cb8, "\x60\x00\x00\x00");
+DATA_WRITE(0x80900cb8, 0x60000000);
 
 // FIX_SWING_CHK_RESET
-STRING_WRITE(0x80905668, "\x4e\x80\x00\x20");
+DATA_WRITE(0x80905668, 0x4e800020);
 // FIX_SWING_CHK_SET
-STRING_WRITE(0x80905690, "\x4e\x80\x00\x20");
+DATA_WRITE(0x80905690, 0x4e800020);
 
 // FIX_AUTO_THROW_ROUTINE
-STRING_WRITE(0x808fe89c, "\x60\x00\x00\x00");
+DATA_WRITE(0x808fe89c, 0x60000000);
+
+// THESE DO NOT WORK :pensive:
+// INJECTION("FORCE_PICK_AI", 0x80685830, R"(
+//     bl validCheck
+//     stw r3, 0x0044 (sp)
+// )");
+
+// INJECTION("colorslot_override_1", 0x8068584c, R"(
+//     li r3, 1
+// )");
+
+// INJECTION("colorslot_override_2", 0x80684914, R"(
+//     li r3, 1
+// )");
+
+// INJECTION("FORCE_AI_PICK_ALLSTAR", 0x8077FB7C, R"(
+// loc_0x0:
+//     stwu r1, -80(r1)
+//     stmw r14, 8(r1)
+//     lis r12, 0x9018
+//     lbz r12, -3201(r12)
+//     cmpwi r12, 0x2
+//     bne- loc_0x15C
+//     lis r14, 0x8058
+//     ori r14, r14, 0x8003
+//     lis r15, 0x9018
+//     ori r15, r15, 0xFB8
+//     lis r29, 0x8058
+//     ori r29, r29, 0x8300
+//     lwz r22, -12(r29)
+//     cmpwi r25, 0x14
+//     bne- loc_0x60
+//     cmplwi r26, 48879
+//     blt- loc_0x60
+
+// loc_0x44:
+//     stw r7, 153(r14)
+//     stw r7, 104(r29)
+//     addi r14, r14, 0xA0
+//     addi r29, r29, 0x70
+//     addi r9, r9, 0x1
+//     cmpwi r9, 0x4
+//     bne+ loc_0x44
+
+// loc_0x60:
+//     addi r16, r14, 0x98
+//     lhz r26, -7(r14)
+//     lbzx r17, r16, r26
+//     cmpwi cr1, r17, 0x9B
+//     cmpwi r30, 0xBE
+//     bne- loc_0x80
+//     stbx r7, r16, r26
+//     beq- cr1, loc_0x90
+
+// loc_0x80:
+//     cmpwi r30, 0x10B
+//     bne- loc_0x15C
+//     cmpwi r23, 0xBD
+//     bne- loc_0x15C
+
+// loc_0x90:
+//     lwz r12, 8(r31)
+//     lwz r11, 272(r12)
+//     cmpwi cr4, r11, 0xF
+//     bne- cr4, loc_0xAC
+//     lhz r11, 252(r12)
+//     cmpwi r11, 0x1
+//     beq- loc_0x15C
+
+// loc_0xAC:
+//     lwz r12, 28(r31)
+//     lwz r12, 40(r12)
+//     lwz r12, 16(r12)
+//     lbz r12, 85(r12)
+//     mulli r16, r12, 0xA0
+//     mulli r17, r12, 0x5C
+//     mulli r23, r12, 0x80
+//     add r16, r16, r14
+//     sub r22, r22, r23
+//     lbz r20, 153(r16)
+
+// loc_0xD4:
+//     lbzx r19, r16, r20
+//     cmplwi r19, 204
+//     blt- loc_0xE8
+//     li r20, -3
+//     b loc_0xD4
+
+// loc_0xE8:
+//     lwzx r19, r16, r20
+//     rlwinm r18, r19, 8, 24, 31
+//     cmpwi r18, 0x3D
+//     bne- loc_0x104
+//     mflr r24
+//     bl RandomSelect
+//     mtlr r24
+
+//     lbzx r11, r15, r17
+//     cmpw r11, r18
+//     beq loc_0xE8
+
+// loc_0x104:
+//     rlwinm r19, r19, 24, 8, 31
+//     lis r11, 0x8128
+//     ori r11, r11, 0xAE64
+//     bne- cr4, loc_0x118
+//     subi r11, r11, 0x280
+
+// loc_0x118:
+//     li r6, 0x52
+//     rlwinm r6, r6, 12, 0, 19
+//     mullw r6, r6, r12
+//     lwzx r6, r11, r6
+//     beq- cr1, loc_0x134
+//     cmpwi r6, 0x1
+//     beq- loc_0x15C
+
+// loc_0x134:
+//     li r23, 0x12
+//     stb r23, 0(r22)
+//     stbx r18, r15, r17
+//     addi r15, r15, 0x5
+//     sthx r19, r15, r17
+//     addi r20, r20, 0x3
+//     stb r20, 153(r16)
+//     lbz r21, 154(r16)
+//     addi r21, r21, 0x1
+//     stb r21, 154(r16)
+
+// loc_0x15C:
+//     lmw r14, 8(r1)
+//     addi r1, r1, 0x50
+//     lwz r3, 44(r29)
+//     b exit
+
+// RandomSelect:
+//     stwu r1, -100(r1)
+//     stmw r9, 8(r1)
+//     lis r27, 0x8003
+//     ori r27, r27, 0xFC7C
+//     mflr r8
+//     mtctr r27
+//     li r3, 0x36 	#set range 0-0x35
+//     bctrl 
+//     bl validCheck
+//     mtlr r8
+//     lmw r9, 8(r1)
+//     addi r1, r1, 0x64
+//     mr r18, r3
+//     cmpwi r18, 0x17 #if wario
+//     bne- RandomChecks
+//     lis r19, 0x6    #set wario costume to warioland wario
+
+// RandomChecks:
+//     cmpwi r18, 0x11 #if ID is sopo rechoose random ID
+//     beq+ RandomSelect
+//     cmpwi r18, 0x12 #if ID is sona rechoose random ID
+//     beq+ RandomSelect
+//     cmpwi r18, 0x1D #if ID is pokemon trainer's charizard rechoose random ID
+//     beq+ RandomSelect
+//     cmpwi r18, 0x1F #if ID is pokemon trainer's squirtle rechoose random ID
+//     beq+ RandomSelect
+//     cmpwi r18, 0x21 #if ID is pokemon trainer's ivysaur rechoose random ID
+//     beq+ RandomSelect
+//     cmpwi r18, 0x2C #if ID is less than 0x2C ID is good so branch to blr
+//     blt- end
+//     cmpwi r18, 0x31 #if ID is giga bowser, warioman, or alloys rechoose random ID
+//     ble+ RandomSelect
+//     cmpwi r18, 0x34 #if ID is 0x34, rechoose random ID.
+//     beq RandomSelect
+
+// end:
+//     blr 
+// exit:
+
+// )");
+
+// extern "C" s32 validCheck(CHRKIND_ID chosen) {
+//     return CHRKIND_ID::CK_ZakoYellow;
+//     _character_validator:
+//     switch(chosen) {
+//         // case CHRKIND_ID::CK_Mario:
+//         // case CHRKIND_ID::CK_Link:
+//         case CHRKIND_ID::CK_Samus:
+//         // case CHRKIND_ID::CK_SZerosuit:
+//         case CHRKIND_ID::CK_Yosi:
+//         // case CHRKIND_ID::CK_Kirby:
+//         // case CHRKIND_ID::CK_Fox:
+//         // case CHRKIND_ID::CK_Pikachu:
+//         // case CHRKIND_ID::CK_Luigi:
+//         // case CHRKIND_ID::CK_Captain:
+//         // case CHRKIND_ID::CK_Ness:
+//         // case CHRKIND_ID::CK_Koopa:
+//         // case CHRKIND_ID::CK_Peach:
+//         // case CHRKIND_ID::CK_Zelda:
+//         case CHRKIND_ID::CK_Sheik:
+//         case CHRKIND_ID::CK_Iceclimber:
+//         case CHRKIND_ID::CK_Popo:
+//         case CHRKIND_ID::CK_Nana:
+//         // case CHRKIND_ID::CK_Marth:
+//         // case CHRKIND_ID::CK_GameWatch:
+//         // case CHRKIND_ID::CK_Falco:
+//         // case CHRKIND_ID::CK_Ganon:
+//         case CHRKIND_ID::CK_Wario:
+//         // case CHRKIND_ID::CK_Metaknight:
+//         case CHRKIND_ID::CK_Pit:
+//         case CHRKIND_ID::CK_Pikmin:
+//         // case CHRKIND_ID::CK_Lucas:
+//         // case CHRKIND_ID::CK_Diddy:
+//         case CHRKIND_ID::CK_PokeLizardon:
+//         case CHRKIND_ID::CK_Lizardon:
+//         case CHRKIND_ID::CK_PokeZenigame:
+//         case CHRKIND_ID::CK_Zenigame:
+//         case CHRKIND_ID::CK_PokeFushigisou:
+//         case CHRKIND_ID::CK_Fushigisou:
+//         // case CHRKIND_ID::CK_Dedede:
+//         // case CHRKIND_ID::CK_Lucario:
+//         // case CHRKIND_ID::CK_Ike:
+//         case CHRKIND_ID::CK_Robot:
+//         case CHRKIND_ID::CK_Purin:
+//         case CHRKIND_ID::CK_ToonLink:
+//         // case CHRKIND_ID::CK_Wolf:
+//         case CHRKIND_ID::CK_Snake:
+//         case CHRKIND_ID::CK_Sonic:
+//         case CHRKIND_ID::CK_GKoopa:
+//         case CHRKIND_ID::CK_WarioMan:
+//         case CHRKIND_ID::CK_Roy:
+//         case CHRKIND_ID::CK_Mewtwo:
+//         case CHRKIND_ID::CK_Knuckles:
+
+//         case CHRKIND_ID::CK_ZakoRed:
+//         case CHRKIND_ID::CK_ZakoBlue:
+//         case CHRKIND_ID::CK_ZakoYellow:
+//         case CHRKIND_ID::CK_ZakoGreen:
+//         case CHRKIND_ID::CK_MarioD:
+//         case CHRKIND_ID::CK_BossPackun:
+//         case CHRKIND_ID::CK_Rayquaza:
+//         case CHRKIND_ID::CK_PorkyStatue:
+//         case CHRKIND_ID::CK_Porky:
+//         case CHRKIND_ID::CK_HeadRobo:
+//         case CHRKIND_ID::CK_Ridley:
+//         case CHRKIND_ID::CK_Duon:
+//         case CHRKIND_ID::CK_MetaRidley:
+//         case CHRKIND_ID::CK_Taboo:
+//         case CHRKIND_ID::CK_MasterHand:
+//         case CHRKIND_ID::CK_CrazyHand:
+//         case CHRKIND_ID::CK_None:
+//             chosen = ((CHRKIND_ID) _randf());
+//             goto _character_validator;
+//     }
+//     return chosen;
+// };
 
 // FIX_AUTO_ROUTINE_SWITCH
-// STRING_WRITE(0x80928620, "\x4e\x80\x00\x20");
-// STRING_WRITE(0x80928b1c, "\x4e\x80\x00\x20");
-// STRING_WRITE(0x80928c60, "\x4e\x80\x00\x20");
-// STRING_WRITE(0x809293d0, "\x4e\x80\x00\x20");
+// DATA_WRITE(0x80928620, 0x4e800020);
+// DATA_WRITE(0x80928b1c, 0x4e800020);
+// DATA_WRITE(0x80928c60, 0x4e800020);
+// DATA_WRITE(0x809293d0, 0x4e800020);
 
-// STRING_WRITE(0x8092a524, "\x4e\x80\x00\x20");
-// STRING_WRITE(0x8092a548, "\x4e\x80\x00\x20");
-// STRING_WRITE(0x8092a56c, "\x4e\x80\x00\x20");
-// STRING_WRITE(0x8092a590, "\x4e\x80\x00\x20");
-
-
-
-
-
+// DATA_WRITE(0x8092a524, 0x4e800020);
+// DATA_WRITE(0x8092a548, 0x4e800020);
+// DATA_WRITE(0x8092a56c, 0x4e800020);
+// DATA_WRITE(0x8092a590, 0x4e800020);
 
 signed char disabledMd[4] = {-1, -1, -1, -1};
 INJECTION("CPUForceMd", 0x80905204, R"(
@@ -310,7 +577,11 @@ INJECTION("CPUForceMd", 0x80905204, R"(
 #define _IsPlayer_aiChrIdx ((bool (*)(char* chrIdx)) 0x808fd720)
 extern "C" void CPUForceMd(AiInput * aiInput, unsigned int intent, int newAction) {
     // OSReport("ADDR: %08x\n", aiInput);
-    if (aiInput->charId == CHAR_ID::Nana) aiInput->aiMd = intent;
+
+    if (aiInput->aiActPtr->scriptValues->character == CHAR_ID::Nana) {
+        aiInput->aiMd = intent;
+        OSReport("nana intent: %02x\n", intent);
+    }
     else if (aiInput->ftEntryPtr != nullptr) {
         OSReport("-- MD CHANGE --\n");
         OSReport("current action: %04x; ", aiInput->aiActPtr->aiScript);
@@ -430,6 +701,7 @@ extern float ai_customFnInjection[0x10];
 extern bool ai_customFnInjectionToggle[0x10];
 extern TrainingData playerTrainingData[];
 extern Menu* fudgeMenu;
+extern u8 getPlayerCount();
 
 PatternManager rpsManagers[0x10] = {
     PatternManager(),
@@ -450,6 +722,7 @@ PatternManager rpsManagers[0x10] = {
     PatternManager()
 };
 
+unsigned int playerCount = 0;
 MovementTracker movementTrackers[4] = {
     MovementTracker(),
     MovementTracker(),
@@ -458,11 +731,10 @@ MovementTracker movementTrackers[4] = {
 };
 
 SIMPLE_INJECTION(clearPredictions, 0x800dc590, "li r9, 2") {
-    
     for (int i = 0; i < 0x10; i++) {
         if (i < 4) {
             movementTrackers[i].reset();
-            movementTrackers[i].trackAction(0x0, 0, 0);
+            movementTrackers[i].trackAction(0x0, true, 0, 0);
             disabledSwitch[i] = false;
             disabledMd[i] = -1;
             autoDefend[i] = true;
@@ -495,6 +767,13 @@ INJECTION("TRACK_ACTION", 0x8077f9d8, R"(
     cmpwi r4, -1
 )")
 
+// INJECTION("TRACK_SUBACTION", 0x80726e58, R"(
+//     SAVE_REGS
+//     bl trackSubactionChange
+//     RESTORE_REGS
+//     mr r31, r4
+// )")
+
 #define FUNCTIONAL_STACK_LEN 0x10
 float functionalStack[FUNCTIONAL_STACK_LEN] = {};
 int functionalStackPtr = -1;
@@ -510,26 +789,24 @@ WeightedDie dynamicDice[2] = {
 
 extern "C" {
     double fn_result = 0;
-    void trackActionChange(int action, soModuleAccessor * accesser) {
-        if (action == -1 || (action >= 0x10E && action <= 0x110)) return;
+    bool recordSubaction = false;
+    
+    void recordData(unsigned char toRecord, soModuleAccessor * accesser, bool isAction) {
         // necessary because this will also pick up articles
         // checking the base type for the "ft" prefix ensures it's an actual fighter
         // 0x6674 = "ft"
         if (****((short****)accesser->paramCustomizeModule) != 0x6674) return;
         AiInput* aiInput = ((Fighter*) accesser->owningObject)->getOwner()->aiInputPtr;
         // obligatory nana check
-        if (aiInput->charId == CHAR_ID::Nana) return;
+        
+        if (aiInput->ftEntryPtr->isSubFighter(accesser)) return;
         auto pNum = _GetPlayerNo_aiChrIdx(&aiInput->cpuIdx);
         if (pNum >= 4) return;
 
         // get YDistFloor (+1)
         u8 yDistFloor = 0;
-        auto* landingCollGroundModule = accesser->groundModule->unk1->unk1->unk1;
-        Vec3f startPos {
-            landingCollGroundModule->landingCollisionBottomXPos,
-            landingCollGroundModule->landingCollisionBottomYPos,
-            accesser->postureModule->zPos
-        };
+        Vec3f startPos = {};
+        accesser->groundModule->getCorrectPos(&startPos);
 
         Vec3f destPos {
             0,
@@ -548,15 +825,40 @@ extern "C" {
             yDistFloor = _length_vec3f(&startPos) + 1;
         }
 
-        if (FIGHTER_MANAGER->getEntryCount() == 2 && accesser->groundModule != nullptr) {
-            float other = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(pNum == 1 ? 0 : 1))->modules->groundModule->getDownPos().xPos;
+        if (getPlayerCount() == 2 && accesser->groundModule != nullptr) {
+            auto otherGroundModule = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(aiInput->aiTarget))->modules->groundModule;
+            if (otherGroundModule == nullptr) return;
+            float other = otherGroundModule->getDownPos().xPos;
             float self = accesser->groundModule->getDownPos().xPos;
             float dist = other - self;
             if (dist < 0) dist *= -1;
-            movementTrackers[pNum].trackAction(action, yDistFloor, (u8) dist);
+            u8 ownAttackChance = (u8)(movementTrackers[pNum].approxChance(50, MOV_ATTACK) * 200);
+            u8 ownShieldChance = (u8)(movementTrackers[pNum].approxChance(50, MOV_SHIELD) * 200);
+            movementTrackers[pNum].trackAction(toRecord, isAction, yDistFloor, (u8) dist, ownAttackChance, ownShieldChance);
         } else {
-            movementTrackers[pNum].trackAction(action, yDistFloor);
+            float xPos = accesser->groundModule->getDownPos().xPos;
+            xPos += (xPos<0)*xPos*-2;
+            xPos *= 0.5;
+            movementTrackers[pNum].trackAction(toRecord, isAction, yDistFloor, (u8) xPos);
         }
+    }
+    void trackSubactionChange(int* subactionPtr, soMotionModule * motionModule) {
+        if (recordSubaction) {
+            // 0x48 to 0x6B for attacks
+            // 0x6C to 0x6E for grabs
+            // 0x1CE+ for specials
+            // 0x1CE - 0x6E (- 1) = 0x15F = plenty of room (noice)
+            int subaction = *subactionPtr;
+            if (subaction >= 0x1CE) subaction -= 0x15F;
+            recordData(subaction, motionModule->accesser, false);
+        }
+        recordSubaction = false;
+    }
+    void trackActionChange(int action, soModuleAccessor * accesser) {
+        if (action == -1 || (action >= 0x10E && action <= 0x110)) return;
+        recordData(action, accesser, true);
+        // if (action == 0x33) recordSubaction = true;
+        // else recordData(action, accesser, true);
     }
     void aiFunctionHandlers(float unk_f10, AiParam* targetAiParam, unsigned int switchCase, AiScriptData* selfAi, u32 sp, u32 rtoc) {
         fn_shouldReturnResult = 0;
@@ -599,12 +901,8 @@ extern "C" {
         if (switchCase == 0x4C) { // IsOnStage
             fn_shouldReturnResult = 1;
 
-            auto groundModule = targetFighter->modules->groundModule->unk1->unk1->unk1;
-            Vec3f startPos {
-                    groundModule->landingCollisionBottomXPos,
-                    groundModule->landingCollisionBottomYPos,
-                    targetFighter->modules->postureModule->zPos
-            };
+            Vec3f startPos = {};
+            targetFighter->modules->groundModule->getCorrectPos(&startPos);
 
             Vec3f destPos {
                 0,
@@ -628,14 +926,8 @@ extern "C" {
         }
 
         if (switchCase == 0x4B) { // YDistFloor
-            auto groundModule = targetFighter->modules->groundModule->unk1->unk1->unk1;
-            
-            Vec3f startPos {
-                    groundModule->landingCollisionBottomXPos,
-                    groundModule->landingCollisionBottomYPos,
-                    targetFighter->modules->postureModule->zPos
-            };
-
+            Vec3f startPos = {};
+            targetFighter->modules->groundModule->getCorrectPos(&startPos);
             Vec3f destPos {
                 0,
                 -500,
@@ -755,7 +1047,7 @@ extern "C" {
 
         // player count
         if (switchCase == 0x5D) {
-            fn_result = FIGHTER_MANAGER->getEntryCount();
+            fn_result = getPlayerCount();
             fn_shouldReturnResult = 1;
             return;
         } // 80623560
@@ -782,9 +1074,24 @@ extern "C" {
                 OSReport("========ERROR: TRIED TO ACCESS LTF STACK VARIABLE THAT DIDN'T EXIST========\n");
             }
         }
+
+        // shieldStunRemain
+        if (switchCase == 0x60) {
+            auto RABasicsArr = (*(int (*)[targetFighter->modules->workModule->RAVariables->basicsSize])targetFighter->modules->workModule->RAVariables->basics);
+            fn_result = RABasicsArr[0x5];
+            fn_shouldReturnResult = 1;
+            return;
+        }
         
         if (switchCase == 0x70) {
             fn_result = targetFighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector.threadUnion.ActionMain.cmdInterpreter->logicalFrame;
+            fn_shouldReturnResult = 1;
+            return;
+        }
+
+        // throw frame
+        if (switchCase == 0x71) {
+            fn_result = playerTrainingData[targetPlayerNo].debug.psaData.throwFrame;
             fn_shouldReturnResult = 1;
             return;
         }
@@ -807,6 +1114,14 @@ extern "C" {
                 fn_shouldReturnResult = 0;
         }
 
+        if (switchCase == 0xFE) {
+            fn_result = -1;
+            if (SCENE_NAME == 0x71547261) {
+                fn_result = *TRAINING_MODE_OPTION;
+            }
+            fn_shouldReturnResult = 1;
+            return;
+        }
         if (switchCase == 0xFF) {
             fn_result = playerTrainingData[targetPlayerNo].aiData.AIDebug;
             fn_shouldReturnResult = 1;
@@ -839,9 +1154,9 @@ INJECTION("CUSTOM_AI_REQUIREMENTS", 0x8091ed20, R"(
 // )");
 int originScript = 0;
 
-int* gotoCmdStack[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
-int gotoCmdScripts[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-int* gotoCmdScriptHeads[0x10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int* gotoCmdStack[0x11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; 
+int gotoCmdScripts[0x11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int* gotoCmdScriptHeads[0x11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int gotoCmdStackPtr = 0;
 #define _get_script_value_aiScriptData ((double (*)(AiScriptData * self, int soughtValue, int isPartOfVector)) 0x8091dfc4)
 #define _get_script_tag_scriptpac ((int* (*)(int* aice, int* commonce, int target)) 0x8091dedc)
@@ -883,6 +1198,14 @@ extern "C" {
                 // 0x9017F378 = stamina/300% mode flag
                 // 0x9017F385 = blastzones on/off flag
                 rq_result = !((*(u8*)0x9017F378) == 2 && (*(u8*)0x9017F385) != 2);
+                break;
+            }
+            case 0x1027: {
+                AiInput* targetAiInput = FIGHTER_MANAGER->getOwner(FIGHTER_MANAGER->getEntryId(aiActInst->aiInputPtr->aiTarget))->aiInputPtr;
+                auto targetFighterEntry = targetAiInput->ftEntryPtr;
+                bool getChild = targetFighterEntry == nullptr;
+                int targetPlayerNo = _GetPlayerNo_aiChrIdx(&targetAiInput->cpuIdx);
+                rq_result = playerTrainingData[targetPlayerNo].debug.psaData.shouldTechThrow;
                 break;
             }
             default: {
@@ -1072,9 +1395,291 @@ INJECTION("CUSTOM_XGOTO_RELOCATE_FIX", 0x809181d4, R"(
     bl FORCE_XGOTO_CONTINUE
 )")
 
+// FIXME: remove later
+
+// old position: 0x80904958
+
+// # <gutteral screaming>
+// timingFloat:
+//     .float 5
+//     .float 20
+// timingCheck:
+//     lis r12, timingFloat@ha
+//     ori r12, r12, timingFloat@l
+//     lfs f2, 0x0(r12)
+
+//     # let pivot grab exist
+//     # lets nana pivot grab
+//     fcmpo cr0, f1, f2
+//     ble notThrow
+
+//     lfs f2, 0x4(r12)
+//     # keeps nana from buffering dash
+//     fcmpo cr0, f1, f2 
+//     bge notThrow
+
+// cmpwi r3, 0x36 # = "catchDash" (action)
+//     beq- timingCheck
+//     cmpwi r3, 0x38 # = "catchTurn" (action)
+//     beq- timingCheck
+
+// INJECTION("nana_throw_routine_correction", 0x80903440, R"(
+//     # last line before nana child_update call
+//     lwz r3, 0x0034 (r31)
+    
+//     # r23 = AiInput
+//     # r24 = stick outputs
+//     # 0x8(r1) = button output
+//     # r30 = AiStat
+
+// check_if_grabbing:
+//     # clears nana inputs
+//     # li r3, 0x0
+//     # stw r3, 0x0(r24) # ? xCoord
+//     # stw r3, 0x4(r24) # ? yCoord
+//     # stw r3, 0x8(r1)
+
+//     # AI action
+//     # checks if between 0x34 and 0x3B which covers all "grabbing/holding" states
+//     lwz r3, 0xB4(r30)
+//     # 0x34 = "Catch" (action)
+//     cmpwi r3, 0x34
+//     blt+ notThrow
+//     # 0x3B = "CatchCut" (action)
+//     cmpwi r3, 0x3B
+//     bgt+ notThrow
+//     b setupGrab
+
+// setupGrab:
+//     # grab or setup
+//     li r3, 0x0
+//     stw r3, 0x0(r24) # stickX
+//     stw r3, 0x4(r24) # stickY
+//     stw r3, 0x8(r1)
+//     lwz r4, 0x8(r1) # buttons
+//     rlwinm r4, r4, 0, 23, 21
+//     stw r4, 0x8(r1) 
+    
+//     lwz r3, 0x44(r23) # r3 = AiAct
+//     lhz r4, 0x78(r3) # r4 = aiScript
+//     cmpwi r4, 0x6100 # if aiScript = 6100
+//     beq- inThrowRoutine
+
+//     # setup throw routine?
+//     li r3, 0x0
+//     stw r3, 0x0(r24) # ? xCoord
+//     stw r3, 0x4(r24) # ? yCoord
+//     stw r3, 0xD0(r1) # stick XCoord
+//     stw r3, 0xD4(r1) # stick YCoord
+//     # copy button input bitfield from current AiInput
+//     lwz r3, 0xC(r23) # \tell nana inputs should not change since previous logic
+//     stw r3, 0x8(r1)  # /
+//     b changeToThrowRoutine
+
+// inThrowRoutine:
+//     # relies on AI script to tell it when the throw is done for some reason?
+//     # this will only branch if AI var23 is set to 0 :thonk:
+//     lwz r4, 0x5C(r3)
+//     cmpwi r4, 0x0
+//     bne- notThrow
+
+//     lwz r4, 0x8(r1)                 # \
+//     andi. r3, r4, 0x100             # |
+//     cmpwi r3, 0x100                 # | if cstick is pressed, tell nana to forget about it
+//     # rlwinm r4, r4, 0, 23, 21      # | (<-- eliminate cstick input)
+//     beq changeToThrowRoutine        # |
+//     stw r3, 0x8(r1)                 # /
+
+//     b notThrow
+
+// changeToThrowRoutine:
+//     #act_change to 0x6100
+//     #args: (AiAct*, unsigned int nextScript, char* nextTargetAIChrIdx, int unk1, int unk2)
+    
+//     lwz r3, 0x44(r23) # r3 = AiAct
+//     li r5, 0x1
+//     stw r5, 0x5C(r3)      # sets internal AI variable (var23) to 1 for some reason 
+//     lhz r4, 0x78(r3)
+
+//     li r4, 0x6100         # next script
+//     lis r5, -1            #\ initialise this variable that PMDT never did
+//     stb r5, 0x24(r1)      #/ (pointer to 0xFF, effectively randomizes the AI target)
+//     li r6, 0 # unk1 arg
+//     li r7, 0 # unk2 arg
+
+//     # calls act_change(this, 0x6100, &0xFF, 0, 0)
+//     lis r12, 0x8090
+//     ori r12, r12, 0x3F4C
+//     mtctr r12
+//     bctr
+
+//     #exit
+// notThrow:
+//     lwz r3,0x0(r24)
+// )")
+
+INJECTION("disable_old_throw_routine_code_1", 0x80904958, R"(    
+    psq_l f31, 0x1f8(r1), 0x0, 0
+    lis r12, 0x8090
+    ori r12, r12, 0x495C
+    mtctr r12
+    bctr
+)");
+
+INJECTION("nana_throw_routine_correction_NEW", 0x80903440, R"(
+    # last line before nana child_update call
+    lwz r3, 0x0034 (r31)
+    
+    # r3 = childAi (AiInput)
+    # r4 = nana stick ptr
+    # r5 = nana buttons
+    # r6 = aiChrIdxPtr
+    # r7 = is tap jump enabled
+
+check_if_grabbing:
+    mr r14, r3 # AiInput
+    # SAVE_REGS
+    # bl nanaCheck
+    # RESTORE_REGS
+    lwz r15, 0x44(r14) # AiInput->AiAct r15 = AiAct
+    lwz r16, 0x74(r15) # AiAct->AiStat r16 = AiStat
+    # AI action
+    # checks if between 0x34 and 0x3B which covers all "grabbing/holding" states
+    lwz r17, 0xB4(r16)
+    # 0x34 = "Catch" (action)
+    cmpwi r17, 0x34
+    blt+ notThrow
+    # 0x3B = "CatchCut" (action)
+    cmpwi r17, 0x3B
+    bgt+ notThrow
+    b setupGrab
+
+setupGrab:
+    # 809041f4 - last address | 80912180
+    # grab or setup
+    li r17, 0x0
+    stw r17, 0x0(r4) # stickX
+    stw r17, 0x4(r4) # stickY
+    mr r5, r17 # buttons
+    # li r17, 0x79 # forces nana into mode that allows ai scripts
+    li r17, 0x7e # forces nana into mode that allows ai scripts
+    stw r17, 0x48(r14)
+    li r17, 0xA
+    stb r17, 0x1ba(r16)
+    
+    lhz r17, 0x78(r15) # r4 = aiScript
+    cmpwi r17, 0x6100 # if aiScript = 6100
+    beq- inThrowRoutine
+    b changeToThrowRoutine
+
+inThrowRoutine:
+    # relies on AI script to tell it when the throw is done for some reason?
+    # this will only branch if AI var23 is set to 0 :thonk:
+    lwz r17, 0x5C(r15)
+    cmpwi r17, 0x0
+    bne- notThrow
+
+    lwz r17, 0x8(r5)                 # \
+    andi. r18, r17, 0x100            # |
+    cmpwi r18, 0x100                 # | if cstick is pressed, tell nana to forget about it
+    beq changeToThrowRoutine         # |
+    stw r18, 0x8(r5)                 # /
+
+    b notThrow
+
+changeToThrowRoutine:
+
+    #act_change to 0x6100
+    #args: (AiAct*, unsigned int nextScript, char* nextTargetAIChrIdx, int vanilla ai routine, int unk2)
+    
+    mr r3, r15 # r3 = AiAct
+    li r5, 0x1
+    stw r5, 0x5C(r3)      # sets internal AI variable (var23) to 1 for some reason 
+    lhz r4, 0x78(r3)
+
+    li r4, 0x6100         # next script
+    
+    
+    li r0, -0x1             #\ initialise this variable that PMDT never did
+    stb r0, 0x24(sp)        #|
+    addi r5, r1, 0x24       #/ (pointer to 0xFF, effectively randomizes the AI target)
+    li r6, 0x6100 # unk1 arg
+    li r7, 0 # unk2 arg
+
+    # calls act_change(this, 0x6100, &0xFF, 0, 0)
+    lis r12, 0x8091
+    ori r12, r12, 0x8554
+    mtctr r12
+    bctr
+
+    #exit
+
+notThrow:
+)");
+
+INJECTION("force_nana_throw_execution", 0x8090366c, R"(
+    lwz r14, 0x44(r23) # AiInput->AiAct r14 = AiAct
+    lwz r15, 0x74(r14) # AiAct->AiStat r15 = AiStat
+    
+    # AI action
+    # checks if between 0x34 and 0x3B which covers all "grabbing/holding" states
+    lwz r16, 0xB4(r15)
+    # 0x34 = "Catch" (action)
+    cmpwi r16, 0x34
+    blt+ FNTE_normalExec
+    # 0x3B = "CatchCut" (action)
+    cmpwi r16, 0x3B
+    bgt+ FNTE_normalExec
+    bl FNTE_cache_large_dist
+    b FNTE_normalExec
+
+FNTE_big_long_dist:
+    .float 99999
+
+FNTE_cache_large_dist:
+    mflr r12
+    lfs f31, 0x4(r12)
+    blr
+
+FNTE_normalExec:
+    fcmpo 0, f31, f29
+)");
+
+// INJECTION("analyze_script_value_output", 0x8091e440, R"(
+//     lwz	r0, 0x0024 (sp)
+//     SAVE_REGS
+//     mr r3, r26
+//     bl scriptValueCheck
+//     RESTORE_REGS
+// )");
+
+// INJECTION("analyze_stick_output", 0x80904104, R"(
+//     SAVE_REGS
+//     mr r3, r24
+//     bl stickValueCheck
+//     RESTORE_REGS
+//     lis r3, 0x805A
+// )");
 
 #define _getButtonMask_soController ((unsigned int (*)(int btn)) 0x8076544c)
 extern "C" {
+    // void scriptValueCheck(double output, AiScriptData* aiActInst) {
+    //     OSReport("output: %.3f; constPtr: %08x; currInst: %08x\n", output, aiActInst->constPtr, aiActInst->currentInstruction);
+    // }
+    // void stickValueCheck(Vec2f* stick) {
+    //     OSReport("stick: [%.3f, %.3f]\n", stick->x, stick->y);
+    // }
+    // // # r3 = childAi (AiInput)
+    // // # r4 = nana stick ptr
+    // // # r5 = nana buttons
+    // // # r6 = aiChrIdxPtr
+    // // # r7 = is tap jump enabled
+    // void nanaCheck(AiInput* nanaAi, Vec2f* nanaStick, Inputs nanaButtons, void* aiChrIdxPtr, bool isTapJumpEnabled) {
+    //     OSReport("currScript: %04x; currMd: %02x; passed stick: [%.3f, %.3f]\nbuttons: %04x, isTapJump?: %d\n", nanaAi->aiActPtr->aiScript, nanaAi->aiMd, nanaStick->x, nanaStick->y, nanaButtons, isTapJumpEnabled);
+    // }
+    // float checkNana(AiStat* nanaStat) {
+    //     return FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(_GetPlayerNo_aiChrIdx(&nanaStat->aiIndex)), true)->modules->motionModule->getFrame();
+    // }
     float calculateKnockback(float percent, float damage, float bkb, float kbg, float weight, bool isWeightDependent) {
         if (isWeightDependent) {
             return ((((bkb * 10 / 20) + 1) * 1.4 * (200 / (weight + 100)) + 18) * (kbg / 100)) + 0;
@@ -1358,11 +1963,10 @@ extern "C" {
                     targetGroundModule = FIGHTER_MANAGER->getFighter(aiActInst->aiInputPtr->fighterId)->modules->groundModule;
                 }
 
-                Vec3f startPos {
-                        targetGroundModule->unk1->unk1->unk1->landingCollisionBottomXPos + (float) xOffset,
-                        targetGroundModule->unk1->unk1->unk1->landingCollisionBottomYPos + (float) yOffset,
-                        0
-                };
+                Vec3f startPos = {};
+                targetGroundModule->getCorrectPos(&startPos);
+                startPos.f1 += xOffset;
+                startPos.f2 += yOffset;
 
                 Vec3f destPos {
                     0,
@@ -1524,13 +2128,21 @@ extern "C" {
                 
                 float accumulator = 0;
                 float tracker = ySpeed;
-                for (int i = 0; i < frameCount; i++) {
+                u32 remainder = frameCount;
+                while (remainder > 0) {
+                    remainder --;
                     accumulator += tracker;
                     tracker -= gravity;
-                    if (tracker < fastFallSpeed || (tracker <= 0 && fastFallImmediate)) tracker = fastFallSpeed;
-                    else if (tracker < maxFallSpeed) tracker = maxFallSpeed;
+                    if (tracker < fastFallSpeed || (tracker <= 0 && fastFallImmediate)) {
+                        tracker = fastFallSpeed;
+                        break;
+                    }
+                    else if (tracker < maxFallSpeed) {
+                        tracker = maxFallSpeed;
+                        break;
+                    }
                 }
-
+                accumulator += remainder * tracker;
                 aiActInst->variables[varToMod] = accumulator;
             }
             _setAutoDefend: { // OSReport("setAutoDefend\n");
@@ -1607,9 +2219,9 @@ extern "C" {
                 bool detectPlats = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
 
                 Vec3f startPos {
-                        (float) xPos,
-                        (float) yPos,
-                        0
+                    (float) xPos,
+                    (float) yPos,
+                    0
                 };
 
                 // THIS IS RELATIVE TO THE STARTPOS
@@ -1705,7 +2317,7 @@ extern "C" {
                 float hitstun = moveCurrKnockback * 0.4;
                 float endlag = moveIASA - ((moveDuration / 2) + moveHitFrame);
                 aiActInst->variables[varToMod] += (hitstun - endlag) * 0.1;
-                OEndLag += 10;
+                // OEndLag += 2;
                 if ((OEndLag > moveHitFrame || (stageWidth / 2 - OTopNX < 0) || _randf() < 0.2) && (xVelRequired < moveCurrKnockback * moveXVelMultiplier || yVelRequired < moveCurrKnockback * moveYVelMultiplier) && (moveAngle <= 210 || moveAngle >= 330)) {
                     if (debugEnabled) OSReport("; KILLING");
                     aiActInst->variables[varToMod] += 3000;
@@ -1996,7 +2608,9 @@ extern "C" {
                 } else {
                     target = aiActInst->aiInputPtr->ftEntryPtr->ftStageObject;
                 }
-                Weapon* article = target->modules->generateArticleManageModule->getArticle(articleKind);
+
+                void*** rawArticle = target->modules->generateArticleManageModule->getArticle(articleKind);
+                Weapon* article = (Weapon*) DynamicCast(rawArticle, 0, **rawArticle, ArticleDescriptor);
 
                 if (article == nullptr) {
                     aiActInst->variables[xPosDest] = 0;
@@ -2008,32 +2622,35 @@ extern "C" {
                 // 812865ac | 812865ac
                 // 81286524 | 81286524
                 // DYNAMIC_CAST()
-                asm(R"(
-                    mr r3, %1
-                    li r4, 0
-                    lwz r5, 0(r3)
-                    lwz r5, 0(r5)
-                    lis r6, 0x80AE
-                    ori r6, r6, 0xB7D8
-                    li r7, 1
-                    lis r12, 0x803f
-                    ori r12, r12, 0x0f44
-                    mtctr r12
-                    bctrl
-                    mr %0, r3
-                )"
-                : "=r" (article)
-                : "r" (article));
+                
+                // asm(R"(
+                //     mr r3, %1
+                //     li r4, 0
+                //     lwz r5, 0(r3)
+                //     lwz r5, 0(r5)
+                //     lis r6, 0x80AE
+                //     ori r6, r6, 0xB7D8
+                //     li r7, 1
+                //     lis r12, 0x803f
+                //     ori r12, r12, 0x0f44
+                //     mtctr r12
+                //     bctrl
+                //     mr %0, r3
+                // )"
+                // : "=r" (article)
+                // : "r" (article));
 
                 // OSReport("article address: %08x\n", &article);
                 // OSReport("article: %08x\n", article);
                 // OSReport("article module addr: %08x\n", article->modules);
                 // OSReport("article module posture addr: %08x\n", article->modules->groundModule);
-                // OSReport("article module posture xpos addr: %08x\n", article->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos);
+                // OSReport("article module posture xpos addr: %08x\n", article->modules->groundModule->collStatus->collStatus->collStatus->landingCollisionBottomXPos);
 
                 if (cmd == 0x71) {
-                    aiActInst->variables[xPosDest] = article->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomXPos;
-                    aiActInst->variables[yPosDest] = article->modules->groundModule->unk1->unk1->unk1->landingCollisionBottomYPos;
+                    Vec3f correctPos = {};
+                    article->modules->groundModule->getCorrectPos(&correctPos);
+                    aiActInst->variables[xPosDest] = correctPos.f1;
+                    aiActInst->variables[yPosDest] = correctPos.f2;
                 } else {
                     auto postureModule = article->modules->postureModule;
                     aiActInst->variables[xPosDest] = postureModule->xPos - postureModule->prevXPos;
@@ -2230,10 +2847,10 @@ extern "C" {
             _DrawDebugPoint: { // OSReport("DrawDebugPoint\n");
                 double x1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
                 double y1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
-                int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
-                int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                u8 red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                u8 green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                u8 blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                u8 alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
                 if (alpha == 255) {
                     Point * pt = new Point{
                             0x000000FF,
@@ -2246,7 +2863,7 @@ extern "C" {
                     renderables.items.tick.push(pt);
                 }
                 Point * pt = new Point{
-                        (red << 24) | (green << 16) | (blue << 8) | alpha,
+                        (red << 24) | (green << 16) | (blue << 8) | ((alpha > 255) ? 255 : alpha),
                         (float) x1,
                         (float) y1,
                         30,
@@ -2261,10 +2878,10 @@ extern "C" {
                 double y1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 double x2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
                 double y2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
-                int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
-                int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
-                int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
-                int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
+                u8 red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                u8 green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                u8 blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
+                u8 alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
                 if (alpha == 255) {
                     Line * ln = new Line{
                             0x000000FF,
@@ -2279,7 +2896,7 @@ extern "C" {
                     renderables.items.tick.push(ln);
                 }
                 Line * ln = new Line{
-                        (red << 24) | (green << 16) | (blue << 8) | alpha,
+                        (red << 24) | (green << 16) | (blue << 8) | ((alpha > 255) ? 255 : alpha),
                         (float) x1,
                         (float) y1,
                         (float) x2,
@@ -2296,10 +2913,11 @@ extern "C" {
                 double y = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 double width = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
                 double height = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
-                int red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
-                int green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
-                int blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
-                int alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
+                u8 red = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                u8 green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                u8 blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
+                u8 alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
+                // OSReport("RECT RGBA: %d %d %d %d\n", red, green, blue, alpha);
                 if (alpha == 255) {
                     RectOutline * ro = new RectOutline{
                             0x000000FF,
@@ -2314,7 +2932,7 @@ extern "C" {
                     renderables.items.tick.push(ro);
                 }
                 RectOutline * ro = new RectOutline{
-                    (red << 24) | (green << 16) | (blue << 8) | alpha,
+                    (red << 24) | (green << 16) | (blue << 8) | ((alpha > 255) ? 255 : alpha),
                     (float) (y - height),
                     (float) (y + height),
                     (float) (x - width),
@@ -2322,6 +2940,7 @@ extern "C" {
                     30,
                     false
                 };
+                // OSReport("OUT RGBA: %08x\n", ro->color.value);
                 ro->autoTimer = false;
                 renderables.items.tick.push(ro);
                 return;

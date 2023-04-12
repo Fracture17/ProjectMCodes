@@ -60,7 +60,11 @@ struct gfTask {
     // 0x8
     gfTask* prevTask;
 
-    char _spacer[0x3c - 0x8 - 4];
+    char _spacer[0x28 - 0x8 - 4];
+    
+    int taskID;
+    
+    char _spacer2[0x3c - 0x28 - 4];
     
     gfTaskVTable* vtable; // points to a struct with functions seen above
 };

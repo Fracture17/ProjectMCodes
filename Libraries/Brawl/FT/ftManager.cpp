@@ -20,12 +20,24 @@ EntryID FtManager::getEntryIdFromIndex(int index) {
     return _getEntryIDFromIndex_ftManager(this, index);
 }
 
+EntryID FtManager::getEntryIdFromTaskID(int taskId) {
+    return _getEntryIDFromTaskId_ftManager(this, taskId, 0x0);
+}
+
 Fighter* FtManager::getFighter(EntryID entry, bool getFollower) {
     return _getFighter_ftManager(this, entry, getFollower);
 }
 
+Fighter* FtManager::getSubFighter(EntryID entry) {
+    return _getSubFighter_ftManager(this, entry);
+}
+
 unsigned int FtManager::getFighterCount(EntryID entry) {
     return _getFighterCount_ftManager(this, entry);
+}
+
+unsigned int FtManager::getFighterNo(EntryID entry) {
+    return _getFighterNo_ftManager(this, entry);
 }
 
 AiInput* FtManager::getInput(EntryID entry) {

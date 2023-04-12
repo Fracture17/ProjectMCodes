@@ -49,6 +49,8 @@ struct soStatusUniqProcess {
 
 struct soStatusModuleImpl {
     void changeStatusForce(u32 action, soModuleAccessor* accesser);
+    void changeStatusRequest(u32 action, soModuleAccessor* accesser);
+    void enableTransitionTermAll();
 
     char _spacer[0x06];
 
@@ -72,6 +74,8 @@ struct soStatusModuleImpl {
 };
 
 #define _changeStatusForce_soStatusModuleImpl ((void (*)(soStatusModuleImpl* self, u32 actionID, soModuleAccessor* accesser)) 0x8077f8b0)
+#define _changeStatusRequest_soStatusModuleImpl ((void (*)(soStatusModuleImpl* self, u32 actionID, soModuleAccessor* accesser)) 0x8077f5a8)
+#define _enableTransitionTermAll_soStatusModuleImpl ((void (*)(soStatusModuleImpl* self)) 0x807807b4)
 
 
 #endif //PROJECTMCODES_SOSTATUSMODULEIMPL_H

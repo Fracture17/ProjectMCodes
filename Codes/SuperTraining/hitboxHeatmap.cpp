@@ -187,7 +187,6 @@ void initializeAITargetingData(int currPlayerAction, soPostureModuleImpl* postur
 }
 void collectAITargetingData(double radius, float pos1[3], float pos2[3], unsigned int* colour) {
   if (currPlayerNum == 0 && !playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].heatmapOpts.active && (*colour == hitboxColour || *colour == grabboxColour)) {
-    OSReport("R: %.3f; XOffs: %.3f; YOffs: %.3f; ZOffs: %.3f\n", radius, pos1[0] - fudgeAI.xOrigin, pos1[1] - fudgeAI.yOrigin, pos1[2]);
     if (-radius < pos1[2] && pos1[2] < radius) {
       if (pos1[0] - radius < fudgeAI.xMin) fudgeAI.xMin = pos1[0] - radius;
       if (pos1[0] + radius > fudgeAI.xMax) fudgeAI.xMax = pos1[0] + radius;

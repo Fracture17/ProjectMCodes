@@ -19,6 +19,13 @@ struct AIDebugPage : public BasicPage {
   TrainingData& data;
 };
 
+struct MeterOptionsPage : public BasicPage {
+  MeterOptionsPage(Menu* myMenu, TrainingData& d)
+  : BasicPage(myMenu, "Meter Options"), data(d) {}
+  void show();
+  TrainingData& data;
+};
+
 struct ComboTrainerPage : public BasicPage {
   ComboTrainerPage(Menu* myMenu, TrainingData& d) 
   : BasicPage(myMenu, "Combo Trainer"), data(d) {};

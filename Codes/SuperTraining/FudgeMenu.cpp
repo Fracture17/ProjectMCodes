@@ -7,6 +7,7 @@
 #include "./FudgeMenuPages.h"
 #include "./FudgeMenu.h"
 #include "./MovementTracker.h"
+#include "./_TrainingOptionDefs.h"
 
 Menu* fudgeMenu;
 
@@ -79,6 +80,7 @@ TrainingData playerTrainingData[] = {
   TrainingData(),
   TrainingData()
 };
+GlobalCustomData GCD;
 
 CurrentItemParams currentItemParams = CurrentItemParams();
 
@@ -201,40 +203,58 @@ void PlayerPage::show() {
     //   AIRangePage->addOption(new ResetFudgeAIOption());
     //   this->addOption(new PageLink("AIRangeFinder", AIRangePage));
     // }
-    
-    Page* AIDP = new AIDebugPage(menu, data);
-    this->addOption(new PageLink(AIDP->getTitle(), AIDP));
 
-    Page* comboTrainerPage = new ComboTrainerPage(menu, data);
-    this->addOption(new PageLink(comboTrainerPage->getTitle(), comboTrainerPage));
+    #if AI_DEBUGGING_PAGE == 1
+      Page* AIDP = new AIDebugPage(menu, data);
+      this->addOption(new PageLink(AIDP->getTitle(), AIDP));
+    #endif
 
-    Page* trajectoryLinePage = new TrajectoryLinePage(menu, data);
-    this->addOption(new PageLink(trajectoryLinePage->getTitle(), trajectoryLinePage));
+    #if COMBO_TRAINER_PAGE == 1
+      Page* comboTrainerPage = new ComboTrainerPage(menu, data);
+      this->addOption(new PageLink(comboTrainerPage->getTitle(), comboTrainerPage));
+    #endif
 
-    Page* heatmapPage = new HeatmapPage(menu, data);
-    this->addOption(new PageLink(heatmapPage->getTitle(), heatmapPage));
+    #if TRAJECTORY_LINE_PAGE == 1
+      Page* trajectoryLinePage = new TrajectoryLinePage(menu, data);
+      this->addOption(new PageLink(trajectoryLinePage->getTitle(), trajectoryLinePage));
+    #endif
 
-    Page* predictionPage = new AIPredictionPage(menu, data, playerNum);
-    this->addOption(new PageLink(predictionPage->getTitle(), predictionPage));
+    #if HITBOX_HEATMAP_PAGE == 1
+      Page* heatmapPage = new HeatmapPage(menu, data);
+      this->addOption(new PageLink(heatmapPage->getTitle(), heatmapPage));
+    #endif
 
-    Page* AIPP = new AIPersonalityPage(menu, data);
-    this->addOption(new PageLink(AIPP->getTitle(), AIPP));
+    #if AI_STAT_PAGES == 1
+      Page* predictionPage = new AIPredictionPage(menu, data, playerNum);
+      this->addOption(new PageLink(predictionPage->getTitle(), predictionPage));
+
+      Page* AIPP = new AIPersonalityPage(menu, data);
+      this->addOption(new PageLink(AIPP->getTitle(), AIPP));
+    #endif
 
     this->addOption(new BoolOption("actionable overlay", data.actionableOverlay));
     this->addOption(new IntOption("actionable sound", data.actionableSE, -1, 0xFF));
     this->addOption(new IntOption("input display", data.inputDisplayType, 0, 2));
-    this->addOption(new NamedIndexOption("type", ControllerInfoPage::dataType, data.inputDisplayType, 3));
+    #if CONTROLLER_INFO_PAGE  == 1
+      this->addOption(new NamedIndexOption("type", ControllerInfoPage::dataType, data.inputDisplayType, 3));
+    #endif
 
-    Page* PSAData = new PSADataPage(menu, data);
-    // this->data->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);
-    // PSAData->addOption(this->data->debug.psaData.subactionSwitcher);
-    this->addOption(new PageLink(PSAData->getTitle(), PSAData));
+    #if PSA_DATA_PAGE == 1
+      Page* PSAData = new PSADataPage(menu, data);
+      // this->data->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);
+      // PSAData->addOption(this->data->debug.psaData.subactionSwitcher);
+      this->addOption(new PageLink(PSAData->getTitle(), PSAData));
+    #endif
 
-    Page* controllerInfo = new ControllerInfoPage(menu, data);
-    this->addOption(new PageLink(controllerInfo->getTitle(), controllerInfo));
+    #if CONTROLLER_INFO_PAGE  == 1
+      Page* controllerInfo = new ControllerInfoPage(menu, data);
+      this->addOption(new PageLink(controllerInfo->getTitle(), controllerInfo));
+    #endif
 
-    Page* positionalDataPage = new PositionalDataPage(menu, data);
-    this->addOption(new PageLink(positionalDataPage->getTitle(), positionalDataPage)); 
+    #if POSITIONAL_DATA_PAGE == 1
+      Page* positionalDataPage = new PositionalDataPage(menu, data);
+      this->addOption(new PageLink(positionalDataPage->getTitle(), positionalDataPage)); 
+    #endif
 }
 
 void PlayerPage::select() { 

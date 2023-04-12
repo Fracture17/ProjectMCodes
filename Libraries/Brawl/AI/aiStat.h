@@ -7,6 +7,7 @@
 
 #include "aiIpBuf.h"
 #include "Containers/Vec3f.h"
+#include "Brawl/FT/Fighter.h"
 
 enum AI_ACT_CAT {
     ACAT_NONE = 0x0,	
@@ -37,6 +38,7 @@ enum AI_ACT_CAT {
 };
 
 struct AiInput;
+struct FtInput;
 struct AiStat {
     double calcArrivePosX(double time);
     double calcArrivePosY(double time);    
@@ -53,7 +55,9 @@ struct AiStat {
     // 0x3
     bool enableAway;
 
-    char _spacer1[0x4C - 0x3 - 1];
+    char _spacer1[0x48 - 0x3 - 1];
+    // 0x48
+    FtInput* ftInput;
     // 0x4C
     AiInput* aiInput;
     
@@ -61,127 +65,127 @@ struct AiStat {
     union FloorInfoUnion {
         unsigned int raw;
         struct FloorInfoBits {
-            unsigned unk32 : 1;
-            unsigned unk31 : 1;
-            unsigned unk30 : 1;
-            unsigned isNotTouch_xa4_0 : 1;
-            unsigned isNotTouch_x52_0 : 1;
-            unsigned isNotTouch_1_0 : 1;
-            unsigned unk26 : 1;
-            unsigned DamageElec : 1;
+            bool isOnStage : 1;
+            bool unk31 : 1;
+            bool unk30 : 1;
+            bool isNotTouch_xa4_0 : 1;
+            bool isNotTouch_x52_0 : 1;
+            bool isNotTouch_1_0 : 1;
+            bool unk26 : 1;
+            bool DamageElec : 1;
             
-            unsigned unk24 : 1;
-            unsigned DamageElec_2 : 1;
-            unsigned unk22 : 1;
-            unsigned unk21 : 1;
-            unsigned LABit_x18 : 1;
-            unsigned isGrabbing : 1;
-            unsigned unk18 : 1;
-            unsigned Fighter_x138_bit_4 : 1;
+            bool unk24 : 1;
+            bool DamageElec_2 : 1;
+            bool unk22 : 1;
+            bool unk21 : 1;
+            bool LABit_x18 : 1;
+            bool isGrabbing : 1;
+            bool unk18 : 1;
+            bool Fighter_x138_bit_4 : 1;
 
-            unsigned unk16 : 1;
-            unsigned unk15 : 1;
-            unsigned unk14 : 1;
-            unsigned unk13 : 1;
-            unsigned unk12 : 1;
-            unsigned unk11 : 1;
-            unsigned unk10 : 1;
-            unsigned unk9 : 1;
+            bool unk16 : 1;
+            bool unk15 : 1;
+            bool unk14 : 1;
+            bool unk13 : 1;
+            bool unk12 : 1;
+            bool unk11 : 1;
+            bool unk10 : 1;
+            bool unk9 : 1;
 
-            unsigned unk8 : 1;
-            unsigned unk7 : 1;
-            unsigned unk6 : 1;
-            unsigned unk5 : 1;
-            unsigned unk4 : 1;
-            unsigned unk3 : 1;
-            unsigned offStage : 1;
-            unsigned isTouchingGround : 1;
+            bool unk8 : 1;
+            bool unk7 : 1;
+            bool unk6 : 1;
+            bool unk5 : 1;
+            bool unk4 : 1;
+            bool unk3 : 1;
+            bool offStage : 1;
+            bool isTouchingGround : 1;
         } infos;
-    };
+    } floorInfoBitfield;
 
     // 0x54
     union TransitionUnion {
         unsigned int raw;
         struct TransitionBits {
-            unsigned unk32 : 1;
-            unsigned unk31 : 1;
-            unsigned unk30 : 1;
-            unsigned unk29 : 1;
-            unsigned unk28 : 1;
-            unsigned unk27 : 1;
-            unsigned unk26 : 1;
-            unsigned unk25 : 1;
+            bool unk32 : 1;
+            bool unk31 : 1;
+            bool unk30 : 1;
+            bool unk29 : 1;
+            bool unk28 : 1;
+            bool unk27 : 1;
+            bool unk26 : 1;
+            bool unk25 : 1;
             
-            unsigned unk24 : 1;
-            unsigned unk23 : 1;
-            unsigned unk22 : 1;
-            unsigned unk21 : 1;
-            unsigned unk20 : 1;
-            unsigned unk19 : 1;
-            unsigned unk18 : 1;
-            unsigned unk17 : 1;
+            bool unk24 : 1;
+            bool unk23 : 1;
+            bool unk22 : 1;
+            bool unk21 : 1;
+            bool unk20 : 1;
+            bool unk19 : 1;
+            bool unk18 : 1;
+            bool unk17 : 1;
 
-            unsigned unk16 : 1;
-            unsigned unk15 : 1;
-            unsigned unk14 : 1;
-            unsigned unk13 : 1;
-            unsigned unk12 : 1;
-            unsigned unk11 : 1;
-            unsigned unk10 : 1;
-            unsigned unk9 : 1;
+            bool unk16 : 1;
+            bool unk15 : 1;
+            bool unk14 : 1;
+            bool unk13 : 1;
+            bool unk12 : 1;
+            bool unk11 : 1;
+            bool unk10 : 1;
+            bool unk9 : 1;
 
-            unsigned unk8 : 1;
-            unsigned unk7 : 1;
-            unsigned unk6 : 1;
-            unsigned unk5 : 1;
-            unsigned unk4 : 1;
-            unsigned unk3 : 1;
-            unsigned unk2 : 1;
-            unsigned unk1 : 1;
+            bool unk8 : 1;
+            bool unk7 : 1;
+            bool unk6 : 1;
+            bool unk5 : 1;
+            bool unk4 : 1;
+            bool unk3 : 1;
+            bool unk2 : 1;
+            bool unk1 : 1;
         } transitions;
-    };
+    } transitionBitfield;
 
     // 0x58
     union ChrStatUnion {
         unsigned int raw;
         struct ChrStatBits {
-            unsigned unk32 : 1;
-            unsigned unk31 : 1;
-            unsigned unk30 : 1;
-            unsigned unk29 : 1;
-            unsigned unk28 : 1;
-            unsigned unk27 : 1;
-            unsigned unk26 : 1;
-            unsigned unk25 : 1;
+            bool unk32 : 1;
+            bool unk31 : 1;
+            bool unk30 : 1;
+            bool unk29 : 1;
+            bool unk28 : 1;
+            bool unk27 : 1;
+            bool unk26 : 1;
+            bool unk25 : 1;
             
-            unsigned unk24 : 1;
-            unsigned unk23 : 1;
-            unsigned unk22 : 1;
-            unsigned unk21 : 1;
-            unsigned unk20 : 1;
-            unsigned unk19 : 1;
-            unsigned unk18 : 1;
-            unsigned unk17 : 1;
+            bool unk24 : 1;
+            bool unk23 : 1;
+            bool unk22 : 1;
+            bool unk21 : 1;
+            bool unk20 : 1;
+            bool unk19 : 1;
+            bool unk18 : 1;
+            bool unk17 : 1;
 
-            unsigned unk16 : 1;
-            unsigned unk15 : 1;
-            unsigned unk14 : 1;
-            unsigned unk13 : 1;
-            unsigned unk12 : 1;
-            unsigned unk11 : 1;
-            unsigned unk10 : 1;
-            unsigned unk9 : 1;
+            bool unk16 : 1;
+            bool unk15 : 1;
+            bool unk14 : 1;
+            bool unk13 : 1;
+            bool unk12 : 1;
+            bool unk11 : 1;
+            bool unk10 : 1;
+            bool unk9 : 1;
 
-            unsigned unk8 : 1;
-            unsigned unk7 : 1;
-            unsigned unk6 : 1;
-            unsigned unk5 : 1;
-            unsigned unk4 : 1;
-            unsigned unk3 : 1;
-            unsigned unk2 : 1;
-            unsigned unk1 : 1;
+            bool unk8 : 1;
+            bool unk7 : 1;
+            bool unk6 : 1;
+            bool unk5 : 1;
+            bool unk4 : 1;
+            bool unk3 : 1;
+            bool unk2 : 1;
+            bool unk1 : 1;
         } chrStats;
-    };
+    } chrStatBitfield;
 
     // 0x5C
     Vec3f position;
@@ -205,7 +209,10 @@ struct AiStat {
     // 0xA4
     float hurtboxSize;
 
-    char _spacer5[0xAA - 0xA4 - 4];
+    // 0xA8
+    char _spacer_a8;
+    char _spacer_a9;
+
     // 0xAA
     char comboedCounter;
 
@@ -213,16 +220,19 @@ struct AiStat {
     char _spacer_aa_ac;
 
     // 0xAC
-    int character;
+    CHAR_ID character;
+
+    // 0xB0
+    CHAR_ID kirbyHatCharacter;
 
     // 0xB4
-    // int currStatus
+    int currAction;
 
     // 0xBC
     // aka currBlk
     // void* currFloorPtr
 
-    char _spacer6[0xC4 - 0xAC - 4];
+    char _spacer6[0xC4 - 0xB4 - 4];
     // 0xC4
     float damage;
     // 0xC8
@@ -233,24 +243,34 @@ struct AiStat {
     float stockCount;
 
     // 0xD4
+    char playerNumber;
     // 0xD8
-    char _spacer7[0xDC - 0xD0 - 4];
+    char _spacer7[0xDC - 0xD4 - 1];
 
     // 0xDC
     float LAFloat3;
 
-    char _spacer8[0xE4 - 0xDC - 4];
+    // 0xE0
+    StageObject* stageObject;
 
     // 0xE4
     AiIpBuf ipBuf;
 
-    char _spacer_fill[0x1a8 - 0xE4 - sizeof(AiIpBuf)];
+    char _spacer_fill[0x1BA - 0xE4 - sizeof(AiIpBuf)];
 
-    char _spacer9[0x1ba - 0x1a8 - 1];
+    // char _spacer9[0x1ba - 0x1a8 - 1];
     
     // 0x1BA
     char aiActionCategory;
+    // 0x1BB
+    char respawnInvincLeft;
+    // 0x1BC
+    u8 attackAnimFrame;
+    // 0x1BD
+    u8 attackAnimFrameAgain;
 };
+
+static_assert(offsetof(AiStat, character) == 0xAC, "improper character offset!!");
 
 #define _calcArraivePosX_aiStat ((double (*)(double time, AiStat * stat)) 0x80916884)
 #define _calcArraivePosY_aiStat ((double (*)(double time, AiStat * stat)) 0x809168c8)

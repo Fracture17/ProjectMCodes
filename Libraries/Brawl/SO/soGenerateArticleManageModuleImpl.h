@@ -4,9 +4,10 @@
 // #include "Brawl/Weapon.h"
 struct Weapon;
 struct soGenerateArticleManageModuleImpl {
-    Weapon* getArticle(int kind);
+    // MUST CONVERT TO WEAPONSTAGEOBJ THROUGH DynamicCast
+    void*** getArticle(int kind);
 };
 
-#define _getArticle_soGenerateArticleManageModuleImpl ((Weapon* (*)(soGenerateArticleManageModuleImpl* self, int kind)) 0x807a17a0)
+#define _getArticle_soGenerateArticleManageModuleImpl ((void*** (*)(soGenerateArticleManageModuleImpl* self, int kind)) 0x807a17a0)
 
 #endif //PROJECTMCODES_SOGENERATEARTICLEMANAGEMODULEIMPL_H

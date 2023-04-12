@@ -10,7 +10,12 @@
   {
     "startAddress": "0x817CE880",
     "endAddress": "0x817DA590"
-  }],
+  },
+  {
+    "startAddress": "0x808FE5A0",
+    "endAddress": "0x80901790"
+  }
+  ],
   "infoSegmentAddress": "0x935D0000",
   "memoryHeapEndAddress": "0x935E0000",
   "initializerInfoAddress": "0x81500000",

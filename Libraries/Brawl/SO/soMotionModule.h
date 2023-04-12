@@ -51,6 +51,10 @@ struct soMotionModule {
     char _spacer3[0x58 - 0x3C - sizeof(soAnimChr)];
     // 0x58
     int subAction;
+
+    char _spacer4[0x168 - 0x58 - 4];
+    // 0x168
+    class soModuleAccessor* accesser;
 };
 
 

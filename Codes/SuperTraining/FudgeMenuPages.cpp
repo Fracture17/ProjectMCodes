@@ -1,6 +1,8 @@
 #include "./FudgeMenuPages.h"
 #include "./menu.h"
+#include "./_TrainingOptionDefs.h"
 
+extern GlobalCustomData GCD;
 void MainPage::show() {
   ADD_UNPAUSE
   PlayerPage* p1Page = new PlayerPage(menu, 0);
@@ -19,43 +21,66 @@ void MainPage::show() {
   addOption(p2PageLink);
   addOption(p3PageLink);
   addOption(p4PageLink);
+  addOption(new BoolOption("Smooth Wavedashes?", GCD.smoothWavedashes));
   addOption(new FloatOption("opacity", menu->opacity, 0, 255));
 }
 
+#if AI_DEBUGGING_PAGE == 1
 void AIDebugPage::show() {
-  ADD_UNPAUSE
-  addOption(new BoolOption("AI DEBUG?", data.aiData.AIDebug));
-  addOption(new IntOption("target", data.aiData.target, false));
-  addOption(new AIScriptPathOption(data.aiData.scriptPath));
-  addOption(new HexObserver("current script", data.aiData.scriptID, HexSize::SHORT));
-  addOption(new FloatOption("stick X", data.aiData.lstickX, false));
-  addOption(new FloatOption("stick Y", data.aiData.lstickY, false));
+    ADD_UNPAUSE
+    addOption(new BoolOption("AI DEBUG?", data.aiData.AIDebug));
+    addOption(new IntOption("target", data.aiData.target, false));
+    addOption(new AIScriptPathOption(data.aiData.scriptPath));
+    addOption(new HexObserver("current script", data.aiData.scriptID, HexSize::SHORT));
+    addOption(new FloatOption("stick X", data.aiData.lstickX, false));
+    addOption(new FloatOption("stick Y", data.aiData.lstickY, false));
 
-  addOption(new HexObserver("action", data.debug.psaData.action, HexSize::SHORT));
-  addOption(new HexObserver("subaction", data.debug.psaData.subaction, HexSize::SHORT));
-  addOption(new StringOption("subaction name", data.debug.psaData.currSubactionName));
+    addOption(new HexObserver("action", data.debug.psaData.action, HexSize::SHORT));
+    addOption(new HexObserver("subaction", data.debug.psaData.subaction, HexSize::SHORT));
+    addOption(new StringOption("subaction name", data.debug.psaData.currSubactionName));
+}
+#endif
+
+#if COMBO_TRAINER_PAGE == 1
+void MeterOptionsPage::show() {
+  ADD_UNPAUSE
+  
+  addOption(new BitOption("hitlag", data.debug.psaData.enabledMeters.fullValue, true, 0));
+  addOption(new BitOption("hitstun", data.debug.psaData.enabledMeters.fullValue, true, 1));
+  addOption(new BitOption("shieldStun", data.debug.psaData.enabledMeters.fullValue, true, 2));
+  addOption(new BitOption("DI", data.debug.psaData.enabledMeters.fullValue, true, 3));
+  addOption(new BitOption("timeUntilIASA", data.debug.psaData.enabledMeters.fullValue, true, 4));
+  addOption(new BitOption("ledgeIntangibility", data.debug.psaData.enabledMeters.fullValue, true, 5));
+  addOption(new BitOption("intangibility", data.debug.psaData.enabledMeters.fullValue, true, 6));
 }
 
 void ComboTrainerPage::show() {
   ADD_UNPAUSE
   addOption(new BoolOption("enabled", data.debug.enabled));
+  
+  Page* meterOptions = new MeterOptionsPage(menu, data); 
+  addOption(new PageLink(meterOptions->getTitle(), meterOptions));
+
   addOption(new BoolOption("no clip", data.debug.noclip));
-  addOption(new FloatOption("damage", data.debug.damage, 0, 999));
+  addOption(new FloatOption("damage", data.debug.damage, -1, 999));
   addOption(new IntOption("combo timer", data.debug.comboTimer, false));
   addOption(new BarOption("remaining hitstun", data.debug.hitstun, data.debug.maxHitstun, 0xFF8800FF, 50));
   addOption(new IntOption("combo adjust", data.debug.comboTimerAdjustment));
   addOption(new BarOption("shield", data.debug.shieldValue, data.debug.maxShieldValue, 0xFF8800FF, 50));
   addOption(new FloatOption("shieldstun taken", data.debug.maxShieldstun, false));
-  addOption(new BarOption("shieldstun", data.debug.shieldstun, data.debug.maxShieldstun, 0xFF8800FF, 50));
+  // addOption(new BarOption("shieldstun", data.debug.shieldstun, data.debug.maxShieldstun, 0xFF8800FF, 50));
   addOption(new BoolOption("fix position", data.debug.fixPosition));
   addOption(new ControlOption("set position", data.debug.settingPosition));
   addOption(new BoolOption("randomize position", data.debug.randomizePosition));
+  addOption(new BoolOption("rec trainer", data.debug.recoveryTrainer));
   addOption(new BoolOption("set on ground", data.debug.randOnGround));
   addOption(new BoolOption("randomize damage", data.debug.randomizeDamage));
   addOption(new FloatOption("X", data.debug.xPos, false));
   addOption(new FloatOption("Y", data.debug.yPos, false));
 }
+#endif
 
+#if TRAJECTORY_LINE_PAGE == 1
 void TrajectoryLinePage::show() {
   ADD_UNPAUSE
   addOption(new BoolOption("enabled", data.trajectoryOpts.active));
@@ -63,7 +88,9 @@ void TrajectoryLinePage::show() {
   addOption(new IntOption("segments", data.trajectoryOpts.segments, 1, 10));
   addOption(new IntOption("segment length", data.trajectoryOpts.segmentLength, 1, 20));
 }
+#endif
 
+#if HITBOX_HEATMAP_PAGE == 1
 extern FudgeAIHitbox fudgeAI;
 void HeatmapPage::show() {
   ADD_UNPAUSE
@@ -72,14 +99,19 @@ void HeatmapPage::show() {
   addOption(new IntOption("opacity", data.heatmapOpts.opacity, 0, 255));
   addOption(new IntOption("color change frame", data.heatmapOpts.colorChangeFrame, 0, 255));
 
-  addOption(new FloatOption("xmin", fudgeAI.trueXMin, false));
-  addOption(new FloatOption("ymin", fudgeAI.trueYMin, false));
-  addOption(new FloatOption("width", fudgeAI.width, false));
-  addOption(new FloatOption("height", fudgeAI.height, false));
-  addOption(new FloatOption("xmax", fudgeAI.trueXMax, false));
-  addOption(new FloatOption("ymax", fudgeAI.trueYMax, false));
+  #if HITBOX_HEATMAP_BOUNDS == 1
+    addOption(new TempLogOption());
+    addOption(new FloatOption("xmin", fudgeAI.trueXMin, false));
+    addOption(new FloatOption("ymin", fudgeAI.trueYMin, false));
+    addOption(new FloatOption("width", fudgeAI.width, false));
+    addOption(new FloatOption("height", fudgeAI.height, false));
+    addOption(new FloatOption("xmax", fudgeAI.trueXMax, false));
+    addOption(new FloatOption("ymax", fudgeAI.trueYMax, false));
+  #endif
 }
+#endif
 
+#if AI_STAT_PAGES == 1
 void AIPredictionPage::show() {
   ADD_UNPAUSE
   addOption(new AIPredictionOption(pNum, data.aiData.predictions));
@@ -102,11 +134,15 @@ void AIPersonalityPage::show() {
   addOption(new FloatOption("SDIChance", data.aiData.personality.SDIChance, -1, 10, 0.05f));
   addOption(new FloatOption("wall_chance", data.aiData.personality.wall_chance, -1, 10, 0.05f));
 }
+#endif
 
+#if PSA_DATA_PAGE == 1
 void PSADataPage::show() {
   ADD_UNPAUSE
-  Page* PSAScript = new PSAScriptPage(menu, data); 
-  addOption(new PageLink(PSAScript->getTitle(), PSAScript));
+  #if PSA_DEBUGGER_PAGE == 1
+    Page* PSAScript = new PSAScriptPage(menu, data); 
+    addOption(new PageLink(PSAScript->getTitle(), PSAScript));
+  #endif
 
   addOption(new HexObserver("action", data.debug.psaData.action, HexSize::SHORT));
   addOption(new HexObserver("prev action", data.debug.psaData.prevAction, HexSize::SHORT));
@@ -115,9 +151,13 @@ void PSADataPage::show() {
   addOption(new StringOption("subaction name", data.debug.psaData.currSubactionName));
   addOption(new FloatOption("current frame", data.debug.psaData.currentFrame, false));
   addOption(new FloatOption("end frame", data.debug.psaData.currentEndFrame, false));
-  addOption(new FloatOption("FSM", data.debug.psaData.frameSpeedModifier, false));
+  #if PSA_DEBUGGER_PAGE == 1
+    addOption(new FloatOption("FSM", data.debug.psaData.frameSpeedModifier, false));
+  #endif
 }
+#endif
 
+#if PSA_DEBUGGER_PAGE == 1
 const char* PSAScriptPage::threadNames[] = {
   "Action Main",
   "Subaction Main",
@@ -140,7 +180,9 @@ void PSAScriptPage::show() {
   addOption(new NamedIndexOption("thread name", PSAScriptPage::threadNames, data.debug.psaData.threadIdx, 11));
   addOption(new PSAScriptOption(data.debug.psaData.fullScript, data.debug.psaData.scriptLocation));
 }
+#endif
 
+#if CONTROLLER_INFO_PAGE == 1
 const char* ControllerInfoPage::dataType[] = {
   "Off",
   "Raw",
@@ -164,27 +206,16 @@ void ControllerInfoPage::show() {
   addOption(new FloatOption("LStickY", data.aiData.lstickY, false));
   addOption(new BoolOption("cStick", data.controllerData.cStick, false));
 }
+#endif
 
-void PositionalDataPage::show() {
-  ADD_UNPAUSE
-  addOption(new FloatOption("X Pos", data.posData.xPos, false));
-  addOption(new FloatOption("Y Pos", data.posData.yPos, false));
-  // addOption(new FloatOption("Chr X Vel", data.posData.CHRXVel, false));
-  // addOption(new FloatOption("Chr Y Vel", data.posData.CHRYVel, false));
-  // addOption(new FloatOption("KB X Vel", data.posData.KBXVel, false));
-  // addOption(new FloatOption("KB Y Vel", data.posData.KBYVel, false));
-  addOption(new FloatOption("Total X Vel", data.posData.totalXVel, false));
-  addOption(new FloatOption("Total Y Vel", data.posData.totalYVel, false));
-  SubpageOption* collisionSubpage = new SubpageOption("ECB Data");
+#if POSITIONAL_DATA_PAGE == 1
+  void PositionalDataPage::show() {
+    ADD_UNPAUSE
+    addOption(new FloatOption("X Pos", data.posData.xPos, false));
+    addOption(new FloatOption("Y Pos", data.posData.yPos, false));
 
-  collisionSubpage->addOption(new FloatOption("L ECB X", data.posData.ECBLX, false));
-  collisionSubpage->addOption(new FloatOption("L ECB Y", data.posData.ECBLY, false));
-  collisionSubpage->addOption(new FloatOption("T ECB X", data.posData.ECBTX, false));
-  collisionSubpage->addOption(new FloatOption("T ECB Y", data.posData.ECBTY, false));
-  collisionSubpage->addOption(new FloatOption("R ECB X", data.posData.ECBRX, false));
-  collisionSubpage->addOption(new FloatOption("R ECB Y", data.posData.ECBRY, false));
-  collisionSubpage->addOption(new FloatOption("B ECB X", data.posData.ECBBX, false));
-  collisionSubpage->addOption(new FloatOption("B ECB Y", data.posData.ECBBY, false));
-
-  addOption(collisionSubpage);
-}
+    addOption(new KineticObserverOption(data.posData.kineticModule));
+    addOption(new FloatOption("Total X Vel", data.posData.totalXVel, false));
+    addOption(new FloatOption("Total Y Vel", data.posData.totalYVel, false));
+  }
+#endif

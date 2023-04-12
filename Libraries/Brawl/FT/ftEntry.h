@@ -9,11 +9,14 @@
 
 struct FtOwner;
 struct FtInput;
-
+struct AiInput;
 // size: 0x244
 struct FtEntry {
     // unsigned int getTeam();
     void setFinal(int unk1);
+
+    bool isSubFighter(AiInput* aiInputPtr);
+    bool isSubFighter(soModuleAccessor* accesser);
 
     char _spacer[0x4];
     // 0x04
@@ -60,6 +63,7 @@ struct FtEntry {
     // fills the rest of the space (array compatibility)
     char _spacer_fill[0x244 - 0x70 - 4];
 };
+static_assert(sizeof(FtEntry) == 0x244);
 
 #define _getTeam_ftEntry ((unsigned int (*)(FtEntry* self, )) 0x80821974)
 #define setFinal_ftEntry ((void (*)(FtEntry* self, int unk3)) 0x8082037c)

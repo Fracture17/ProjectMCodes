@@ -73,7 +73,7 @@ struct soModuleAccessor {
     soStatusModuleImpl* statusModule;
     char _spacer9[0x88 - 0x7C - 4];
     //0x7C + 0xC = 0x88
-    soKineticModuleGenericImpl* kineticModule;
+    soKineticModuleImpl* kineticModule;
     char _spacer10[0x90 - 0x88 - 4];
     //0x84 + 0xC = 0x90
     soGenerateArticleManageModuleImpl* generateArticleManageModule;

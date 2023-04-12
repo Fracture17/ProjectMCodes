@@ -7,8 +7,11 @@
 
 #include "Brawl/GF/gfTask.h"
 
+struct AiInput;
 struct soModuleAccessor;
 struct StageObject : public gfTask {
+    AiInput* getInput();
+
     //a bunch of arguments
     inline static auto ct = (StageObject* (*)()) 0x8070e274;
 
@@ -19,5 +22,6 @@ struct StageObject : public gfTask {
 };
 
 #define _updatePosture_StageObject ((void (*)(StageObject* self, bool interpolate)) 0x8070ef84)
+#define _getInput_StageObject ((AiInput* (*)(StageObject* self)) 0x8070fcc8)
 
 #endif //PROJECTMCODES_STAGEOBJECT_Hrec

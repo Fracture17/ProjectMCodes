@@ -1,7 +1,19 @@
 #pragma once
 
-#define VTABLE_METHOD(RET_TYPE, FN_NAME, ARGS...) \
-RET_TYPE FN_NAME() { return ((RET_TYPE (*)(ARGS)) this->vtable->fn__ ## FN_NAME)(ARGS); }
+#define VTABLE_METHOD(RET_TYPE, FN_NAME) \
+inline RET_TYPE FN_NAME() { return ((RET_TYPE (*)()) this->vtable->fn__ ## FN_NAME)(); }
+#define VTABLE_METHOD_1ARG(RET_TYPE, FN_NAME, TYPE1, NAME1) \
+inline RET_TYPE FN_NAME(TYPE1 NAME1) { return ((RET_TYPE (*)(TYPE1 NAME1)) this->vtable->fn__ ## FN_NAME)(NAME1); }
+#define VTABLE_METHOD_2ARG(RET_TYPE, FN_NAME, TYPE1, NAME1, TYPE2, NAME2) \
+inline RET_TYPE FN_NAME(TYPE1 NAME1, TYPE2 NAME2) { return ((RET_TYPE (*)(TYPE1 NAME1, TYPE2 NAME2)) this->vtable->fn__ ## FN_NAME)(NAME1, NAME2); }
+
+union xyDouble {
+    double asDouble;
+    struct {
+        float xPos = 0;
+        float yPos = 0;
+    };
+};
 
 typedef signed char s8;
 typedef signed short s16;
@@ -63,6 +75,12 @@ struct Position3D {
 
 #define offsetof(type, member) (__builtin_offsetof(type, member))
 #define _randf ((double (*)()) 0x8003fb64)
+
+#define _dynamicCast_addr ((void* (*)(void* toCast, int vtableOffset, void* sourceDescriptor, void* targetDescriptor, bool checkForBadCast)) 0x803f0f44)
+
+inline void* DynamicCast(void* toCast, int vtableOffset, void* sourceDescriptor, void* targetDescriptor) {
+  return _dynamicCast_addr(toCast, vtableOffset, sourceDescriptor, targetDescriptor, true);
+}
 // #define NOP() "\x60\x00\x00\x00"
 
 // template<class> class function; // not defined

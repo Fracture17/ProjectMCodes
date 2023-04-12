@@ -76,10 +76,10 @@ class SegmentManager:
                 extraSections.append(section)
 
         for section in extraSections:
-            print(f'ex: {section}')
+            # print(f'ex: {section}')
             for segment in self.extraSegments:
                 if segment.canInsert(section):
-                    print(segment.name)
+                    # print(segment.name)
                     segment.insert(section)
                     break
             else:
