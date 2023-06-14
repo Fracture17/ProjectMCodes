@@ -10,27 +10,50 @@ void MovementTracker::reset() {
     distanceTracker[i] = 0;
     attackChanceTracker[i] = 0;
     shieldChanceTracker[i] = 0;
+    xPosTracker[i] = 0;
+    movTracker[i] = -1;
   }
   idx = 0;
 };
 
+void MovementTracker::undoLastAction() {
+  idx -= 1;
+  if (idx < 0) idx = ACTION_COUNT - 1;
+}
+
+s16 MovementTracker::getCurrentMov() {
+  return actionTracker[idx];
+}
+
 unsigned char actionToMov(int action) {
   if ((0x24 <= action && action <= 0x33) || action > 0x112) {
     return MOV_ATTACK; // (action > 0x112) ? MOV_ATTACK : action;
+  } else if (action >= 0x3D && action <= 0x4C) {
+    return MOV_HITSTUN;
+  } else if (action >= 0x46 && action <= 0x55) {
+    return MOV_MISSEDTECH;
   }
   switch (action) {
-    case 0x0: 
+    case 0x0:
     // technically 0x1 is "walk" but oh well
     case 0x1: return MOV_IDLE;
     case 0x3: return MOV_DASH;
     case 0x4: return MOV_RUN;
     // case 0x7: return MOV_DASHTURN;
+    // fall disabled
+    case 0x10: return MOV_IDLE;
     case 0x11: return MOV_CROUCH;
     case 0xB: return MOV_JUMP;
     case 0xC:
     case 0xD: return MOV_DJUMP;
     case 0xE:
     case 0xF: return MOV_FALL;
+    // landings
+    
+    case 0x16:
+    case 0x17:
+    case 0x18:
+    case 0x19: return MOV_IDLE;
     case 0x1A: return MOV_SHIELD;
     case 0x21: return MOV_AIRDODGE;
     case 0x1E:
@@ -71,7 +94,67 @@ void MovementTracker::copyLatest(char copy) {
   }
 };
 
-void MovementTracker::trackAction(int actionOrSubaction, bool isAction, u8 yDistFloor, u8 xPos, u8 distance, u8 attackChance, u8 shieldChance) {
+float getMovDiffMultiplier(int source, int comparison) {
+  switch(source) {
+    // mostly idle
+    case MOV_NONE:
+    case MOV_IDLE:
+    case MOV_MISSEDTECH:
+    case MOV_RUN:
+    case MOV_CROUCH:
+      switch (comparison) {
+        case MOV_NONE:
+        case MOV_IDLE:
+        case MOV_MISSEDTECH:
+        case MOV_RUN:
+        case MOV_CROUCH:
+          return 1;
+        case MOV_DASH:
+          return 0.5;
+        default:
+          return 0;
+      }
+    case MOV_DASH:
+    case MOV_HITSTUN:
+      switch (comparison) {
+        case MOV_HITSTUN:
+          return 1;
+        default:
+          return 0;
+      }
+    case MOV_JUMP:
+      switch (comparison) {
+        case MOV_DJUMP:
+          return 0.5;
+      }
+    case MOV_DJUMP:
+    case MOV_FALL:
+      switch (comparison) {
+        case MOV_JUMP:
+        case MOV_DJUMP:
+        case MOV_FALL:
+          return 1;
+      }
+    case MOV_SHIELD:
+    case MOV_AIRDODGE:
+      break;
+    case MOV_ROLL:
+    case MOV_TECH:
+      switch (comparison) {
+        case MOV_ROLL:
+        case MOV_TECH:
+          return 1;
+        case MOV_SHIELD:
+          return 0.5;
+      }
+    case MOV_ATTACK:
+    case MOV_GRAB:
+      break;
+  }
+  return (float)(source == comparison);
+}
+
+void MovementTracker::trackAction(int actionOrSubaction, bool isAction, u8 yDistFloor, u8 xPos, u8 distance, u8 attackChance, u8 shieldChance, s16 otherMov) {
   int MOV = actionToMov(actionOrSubaction);
   if (MOV != MOV_NONE) {
     idx += 1;
@@ -83,6 +166,7 @@ void MovementTracker::trackAction(int actionOrSubaction, bool isAction, u8 yDist
     attackChanceTracker[idx] = attackChance;
     shieldChanceTracker[idx] = shieldChance;
     xPosTracker[idx] = xPos;
+    movTracker[idx] = otherMov;
   }
 };
 
@@ -177,14 +261,15 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
       totalScore += toAdd;
 
       // if the action is the same, then add it to the score
-      if (actionTracker[startTracker] == actionTracker[offsetTracker]) {
+      float diffMultiplier = getMovDiffMultiplier(actionTracker[startTracker], actionTracker[offsetTracker]);
+      if (diffMultiplier > 0) {
         float timeDiff = ((looked == 0) ? reactionPatchTime : timeTracker[startTracker]) - timeTracker[offsetTracker];
         float yDistFloorDiff = yDistFloorTracker[startTracker] - yDistFloorTracker[offsetTracker];
         float xDistDiff = distanceTracker[startTracker] - distanceTracker[offsetTracker];
         u8 attackChanceDiff = attackChanceTracker[startTracker] - attackChanceTracker[offsetTracker];
         u8 shieldChanceDiff = shieldChanceTracker[startTracker] - shieldChanceTracker[offsetTracker];
         u8 xPosDiff = xPosTracker[startTracker] - xPosTracker[offsetTracker];
-
+        bool movDiff = movTracker[startTracker] != movTracker[offsetTracker];
         // branchless programming go brr :3
         timeDiff *= 1 - ((timeDiff < 0)*2);
         yDistFloorDiff *= 1 - ((yDistFloorDiff < 0)*2);
@@ -192,10 +277,10 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
         attackChanceDiff *= 1 - ((attackChanceDiff < 0)*2);
         shieldChanceDiff *= 1 - ((shieldChanceDiff < 0)*2);
         xPosDiff *= 1 - ((xPosDiff < 0)*2);
-
+        movDiff *= 1 - ((movDiff < 0)*2);
         
         using m = MarkovInputs;
-        constexpr float totalWeight = m::time.weight + m::xDist.weight + m::yDistFloor.weight + m::attackChance.weight + m::shieldChance.weight + m::xPos.weight;
+        constexpr float totalWeight = m::time.weight + m::xDist.weight + m::yDistFloor.weight + m::attackChance.weight + m::shieldChance.weight + m::xPos.weight + m::mov.weight;
         #define BIAS(name) m::name.weight * (m::name.tolerence - name ## Diff) / m::name.tolerence
         toAdd *= (
             BIAS(time)
@@ -204,10 +289,11 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
           + BIAS(attackChance)
           + BIAS(shieldChance)
           + BIAS(xPos)
+          + BIAS(mov)
         ) / totalWeight;
         #undef BIAS
         if (toAdd < 0) toAdd = 0;
-        score += toAdd;
+        score += toAdd * diffMultiplier;
       }
 
       // this just sets the score multiplier to a value less than it was before, spaced evenly down to 0

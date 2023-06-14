@@ -2,6 +2,8 @@
 // Created by johno on 7/14/2020.
 //
 
+#include "_TrainingOptionDefs.h"
+
 #include <Graphics/TextPrinter.h>
 #include <Wii/PAD/PADStatus.h>
 #include <Wii/MATH.h>
@@ -51,6 +53,74 @@ extern GlobalCustomData GCD;
 extern char selectedPlayer;
 extern Menu* fudgeMenu;
 
+#if NO_SHIELD_CPU == 1
+// act_a_goro
+DATA_WRITE(0x8091FD4C, 0x60000000);
+// act_d_air_sway
+DATA_WRITE(0x809202A0, 0x60000000);
+DATA_WRITE(0x80920148, 0x60000000);
+// act_d_wait
+DATA_WRITE(0x8092C068, 0x60000000);
+DATA_WRITE(0x8092BF70, 0x60000000);
+DATA_WRITE(0x8092C08C, 0x60000000);
+// act_r_fall
+DATA_WRITE(0x80920E04, 0x60000000);
+DATA_WRITE(0x80920708, 0x60000000);
+DATA_WRITE(0x80920C7C, 0x60000000);
+DATA_WRITE(0x80920E8C, 0x60000000);
+DATA_WRITE(0x80920E78, 0x60000000);
+DATA_WRITE(0x80920ED8, 0x60000000);
+DATA_WRITE(0x80920DDC, 0x60000000);
+DATA_WRITE(0x80920CF0, 0x60000000);
+DATA_WRITE(0x80920A38, 0x60000000);
+DATA_WRITE(0x80920D60, 0x60000000);
+DATA_WRITE(0x80920CC8, 0x60000000);
+DATA_WRITE(0x80920E50, 0x60000000);
+DATA_WRITE(0x80920D88, 0x60000000);
+DATA_WRITE(0x80920F10, 0x60000000);
+// md_chase_sub
+DATA_WRITE(0x8090BA50, 0x60000000);
+// md_down
+DATA_WRITE(0x80909C38, 0x60000000);
+// md_hammer
+DATA_WRITE(0x80910230, 0x60000000);
+// md_item_shoot
+DATA_WRITE(0x8090EFA0, 0x60000000);
+DATA_WRITE(0x8090EE38, 0x60000000);
+DATA_WRITE(0x8090EFF8, 0x60000000);
+DATA_WRITE(0x8090EE70, 0x60000000);
+DATA_WRITE(0x8090F0A4, 0x60000000);
+DATA_WRITE(0x8090EF54, 0x60000000);
+// aiAct::update (scripts)
+DATA_WRITE(0x80917800, 0x60000000);
+// aiInput::update
+DATA_WRITE(0x809022B4, 0x60000000);
+DATA_WRITE(0x80902F9C, 0x60000000);
+DATA_WRITE(0x8090300C, 0x60000000);
+DATA_WRITE(0x809017D0, 0x60000000);
+#endif
+
+#if VANILLA_CPU_FIX == 1
+// act_d_air_sway
+DATA_WRITE(0x809202A0, 0x60000000);
+DATA_WRITE(0x80920148, 0x60000000);
+// act_r_fall
+DATA_WRITE(0x80920E04, 0x60000000);
+DATA_WRITE(0x80920708, 0x60000000);
+DATA_WRITE(0x80920C7C, 0x60000000);
+DATA_WRITE(0x80920E8C, 0x60000000);
+DATA_WRITE(0x80920E78, 0x60000000);
+DATA_WRITE(0x80920ED8, 0x60000000);
+DATA_WRITE(0x80920DDC, 0x60000000);
+DATA_WRITE(0x80920CF0, 0x60000000);
+DATA_WRITE(0x80920A38, 0x60000000);
+DATA_WRITE(0x80920D60, 0x60000000);
+DATA_WRITE(0x80920CC8, 0x60000000);
+DATA_WRITE(0x80920E50, 0x60000000);
+DATA_WRITE(0x80920D88, 0x60000000);
+DATA_WRITE(0x80920F10, 0x60000000);
+#endif
+
 //unsigned int BASE_SCALE = CAMERA_MANAGER->cameras[0].scale;
 
 bool isUnPaused() {
@@ -58,6 +128,7 @@ bool isUnPaused() {
 }
 
 u16 playerNumBitfield = 0;
+bool isMMS = false;
 u8 getPlayerCount() {
     int pCount = 0;
     u8 activeNums = playerNumBitfield;
@@ -67,6 +138,7 @@ u8 getPlayerCount() {
     }
     return pCount + 1;
 }
+
 
 // global variables for the injection down-below
 signed char timer = 5;
@@ -180,6 +252,8 @@ void setPosition(TrainingData& data, Fighter *fighter) {
     
 // }
 
+#define _GetPlayerNo_aiChrIdx ((int (*)(char* chrIdx)) 0x808fd68c)
+#if SHOULD_INCLUDE_AI == 1
 INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
     SAVE_REGS
     mr r3, r31
@@ -189,7 +263,7 @@ INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
 )");
 
 // // const char* STR_DEFAULT = "DEFAULT"; 
-#define _GetPlayerNo_aiChrIdx ((int (*)(char* chrIdx)) 0x808fd68c)
+extern MovementTracker movementTrackers[4];
 extern "C" void initAiTrainingScripts(FtEntry* fighterEntry) {
     AiInput* aiInput = fighterEntry->owner->aiInputPtr;
     if (aiInput == nullptr) return; 
@@ -202,6 +276,12 @@ extern "C" void initAiTrainingScripts(FtEntry* fighterEntry) {
     if (pNum > 3) return;
 
     if (playerTrainingData[pNum].aiData.personality.unlocked && fighterEntry->owner->aiInputPtr->fighterId != playerTrainingData[pNum].aiData.fighterID) {
+        if (getPlayerCount() == 2) {
+            for (int i = 0; i < 4; i++)
+                movementTrackers[i].reset();
+        } else {
+            movementTrackers[pNum].reset();
+        }
         playerTrainingData[pNum].aiData.fighterID = fighterEntry->owner->aiInputPtr->fighterId;
         playerTrainingData[pNum].aiData.personality.AICEData = AIData;
 
@@ -225,6 +305,7 @@ extern "C" void initAiTrainingScripts(FtEntry* fighterEntry) {
         }
     } 
 }
+#endif
 
 // sekret stuff - shh <3
 // int forcedAction = 0x0;
@@ -306,21 +387,52 @@ extern "C" void checkMenuPaused(char* gfTaskSchedulerInst) {
 
 // INJECTION("priorityCheck")
 
-void collectData(Fighter* fighter, int pNum) {
-    auto& currData = playerTrainingData[pNum];
+void gameplayFixes(Fighter* fighter, int pNum) {
     auto& anmData = fighter->modules->motionModule->mainAnimationData;
     auto& groundModule = fighter->modules->groundModule;
     auto& posModule = fighter->modules->postureModule;
     auto& kinModule = fighter->modules->kineticModule;
     auto& statMod = fighter->modules->statusModule;
+    auto prevAction = fighter->modules->statusModule->previousAction;
     
     float vertSpeed = kinModule->energyMotion.getSpeed().yPos;
-    // OSReport("posY (prev, now): (%.3f. %.3f)\n", posModule->prevYPos, posModule->yPos);
-    // OSReport("PosY Addr: %08x\n", &posModule->yPos);
+    
+    if (GCD.cliffJump2Mod
+    && anmData.animFrame == 0
+    && statMod->action == 0x21
+    && statMod->previousAction == 0x7a) {
+        Vec3f startPos = {posModule->xPos, posModule->prevYPos};
+        Vec3f destPos = {
+            10 * posModule->direction,
+            0,
+            0
+        };
+        Vec3f ret1 = {-1,-1,-1};
+        Vec3f ret2 = {-1,-1,-1};
+        int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+        if (rayResult) { 
+            destPos = {};
+            startPos.f1 = ret1.f1 + 2 * posModule->direction;
+            startPos.f2 += 20;
+            destPos = {0, -30, 0};
+            rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            if (rayResult) { 
+                Vec2f newPos = {ret1.f1, ret1.f2 + 2};
+                posModule->xPos = newPos.x; 
+                posModule->yPos = newPos.y;
+                posModule->prevXPos = newPos.x;
+                posModule->prevYPos = newPos.y;
+                groundModule->groundShapeImplVec->at(0)->reset(&newPos);
+                // groundModule->attachGround();
+            }
+        }
+    }
+
     if (GCD.smoothWavedashes 
     && anmData.animFrame == 0 
     && statMod->action == 0x21
     && statMod->previousAction != 0x72
+    // && fighter->getInput()->aiActPtr->scriptValues->character != CHAR_ID::Gkoopa
     && vertSpeed < -0.001) {
 
         xyDouble sPos = groundModule->getDownPos();
@@ -348,8 +460,8 @@ void collectData(Fighter* fighter, int pNum) {
                 // Vec2f newPos = {ret1.f1, ret1.f2};
                 // groundModule->groundShapeImplVec->at(0)->collStatus->currCollShape->setDownPos(&newPos);
                 fighter->processFixPosition();
-                fighter->processPreCollision();
-                fighter->processCollision();
+                // fighter->processPreCollision();
+                // fighter->processCollision();
             }
 
             Vec3f originalPos = startPos;
@@ -359,11 +471,9 @@ void collectData(Fighter* fighter, int pNum) {
             destPos = {0, startPos.f2 - originalPos.f2, 0};
             rayResult = _stRayCheck_vec3f(&originalPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
             if (rayResult) { 
-                OSReport("isInGround\n");
-                // posModule->yPos = ret1.f2;
                 Vec2f newPos = {ret1.f1, ret1.f2};
-                groundModule->groundShapeImplVec->at(0)->collStatus->currCollShape->setDownPos(&newPos);;
-                // groundModule->attachGround();
+                posModule->yPos = ret1.f2;
+                groundModule->groundShapeImplVec->at(0)->reset(&newPos);
             }
             // renderables.items.tick.push(new Rect(startPos.f1, startPos.f2, 1, 1, false, GXColor(0x00FF00FF)));
 
@@ -380,6 +490,20 @@ void collectData(Fighter* fighter, int pNum) {
             if (rayResult) { posModule->xPos = posModule->prevXPos; }
         }
     }
+}
+
+void collectData(Fighter* fighter, int pNum) {
+    auto& currData = playerTrainingData[pNum];
+    auto& anmData = fighter->modules->motionModule->mainAnimationData;
+    auto& groundModule = fighter->modules->groundModule;
+    auto& posModule = fighter->modules->postureModule;
+    auto& kinModule = fighter->modules->kineticModule;
+    auto& statMod = fighter->modules->statusModule;
+    
+    float vertSpeed = kinModule->energyMotion.getSpeed().yPos;
+    // OSReport("posY (prev, now): (%.3f. %.3f)\n", posModule->prevYPos, posModule->yPos);
+    // OSReport("PosY Addr: %08x\n", &posModule->yPos);
+    
 
     
     currData.debug.psaData.currentEndFrame = (anmData.resPtr == nullptr) ? -1 : anmData.resPtr->CHR0Ptr->animLength;
@@ -924,6 +1048,7 @@ extern "C" void updatePreFrame() {
                 instantResponse = false;
             }
         } else if (visible) {
+            if (btn.Z) instantResponse = true;
             if (btn.B && fudgeMenu->path.size() <= 1 && !selected) {
                 inputThing = true;
                 if (instantResponse) {
@@ -1001,9 +1126,14 @@ extern "C" void updatePreFrame() {
 
     if(scene == SCENE_TYPE::VS || scene == SCENE_TYPE::TRAINING_MODE_MMS) {        
         auto entryCount = FIGHTER_MANAGER->getEntryCount();
+        isMMS = false;
         for (int i = 0; i < entryCount; i++) {
             auto id = FIGHTER_MANAGER->getEntryIdFromIndex(i);
             auto playerNum = FIGHTER_MANAGER->getPlayerNo(id);
+            if (playerNum > 4) {
+                isMMS = true;
+                break;
+            }
 
             FtEntry* entry = &(*(FIGHTER_MANAGER->entryManager->ftEntryArray))[id & 0xFFFF];
             // OSReport("IDX: %d; ID: %08x; ENTRY: %08x\n", i, id, entry);
@@ -1316,7 +1446,7 @@ extern "C" void updatePreFrame() {
     else {
         playerNumBitfield = 0;
     }
-    renderables.renderAll();
+    if (!isMMS) renderables.renderAll();
     startNormalDraw();
     if (infoLevel >= 1 && visible) {
         printer.setup();
@@ -1345,7 +1475,6 @@ extern "C" void updatePreFrame() {
 // pre - 0x8076541c
 // processFixPosition
 // post - 0x8083a3ac
-extern MovementTracker movementTrackers[4];
 INJECTION("UPDATE_UNPAUSED", 0x8083a3ac, R"(
     SAVE_REGS
     mr r3, r28
@@ -1363,7 +1492,9 @@ extern "C" void updateUnpaused(soModuleAccessor* accessor) {
         storedHitboxTick();
 
         for (int i = 0; i < 4; i++) {
+            #if SHOULD_INCLUDE_AI == 1
             movementTrackers[i].incrementTimer();
+            #endif
             // OSReport("(%d): %d;", i + 1, playerTrainingData[i].aiData.scriptPath.size());
             playerTrainingData[i].aiData.scriptPath.clear();
         }
@@ -1376,7 +1507,10 @@ extern "C" void updateUnpaused(soModuleAccessor* accessor) {
     auto& targetController = *((ftControllerModuleImpl*)accessor->controllerModule)->controllerPtr;
 
     auto pNum = _GetPlayerNo_aiChrIdx(&targetAiInput.cpuIdx);
+    if (pNum > 3) return;
     auto& currData = playerTrainingData[pNum];
+
+    gameplayFixes(fighter, pNum);
 
     // nana
     if ((u32) FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(pNum), true)->modules == (u32) accessor) {
@@ -1710,51 +1844,53 @@ extern "C" void updateUnpaused(soModuleAccessor* accessor) {
     }
 }
 
+#if SHOULD_INCLUDE_AI == 1
 
+// int intendedScript = 0;
+// INJECTION("CPUStoreIntentionASM", 0x80918570, R"(
+//     SAVE_REGS
+//     mr r3, r4
+//     bl CPUStoreIntention
+//     RESTORE_REGS
+//     lhz r0, 0x78(r3)
+// )");
+// extern "C" void CPUStoreIntention(int intended) { 
+//     // OSReport("INTENDED: %08x\n", intended);
+//     intendedScript = intended; 
+// }
+// INJECTION("CPUForceBehavior", 0x809188B0, R"(
+//     SAVE_REGS
+//     mr r3, r26
+//     mr r4, r25
+//     bl CPUForceBehavior
+//     addi r26, r3, 0
+//     sth r26, 120(r25)
+//     RESTORE_REGS
+// )");
+// extern "C" short CPUForceBehavior(int param1, AiScriptData * aiActPtr) {
+//     // char pNum = _GetPlayerNo_aiChrIdx(&aiActPtr->ftInputPtr->cpuIdx);
+//     // if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {
+//         if (param1 == 0x2050) {
+//             OSReport("   ::(intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
+//             OSReport("current: %04x; ", aiActPtr->aiScript);
+//             OSReport("intended: %04x; ", intendedScript);
+//             OSReport("next: %04x)::\n", param1);
+//         }
+//         // aiActPtr->aiScript = intendedScript;
+//         if (aiActPtr->scriptValues->character == CHAR_ID::Nana) {
+//             // TODO: compile and test
+//             if (aiActPtr->scriptValues->currAction == 0x39 && (param1 == 0x0 || param1 == 0x1120)) return aiActPtr->aiScript;
+//             OSReport("curr nana ai script: %04x\n", aiActPtr->aiScript);
+//             OSReport("next nana ai script: %04x\n", param1);
+//             return param1;
+//         }
+//         if (param1 < 0x8000 && param1 != 0x1120 && param1 != 0x6100) return (aiActPtr->aiScript != 0x0) ? aiActPtr->aiScript : 0x8000;
+//         return param1; // normal routine
+//     // }
 
-int intendedScript = 0;
-INJECTION("CPUStoreIntentionASM", 0x80918570, R"(
-    SAVE_REGS
-    mr r3, r4
-    bl CPUStoreIntention
-    RESTORE_REGS
-    lhz r0, 0x78(r3)
-)");
-extern "C" void CPUStoreIntention(int intended) { 
-    // OSReport("INTENDED: %08x\n", intended);
-    intendedScript = intended; 
-}
-INJECTION("CPUForceBehavior", 0x809188B0, R"(
-    SAVE_REGS
-    mr r3, r26
-    mr r4, r25
-    bl CPUForceBehavior
-    addi r26, r3, 0
-    sth r26, 120(r25)
-    RESTORE_REGS
-)");
-extern "C" short CPUForceBehavior(int param1, AiScriptData * aiActPtr) {
-    // char pNum = _GetPlayerNo_aiChrIdx(&aiActPtr->ftInputPtr->cpuIdx);
-    // if (playerTrainingData[pNum].aiData.scriptID == 0xFFFF) {
-        if (param1 == 0x2050) {
-            OSReport("   ::(intermediate: %04x; ", aiActPtr->intermediateCurrentAiScript);
-            OSReport("current: %04x; ", aiActPtr->aiScript);
-            OSReport("intended: %04x; ", intendedScript);
-            OSReport("next: %04x)::\n", param1);
-        }
-        // aiActPtr->aiScript = intendedScript;
-        if (aiActPtr->scriptValues->character == CHAR_ID::Nana) {
-            // TODO: compile and test
-            if (aiActPtr->scriptValues->currAction == 0x39 && (param1 == 0x0 || param1 == 0x1120)) return aiActPtr->aiScript;
-            OSReport("curr nana ai script: %04x\n", aiActPtr->aiScript);
-            OSReport("next nana ai script: %04x\n", param1);
-            return param1;
-        }
-        if (param1 < 0x8000 && param1 != 0x1120 && param1 != 0x6100) return (aiActPtr->aiScript != 0x0) ? aiActPtr->aiScript : 0x8000;
-        return param1; // normal routine
-    // }
+//     // auto action = aiActPtr->ftInputPtr->ftEntryPtr->ftStageObject->modules->statusModule->action;
 
-    // auto action = aiActPtr->ftInputPtr->ftEntryPtr->ftStageObject->modules->statusModule->action;
+//     // return (aiActPtr->intermediateNextAiScript != 0 || (action >= 0x34 && action <= 0x3B) || action == 0x4D || (action >= 0x74 && action <= 0x7C)) ? param1 : playerTrainingData[pNum].aiData.scriptID;
+// }
 
-    // return (aiActPtr->intermediateNextAiScript != 0 || (action >= 0x34 && action <= 0x3B) || action == 0x4D || (action >= 0x74 && action <= 0x7C)) ? param1 : playerTrainingData[pNum].aiData.scriptID;
-}
+#endif

@@ -7,6 +7,13 @@ inline RET_TYPE FN_NAME(TYPE1 NAME1) { return ((RET_TYPE (*)(TYPE1 NAME1)) this-
 #define VTABLE_METHOD_2ARG(RET_TYPE, FN_NAME, TYPE1, NAME1, TYPE2, NAME2) \
 inline RET_TYPE FN_NAME(TYPE1 NAME1, TYPE2 NAME2) { return ((RET_TYPE (*)(TYPE1 NAME1, TYPE2 NAME2)) this->vtable->fn__ ## FN_NAME)(NAME1, NAME2); }
 
+#define STATIC_METHOD(ADDRESS, SELF_TYPE, RET_TYPE, FN_NAME) \
+inline RET_TYPE FN_NAME() { return ((RET_TYPE (*)(SELF_TYPE * self)) ADDRESS)(this); }
+#define STATIC_METHOD_1ARG(ADDRESS, SELF_TYPE, RET_TYPE, FN_NAME, TYPE1, NAME1) \
+inline RET_TYPE FN_NAME(TYPE1 NAME1) { return ((RET_TYPE (*)(SELF_TYPE * self, TYPE1 NAME1)) ADDRESS)(this, NAME1); }
+// #define _setGrCollisisonMode ((void (*)(soGroundModuleImpl * self, int collisionMode)) 0x80730a04)
+
+
 union xyDouble {
     double asDouble;
     struct {

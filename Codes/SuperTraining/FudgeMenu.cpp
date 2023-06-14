@@ -14,7 +14,7 @@ Menu* fudgeMenu;
 extern MovementTracker movementTrackers[4]; 
 void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
   // predictions.IDLE = movementTrackers[pNum].approxChance(101, MOV_IDLE);
-  // predictions.WALK = movementTrackers[pNum].approxChance(101, MOV_WALK);
+  // predictions.WALK = movementTrackers[pNum].approxChance(101, MOV_MISSEDTECH);
   predictions.RUN = movementTrackers[pNum].approxChance(101, MOV_RUN);
   predictions.DASH = movementTrackers[pNum].approxChance(101, MOV_DASH);
   // predictions.CROUCH = movementTrackers[pNum].approxChance(101, MOV_CROUCH);

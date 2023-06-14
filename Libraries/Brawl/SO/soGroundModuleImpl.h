@@ -78,7 +78,57 @@ struct grCollStatus {
     char airGroundState;
 };
 
+
+
 struct soGroundShapeImpl {
+    STATIC_METHOD(0x8073922c, soGroundShapeImpl, void, __ct)
+    STATIC_METHOD(0x8073929c, soGroundShapeImpl, void, __dt)
+    STATIC_METHOD(0x8073930c, soGroundShapeImpl, void, clean)
+    STATIC_METHOD(0x807393b4, soGroundShapeImpl, void, setup)
+    STATIC_METHOD(0x80739484, soGroundShapeImpl, void, activate)
+    STATIC_METHOD(0x807394fc, soGroundShapeImpl, void, deactivate)
+    STATIC_METHOD(0x80739554, soGroundShapeImpl, void, initShape)
+    STATIC_METHOD_1ARG(0x807395d0, soGroundShapeImpl, void, reset, Vec2f*, newPos)
+    STATIC_METHOD(0x807396d4, soGroundShapeImpl, void, resetStatus)
+    STATIC_METHOD(0x80739724, soGroundShapeImpl, void, clearSetting)
+    STATIC_METHOD(0x80739834, soGroundShapeImpl, void, updateDownMaterialInfo)
+    STATIC_METHOD(0x80739888, soGroundShapeImpl, void, setEventToGround)
+    STATIC_METHOD(0x807398b0, soGroundShapeImpl, void, setTestCollStop)
+    STATIC_METHOD(0x807398d8, soGroundShapeImpl, void, setTestPreMap)
+    STATIC_METHOD(0x80739920, soGroundShapeImpl, void, setTestDynamicCollision)
+    STATIC_METHOD(0x80739948, soGroundShapeImpl, void, setCalcLineMove)
+    STATIC_METHOD(0x8073995c, soGroundShapeImpl, void, setTargetLineCategory)
+    STATIC_METHOD(0x80739968, soGroundShapeImpl, void, setExclusiveLineAttr)
+    STATIC_METHOD(0x80739974, soGroundShapeImpl, void, setPassableCheck)
+    STATIC_METHOD(0x8073997c, soGroundShapeImpl, void, isPassableCheck)
+    STATIC_METHOD(0x80739990, soGroundShapeImpl, void, setCloudThrough)
+    STATIC_METHOD(0x807399a4, soGroundShapeImpl, void, isCloudThrough)
+    STATIC_METHOD(0x807399b4, soGroundShapeImpl, void, isCloudThroughOut)
+    STATIC_METHOD(0x807399d4, soGroundShapeImpl, void, setCorrectIgnoreSlope)
+    STATIC_METHOD(0x807399e8, soGroundShapeImpl, void, enable)
+    STATIC_METHOD(0x80739a04, soGroundShapeImpl, void, unable)
+    STATIC_METHOD(0x80739a20, soGroundShapeImpl, void, setFlag)
+    STATIC_METHOD(0x80739a58, soGroundShapeImpl, void, setSafePos)
+    STATIC_METHOD(0x80739a78, soGroundShapeImpl, void, setSpeed)
+    STATIC_METHOD(0x80739a80, soGroundShapeImpl, void, calcRhombusModify)
+    STATIC_METHOD(0x80739ba4, soGroundShapeImpl, void, updateRhombusModify)
+    STATIC_METHOD(0x8073a3b8, soGroundShapeImpl, void, updateRhombus)
+    STATIC_METHOD(0x8073a624, soGroundShapeImpl, void, updateRhombusFollowNode)
+    STATIC_METHOD(0x8073a8c8, soGroundShapeImpl, void, update)
+    STATIC_METHOD(0x8073a958, soGroundShapeImpl, void, getCorrectPos)
+    STATIC_METHOD(0x8073ab00, soGroundShapeImpl, void, attach)
+    STATIC_METHOD(0x8073ab28, soGroundShapeImpl, void, isAttach)
+    STATIC_METHOD(0x8073ab44, soGroundShapeImpl, void, detach)
+    STATIC_METHOD(0x8073ab68, soGroundShapeImpl, void, setAttackPoint)
+    STATIC_METHOD(0x8073abb4, soGroundShapeImpl, void, getAttackPointBreak)
+    STATIC_METHOD(0x8073abec, soGroundShapeImpl, void, getCrushRateUD)
+    STATIC_METHOD(0x8073ac54, soGroundShapeImpl, void, getCrushRateLR)
+    STATIC_METHOD(0x8073acbc, soGroundShapeImpl, void, modify)
+    // STATIC_METHOD(0x8073accc, soGroundShapeImpl, void, modify)
+    STATIC_METHOD(0x8073ace0, soGroundShapeImpl, void, getRhombus)
+    // STATIC_METHOD(0x8073acfc, soGroundShapeImpl, void, getRhombus)
+    STATIC_METHOD(0x8073ad20, soGroundShapeImpl, void, setTracerType)
+
     char _spacer[0x4];
 
     // 0x4

@@ -5,10 +5,10 @@
 // the name for each value
 #define MOV_NONE 0
 #define MOV_IDLE 1
-#define MOV_WALK 2
+#define MOV_MISSEDTECH 2
 #define MOV_RUN 3
 #define MOV_DASH 4
-#define MOV_DASHTURN 5
+#define MOV_HITSTUN 5
 #define MOV_CROUCH 6
 #define MOV_JUMP 7
 #define MOV_DJUMP 8
@@ -38,7 +38,7 @@ struct MarkovInput {
 };
 
 struct MarkovInputs {
-  static constexpr MarkovInput time = { 200, 2 }; 
+  static constexpr MarkovInput time = { 60, 2 }; 
   static constexpr MarkovInput yDistFloor = { 35, 1 }; 
   static constexpr MarkovInput xDist = { 75, 4 }; 
   // these two add a little extra "YOMI"
@@ -47,6 +47,7 @@ struct MarkovInputs {
   // the AI's own chance of being in an defending state
   static constexpr MarkovInput shieldChance = { 125, 2 }; 
   static constexpr MarkovInput xPos = { 250, 3 }; 
+  static constexpr MarkovInput mov = { 1, 4 }; 
 };
 
 class MovementTracker {
@@ -54,10 +55,12 @@ public:
   MovementTracker() {};
 
   void reset();
-  void trackAction(int action, bool isAction, u8 yDistFloor, u8 xPos, u8 distance = 0, u8 attackChance = 0, u8 shieldChance = 0);
+  void trackAction(int action, bool isAction, u8 yDistFloor, u8 xPos, u8 distance = 0, u8 attackChance = 0, u8 shieldChance = 0, s16 otherMov = 0);
   float approxChance(float levelValue);
   float approxChance(float levelValue, char actionType);
   void incrementTimer();
+  void undoLastAction();
+  s16 getCurrentMov();
 
 private:
   // will multiply alongside time for each tracked action to get resulting weight
@@ -68,7 +71,7 @@ private:
     0, // WALK
     60, // RUN
     120, // DASH
-    0, // DASHTURN
+    100, // HITSTUN
     100, // CROUCH
     120, // JUMP
     130, // DJUMP
@@ -90,10 +93,12 @@ private:
   unsigned char attackChanceTracker[ACTION_COUNT] = {};
   unsigned char shieldChanceTracker[ACTION_COUNT] = {};
   unsigned char xPosTracker[ACTION_COUNT] = {};
+  char movTracker[ACTION_COUNT] = {};
   float actionCache[MOV_LEN] = {};
   unsigned char attackGuess = 0;
 };
 
 unsigned char actionToMov(int action);
+float getMovDiffMultiplier(int source, int comparison);
 
 #endif // PROJECTMCODES_MOVEMENTTRACKER_H

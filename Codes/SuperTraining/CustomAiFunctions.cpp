@@ -1,6 +1,8 @@
 //
 // Created by dareb on 7/30/2020.
 //
+#include "_TrainingOptionDefs.h"
+#if SHOULD_INCLUDE_AI == 1
 
 #include "Assembly.h"
 #include "stddef.h"
@@ -182,11 +184,13 @@ DATA_WRITE(0x80902f9c, 0x60000000);
 // // FORCED_AIRDODGE_FIX2
 // DATA_WRITE(0x80765758, 0x60000000);
 
+// 0x808FE5A0
+// 0x80901790
 
 // FORCED_INPUT_FIX1
-DATA_WRITE(0x808fe93c, 0x60000000);
+// DATA_WRITE(0x808fe93c, 0x60000000);
 // FORCED_INPUT_FIX2
-DATA_WRITE(0x808ff77c, 0x60000000);
+// DATA_WRITE(0x808ff77c, 0x60000000);
 // FORCED_INPUT_FIX3
 DATA_WRITE(0x809017dc, 0x60000000);
 // FORCED_INPUT_FIX4
@@ -226,7 +230,7 @@ DATA_WRITE(0x80902f7c, 0x60000000);
 // FORCED_INPUT_FIX21
 DATA_WRITE(0x80903018, 0x60000000);
 // FORCED_INPUT_FIX22
-DATA_WRITE(0x808fe930, 0x60000000);
+// DATA_WRITE(0x808fe930, 0x60000000);
 // FORCED_INPUT_FIX23
 DATA_WRITE(0x808ff770, 0x60000000);
 // FORCED_INPUT_FIX24
@@ -281,16 +285,18 @@ DATA_WRITE(0x80903094, 0x60000000);
 DATA_WRITE(0x809030a0, 0x60000000);
 
 // FORCED MD FIX
-DATA_WRITE(0x808fe864, 0x60606060);
+// DATA_WRITE(0x808fe864, 0x60606060);
 
 // SELF_TARGET_CHANGE_FIX1
-DATA_WRITE(0x808fe5f8, 0x60000000);
+// DATA_WRITE(0x808fe5f8, 0x60000000);
 // SELF_TARGET_CHANGE_FIX2
 DATA_WRITE(0x809073dc, 0x60000000);
 // SELF_TARGET_CHANGE_FIX3
 DATA_WRITE(0x809188e0, 0x60000000);
 // SELF_TARGET_CHANGE_FIX4
-DATA_WRITE(0x80900cb8, 0x60000000);
+// DATA_WRITE(0x80900cb8, 0x60000000);
+
+
 
 // FIX_SWING_CHK_RESET
 DATA_WRITE(0x80905668, 0x4e800020);
@@ -298,7 +304,7 @@ DATA_WRITE(0x80905668, 0x4e800020);
 DATA_WRITE(0x80905690, 0x4e800020);
 
 // FIX_AUTO_THROW_ROUTINE
-DATA_WRITE(0x808fe89c, 0x60000000);
+// DATA_WRITE(0x808fe89c, 0x60000000);
 
 // THESE DO NOT WORK :pensive:
 // INJECTION("FORCE_PICK_AI", 0x80685830, R"(
@@ -314,244 +320,6 @@ DATA_WRITE(0x808fe89c, 0x60000000);
 //     li r3, 1
 // )");
 
-// INJECTION("FORCE_AI_PICK_ALLSTAR", 0x8077FB7C, R"(
-// loc_0x0:
-//     stwu r1, -80(r1)
-//     stmw r14, 8(r1)
-//     lis r12, 0x9018
-//     lbz r12, -3201(r12)
-//     cmpwi r12, 0x2
-//     bne- loc_0x15C
-//     lis r14, 0x8058
-//     ori r14, r14, 0x8003
-//     lis r15, 0x9018
-//     ori r15, r15, 0xFB8
-//     lis r29, 0x8058
-//     ori r29, r29, 0x8300
-//     lwz r22, -12(r29)
-//     cmpwi r25, 0x14
-//     bne- loc_0x60
-//     cmplwi r26, 48879
-//     blt- loc_0x60
-
-// loc_0x44:
-//     stw r7, 153(r14)
-//     stw r7, 104(r29)
-//     addi r14, r14, 0xA0
-//     addi r29, r29, 0x70
-//     addi r9, r9, 0x1
-//     cmpwi r9, 0x4
-//     bne+ loc_0x44
-
-// loc_0x60:
-//     addi r16, r14, 0x98
-//     lhz r26, -7(r14)
-//     lbzx r17, r16, r26
-//     cmpwi cr1, r17, 0x9B
-//     cmpwi r30, 0xBE
-//     bne- loc_0x80
-//     stbx r7, r16, r26
-//     beq- cr1, loc_0x90
-
-// loc_0x80:
-//     cmpwi r30, 0x10B
-//     bne- loc_0x15C
-//     cmpwi r23, 0xBD
-//     bne- loc_0x15C
-
-// loc_0x90:
-//     lwz r12, 8(r31)
-//     lwz r11, 272(r12)
-//     cmpwi cr4, r11, 0xF
-//     bne- cr4, loc_0xAC
-//     lhz r11, 252(r12)
-//     cmpwi r11, 0x1
-//     beq- loc_0x15C
-
-// loc_0xAC:
-//     lwz r12, 28(r31)
-//     lwz r12, 40(r12)
-//     lwz r12, 16(r12)
-//     lbz r12, 85(r12)
-//     mulli r16, r12, 0xA0
-//     mulli r17, r12, 0x5C
-//     mulli r23, r12, 0x80
-//     add r16, r16, r14
-//     sub r22, r22, r23
-//     lbz r20, 153(r16)
-
-// loc_0xD4:
-//     lbzx r19, r16, r20
-//     cmplwi r19, 204
-//     blt- loc_0xE8
-//     li r20, -3
-//     b loc_0xD4
-
-// loc_0xE8:
-//     lwzx r19, r16, r20
-//     rlwinm r18, r19, 8, 24, 31
-//     cmpwi r18, 0x3D
-//     bne- loc_0x104
-//     mflr r24
-//     bl RandomSelect
-//     mtlr r24
-
-//     lbzx r11, r15, r17
-//     cmpw r11, r18
-//     beq loc_0xE8
-
-// loc_0x104:
-//     rlwinm r19, r19, 24, 8, 31
-//     lis r11, 0x8128
-//     ori r11, r11, 0xAE64
-//     bne- cr4, loc_0x118
-//     subi r11, r11, 0x280
-
-// loc_0x118:
-//     li r6, 0x52
-//     rlwinm r6, r6, 12, 0, 19
-//     mullw r6, r6, r12
-//     lwzx r6, r11, r6
-//     beq- cr1, loc_0x134
-//     cmpwi r6, 0x1
-//     beq- loc_0x15C
-
-// loc_0x134:
-//     li r23, 0x12
-//     stb r23, 0(r22)
-//     stbx r18, r15, r17
-//     addi r15, r15, 0x5
-//     sthx r19, r15, r17
-//     addi r20, r20, 0x3
-//     stb r20, 153(r16)
-//     lbz r21, 154(r16)
-//     addi r21, r21, 0x1
-//     stb r21, 154(r16)
-
-// loc_0x15C:
-//     lmw r14, 8(r1)
-//     addi r1, r1, 0x50
-//     lwz r3, 44(r29)
-//     b exit
-
-// RandomSelect:
-//     stwu r1, -100(r1)
-//     stmw r9, 8(r1)
-//     lis r27, 0x8003
-//     ori r27, r27, 0xFC7C
-//     mflr r8
-//     mtctr r27
-//     li r3, 0x36 	#set range 0-0x35
-//     bctrl 
-//     bl validCheck
-//     mtlr r8
-//     lmw r9, 8(r1)
-//     addi r1, r1, 0x64
-//     mr r18, r3
-//     cmpwi r18, 0x17 #if wario
-//     bne- RandomChecks
-//     lis r19, 0x6    #set wario costume to warioland wario
-
-// RandomChecks:
-//     cmpwi r18, 0x11 #if ID is sopo rechoose random ID
-//     beq+ RandomSelect
-//     cmpwi r18, 0x12 #if ID is sona rechoose random ID
-//     beq+ RandomSelect
-//     cmpwi r18, 0x1D #if ID is pokemon trainer's charizard rechoose random ID
-//     beq+ RandomSelect
-//     cmpwi r18, 0x1F #if ID is pokemon trainer's squirtle rechoose random ID
-//     beq+ RandomSelect
-//     cmpwi r18, 0x21 #if ID is pokemon trainer's ivysaur rechoose random ID
-//     beq+ RandomSelect
-//     cmpwi r18, 0x2C #if ID is less than 0x2C ID is good so branch to blr
-//     blt- end
-//     cmpwi r18, 0x31 #if ID is giga bowser, warioman, or alloys rechoose random ID
-//     ble+ RandomSelect
-//     cmpwi r18, 0x34 #if ID is 0x34, rechoose random ID.
-//     beq RandomSelect
-
-// end:
-//     blr 
-// exit:
-
-// )");
-
-// extern "C" s32 validCheck(CHRKIND_ID chosen) {
-//     return CHRKIND_ID::CK_ZakoYellow;
-//     _character_validator:
-//     switch(chosen) {
-//         // case CHRKIND_ID::CK_Mario:
-//         // case CHRKIND_ID::CK_Link:
-//         case CHRKIND_ID::CK_Samus:
-//         // case CHRKIND_ID::CK_SZerosuit:
-//         case CHRKIND_ID::CK_Yosi:
-//         // case CHRKIND_ID::CK_Kirby:
-//         // case CHRKIND_ID::CK_Fox:
-//         // case CHRKIND_ID::CK_Pikachu:
-//         // case CHRKIND_ID::CK_Luigi:
-//         // case CHRKIND_ID::CK_Captain:
-//         // case CHRKIND_ID::CK_Ness:
-//         // case CHRKIND_ID::CK_Koopa:
-//         // case CHRKIND_ID::CK_Peach:
-//         // case CHRKIND_ID::CK_Zelda:
-//         case CHRKIND_ID::CK_Sheik:
-//         case CHRKIND_ID::CK_Iceclimber:
-//         case CHRKIND_ID::CK_Popo:
-//         case CHRKIND_ID::CK_Nana:
-//         // case CHRKIND_ID::CK_Marth:
-//         // case CHRKIND_ID::CK_GameWatch:
-//         // case CHRKIND_ID::CK_Falco:
-//         // case CHRKIND_ID::CK_Ganon:
-//         case CHRKIND_ID::CK_Wario:
-//         // case CHRKIND_ID::CK_Metaknight:
-//         case CHRKIND_ID::CK_Pit:
-//         case CHRKIND_ID::CK_Pikmin:
-//         // case CHRKIND_ID::CK_Lucas:
-//         // case CHRKIND_ID::CK_Diddy:
-//         case CHRKIND_ID::CK_PokeLizardon:
-//         case CHRKIND_ID::CK_Lizardon:
-//         case CHRKIND_ID::CK_PokeZenigame:
-//         case CHRKIND_ID::CK_Zenigame:
-//         case CHRKIND_ID::CK_PokeFushigisou:
-//         case CHRKIND_ID::CK_Fushigisou:
-//         // case CHRKIND_ID::CK_Dedede:
-//         // case CHRKIND_ID::CK_Lucario:
-//         // case CHRKIND_ID::CK_Ike:
-//         case CHRKIND_ID::CK_Robot:
-//         case CHRKIND_ID::CK_Purin:
-//         case CHRKIND_ID::CK_ToonLink:
-//         // case CHRKIND_ID::CK_Wolf:
-//         case CHRKIND_ID::CK_Snake:
-//         case CHRKIND_ID::CK_Sonic:
-//         case CHRKIND_ID::CK_GKoopa:
-//         case CHRKIND_ID::CK_WarioMan:
-//         case CHRKIND_ID::CK_Roy:
-//         case CHRKIND_ID::CK_Mewtwo:
-//         case CHRKIND_ID::CK_Knuckles:
-
-//         case CHRKIND_ID::CK_ZakoRed:
-//         case CHRKIND_ID::CK_ZakoBlue:
-//         case CHRKIND_ID::CK_ZakoYellow:
-//         case CHRKIND_ID::CK_ZakoGreen:
-//         case CHRKIND_ID::CK_MarioD:
-//         case CHRKIND_ID::CK_BossPackun:
-//         case CHRKIND_ID::CK_Rayquaza:
-//         case CHRKIND_ID::CK_PorkyStatue:
-//         case CHRKIND_ID::CK_Porky:
-//         case CHRKIND_ID::CK_HeadRobo:
-//         case CHRKIND_ID::CK_Ridley:
-//         case CHRKIND_ID::CK_Duon:
-//         case CHRKIND_ID::CK_MetaRidley:
-//         case CHRKIND_ID::CK_Taboo:
-//         case CHRKIND_ID::CK_MasterHand:
-//         case CHRKIND_ID::CK_CrazyHand:
-//         case CHRKIND_ID::CK_None:
-//             chosen = ((CHRKIND_ID) _randf());
-//             goto _character_validator;
-//     }
-//     return chosen;
-// };
-
 // FIX_AUTO_ROUTINE_SWITCH
 // DATA_WRITE(0x80928620, 0x4e800020);
 // DATA_WRITE(0x80928b1c, 0x4e800020);
@@ -564,6 +332,7 @@ DATA_WRITE(0x808fe89c, 0x60000000);
 // DATA_WRITE(0x8092a590, 0x4e800020);
 
 signed char disabledMd[4] = {-1, -1, -1, -1};
+
 INJECTION("CPUForceMd", 0x80905204, R"(
     SAVE_REGS
     mr r3, r26
@@ -580,7 +349,7 @@ extern "C" void CPUForceMd(AiInput * aiInput, unsigned int intent, int newAction
 
     if (aiInput->aiActPtr->scriptValues->character == CHAR_ID::Nana) {
         aiInput->aiMd = intent;
-        OSReport("nana intent: %02x\n", intent);
+        // OSReport("nana intent: %02x\n", intent);
     }
     else if (aiInput->ftEntryPtr != nullptr) {
         OSReport("-- MD CHANGE --\n");
@@ -590,6 +359,7 @@ extern "C" void CPUForceMd(AiInput * aiInput, unsigned int intent, int newAction
         OSReport("new md: %02x\n", intent);
 
         char pNum = _GetPlayerNo_aiChrIdx(&aiInput->cpuIdx);
+        if (pNum >= 4) pNum = 0;
         if (intent <= 0xFFFF && pNum != -1 && intent != disabledMd[pNum] && intent != 0x2 && intent != 0x5 && intent != 0x0) {
             aiInput->aiMd = intent;
         }
@@ -598,29 +368,38 @@ extern "C" void CPUForceMd(AiInput * aiInput, unsigned int intent, int newAction
 
 bool disabledSwitch[4] = {false, false, false, false};
 bool debugSwitch[4] = {true, true, true, true};
-INJECTION("PREVENT_AUTO_CALL1", 0x80900ff8, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL2", 0x80900eb4, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL3", 0x808fe638, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL4", 0x80901084, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL5", 0x80900d38, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL6", 0x80900e54, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL7", 0x80900f60, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL8", 0x80900fa4, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL9", 0x80900fd4, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL10", 0x8090137c, "bl filterMDCall");
-INJECTION("PREVENT_AUTO_CALL11", 0x808feb2c, "bl filterMDCall");
+
+// CURRENT CODE REGION
+// 0x808FE5A0
+// 0x80901790
+
+// INJECTION("PREVENT_AUTO_CALL1", 0x80900ff8, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL2", 0x80900eb4, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL3", 0x808fe638, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL4", 0x80901084, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL5", 0x80900d38, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL6", 0x80900e54, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL7", 0x80900f60, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL8", 0x80900fa4, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL9", 0x80900fd4, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL10", 0x8090137c, "bl filterMDCall");
+// INJECTION("PREVENT_AUTO_CALL11", 0x808feb2c, "bl filterMDCall");
+
 // INJECTION("PREVENT_AUTO_CALL12", 0x80907b18, "bl filterMDCall");
 // INJECTION("PREVENT_AUTO_CALL13", 0x80907b18, "bl filterMDCall");
 extern "C" void filterMDCall(AiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5) {
-    if (!disabledSwitch[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)]) {
+    int pNum = _GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx);
+    if (pNum >= 4) pNum = 0;
+    if (!disabledSwitch[pNum]) {
         change_md_aiInput(aiInputInst, newMode, param_3, newOrOldAction, param_5);
     }
     return;
 }
 
-bool autoDefend[4] = {true, true, true, true};
-INJECTION("PREVENT_AUTO_DEFEND", 0x80900c60, "bl preventAutoDefend");
-INJECTION("PREVENT_AUTO_DANGER_CHECK", 0x80901514, "bl preventDangerCheck");
+bool autoDefend[4] = {false, false, false, false};
+
+// INJECTION("PREVENT_AUTO_DEFEND", 0x80900c60, "bl preventAutoDefend");
+// INJECTION("PREVENT_AUTO_DANGER_CHECK", 0x80901514, "bl preventDangerCheck");
 
 extern "C" void preventAutoDefend(AiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5) {
     // if (autoDefend[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)]) {
@@ -629,7 +408,9 @@ extern "C" void preventAutoDefend(AiInput *aiInputInst,unsigned int newMode,unsi
     return;
 }
 extern "C" void preventDangerCheck(AiInput *aiInputInst,unsigned int thing1, unsigned int thing2) {
-    if (autoDefend[_GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx)]) {
+    int pNum = _GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx);
+    if (pNum >= 4) pNum = 0;
+    if (autoDefend[pNum]) {
         _danger_check_aiInput(aiInputInst, thing1, thing2);
     }
     return;
@@ -825,6 +606,11 @@ extern "C" {
             yDistFloor = _length_vec3f(&startPos) + 1;
         }
 
+        // retroactively unrecord jump if wavedashing
+        if (accesser->statusModule->previousAction == 0xB && toRecord == 0x21 && yDistFloor < 10 && accesser->postureModule->prevYPos < accesser->postureModule->yPos) {
+            movementTrackers[pNum].undoLastAction();
+        }
+
         if (getPlayerCount() == 2 && accesser->groundModule != nullptr) {
             auto otherGroundModule = FIGHTER_MANAGER->getFighter(FIGHTER_MANAGER->getEntryId(aiInput->aiTarget))->modules->groundModule;
             if (otherGroundModule == nullptr) return;
@@ -834,7 +620,7 @@ extern "C" {
             if (dist < 0) dist *= -1;
             u8 ownAttackChance = (u8)(movementTrackers[pNum].approxChance(50, MOV_ATTACK) * 200);
             u8 ownShieldChance = (u8)(movementTrackers[pNum].approxChance(50, MOV_SHIELD) * 200);
-            movementTrackers[pNum].trackAction(toRecord, isAction, yDistFloor, (u8) dist, ownAttackChance, ownShieldChance);
+            movementTrackers[pNum].trackAction(toRecord, isAction, yDistFloor, (u8) dist, ownAttackChance, ownShieldChance, movementTrackers[pNum].getCurrentMov());
         } else {
             float xPos = accesser->groundModule->getDownPos().xPos;
             xPos += (xPos<0)*xPos*-2;
@@ -900,6 +686,10 @@ extern "C" {
         switchCase -= 0x1000;
         if (switchCase == 0x4C) { // IsOnStage
             fn_shouldReturnResult = 1;
+            if (targetFighter->modules->groundModule == nullptr) {
+                fn_result = 0;
+                return;
+            }
 
             Vec3f startPos = {};
             targetFighter->modules->groundModule->getCorrectPos(&startPos);
@@ -926,8 +716,15 @@ extern "C" {
         }
 
         if (switchCase == 0x4B) { // YDistFloor
+            if (targetFighter->modules->groundModule == nullptr) {
+                fn_result = -1;
+                return;
+            }
             Vec3f startPos = {};
-            targetFighter->modules->groundModule->getCorrectPos(&startPos);
+            xyDouble dPos = targetFighter->modules->groundModule->getDownPos();
+            startPos.f1 = dPos.xPos;
+            startPos.f2 = dPos.yPos;
+            startPos.f3 = 0;
             Vec3f destPos {
                 0,
                 -500,
@@ -978,7 +775,8 @@ extern "C" {
             return;
         }
         if (switchCase == 0x54) {
-            fn_result = targetFighter->modules->groundModule->isPassableGround(0);
+            if (targetFighter->modules->groundModule == nullptr) fn_result = 0;
+            else fn_result = targetFighter->modules->groundModule->isPassableGround(0);
             fn_shouldReturnResult = 1;
             return;
         }
@@ -988,6 +786,10 @@ extern "C" {
 //            OSReport("ftSo Address: %08x\n", targetFighter);
 //            OSReport("UnkFtPtr Address: %08x\n", targetFighter->modFnAccessor);
 //            OSReport("Supposed cancelModule address: %08x\n", targetFighter->modFnAccessor->getFtCancelModule(targetFighter));
+            if (targetFighter == nullptr) {
+                fn_result = 0;
+                return;
+            }
             fn_result = targetFighter
                     ->getCancelModule()
                     ->isEnableCancel();
@@ -1017,7 +819,7 @@ extern "C" {
         // endframe
         if (switchCase == 0x59) {
             auto motionModule = targetFighter->modules->motionModule;
-            if (motionModule->mainAnimationData.resPtr != nullptr) {
+            if (motionModule != nullptr && motionModule->mainAnimationData.resPtr != nullptr) {
                 fn_result = motionModule->getEndFrame();
                 fn_shouldReturnResult = 1;
             }
@@ -1026,21 +828,24 @@ extern "C" {
         // width
         if (switchCase == 0x5A) {
             auto groundModule = targetFighter->modules->groundModule;
-            fn_result = groundModule->getRightPos().xPos - groundModule->getLeftPos().xPos;
+            if (groundModule == nullptr) fn_result = 0;
+            else fn_result = groundModule->getRightPos().xPos - groundModule->getLeftPos().xPos;
             fn_shouldReturnResult = 1;
             return;
         }
         // ECB Center X
         if (switchCase == 0x5B) {
             auto groundModule = targetFighter->modules->groundModule;
-            fn_result = (groundModule->getRightPos().xPos + groundModule->getLeftPos().xPos) / 2;
+            if (groundModule == nullptr) fn_result = 0;
+            else fn_result = (groundModule->getRightPos().xPos + groundModule->getLeftPos().xPos) / 2;
             fn_shouldReturnResult = 1;
             return;
         }
         // ECB Center Y
         if (switchCase == 0x5C) {
             auto groundModule = targetFighter->modules->groundModule;
-            fn_result = (groundModule->getUpPos().yPos + groundModule->getDownPos().yPos) / 2;
+            if (groundModule == nullptr) fn_result = 0;
+            else fn_result = (groundModule->getUpPos().yPos + groundModule->getDownPos().yPos) / 2;
             fn_shouldReturnResult = 1;
             return;
         }
@@ -1091,11 +896,31 @@ extern "C" {
 
         // throw frame
         if (switchCase == 0x71) {
-            fn_result = playerTrainingData[targetPlayerNo].debug.psaData.throwFrame;
+            fn_result = playerTrainingData[targetPlayerNo < 4 ? targetPlayerNo : 0].debug.psaData.throwFrame;
             fn_shouldReturnResult = 1;
             return;
         }
 
+        if (switchCase >= 0x80 && switchCase <= 0x8B && targetPlayerNo >= 4) {
+            switchCase -= 0x80;
+            fn_shouldReturnResult = 1;
+            fn_result = 1;
+            switch(switchCase) {
+                case 0x0: fn_result = 1.75; return;
+                case 0x1: fn_result = 0.6; return;
+                case 0x2: fn_result = 0.3; return;
+                case 0x3: fn_result = 0.6; return;
+                case 0x4: fn_result = 0.8; return;
+                case 0x5: fn_result = 0.2; return;
+                case 0x6: fn_result = 0.3; return;
+                case 0x7: fn_result = 0.4; return;
+                case 0x8: fn_result = 0.35; return;
+                case 0x9: fn_result = 1; return;
+                case 0xA: fn_result = 0.75; return;
+                case 0xB: fn_result = 1; return;
+            }
+            return;
+        }
         fn_shouldReturnResult = 1;
         switch (switchCase) {
             case 0x80: fn_result = playerTrainingData[targetPlayerNo].aiData.personality.aggression; return;
@@ -1123,7 +948,7 @@ extern "C" {
             return;
         }
         if (switchCase == 0xFF) {
-            fn_result = playerTrainingData[targetPlayerNo].aiData.AIDebug;
+            fn_result = targetPlayerNo < 4 ? playerTrainingData[targetPlayerNo].aiData.AIDebug : false;
             fn_shouldReturnResult = 1;
             return;
         }
@@ -1205,6 +1030,10 @@ extern "C" {
                 auto targetFighterEntry = targetAiInput->ftEntryPtr;
                 bool getChild = targetFighterEntry == nullptr;
                 int targetPlayerNo = _GetPlayerNo_aiChrIdx(&targetAiInput->cpuIdx);
+                if (targetPlayerNo >= 4) {
+                    rq_result = false;
+                    return;
+                }
                 rq_result = playerTrainingData[targetPlayerNo].debug.psaData.shouldTechThrow;
                 break;
             }
@@ -1325,8 +1154,9 @@ extern "C" {
         gotoCmdStack[gotoCmdStackPtr] = nextPlace + 2;
         gotoCmdScripts[gotoCmdStackPtr] = aiActInst->aiScript;
         gotoCmdScriptHeads[gotoCmdStackPtr] = aiActInst->constPtr;
-        if (nextScript != 0x8505) {
-            auto& scriptPath = playerTrainingData[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx)].aiData.scriptPath;
+        int pNum = _GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx);
+        if (nextScript != 0x8505 && pNum < 4) {
+            auto& scriptPath = playerTrainingData[pNum].aiData.scriptPath;
             scriptPath.push(new AIScriptCache {(unsigned short) nextScript, (char) gotoCmdStackPtr + 1});
         }
         // OSReport("XGoto: (%08x) ==> %d: %08x: [\n", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
@@ -1347,8 +1177,9 @@ extern "C" {
         if (gotoCmdStackPtr > 0) {
             gotoCmdStackPtr -= 1;
             if (gotoCmdScripts[gotoCmdStackPtr] != 0) {
-                if (gotoCmdScripts[gotoCmdStackPtr] != 0 && aiActInst->aiScript != 0x8505) {
-                    auto& scriptPath = playerTrainingData[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx)].aiData.scriptPath;
+                int pNum = _GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx);
+                if (gotoCmdScripts[gotoCmdStackPtr] != 0 && aiActInst->aiScript != 0x8505 && pNum < 4) {
+                    auto& scriptPath = playerTrainingData[pNum].aiData.scriptPath;
                     auto thing = new AIScriptCache {(unsigned short) gotoCmdScripts[gotoCmdStackPtr], (char) -(gotoCmdStackPtr) - 1};
                     scriptPath.push(thing);
                 }
@@ -1373,6 +1204,7 @@ extern "C" {
         // OSReport("CLEARED GOTO STACK\n");
         aiActInst->aiScript = *(int*)aiActInst->constPtr;
         asm("RESTORE_REGS");
+        functionalStackPtr = -1;
         gotoCmdStackPtr = 0;
         originScript = 0;
     };
@@ -1518,132 +1350,182 @@ INJECTION("CUSTOM_XGOTO_RELOCATE_FIX", 0x809181d4, R"(
 //     lwz r3,0x0(r24)
 // )")
 
-INJECTION("disable_old_throw_routine_code_1", 0x80904958, R"(    
-    psq_l f31, 0x1f8(r1), 0x0, 0
-    lis r12, 0x8090
-    ori r12, r12, 0x495C
-    mtctr r12
-    bctr
-)");
-
-INJECTION("nana_throw_routine_correction_NEW", 0x80903440, R"(
-    # last line before nana child_update call
-    lwz r3, 0x0034 (r31)
+// #################################
+// nana throws without considering human input [Bero, v1.2 by Eon, dual-hook fix by fudgepop01]
+// #################################
+// INJECTION("NANA_FIX_1", 0x80903440, R"(
+//     # update::aiInput (specifically right before calling aiInput::child_update)
     
-    # r3 = childAi (AiInput)
-    # r4 = nana stick ptr
-    # r5 = nana buttons
-    # r6 = aiChrIdxPtr
-    # r7 = is tap jump enabled
-
-check_if_grabbing:
-    mr r14, r3 # AiInput
-    # SAVE_REGS
-    # bl nanaCheck
-    # RESTORE_REGS
-    lwz r15, 0x44(r14) # AiInput->AiAct r15 = AiAct
-    lwz r16, 0x74(r15) # AiAct->AiStat r16 = AiStat
-    # AI action
-    # checks if between 0x34 and 0x3B which covers all "grabbing/holding" states
-    lwz r17, 0xB4(r16)
-    # 0x34 = "Catch" (action)
-    cmpwi r17, 0x34
-    blt+ notThrow
-    # 0x3B = "CatchCut" (action)
-    cmpwi r17, 0x3B
-    bgt+ notThrow
-    b setupGrab
-
-setupGrab:
-    # 809041f4 - last address | 80912180
-    # grab or setup
-    li r17, 0x0
-    stw r17, 0x0(r4) # stickX
-    stw r17, 0x4(r4) # stickY
-    mr r5, r17 # buttons
-    # li r17, 0x79 # forces nana into mode that allows ai scripts
-    li r17, 0x7e # forces nana into mode that allows ai scripts
-    stw r17, 0x48(r14)
-    li r17, 0xA
-    stb r17, 0x1ba(r16)
+//     # last line before nana child_update call
+//     lwz r3, 0x0034 (r31)
     
-    lhz r17, 0x78(r15) # r4 = aiScript
-    cmpwi r17, 0x6100 # if aiScript = 6100
-    beq- inThrowRoutine
-    b changeToThrowRoutine
+//     # r3 = childAi (AiInput)
+//     # r4 = nana stick ptr
+//     # r5 = nana buttons
+//     # r6 = aiChrIdxPtr
+//     # r7 = is tap jump enabled
 
-inThrowRoutine:
-    # relies on AI script to tell it when the throw is done for some reason?
-    # this will only branch if AI var23 is set to 0 :thonk:
-    lwz r17, 0x5C(r15)
-    cmpwi r17, 0x0
-    bne- notThrow
+// check_if_grabbing:
+//     mr r14, r3 # AiInput
+//     lwz r15, 0x44(r14) # AiInput->AiAct r15 = AiAct
+//     lwz r16, 0x74(r15) # AiAct->AiStat r16 = AiStat
+//     # AI action
+//     # checks if between 0x34 and 0x3B which covers all "grabbing/holding" states
+//     lwz r17, 0xB4(r16)
+//     # 0x34 = "Catch" (action)
+//     cmpwi r17, 0x34
+//     blt+ notThrow
+//     # 0x3B = "CatchCut" (action)
+//     cmpwi r17, 0x3B
+//     bgt+ notThrow
+//     b setupGrab
 
-    lwz r17, 0x8(r5)                 # \
-    andi. r18, r17, 0x100            # |
-    cmpwi r18, 0x100                 # | if cstick is pressed, tell nana to forget about it
-    beq changeToThrowRoutine         # |
-    stw r18, 0x8(r5)                 # /
-
-    b notThrow
-
-changeToThrowRoutine:
-
-    #act_change to 0x6100
-    #args: (AiAct*, unsigned int nextScript, char* nextTargetAIChrIdx, int vanilla ai routine, int unk2)
+// setupGrab:
+//     # grab or setup
+//     li r17, 0x0
+//     stw r17, 0x0(r4) # stickX
+//     stw r17, 0x4(r4) # stickY
+//     mr r5, r17 # buttons
+//     # li r17, 0x79 # forces nana into mode that allows ai scripts
+//     li r17, 0x7e # forces nana into mode that allows ai scripts
+//     stw r17, 0x48(r14)
+//     li r17, 0xA
+//     stb r17, 0x1ba(r16)
     
-    mr r3, r15 # r3 = AiAct
-    li r5, 0x1
-    stw r5, 0x5C(r3)      # sets internal AI variable (var23) to 1 for some reason 
-    lhz r4, 0x78(r3)
+//     lhz r17, 0x78(r15) # r4 = aiScript
+//     cmpwi r17, 0x6100 # if aiScript = 6100
+//     beq- inThrowRoutine
+//     b changeToThrowRoutine
 
-    li r4, 0x6100         # next script
+// inThrowRoutine:
+//     # relies on AI script to tell it when the throw is done for some reason?
+//     # this will only branch if AI var23 is set to 0 :thonk:
+//     lwz r17, 0x5C(r15)
+//     cmpwi r17, 0x0
+//     bne- notThrow
+
+//     # li r17, 0x60 # forces nana back into default AI mode
+//     # stw r17, 0x48(r14)
+//     lwz r17, 0x8(r5)                 # \
+//     andi. r18, r17, 0x100            # |
+//     cmpwi r18, 0x100                 # | if cstick is pressed, tell nana to forget about it
+//     beq changeToThrowRoutine         # |
+//     stw r18, 0x8(r5)                 # /
+
+//     b notThrow
+
+// changeToThrowRoutine:
+
+//     #act_change to 0x6100
+//     #args: (AiAct*, unsigned int nextScript, char* nextTargetAIChrIdx, int vanilla ai routine, int unk2)
     
+//     mr r3, r15 # r3 = AiAct
+//     li r5, 0x1
+//     stw r5, 0x5C(r3)      # sets internal AI variable (var23) to 1 for some reason 
+//     lhz r4, 0x78(r3)
+
+//     li r4, 0x6100         # next script
     
-    li r0, -0x1             #\ initialise this variable that PMDT never did
-    stb r0, 0x24(sp)        #|
-    addi r5, r1, 0x24       #/ (pointer to 0xFF, effectively randomizes the AI target)
-    li r6, 0x6100 # unk1 arg
-    li r7, 0 # unk2 arg
+//     li r0, -0x1             #\ initialise this variable that PMDT never did
+//     stb r0, 0x24(r1)        #| (stb + addi make it a pointer to 0xFF, -
+//     addi r5, r1, 0x24       #/ - effectively randomizes the AI target)
+//     li r6, 0x6100 # unk1 arg
+//     li r7, 0 # unk2 arg
 
-    # calls act_change(this, 0x6100, &0xFF, 0, 0)
-    lis r12, 0x8091
-    ori r12, r12, 0x8554
-    mtctr r12
-    bctr
+//     # calls act_change(this, 0x6100, &0xFF, 0, 0)
+//     lis r12, 0x8091
+//     ori r12, r12, 0x8554
+//     mtctr r12
+//     bctr
+//     # the bctr means it just branches and will not return here at the next blr.
+//     # Thus: exit
 
-    #exit
+// notThrow:
+// )")
 
-notThrow:
-)");
+// INJECTION("NANA_FIX_2", 0x8090366c, R"(
+//     # FNTE = Force Nana Throw Execution
+//     # child_update::aiInput (specifically right before the nana distance check)
 
-INJECTION("force_nana_throw_execution", 0x8090366c, R"(
-    lwz r14, 0x44(r23) # AiInput->AiAct r14 = AiAct
-    lwz r15, 0x74(r14) # AiAct->AiStat r15 = AiStat
+// FNTE_begin:
+//     lwz r14, 0x44(r23) # AiInput->AiAct r14 = AiAct
+//     lwz r15, 0x74(r14) # AiAct->AiStat r15 = AiStat
     
-    # AI action
-    # checks if between 0x34 and 0x3B which covers all "grabbing/holding" states
-    lwz r16, 0xB4(r15)
-    # 0x34 = "Catch" (action)
-    cmpwi r16, 0x34
-    blt+ FNTE_normalExec
-    # 0x3B = "CatchCut" (action)
-    cmpwi r16, 0x3B
-    bgt+ FNTE_normalExec
-    bl FNTE_cache_large_dist
-    b FNTE_normalExec
+//     # AI action (see previous HOOK for explaination)
+//     lwz r16, 0xB4(r15)
+//     # 0x34 = "Catch" (action)
+//     cmpwi r16, 0x34
+//     blt+ FNTE_normalExec
+//     # 0x3B = "CatchCut" (action)
+//     cmpwi r16, 0x3B
+//     bgt+ FNTE_normalExec
+//     bl FNTE_cache_large_dist
+//     b FNTE_normalExec
 
-FNTE_big_long_dist:
-    .float 99999
+// FNTE_big_long_dist:
+//     .float 9999
 
-FNTE_cache_large_dist:
-    mflr r12
-    lfs f31, 0x4(r12)
-    blr
+// FNTE_cache_large_dist:
+//     mflr r12 # lr is set by the bl here...
+//     lfs f31, 0x4(r12) # ...which lets us grab the "FNTE_big_long_dist" float based on an offset
+//     blr
 
-FNTE_normalExec:
-    fcmpo 0, f31, f29
-)");
+// FNTE_normalExec:
+//     fcmpo 0, f31, f29
+// )");
+
+// INJECTION("NANA_FIX_3", 0x809188B0, R"(
+//     # forces nana to ignore calls to script 0x1120 while grabbing 
+//     # r26 = next script
+//     # r25 = AiActPtr
+// nana_check:
+//     lwz r14, 0x74(r25) # r14 = AiStat
+//     lbz r15, 0xAF(r14) # r15 = character ID
+//     cmpwi r15, 0x10
+//     bne nana_fix3_end
+
+// action_check:
+//     lwz r15, 0xB4(r14) # r15 = action ID
+//     cmpwi r15, 0x39 # r39 = grab idle
+//     bne nana_fix3_end
+
+// check_if_6100:
+//     lhz r15, 0x78(r25)
+//     cmpwi r15, 0x6100
+//     beq ignore_if_6100
+
+// nana_fix3_end:
+//     sth r26, 120(r25)
+
+// ignore_if_6100:
+// )");
+
+// // # this was the culprit; by eliminating the call to change_md altogether nana sometimes just derps around in unexpected ways
+// // # op nop @ $809036c
+
+// // # ...so instead I perform a check to see if nana is grabbing and ONLY THEN do I ignore it
+// INJECTION("NANA_FIX_4", 0x809036cc, R"(
+//     lwz r14, 0x44(r23) # AiInput->AiAct r14 = AiAct
+//     lwz r15, 0x74(r14) # AiAct->AiStat r15 = AiStat
+
+//     # AI action (see previous HOOK for explaination)
+//     lwz r16, 0xB4(r15)
+//     # 0x34 = "Catch" (action)
+//     cmpwi r16, 0x34
+//     blt+ KeepMD_normalExec
+//     # 0x3B = "CatchCut" (action)
+//     cmpwi r16, 0x3B
+//     bgt+ KeepMD_normalExec
+//     b KeepMD_end
+
+// KeepMD_normalExec:
+//     lis r12, 0x8090
+//     ori r12, r12, 0x49d0
+//     mtctr r12
+//     bctrl
+
+// KeepMD_end:
+// )");
 
 // INJECTION("analyze_script_value_output", 0x8091e440, R"(
 //     lwz	r0, 0x0024 (sp)
@@ -1962,6 +1844,10 @@ extern "C" {
                 } else {
                     targetGroundModule = FIGHTER_MANAGER->getFighter(aiActInst->aiInputPtr->fighterId)->modules->groundModule;
                 }
+                if (targetGroundModule == nullptr) {
+                    aiActInst->variables[varToMod] = (float) -1;
+                    return;
+                }
 
                 Vec3f startPos = {};
                 targetGroundModule->getCorrectPos(&startPos);
@@ -2146,18 +2032,21 @@ extern "C" {
                 aiActInst->variables[varToMod] = accumulator;
             }
             _setAutoDefend: { // OSReport("setAutoDefend\n");
+                if (pNum >= 4) return;
                 bool onOff = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
                 autoDefend[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx)] = onOff;
                 return;
             }
             _setDisableMd: { // OSReport("setDisableMd\n");
+                if (pNum >= 4) return;
                 int mdValue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
                 disabledMd[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx)] = mdValue;
                 return;
             }
             _setDisabledSwitch: { // OSReport("setDisabledSwitch\n");
+                if (pNum >= 4) pNum = 0;
                 bool onOff = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-                disabledSwitch[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx)] = onOff;
+                disabledSwitch[pNum] = onOff;
                 return;
             }
             _retrieveFullATKD: { // OSReport("retrieveFullATKD\n");
@@ -2187,13 +2076,13 @@ extern "C" {
                     return;
                 }
 
-                aiActInst->variables[unkVar] = data->unk;
-                aiActInst->variables[startVar] = data->start;
-                aiActInst->variables[endVar] = data->end;
-                aiActInst->variables[xMinVar] = data->xmin;
-                aiActInst->variables[xMaxVar] = data->xmax;
-                aiActInst->variables[yMinVar] = data->ymin;
-                aiActInst->variables[yMaxVar] = data->ymax;
+                if (unkVar >= 0) aiActInst->variables[unkVar] = data->unk;
+                if (startVar >= 0) aiActInst->variables[startVar] = data->start;
+                if (endVar >= 0) aiActInst->variables[endVar] = data->end;
+                if (xMinVar >= 0) aiActInst->variables[xMinVar] = data->xmin;
+                if (xMaxVar >= 0) aiActInst->variables[xMaxVar] = data->xmax;
+                if (yMinVar >= 0) aiActInst->variables[yMinVar] = data->ymin;
+                if (yMaxVar >= 0) aiActInst->variables[yMaxVar] = data->ymax;
                 return;
             }
             // 2
@@ -2245,6 +2134,7 @@ extern "C" {
                 return;
             }
             _setDebugMode: { // OSReport("setDebugMode\n");
+                if (pNum >= 4) return;
                 bool value = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
                 debugSwitch[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx)] = value;
                 return;
@@ -2339,7 +2229,7 @@ extern "C" {
                     float approxKB = moveCurrKnockback * moveXVelMultiplier;
                     if (xVelRequired < approxKB && moveCurrKnockback > 110) {
                         if (debugEnabled) OSReport("; LAUNCHING");
-                        aiActInst->variables[varToMod] += 55 + (approxKB - xVelRequired) * 0.9;
+                        aiActInst->variables[varToMod] += 80 + (approxKB - xVelRequired) * 0.9;
                         return;
                     }
                 } else {
@@ -2347,8 +2237,10 @@ extern "C" {
                         aiActInst->variables[varToMod] += moveCurrKnockback * 0.45; 
                         if (((moveAngle >= 210 && moveAngle <= 340) || moveAngle < 20) && moveYVelMultiplier * moveCurrKnockback > 10) {
                             if (debugEnabled) OSReport("; (+ launch-low)");
-                            aiActInst->variables[varToMod] += 60; 
+                            aiActInst->variables[varToMod] += 75; 
                         }
+                    } else if ((endlag - 10) > hitstun) {
+                        aiActInst->variables[varToMod] = 0; 
                     }
                     return;
                 }
@@ -2358,10 +2250,10 @@ extern "C" {
                 }
 
                 // will a move combo
-                if (moveCurrKnockback > 90) {
-                    endlag -= 10;
-                }
-                endlag *= 1.65;
+                // if (moveCurrKnockback > 90) {
+                //     endlag -= 10;
+                // }
+                // endlag *= 1.65;
                 hitstun *= 0.7;
                 if (endlag < hitstun) {
                     if ((moveAngle >= 220 && moveAngle <= 320) || (moveAngle > 75 && moveAngle < 105)) {
@@ -2380,13 +2272,14 @@ extern "C" {
                                 }
                             }
                         }      
-                    } else if (hitstun > 25) {
+                    } else if (hitstun > 15) {
                         if (XTerminalVelocity * hitstun * 15 > moveXVelMultiplier * moveCurrKnockback) {
                             if (debugEnabled) OSReport("; COMBOING (horiz)");
                             if (moveYVelMultiplier * moveCurrKnockback > 20 || moveCurrKnockback <= 80) aiActInst->variables[varToMod] += 15;
                             else if (!(moveAngle <= 20 && moveAngle >= 160)) aiActInst->variables[varToMod] += 19;
                             else aiActInst->variables[varToMod] += 14;
                             aiActInst->variables[varToMod] += 20 * (1 - (moveXVelMultiplier * moveCurrKnockback / 100));
+                            aiActInst->variables[varToMod] += 5;
                         }
                     }
                     aiActInst->variables[varToMod] *= 1 + ((hitstun - endlag) / 80);
@@ -2396,57 +2289,65 @@ extern "C" {
             _trackOAction: { // OSReport("trackOAction\n");
                 int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
                 if (0 <= managerNum && managerNum < 0x10) {
-                    rpsManagers[managerNum].pushNew(_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx), (int) _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0));
+                    if (pNum >= 4) pNum = 0;
+                    rpsManagers[managerNum].pushNew(pNum, (int) _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0));
                 }
                 return;
             }
             _predictOOption: { // OSReport("predictOOption\n");
+                if (pNum >= 4) pNum = 0;
                 int varToMod = args[1];
                 int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 int lookAmount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0) / 20;
-                aiActInst->variables[varToMod] = rpsManagers[managerNum].calcOption(_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx), lookAmount);
+                aiActInst->variables[varToMod] = rpsManagers[managerNum].calcOption(pNum, lookAmount);
                 return;
             }
             _predictionConfidence: { // OSReport("predictionConfidence\n");
+                if (pNum >= 4) pNum = 0;
                 int varToMod = args[1];
                 int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 int lookAmount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0) / 20;
-                aiActInst->variables[varToMod] = rpsManagers[managerNum].calcOptionConfidence(_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx), lookAmount);
+                aiActInst->variables[varToMod] = rpsManagers[managerNum].calcOptionConfidence(pNum, lookAmount);
                 return;
             }
             _predictAverage: { // OSReport("predictAverage\n");
+                if (pNum >= 4) pNum = 0;
                 int varToMod = args[1];
                 int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 int lookAmount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0) / 20;
-                aiActInst->variables[varToMod] = rpsManagers[managerNum].average(_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx), lookAmount);
+                aiActInst->variables[varToMod] = rpsManagers[managerNum].average(pNum, lookAmount);
                 return;
             }
             _incrementPrediction: { // OSReport("incrementPrediction\n");
+                if (pNum >= 4) pNum = 0;
                 int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-                rpsManagers[managerNum].plusOne(_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx));
+                rpsManagers[managerNum].plusOne(pNum);
                 return;
             }
             _getCurrentPredictValue: { // OSReport("getCurrentPredictValue\n");
+                if (pNum >= 4) pNum = 0;
                 int varToMod = args[1];
                 int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                aiActInst->variables[varToMod] = rpsManagers[managerNum].get(_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx));
+                aiActInst->variables[varToMod] = rpsManagers[managerNum].get(pNum);
                 return;
             }
             _getCommitPredictChance: { // OSReport("getCommitPredictChance\n");
+                if (pNum >= 4) pNum = 0;
                 int varToMod = args[1];
                 int levelValue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 float result = 0;
-                result = movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->aiTarget)].approxChance((float) levelValue, MOV_ATTACK);
-                float grabRes = movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->aiTarget)].approxChance((float) levelValue, MOV_GRAB);
+                result = movementTrackers[pNum].approxChance((float) levelValue, MOV_ATTACK);
+                float grabRes = movementTrackers[pNum].approxChance((float) levelValue, MOV_GRAB);
                 if (grabRes > result) result = grabRes;
                 aiActInst->variables[varToMod] = result;
                 return;
             }
             _predictOMov: { // OSReport("predictOMov\n");
+                if (pNum >= 4) pNum = 0;
                 int varToMod = args[1];
                 int actToGet = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 int levelValue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                aiActInst->variables[varToMod] = movementTrackers[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->aiTarget)].approxChance((float) levelValue, actToGet);
+                aiActInst->variables[varToMod] = movementTrackers[pNum].approxChance((float) levelValue, actToGet);
                 return;
             }
             _bitOR: { // OSReport("bitOR\n");
@@ -2501,7 +2402,7 @@ extern "C" {
                 int varNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
                 float value = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 if (varNum >= 24) {
-                    OSReport("========WARNING: TRIED TO INSERT DATA INTO VARNUM %d\n========", varNum);
+                    OSReport("========(@%08x) WARNING: TRIED TO INSERT DATA INTO VARNUM %d\n========", &args[0], varNum);
                 } else {
                     aiActInst->variables[varNum] = value;
                 }
@@ -2662,8 +2563,10 @@ extern "C" {
                 forceContinue = true;
                 unsigned int nextScript = args[1] & 0xffff;
                 
-                auto& scriptPath = playerTrainingData[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx)].aiData.scriptPath;
-                scriptPath.push(new AIScriptCache {(unsigned short) nextScript, 0});
+                if (pNum < 4) {
+                    auto& scriptPath = playerTrainingData[pNum].aiData.scriptPath;
+                    scriptPath.push(new AIScriptCache {(unsigned short) nextScript, 0});
+                }
 
                 char dummy = 0xff;
                 aiActInst->aiScript = 0;
@@ -2710,9 +2613,11 @@ extern "C" {
                         if (forcedNextInstruction == nullptr) {
                             forcedReturnStatement = true;
                         }
-                        auto& scriptPath = playerTrainingData[_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx)].aiData.scriptPath;
-                        scriptPath.pop_back();
-                        scriptPath.pop_back();
+                        if (pNum < 4) {
+                            auto& scriptPath = playerTrainingData[pNum].aiData.scriptPath;
+                            scriptPath.pop_back();
+                            scriptPath.pop_back();
+                        }
                         return;
                     }
                 }
@@ -2754,6 +2659,7 @@ extern "C" {
                 aiActInst->variables[varToMod] = dynamicDice[slot].getWeight();
             }
             _ADJUST_PERSONALITY: { // OSReport("ADJUST_PERSONALITY\n");
+                if (pNum >= 4) return;
                 int index = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
                 float amount = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 float multiplier = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
@@ -3014,3 +2920,5 @@ extern "C" {
         }
     }
 }
+
+#endif

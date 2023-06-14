@@ -22,6 +22,7 @@ void MainPage::show() {
   addOption(p3PageLink);
   addOption(p4PageLink);
   addOption(new BoolOption("Smooth Wavedashes?", GCD.smoothWavedashes));
+  addOption(new BoolOption("CliffJump2 Mod?", GCD.cliffJump2Mod));
   addOption(new FloatOption("opacity", menu->opacity, 0, 255));
 }
 

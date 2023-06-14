@@ -352,7 +352,8 @@ struct TrainingData {
 };
 
 struct GlobalCustomData {
-  bool smoothWavedashes = false;
+  bool smoothWavedashes = true;
+  bool cliffJump2Mod = true;
 };
 
 class AITrainingScriptOption : public StandardOption {

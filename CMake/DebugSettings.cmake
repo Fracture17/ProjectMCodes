@@ -32,9 +32,7 @@ set(CMAKE_CXX_FLAGS
     -foptimize-strlen \
     -fpartial-inlining \
     -fpeephole2 \
-    -freorder-blocks-algorithm=stc \
     -frerun-cse-after-loop  \
-    -fschedule-insns  \
     -fsched-interblock  -fsched-spec \
     -fstore-merging \
     -fstrict-aliasing \
@@ -84,7 +82,9 @@ set(CMAKE_CXX_FLAGS
 # -foptimize-strlen \
 # -fpartial-inlining \
 # -fpeephole2 \
-# -freorder-blocks-algorithm=stc \
+#### MAKES BUILD SIZES SIGNIFICANTLY LARGER THAN NECESSARY
+#### removing this brought size from 88508kb to 86860
+#### -freorder-blocks-algorithm=stc \
 #### THIS IS THE CULPRIT OF THE BREAKING -O2/Os
 #### -freorder-blocks-and-partition  -freorder-functions \
 # -frerun-cse-after-loop  \

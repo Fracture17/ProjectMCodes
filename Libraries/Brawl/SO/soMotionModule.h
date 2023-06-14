@@ -35,6 +35,48 @@ struct soAnimChr {
     float frameSpeedModifier;
 };
 
+// struct soTransitionModuleImpl_vtable {
+//     char*** objDescriptor;
+//     void* thisPtrFixup;
+
+//     void** fn__checkEstablish;
+//     void** fn__enableTerm;
+//     void** fn__unableTerm;
+//     void** fn__enableTermAll;
+//     void** fn__unableTermAll;
+//     void** fn__enableTermGroup;
+//     void** fn__unableTermGroup;
+//     void** fn__isEnableTermGroup;
+//     void** fn__addTerm;
+//     void** fn__addGeneralTerm;
+//     void** fn__addGeneralTermLastTerm;
+//     void** fn__clearTransitionTermAll;
+//     void** fn__notifyEventAnimCmd;
+//     void** fn__getLastTransitionInfo;
+//     void** fn____dt;
+// };
+
+// struct soTransitionModuleImpl {
+//     VTABLE_METHOD(void, init)
+//     VTABLE_METHOD(void, checkEstablish)
+//     VTABLE_METHOD(void, enableTerm)
+//     VTABLE_METHOD(void, unableTerm)
+//     VTABLE_METHOD(void, enableTermAll)
+//     VTABLE_METHOD(void, unableTermAll)
+//     VTABLE_METHOD(void, enableTermGroup)
+//     VTABLE_METHOD(void, unableTermGroup)
+//     VTABLE_METHOD(void, isEnableTermGroup)
+//     VTABLE_METHOD(void, addTerm)
+//     VTABLE_METHOD(void, addGeneralTerm)
+//     VTABLE_METHOD(void, addGeneralTermLastTerm)
+//     VTABLE_METHOD(void, clearTransitionTermAll)
+//     VTABLE_METHOD(void, notifyEventAnimCmd)
+//     VTABLE_METHOD(void, getLastTransitionInfo)
+//     VTABLE_METHOD(void, __dt)
+
+//     soTransitionModuleImpl_vtable* vtable;
+// };
+
 struct soMotionModule {
     float getFrame();
     float getEndFrame();
@@ -52,7 +94,13 @@ struct soMotionModule {
     // 0x58
     int subAction;
 
-    char _spacer4[0x168 - 0x58 - 4];
+    char _spacer4[0xf0 - 0x58 - 4];
+
+    // 0xf0
+    // soTransitionModuleImpl* transitionModuleImpl;
+    void* transitionModuleImpl;
+
+    char _spacer5[0x168 - 0xf0 - 4];
     // 0x168
     class soModuleAccessor* accesser;
 };

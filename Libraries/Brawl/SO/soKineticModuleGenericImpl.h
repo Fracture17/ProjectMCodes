@@ -172,7 +172,7 @@ struct soKineticModuleImpl {
     // 2 args
     VTABLE_METHOD(void, setConsiderGroundFriction)
     // 2 args (vec2f, whichEnergies)
-    VTABLE_METHOD(void, mulSpeed)
+    VTABLE_METHOD_2ARG(void, mulSpeed, Vec2f, muls, int, energies)
     // 2 args (vec2f, whichEnergies)
     VTABLE_METHOD(void, mulAccel)
     // 2 args (vec2f, whichEnergies)
