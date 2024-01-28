@@ -47,7 +47,7 @@ struct soControllerImpl {
     char _spacer3[0x44 - 0x38 - 4];
     
     // 0x44
-    short buttons;
+    Inputs buttons;
     
     // 0x46
     Inputs inputs;
@@ -60,12 +60,15 @@ struct soControllerImpl {
     char _spacer5[0x50 - 0x4a - 2];
     
     // 0x50
-    float trigger;
+    Inputs trigger;
+    
+    char _spacer6[0x50 - 0x4a - 2];
     
     // 0x54
-    int release;
+    Inputs release; // unf <333 lip biting emoji
+
     
-    char _spacer6[0x7a - 0x54 - 4];
+    char _spacer7[0x7a - 0x54 - 4];
     
     // 0x7a
     char flickX;
@@ -82,12 +85,12 @@ struct soControllerImpl {
     // 0x7e
     char flickNoResetX;
     
-    char _spacer7;
+    char _spacer8;
     
     // 0x80
     char flickNoResetY;
     
-    char _spacer8;
+    char _spacer9;
     
     // 0x82
     char flickAfterX;
@@ -97,7 +100,7 @@ struct soControllerImpl {
     
     // 0x84
     char flickAfterY;
-    short _spacer9;
+    short _spacer10;
     
     // 0x86
     char flickBonus;
@@ -105,7 +108,7 @@ struct soControllerImpl {
     // 0x87
     char getFlickBonusLR;
     
-    char _spacer10;
+    char _spacer11;
     
     // 0x89
     char offUnk;

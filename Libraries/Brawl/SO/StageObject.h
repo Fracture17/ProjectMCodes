@@ -22,6 +22,9 @@ struct StageObject : public gfTask {
 };
 
 #define _updatePosture_StageObject ((void (*)(StageObject* self, bool interpolate)) 0x8070ef84)
+#define _updateRoughPos_StageObject ((void (*)(StageObject* self)) 0x807110b0)
+#define _updateNodeSRT_StageObject ((void (*)(StageObject* self)) 0x8070f340)
+
 #define _getInput_StageObject ((AiInput* (*)(StageObject* self)) 0x8070fcc8)
 
 #endif //PROJECTMCODES_STAGEOBJECT_Hrec

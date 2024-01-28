@@ -32,8 +32,12 @@ struct AICEPac;
 struct AiStat;
 // size: 0x388
 struct AiManager {
+    STATIC_METHOD_1ARG(0x808fc96c, AiManager, AiStat*, getAiStat, char*, aiStatIdx)
+    STATIC_METHOD_1ARG(0x808fc630, AiManager, int, getCPURank, int, ftSlot)
+
     EntryID getAiCpuTarget(EntryID fighter);
     ATKDEntry* searchAtkData(int targetCharID, int subactionID);
+
     char _spacer[0xf8];
 
     // 0xF8
@@ -53,6 +57,8 @@ struct AiManager {
     int* aiCommonMiscData1;
 
 };
+
+
 
 // vBrawl: 0x80b89a20
 #define AI_MANAGER ((AiManager *) 0x80622d20)

@@ -8,9 +8,14 @@
 struct AICEPac;
 struct AiInput;
 struct AiStat;
+// p1 @ 8128bbc0
+// p1 curr_goal @ 8128bc14
+
 // p2 @ 812ddbc0
 // p2 act id @ 812ddc38
-// p2 currInst @ 812ddc28
+// p2 currInst @ 812ddc28 
+
+// 926d58c0
 struct AiScriptData {
     // 0x00
     float variables[24];
@@ -29,7 +34,7 @@ struct AiScriptData {
     AiInput* aiInputPtr;
 
     // 0x74
-    AiStat* scriptValues;
+    AiStat* aiStatPtr;
 
     // 0x78
     unsigned short aiScript;
@@ -39,8 +44,11 @@ struct AiScriptData {
     unsigned short intermediateCurrentAiScript;
     // 0x7E
     unsigned short intermediateNextAiScript;
-    char _spacer3[0xAC - 0x7E - 2];
+    char _spacer3[0x94 - 0x7E - 2];
 
+    // 0x94
+    unsigned int timeToWait; 
+    char _spacer4[0xAC - 0x94 - 4];
     // 0xAC
     unsigned int framesSinceScriptChanged;
 };

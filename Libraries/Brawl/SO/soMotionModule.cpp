@@ -12,6 +12,6 @@ float soMotionModule::getEndFrame() {
     return _getEndFrame_soMotionModule(this);
 }
 
-void soMotionModule::changeMotionRequest(int* subAction) {
-    return _changeMotionRequest_soMotionModule(this, subAction);
+void soMotionModule::changeMotionRequest(soMotionChangeParam* params) {
+    return _changeMotionRequest_soMotionModule(this, params);
 }

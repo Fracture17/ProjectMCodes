@@ -11,3 +11,7 @@ int ftCancelModule::isEnableCancel() {
 int ftCancelModule::unableCancelStatus() {
     return _unableCancelStatus_ftCancelModule(this);
 }
+
+void ftCancelModule::enableCancelTransitionGroup(int groupID) {
+    _enableCancelTransitionGroup_ftCancelModule(this, groupID);
+}

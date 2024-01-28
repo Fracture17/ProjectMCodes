@@ -22,5 +22,6 @@ struct ftEntryManager {
     void * vtable2;
 };
 
+#define _getEntity_ftEntryManager ((FtEntry* (*)(ftEntryManager* self, EntryID entryid)) 0x80823b24)
 
 #endif //PROJECTMCODES_FTENTRYMANAGER_H

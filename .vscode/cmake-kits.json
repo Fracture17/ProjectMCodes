@@ -45,11 +45,43 @@
     "cmakeSettings": {
       "CMAKE_CXX_COMPILER_WORKS": 1,
       "CMAKE_BUILD_TYPE": "Debug",
+      "CSS_CONTROLS": 0,
+      "CODE_MENU": 0,
+      "REPLAY_FIX": 0,
+      "CUSTOM_AI_FUNCTIONS": 0,
+      "MANUAL_MESSAGE": 0,
+      "PRINT_GET_PARAMS": 0,
+      "PRINT_TEST": 0,
+      "FUDGE_MENU": 0,
+      "SUPER_TRAINING": 1,
+      "CAMERA_SCALE": 0,
+      "SLIPPI_TEST": 0,
+      "RANDOM_1_TO_1_ALTS": 0,
+      "DRAW_A_RECTANGLE": 0,
+      "ENABLE_DEBUG": 0,
+      "CROWD_CONTROL": 0,
+      "OGG_SUPPORT": 0,
+      "PURE_AI": 0,
+      "SIMPLE_CONTROLLER_TEST": 0,
+    }
+  },
+  {
+    "name": "CODE MENU REWRITE",
+    "compilers": {
+      "CXX": "${workspaceFolder}/BuildSystem/Compiler/bin/powerpc-eabi-g++.exe"
+    },
+    "preferredGenerator": {
+      "name": "MinGW Makefiles"
+    },
+    "cmakeSettings": {
+      "CMAKE_CXX_COMPILER_WORKS": 1,
+      "CMAKE_BUILD_TYPE": "Debug",
       "PRINT_GET_PARAMS": 0,
       "CUSTOM_AI_FUNCTIONS": 0,
       "PRINT_TEST": 0,
       "FUDGE_MENU": 0,
-      "SUPER_TRAINING": 1,
+      "CODE_MENU": 1,
+      "SUPER_TRAINING": 0,
       "RANDOM_1_TO_1_ALTS": 0,
       "SIMPLE_CONTROLLER_TEST": 0,
       "DRAW_A_RECTANGLE": 0,

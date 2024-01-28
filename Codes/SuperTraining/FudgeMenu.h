@@ -10,7 +10,6 @@
 #include "Brawl/SO/soAnimCmdModuleImpl.h"
 #include "Brawl/IT/BaseItem.h"
 #include "Wii/PAD/PADStatus.h"
-#include "./hitboxHeatmap.h"
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
@@ -34,17 +33,17 @@ public:
 
 class KineticObserverOption : public StandardOption {
 public:
-  KineticObserverOption(soKineticModuleImpl* kinModule) :
+  KineticObserverOption(soKineticModuleImpl** kinModule) :
     kinModule(kinModule) {}
   void modify(float _) {};
   void deselect() {};
   void select() {};
   void render(TextPrinter *printer, char *buffer) {
     printer->printLine("energies");
-    if (kinModule != nullptr) {
-      int limit = kinModule->kineticEnergyVector->energies.size();
+    if (*kinModule != nullptr) {
+      int limit = (*kinModule)->kineticEnergyVector->energies.size();
       for (int i = 0; i < limit; i++) {
-        soKineticEnergyNormal* energy = *(kinModule->kineticEnergyVector->energies.at(i));
+        soKineticEnergyNormal* energy = *((*kinModule)->kineticEnergyVector->energies.at(i));
         printer->padToWidth(RENDER_X_SPACING / 5);
         sprintf(buffer, "%d: %s: [%.3f, %.3f]", i + 1, *energy->vtable->objDescriptor, energy->xVel, energy->yVel);
         printer->printLine(buffer);
@@ -57,7 +56,7 @@ public:
   };
 
 protected:
-  soKineticModuleImpl* kinModule;
+  soKineticModuleImpl** kinModule;
 };
 
 class PSAScriptOption : public StandardOption {
@@ -150,17 +149,41 @@ protected:
 // };
 
 struct PSAData {
-  int threadIdx = 0;
   int scriptLocation = -1;
   vector<soAnimCmd*> fullScript;
   unsigned int action = -1;
+  // const char* actionName;
   float actionTimer = -1;
   unsigned int prevAction = -1;
+  // const char* prevActionName;
   unsigned int subaction = -1;
   float frameSpeedModifier = 1;
   float currentFrame = 0;
   float currentEndFrame = -1;
 
+  u8 currSubactIntag[8] = {};
+  s16 throwFrame = -1;
+  bool shouldTechThrow = false;
+  float intanProgBar = 0;
+  float currSubactIASA = 0;
+  float subactIASAProgBar = 0;
+  s16 maxGlobalIntanRemaining = -1;
+  const char* currSubactionName;
+  SubpageOption* subactionSwitcher;
+};
+
+struct comboTrainerOptions {
+  bool enabled = false;
+  bool noclip = false;
+  bool fixPosition = false;
+  bool randomizePosition = false;
+  bool randOnGround = false;
+  bool randomizeDamage = false;
+  bool recoveryTrainer = false;
+  float damage = -1;
+  int comboTimerAdjustment = 0;
+
+  int threadIdx = 0;
   union {
     int fullValue = 0xFFFFFFFF;
     struct {
@@ -174,38 +197,23 @@ struct PSAData {
       bool hitlag: 1;
     } bits;
   } enabledMeters;
-
-  u8 currSubactIntag[8] = {};
-  s16 throwFrame = -1;
-  bool shouldTechThrow = false;
-  float intanProgBar = 0;
-  float currSubactIASA = 0;
-  float subactIASAProgBar = 0;
-  s16 maxGlobalIntanRemaining = -1;
-  char currSubactionName[20] = {};
-  SubpageOption* subactionSwitcher;
 };
 
-struct debugData {
-  bool enabled = false;
-  bool noclip = false;
+struct comboTrainerData {
+  char airGroundState = 0;
   bool noclipInternal = false;
   bool settingPosition = false;
-  bool fixPosition = false;
-  bool randomizePosition = false;
-  bool randOnGround = false;
-  bool randomizeDamage = false;
-  char airGroundState = 0;
-  bool recoveryTrainer = false;
+
   float randXPos = 0;
   float randYPos = 0;
   float randDmg = 0;
 
+  float currKnockback = 0;
+  float currKnockbackAngle = 0;
+
   float xPos = 0;
   float yPos = 0;
-  float damage = -1;
   int comboTimer = 0;
-  int comboTimerAdjustment = 0;
 
   float hitstun = 0;
   float maxHitstun = 0;
@@ -243,9 +251,20 @@ struct AIPredictions {
 
 struct AIPersonality {
   AICEPac* AICEData;
+  int personalityIndex = 0;
+};
+
+#define SCRIPTPATH_LEN 0x20
+struct AIScriptCache {
+  unsigned short scriptID = 0; 
+  char depth = 0;
+};
+
+struct AIOptions {
+  bool debug = false;
   bool unlocked = true;
   bool autoAdjust = true;
-  int personalityIndex = 0;
+  float debugValue = 0;
   float braveChance = 0;
   float baitChance = 0;
   float aggression = 0;
@@ -260,11 +279,6 @@ struct AIPersonality {
   float reactionTime = 0;
 };
 
-#define SCRIPTPATH_LEN 0x20
-struct AIScriptCache {
-  unsigned short scriptID = 0; 
-  char depth = 0;
-};
 struct AIData {
   vector<AIScriptCache*> scriptPath;
   unsigned int scriptID = 0xFFFF;
@@ -281,7 +295,6 @@ struct AIData {
   float nana_lstickY = 0;
 
   float snapbackShieldtimer = 0;
-  bool AIDebug = false;
 
   AIPredictions predictions;
   AIPersonality personality;
@@ -300,19 +313,17 @@ struct HeatmapOptions {
   int opacity = 0x80;
   int colorChangeFrame = 25;
   int bubbleLimit = 150;
-  vector<HitboxDataFrame*>* data = new vector<HitboxDataFrame*>();
 };
 
 struct ControllerData {
-  bool display = false;
   bool cStick = false;
 
-  int stickX = 0;
-  int stickY = 0;
-  int substickX = 0;
-  int substickY = 0;
-  int triggerLeft = 0;
-  int triggerRight = 0;
+  float stickX = 0;
+  float stickY = 0;
+  float substickX = 0;
+  float substickY = 0;
+  float triggerLeft = 0;
+  float triggerRight = 0;
 };
 
 struct PositionalData {
@@ -336,24 +347,78 @@ struct PositionalData {
   float ECBBY = 0;
 };
 
+struct ControlCodes {
+  bool meleeJumpsEnabled = false;
+  bool aerialTransitionFix = false;
+  bool smoothWavedashes = false;
+  bool fastfallTumble = false;
+  bool meleeDJC = false;
+  bool instantFastFall = false;
+};
+
+struct TrainingDataOptions {
+  ControlCodes controlCodes;
+  TrajectoryOptions trajectory;
+  HeatmapOptions heatmap;
+  comboTrainerOptions comboTrainer;
+  AIOptions AI;
+  int inputDisplayType = 0;
+  int actionableSE = -1;
+  bool actionableOverlay = false; 
+  bool inputDisplay = false;
+};
+
+struct SuperTurboData {
+  int comboHitCount = 0;
+  int attackerTeamId = 0;
+  float attackedDamage = 0;
+  unsigned char attackerHitFrame = 0;
+  unsigned char attackerSubaction = 0;
+  bool attackerNewAttack = true;
+  bool hasMultipliedHitstun = false;
+  bool hasAppliedHitlag = false;
+  bool canceledDuringIASA = false;
+  bool attackConnected = false;
+  char remainingFreeCancels = 2;
+  char remainingAirDashes = 2;
+  short lastActionTracked = 0;
+};
+
 struct TrainingData {
+  TrainingDataOptions options;
+
   AIData aiData;
   PADStatus playerInputs;
-  bool actionableOverlay = false; 
-  int actionableSE = -1;
-  int inputDisplayType = 0;
   bool hasPlayedSE = false;
   PositionalData posData;
   
-  TrajectoryOptions trajectoryOpts;
-  HeatmapOptions heatmapOpts;
-  debugData debug;
+  vector<HitboxDataFrame*>* heatmapData = new vector<HitboxDataFrame*>();
+  comboTrainerData debug;
   ControllerData controllerData;
+  SuperTurboData turboData;
 };
 
 struct GlobalCustomData {
-  bool smoothWavedashes = true;
+  // bool smoothWavedashes = false;
   bool cliffJump2Mod = true;
+  // bool aerialTransitionFix = false;
+  bool xDirCardinalCoersion = false;
+
+  // bool smoothWavedashes = true;
+  // bool cliffJump2Mod = true;
+  // bool aerialTransitionFix = true;
+  // bool xDirCardinalCoersion = true;
+  // bool fastfallTumble = true;
+
+  bool GCCShieldToHardpressCoersion = false;
+  bool immediateDashVel = false;
+  // bool meleeJumpVel = false;
+  // bool yoshiDJC = false;
+  bool horizontalWavedash = false;
+  bool bufferWavedash = false;
+  bool superTurbo = true;
+  bool alwaysTurbo = false;
+  // bool physicsDelayFix = true;
 };
 
 class AITrainingScriptOption : public StandardOption {
@@ -438,6 +503,43 @@ protected:
 
 struct ItemPage : public Page {
   ItemPage(Menu* myMenu);  
+};
+
+class ResetMenuOption : public StandardOption { 
+public:
+  ResetMenuOption(char pNum) {
+    this->pNum = pNum;
+    this->name = "reset settings";
+  }
+
+  void modify(float) {}
+  void select();
+  void deselect() {}
+  void render(TextPrinter* printer, char* buffer);
+
+private:
+  char pNum;
+
+protected:
+  const char* name;
+};
+
+class MeleeToggleOption : public StandardOption { 
+public:
+  MeleeToggleOption(TrainingData& d) : data(d) {
+    this->name = "meleeify physics";
+  }
+
+  void modify(float amount);
+  void select() {}
+  void deselect() {}
+  void render(TextPrinter* printer, char* buffer);
+
+private:
+  TrainingData& data;
+
+protected:
+  const char* name;
 };
 
 #endif // PROJECTMCODES_FUDGEMENU_H

@@ -3,7 +3,7 @@
 
 void WeightedDie::addValue(WeightedValue weight) {
   // OSReport("AddValue (currSize: %d) (weight: %d, %.3f)\n", weights.size(), weight.value, weight.weight);
-  if (weight.weight == 0) {
+  if (weight.weight <= 0) {
     return;
   }
   for (int i = 0; i < weights.size(); i++) {
@@ -55,3 +55,7 @@ float WeightedDie::getWeight() {
   }
   return out;
 } 
+
+float WeightedDie::getSize() {
+  return weights.size();
+}

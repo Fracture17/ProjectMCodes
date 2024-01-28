@@ -18,6 +18,7 @@ public:
 
   void addValue(WeightedValue value);
   void clear();
+  float getSize();
 
   float roll();
   float rollAndRemove();

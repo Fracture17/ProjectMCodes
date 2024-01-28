@@ -21,7 +21,6 @@
 #define MOV_GRAB 15
 #define MOV_LEN 16
 #define MOV_CACHE_RESET -1
-
 // number of actions to be tracked
 #define ACTION_COUNT 0x80
 
@@ -33,21 +32,29 @@ struct KVPair {
 };
 
 struct MarkovInput {
+  // if the difference between the incoming value and the value its compared to
+  // is greater than this, the influence of this particular weight is 0
   u8 tolerence;
   float weight;
 };
 
+// { tolerence, weight }
 struct MarkovInputs {
+  // time spent in a particular action "category" (ex - attacking, running, grabbing)
   static constexpr MarkovInput time = { 60, 2 }; 
-  static constexpr MarkovInput yDistFloor = { 35, 1 }; 
-  static constexpr MarkovInput xDist = { 75, 4 }; 
+  // Y Distance to the ground beneath a fighter
+  static constexpr MarkovInput yDistFloor = { 35, 3 };
+  // X distance between the AI and the opponent 
+  static constexpr MarkovInput xDist = { 75, 6 }; 
   // these two add a little extra "YOMI"
   // the AI's own chance of being in an attacking state
-  static constexpr MarkovInput attackChance = { 125, 2 }; 
+  static constexpr MarkovInput attackChance = { 125, 4 }; 
   // the AI's own chance of being in an defending state
-  static constexpr MarkovInput shieldChance = { 125, 2 }; 
-  static constexpr MarkovInput xPos = { 250, 3 }; 
-  static constexpr MarkovInput mov = { 1, 4 }; 
+  static constexpr MarkovInput shieldChance = { 125, 4 };
+  // the x position of the fighter 
+  static constexpr MarkovInput xPos = { 250, 4 }; 
+  // the particular action category in question (attack/run/grab/etc)
+  static constexpr MarkovInput mov = { 1, 2 }; 
 };
 
 class MovementTracker {
@@ -55,9 +62,10 @@ public:
   MovementTracker() {};
 
   void reset();
-  void trackAction(int action, bool isAction, u8 yDistFloor, u8 xPos, u8 distance = 0, u8 attackChance = 0, u8 shieldChance = 0, s16 otherMov = 0);
-  float approxChance(float levelValue);
-  float approxChance(float levelValue, char actionType);
+  void trackAction(int action, bool isAction);
+  void updateData(u8 yDistFloor, u8 xPos, u8 distance = 0, u8 attackChance = 0, u8 shieldChance = 0, s16 otherMov = 0);
+  float approxChance(int levelValue, char actionType);
+  float approxCommit(int levelValue);
   void incrementTimer();
   void undoLastAction();
   s16 getCurrentMov();
@@ -67,7 +75,7 @@ private:
   // 100 = a multiplier of 1 (because chars consume less space than floats)
   static constexpr unsigned char weights[0x10] = {
     20, // NONE
-    90, // IDLE
+    40, // IDLE
     0, // WALK
     60, // RUN
     120, // DASH
@@ -84,6 +92,7 @@ private:
     190, // GRAB 
   };
 
+  void calcWeight(char actionType);
   void copyLatest(char copy);
   unsigned short idx = 0;
   unsigned char actionTracker[ACTION_COUNT] = {};
@@ -94,7 +103,10 @@ private:
   unsigned char shieldChanceTracker[ACTION_COUNT] = {};
   unsigned char xPosTracker[ACTION_COUNT] = {};
   char movTracker[ACTION_COUNT] = {};
-  float actionCache[MOV_LEN] = {};
+  float weightCache[MOV_LEN] = {};
+  float weightCacheTotal = 0;
+  float chanceCache[MOV_LEN] = {};
+  u8 actionCacheEntries = 0;
   unsigned char attackGuess = 0;
 };
 

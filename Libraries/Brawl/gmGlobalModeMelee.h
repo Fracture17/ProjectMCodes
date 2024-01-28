@@ -7,12 +7,29 @@
 
 #include "stddef.h"
 
-struct gmGlobalModeMelee {
-    char _spacer[0x1B];
+struct MeleeInitData {
+    bool unk1;
+    bool unk2;
 
+    // 0x2
+    bool unk_b1: 1;
+    bool unk_b2: 1;
+    bool unk_b3: 1;
+    bool unk_b4: 1;
+    bool unk_b5: 1;
+    bool unk_b6: 1;
+    bool unk_b7: 1;
+    bool teamAttackOnOff: 1;
+
+    char _spacer[0x13 - 0x2 - 1];
     u8 stageID;
+};
 
-    char _spacer2[0x320 - 0x1B - sizeof(stageID)];
+struct gmGlobalModeMelee {
+    char _spacer[0x8];
+    MeleeInitData meleeInitData;
+
+    char _spacer3[0x320 - 0x8 - sizeof(MeleeInitData)];
 }__attribute__((packed, aligned(2)));
 
 

@@ -12,6 +12,19 @@ struct MainPage : public BasicPage {
   void show();
 };
 
+struct GameplayPage : public BasicPage {
+  GameplayPage(Menu* myMenu) 
+  : BasicPage(myMenu, "Gameplay") {};
+  void show();
+};
+
+struct PlayerPhysicsPage : public BasicPage {
+  PlayerPhysicsPage(Menu* myMenu, TrainingData& d) 
+  : BasicPage(myMenu, "Physics"), data(d) {};
+  void show();
+  TrainingData& data;
+};
+
 struct AIDebugPage : public BasicPage {
   AIDebugPage(Menu* myMenu, TrainingData& d) 
   : BasicPage(myMenu, "AI Debug"), data(d) {};
@@ -49,7 +62,7 @@ struct HeatmapPage : public BasicPage {
 
 struct AIPredictionPage : public BasicPage {
   AIPredictionPage(Menu* myMenu, TrainingData& d, char pNum) 
-  : BasicPage(myMenu, "AI Predictions"), data(d), pNum(pNum) {};
+  : BasicPage(myMenu, "Option Predictions"), data(d), pNum(pNum) {};
   void show();
   TrainingData& data;
   char pNum;

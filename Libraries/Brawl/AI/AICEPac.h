@@ -1,6 +1,8 @@
 #ifndef PROJECTMCODES_AICEPac_H
 #define PROJECTMCODES_AICEPac_H
 
+#include "stddef.h"
+
 struct AICEStringEntryPair {
   int index;
   int offset;
@@ -31,5 +33,6 @@ struct AICEPac {
     int unk3;
 };
 
+#define _get_script_AISCRIPTPACK ((AICEEntry* (*)(void* AICharCE, void* AICommonCE, u32 targetScript)) 0x8091dedc)
 
 #endif //PROJECTMCODES_AICEPac_H

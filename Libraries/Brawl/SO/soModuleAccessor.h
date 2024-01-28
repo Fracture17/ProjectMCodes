@@ -8,10 +8,12 @@
 #include "Brawl/GF/gfTask.h"
 #include "Brawl/SO/StageObject.h"
 #include "soControllerModuleImpl.h"
+#include "soDamageModuleImpl.h"
 #include "soWorkManageModuleImpl.h"
 #include "soPostureModuleImpl.h"
 #include "soMotionModule.h"
 #include "soStatusModuleImpl.h"
+#include "soEffectModuleImpl.h"
 #include "soCollisionAttackModuleImpl.h"
 #include "soCollisionHitModuleImpl.h"
 #include "soKineticModuleGenericImpl.h"
@@ -23,6 +25,7 @@
 #include "soColorBlendModule.h"
 #include "soAnimCmdModuleImpl.h"
 #include "soResourceModuleImpl.h"
+#include "soTeamModuleImpl.h"
 
 
 struct StageObject;
@@ -50,43 +53,52 @@ struct soModuleAccessor {
     //0x10 + 0xC = 0x1C
     soGroundModuleImpl* groundModule;
 
-    char _spacer3[0x28 - 0x1C - 4];
+    char _spacer3[0x24 - 0x1C - 4];
+    //0x18 + 0xC = 0x24
+    soTeamModuleImpl* teamModule;
     //0x1C + 0xC = 0x28
     soCollisionAttackModuleImpl* collisionAttackModule;
-    //0x1C + 0xC = 0x2C
+    //0x20 + 0xC = 0x2C
     soCollisionHitModuleImpl* collisionHitModule;
-    char _spacer4[0x50 - 0x2C - 4];
+
+    //0x38 + 0xC = 0x44
+    char _spacer4[0x44 - 0x2C - 4];
+    soDamageModuleImpl* damageModuleImpl;
+
+    char _spacer5[0x50 - 0x44 - 4];
     // 0x44 + 0xC = 0x50
     ftStopModuleImpl* ftStopModule;
 
-    char _spacer5[0x68 - 0x50 - 4];
+    char _spacer6[0x68 - 0x50 - 4];
     //0x5C + 0xC = 0x68
     soControllerModuleImpl* controllerModule;
-    char _spacer6[0x70 - 0x68 - 4];
+    char _spacer7[0x70 - 0x68 - 4];
     //0x64 + 0xC = 0x70
     soWorkManageModuleImpl* workModule;
-    char _spacer7[0x78 - 0x70 - 4];
+    char _spacer8[0x78 - 0x70 - 4];
     // 0x6C + 0xC = 0x78
     soAnimCmdModuleImpl* animCmdModule;
-    char _spacer8[0x7C - 0x78 - 4];
+    char _spacer9[0x7C - 0x78 - 4];
     //0x70 + 0xC = 0x7C
     soStatusModuleImpl* statusModule;
-    char _spacer9[0x88 - 0x7C - 4];
+    char _spacer10[0x88 - 0x7C - 4];
     //0x7C + 0xC = 0x88
     soKineticModuleImpl* kineticModule;
-    char _spacer10[0x90 - 0x88 - 4];
+    char _spacer11[0x90 - 0x88 - 4];
     //0x84 + 0xC = 0x90
     soGenerateArticleManageModuleImpl* generateArticleManageModule;
-    char _spacer11[0xB4 - 0x90 - 4];
+    //0x88 + 0xC = 0x94
+    soEffectModuleImpl* effectModule;
+    char _spacer12[0xB4 - 0x94 - 4];
     //0xA8 + 0xC = 0xB4
     soItemManageModuleImpl* itemManageModule;
-    char _spacer12[0xB8 - 0xB4 - 4];
+    char _spacer13[0xB8 - 0xB4 - 4];
     //0xAC + 0xC = 0xB8
     soColorBlendModule* colorBlendModule;
-    char _spacer13[0xD0 - 0xB8 - 4];
+    char _spacer14[0xD0 - 0xB8 - 4];
     //0xC4 + 0xC = 0xD0
     ftParamCustomizeModuleImpl* paramCustomizeModule;
-    char _spacer14[4];
+    char _spacer15[4];
     // 0xCC + 0xC = 0xD8
     soModuleAccessor * moduleEnumeration;
 };

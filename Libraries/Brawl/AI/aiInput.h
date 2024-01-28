@@ -12,6 +12,38 @@ struct AiInput;
 struct AiScriptData;
 struct FtEntry;
 
+enum aimd_value : int {
+    md_none=0,
+    md_attack=1,
+    md_defend=2,
+    md_return=3 /* recovery */,
+    md_down=4,
+    md_away_5=5,
+    md_chase_6=6,
+    md_away_7=7,
+    md_unique=8,
+    md_ladder=9,
+    md_piyo=10,
+    md_chase_b=11,
+    md_drop_get=12,
+    md_item_shoot=13,
+    md_dragoon=14,
+    md_final=15,
+    md_hammer=16,
+    md_catch=17,
+    md_swim=18,
+    md_glide=19,
+    md_relax=20,
+    md_slide=21,
+    md_away_16=22,
+    md_nana_chase_popo=121,
+    md_nana_tech=123,
+    md_nana_return=124 /* nana recovery */,
+    md_nana_ladder=125,
+    md_nana_grabbing=126,
+    md_nana_water=127
+};
+
 // p2 @ 812ddd00
 // size: 0x274
 struct AiInput {

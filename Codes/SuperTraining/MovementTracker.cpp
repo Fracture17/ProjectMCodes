@@ -2,7 +2,10 @@
 #include "Containers/vector.h"
 
 void MovementTracker::reset() {
-  for (int i = 0; i < MOV_LEN; i++) actionCache[i] = MOV_CACHE_RESET;
+  for (int i = 0; i < MOV_LEN; i++) {
+    weightCache[i] = MOV_CACHE_RESET;
+    chanceCache[i] = MOV_CACHE_RESET;
+  }
   for (int i = 0; i < ACTION_COUNT; i++) {
     actionTracker[i] = 0;
     timeTracker[i] = 0;
@@ -14,6 +17,7 @@ void MovementTracker::reset() {
     movTracker[i] = -1;
   }
   idx = 0;
+  weightCacheTotal = 0;
 };
 
 void MovementTracker::undoLastAction() {
@@ -26,10 +30,14 @@ s16 MovementTracker::getCurrentMov() {
 }
 
 unsigned char actionToMov(int action) {
-  if ((0x24 <= action && action <= 0x33) || action > 0x112) {
+  if ((0x24 <= action && action <= 0x33) || action >= 0x112) {
     return MOV_ATTACK; // (action > 0x112) ? MOV_ATTACK : action;
   } else if (action >= 0x3D && action <= 0x4C) {
     return MOV_HITSTUN;
+  } else if (action >= 0x4E && action <= 0x52) {
+    return MOV_ROLL;
+  } else if (action == 0x53) {
+    return MOV_ATTACK;
   } else if (action >= 0x46 && action <= 0x55) {
     return MOV_MISSEDTECH;
   }
@@ -54,18 +62,22 @@ unsigned char actionToMov(int action) {
     case 0x17:
     case 0x18:
     case 0x19: return MOV_IDLE;
-    case 0x1A: return MOV_SHIELD;
+    // 
+    case 0x1A: 
+    case 0x1B: 
+    case 0x1C: return MOV_SHIELD;
     case 0x21: return MOV_AIRDODGE;
     case 0x1E:
     case 0x1F:
     case 0x20: return MOV_ROLL;
     case 0x60: 
-    case 0x61: return MOV_TECH;
+    case 0x61: return MOV_ROLL;
     case 0x34:
     case 0x36:
     case 0x38: return MOV_GRAB;
     case 0x75: return MOV_IDLE;
     case 0x79: return MOV_JUMP; 
+    case 0x53:
     case 0x76:
     case 0x7F: return MOV_ATTACK;
     case 0x77:
@@ -77,9 +89,13 @@ unsigned char actionToMov(int action) {
 
 // called each frame
 void MovementTracker::incrementTimer() {
-  for (int i = 0; i < MOV_LEN; i++) actionCache[i] = MOV_CACHE_RESET;
+  for (int i = 0; i < MOV_LEN; i++) {
+    weightCache[i] = MOV_CACHE_RESET;
+    chanceCache[i] = MOV_CACHE_RESET;
+  }
+  weightCacheTotal = 0;
   timeTracker[idx] += 1;
-  if (timeTracker[idx] >= ACTION_COUNT) {
+  if (timeTracker[idx] >= 254) {
     copyLatest(actionTracker[idx]);
   }
 }
@@ -154,19 +170,26 @@ float getMovDiffMultiplier(int source, int comparison) {
   return (float)(source == comparison);
 }
 
-void MovementTracker::trackAction(int actionOrSubaction, bool isAction, u8 yDistFloor, u8 xPos, u8 distance, u8 attackChance, u8 shieldChance, s16 otherMov) {
+void MovementTracker::trackAction(int actionOrSubaction, bool isAction) {
   int MOV = actionToMov(actionOrSubaction);
   if (MOV != MOV_NONE) {
     idx += 1;
     if (idx >= ACTION_COUNT) idx = 0;
     actionTracker[idx] = MOV;
     timeTracker[idx] = 0;
-    yDistFloorTracker[idx] = yDistFloor;
-    distanceTracker[idx] = distance;
-    attackChanceTracker[idx] = attackChance;
-    shieldChanceTracker[idx] = shieldChance;
-    xPosTracker[idx] = xPos;
-    movTracker[idx] = otherMov;
+  }
+};
+
+void MovementTracker::updateData(u8 yDistFloor, u8 xPos, u8 distance, u8 attackChance, u8 shieldChance, s16 otherMov) {
+  yDistFloorTracker[idx] = yDistFloor;
+  distanceTracker[idx] = distance;
+  attackChanceTracker[idx] = attackChance;
+  shieldChanceTracker[idx] = shieldChance;
+  xPosTracker[idx] = xPos;
+  movTracker[idx] = otherMov;
+
+  for (int i = 0; i < MOV_LEN; i++) {
+    calcWeight(i);
   }
 };
 
@@ -179,17 +202,14 @@ void MovementTracker::trackAction(int actionOrSubaction, bool isAction, u8 yDist
 // this is not meant to be perfect, rather it is meant to be
 // speed/size-efficient (and simple enough for me to figure out without 
 // technically knowing true ML techniques)
-float MovementTracker::approxChance(float CPULevel, char actionType) {
+void MovementTracker::calcWeight(char actionType) {
   // score is now a float to account for the varying weights
-  if (actionCache[actionType] != MOV_CACHE_RESET) {
-    return actionCache[actionType];
-  }
   float score = 0;
   float totalScore = 0;
   // this is how the AI will be limited based on its level. 
   // higher levels have more access to the wider array, and as such can take
   // more information into account
-  int lookAmount = (CPULevel / 100) * ACTION_COUNT;
+  int lookAmount = ACTION_COUNT;
   // we start at the most recent action and move backwards, decrementing the base
   // score throughout
   int tracker = idx;
@@ -207,8 +227,9 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
   }
 
   // to prevent the AI from reacting instantly
-  int reactionTime = (1 - (CPULevel / 100)) * 45 + 12 + 7 * _randf();
-  if (CPULevel == 101) reactionTime = 0;
+  // int reactionTime = (1 - (CPULevel / 100)) * 45 + 12 + 7 * _randf();
+  // if (CPULevel == 101) reactionTime = 0;
+  int reactionTime = 0;
 
   // create an offset to use instead of 
   int reactionPatchTime = timeTracker[idx];
@@ -246,7 +267,7 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
     // influence of patterns deteriorate over time
     float scoreMultiplier = 1;
     while(offsetTracker != idx && looked < lookAmount) {
-      if (i + 1 != offsets.size() && offsetTracker == offsets[i + 1]) break;
+      // if (i + 1 != offsets.size() && offsetTracker == offsets[i + 1]) break;
       if (startTracker < 0) startTracker = ACTION_COUNT - 1;
       if (offsetTracker < 0) offsetTracker = ACTION_COUNT - 1;
       // pointless to continue because MOV_NONE effectively means uninitalized
@@ -263,12 +284,12 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
       // if the action is the same, then add it to the score
       float diffMultiplier = getMovDiffMultiplier(actionTracker[startTracker], actionTracker[offsetTracker]);
       if (diffMultiplier > 0) {
-        float timeDiff = ((looked == 0) ? reactionPatchTime : timeTracker[startTracker]) - timeTracker[offsetTracker];
-        float yDistFloorDiff = yDistFloorTracker[startTracker] - yDistFloorTracker[offsetTracker];
-        float xDistDiff = distanceTracker[startTracker] - distanceTracker[offsetTracker];
-        u8 attackChanceDiff = attackChanceTracker[startTracker] - attackChanceTracker[offsetTracker];
-        u8 shieldChanceDiff = shieldChanceTracker[startTracker] - shieldChanceTracker[offsetTracker];
-        u8 xPosDiff = xPosTracker[startTracker] - xPosTracker[offsetTracker];
+        s16 timeDiff = ((looked == 0) ? reactionPatchTime : timeTracker[startTracker]) - timeTracker[offsetTracker];
+        s16 yDistFloorDiff = yDistFloorTracker[startTracker] - yDistFloorTracker[offsetTracker];
+        s16 xDistDiff = distanceTracker[startTracker] - distanceTracker[offsetTracker];
+        s16 attackChanceDiff = attackChanceTracker[startTracker] - attackChanceTracker[offsetTracker];
+        s16 shieldChanceDiff = shieldChanceTracker[startTracker] - shieldChanceTracker[offsetTracker];
+        s16 xPosDiff = xPosTracker[startTracker] - xPosTracker[offsetTracker];
         bool movDiff = movTracker[startTracker] != movTracker[offsetTracker];
         // branchless programming go brr :3
         timeDiff *= 1 - ((timeDiff < 0)*2);
@@ -276,12 +297,14 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
         xDistDiff *= 1 - ((xDistDiff < 0)*2);
         attackChanceDiff *= 1 - ((attackChanceDiff < 0)*2);
         shieldChanceDiff *= 1 - ((shieldChanceDiff < 0)*2);
+        // if (actionType == MOV_ATTACK) OSReport("PRE %d: xPosDiff: %d\n", i, xPosDiff);
         xPosDiff *= 1 - ((xPosDiff < 0)*2);
+        // if (actionType == MOV_ATTACK) OSReport("POST %d: xPosDiff: %d\n", i, xPosDiff);
         movDiff *= 1 - ((movDiff < 0)*2);
-        
+      
         using m = MarkovInputs;
         constexpr float totalWeight = m::time.weight + m::xDist.weight + m::yDistFloor.weight + m::attackChance.weight + m::shieldChance.weight + m::xPos.weight + m::mov.weight;
-        #define BIAS(name) m::name.weight * (m::name.tolerence - name ## Diff) / m::name.tolerence
+        #define BIAS(name) m::name.weight * (float)(m::name.tolerence - name ## Diff) / m::name.tolerence
         toAdd *= (
             BIAS(time)
           + BIAS(yDistFloor)
@@ -303,12 +326,45 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
       looked += 1;
     }
   }
-  // we don't want to divide by 0 - that would break the universe and we don't want that
-  // - so we have this check to preven that
-  if (totalScore == 0) return 0;
+  
+  float result = (totalScore == 0) ? 0 : score / totalScore;
+  
   // finally, we divide the score by the total score to get our prediction!
-  actionCache[actionType] = score / totalScore;
-  return score / totalScore;
+  weightCache[actionType] = result;
+  weightCacheTotal += result;
+}
+
+
+float MovementTracker::approxChance(int CPULevel, char actionType) {
+  float chance;
+  if (chanceCache[actionType] != MOV_CACHE_RESET) {
+    chance = chanceCache[actionType];
+  } else {
+    float actionWeight = weightCache[actionType];
+    chance = actionWeight / (weightCacheTotal + (weightCacheTotal == 0));
+    chanceCache[actionType] = chance;
+  }
+  // CPULevel Fuzz
+  if (CPULevel <= 100) {
+    float chanceFuzz = ((95 - CPULevel) * 0.01) * chance * _randf();
+    chanceFuzz *= 0.35;
+    chance -= chanceFuzz;
+  } 
+  return chance;
+};
+
+float MovementTracker::approxCommit(int CPULevel) {
+  float actionWeight = weightCache[MOV_ATTACK] + weightCache[MOV_GRAB];
+  float chance = actionWeight / (weightCacheTotal + (weightCacheTotal == 0));
+  // CPULevel Fuzz
+  if (CPULevel <= 100) {
+    float chanceFuzz = ((95 - CPULevel) * 0.01) * chance * _randf();
+    chanceFuzz * 0.35;
+    chance -= chanceFuzz;
+    // I am very lazy :)
+    // chance *= 1.5;
+  } 
+  return chance;
 };
 
 /**
@@ -345,7 +401,3 @@ float MovementTracker::approxChance(float CPULevel, char actionType) {
  * 
  * out = score / total
 */
-
-float MovementTracker::approxChance(float CPULevel) {
-  return approxChance(CPULevel, MOV_ATTACK);
-}

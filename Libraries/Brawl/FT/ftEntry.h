@@ -11,6 +11,7 @@ struct FtOwner;
 struct FtInput;
 struct AiInput;
 // size: 0x244
+// 926d5ac0
 struct FtEntry {
     // unsigned int getTeam();
     void setFinal(int unk1);
@@ -48,7 +49,7 @@ struct FtEntry {
     char _spacer6[0x58 - 0x50 - 4];
 
     // 0x58
-    unsigned int team;
+    unsigned int ftSlot;
 
     // 0x5C
     unsigned int subCharID;

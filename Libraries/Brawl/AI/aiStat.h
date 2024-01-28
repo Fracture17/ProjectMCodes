@@ -125,23 +125,23 @@ struct AiStat {
             bool unk18 : 1;
             bool unk17 : 1;
 
-            bool unk16 : 1;
-            bool unk15 : 1;
+            bool stat_air_free_1 : 1;
+            bool stat_air_free_2 : 1;
             bool unk14 : 1;
             bool unk13 : 1;
-            bool unk12 : 1;
+            bool stat_air_free_3 : 1;
             bool unk11 : 1;
             bool unk10 : 1;
             bool unk9 : 1;
 
-            bool unk8 : 1;
+            bool stat_gr_free_1 : 1;
             bool unk7 : 1;
             bool unk6 : 1;
-            bool unk5 : 1;
-            bool unk4 : 1;
+            bool stat_gr_free_2 : 1;
+            bool stat_gr_free_3 : 1;
             bool unk3 : 1;
             bool unk2 : 1;
-            bool unk1 : 1;
+            bool stat_gr_free_4 : 1;
         } transitions;
     } transitionBitfield;
 

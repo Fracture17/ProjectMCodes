@@ -11,6 +11,7 @@ struct ArrayVecVTable {
   void** __dtFn;
   void** shiftFn;
   void** popFn;
+  void** clearFn;
   void** unshiftFn;
   void** pushFn;
   void** insertFn;
@@ -35,6 +36,7 @@ struct ArrayVector {
   ~ArrayVector();
   T* shift();
   T* pop();
+  void clear();
   void unshift(T* element);
   void push(T* element);
   void insert(T* element, int index);
@@ -87,6 +89,11 @@ T* ArrayVector<T>::shift() {
 template<class T>
 T* ArrayVector<T>::pop() {
   return ((T* (*)(void* self)) this->vtable1->popFn)(this);
+}
+
+template<class T>
+void ArrayVector<T>::clear() {
+  return ((T* (*)(void* self)) this->vtable1->clearFn)(this);
 }
 
 template<class T>

@@ -19,3 +19,7 @@ bool FtOwner::isCpu() {
 bool FtOwner::hasCurry() {
     return _getCurry_ftOwner(this);
 }
+
+void FtOwner::setCurry(bool curryState) {
+    _setCurry_ftOwner(this, curryState);
+}

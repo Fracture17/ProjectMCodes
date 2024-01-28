@@ -5,7 +5,6 @@
 #ifndef PROJECTMCODES_SOMOTIONMODULE_H
 #define PROJECTMCODES_SOMOTIONMODULE_H
 
-
 struct CHR0 {
     char* getString() {
         auto thisINT = reinterpret_cast<unsigned int>(this);
@@ -77,10 +76,17 @@ struct soAnimChr {
 //     soTransitionModuleImpl_vtable* vtable;
 // };
 
+struct soMotionChangeParam {
+    int kind;
+    float frame;
+    float rate;
+    int SPACER;
+};
+
 struct soMotionModule {
     float getFrame();
     float getEndFrame();
-    void changeMotionRequest(int* subAction);
+    void changeMotionRequest(soMotionChangeParam* params);
 
     char _spacer[0x2C];
     // 0x2C
@@ -107,7 +113,7 @@ struct soMotionModule {
 
 
 #define _getFrame_soMotionModule ((float (*)(soMotionModule* self)) 0x8071f474)
-#define _changeMotionRequest_soMotionModule ((void (*)(soMotionModule* self, int* subAction)) 0x80726cf8)
+#define _changeMotionRequest_soMotionModule ((void (*)(soMotionModule* self, soMotionChangeParam* params)) 0x80726cf8)
 #define _getEndFrame_soMotionModule ((float (*)(soMotionModule* self)) 0x8071f714)
 
 #endif //PROJECTMCODES_SOMOTIONMODULE_H

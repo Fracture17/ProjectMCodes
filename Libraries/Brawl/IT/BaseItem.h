@@ -5,6 +5,67 @@
 #include "Brawl/SO/StageObject.h"
 #include "Brawl/SO/soModuleAccessor.h"
 
+/** 
+ * getParamInt --> getConstantIntCore: 0x5b__ ; 
+ *      GT 0x5dbf = itExtendParamAccesser + 0x1c
+ *      LT 0x59d8 = soValueAccesser
+ *      GT 0x59d8 && LT 0x59e1 = allItParam + (param id - 0x59d9) * 4 + 0x40
+ *      GT 0x5b67 && LT 0x5b76 = itParams + (param id - 0x5b68) * 4 + 0xa8
+ *      GT 0x5bcb && LT 0x5bd3 = switch @ 0x809d8ea0
+ *          0x5BCC:
+ *              Lipstick_flower = getParamInt(lipstick_flower, 0x66ee)
+ *              Beam Sword = getParamInt(Beam_Sword, 0x5e88)
+ *              else = LA-Basic[0x7]
+ *          0x5BCD:
+ *              LA-Basic[0x7]
+ *          0x5BCE:
+ *              getTrait(baseItemPtr) ; not sure how this works lol
+ *          0x5BCF:
+ *              !(Hammer || Golden_Hammer) = 0
+ *              else = LA-Basic[0x0]
+ *          0x5BD0:
+ *              getResult(baseItemPtr)
+ *          0x5BD1:
+ *              Coin = LA-Basic[0x0]
+ *              Bill_Coin_mode = LA-Basic[0x0]
+ *              else = 0
+ *          0x5BD2:
+ *              Vegetable_Summit = 0x1c8e
+ *              Food = LA-Basic[0x0]
+ *              Seed_edible_peanut = 0x67
+ *              else = 0x65
+ *      EQ 0x5b79 = 0
+ *      GT 0x5b79
+ *        EQ 0x5b77 = animParam + 4
+ *        GT 0x5b76 = animParam + 0xc
+ *      ELSE
+ *        EQ 0x5b7b = animParam + 0x3c
+ *        LT 0x5b7b = itParams + 0xec -> 4
+ * indefinite: 0xa7__ ; extendParamAccessor threshold = abe0
+ * float --> getConstantFloatCore: 0xd5_ ;
+ *      LT 0xfa0
+ *          LT 0xbb8 = getConstantFloatCore[valueAccesser]
+ *          LT 0xbb9 || GT 0xbc8
+ *              LT 0xd49 || GT 0xd72
+ *                  !(0xdad) = 0.0
+ *                  else =
+ *                      getTrait()
+ *                      & 0x80
+ *                          Apple_Green_Greens (iVar3 = 0x1e14)
+ *                          Maxim_Tomato (iVar3 = 0x16a8)
+ *                          Heart_Container
+ *                              EQ variation 1 = 1000
+ *                              else (iVar3 = 0x15e0)
+ *                          Food = (iVar3 = variation + 0x1c20)
+ *                          Seed_edible_peanut (iVar3 = 0x20d0)
+ *                          Vegetable_Summit = (iVar3 = variation + 0x1edc)
+ *                          else = 0.0
+ *                      = getConstantFloat[soValueAccesser](itModuleAccesser, iVar3, 0)
+ *              else = itParams + (param ID - 0xd49) * 4
+ *          else = itAllParam + (param ID - 0xbb9) * 4
+ *      else = itExtendParamAccessor + 0x18
+ */ 
+
 enum itemIdName {
     Assist_Trophy = 0x00,
     Franklin_Badge = 0x01,

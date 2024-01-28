@@ -11,3 +11,7 @@ grGimmick* Stage::getGround(int modelId) {
 int Stage::getGroundNum() {
     return getGroundNum_Stage(this);
 }
+
+double Stage::getFrameRuleTime() {
+    return getFrameRuleTime_Stage(this);
+}

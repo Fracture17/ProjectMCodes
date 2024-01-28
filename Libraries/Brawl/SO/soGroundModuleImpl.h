@@ -40,29 +40,29 @@ struct grCollShape_vtable {
 };
 
 struct grCollShape {
-    VTABLE_METHOD(void, init)
-    VTABLE_METHOD(void, getType)
-    VTABLE_METHOD(void, getAABBox)
-    VTABLE_METHOD_1ARG(void, setDownPos, Vec2f*, newPos)
-    VTABLE_METHOD(void, setLeftPos)
-    VTABLE_METHOD(void, setRightPos)
-    VTABLE_METHOD(void, setCenterPos)
-    VTABLE_METHOD(void, setTopPos)
-    VTABLE_METHOD(void, getCenterPos)
-    VTABLE_METHOD(void, getDownPos)
-    VTABLE_METHOD(void, getLeftPos)
-    VTABLE_METHOD(void, getRightPos)
-    VTABLE_METHOD(void, getTopPos)
-    VTABLE_METHOD(void, move)
-    VTABLE_METHOD(void, set)
-    VTABLE_METHOD(void, getHeight)
-    VTABLE_METHOD(void, getWidth)
-    VTABLE_METHOD(void, test)
-    VTABLE_METHOD(void, updateAABBox)
-    VTABLE_METHOD(void, setLR)
-    VTABLE_METHOD(void, setUD)
-    VTABLE_METHOD(void, setLR1)
-    VTABLE_METHOD(void, modifyDownY)
+    VTABLE_METHOD(grCollShape*, void, init)
+    VTABLE_METHOD(grCollShape*, void, getType)
+    VTABLE_METHOD(grCollShape*, void, getAABBox)
+    VTABLE_METHOD_1ARG(grCollShape*, void, setDownPos, Vec2f*, newPos)
+    VTABLE_METHOD(grCollShape*, void, setLeftPos)
+    VTABLE_METHOD(grCollShape*, void, setRightPos)
+    VTABLE_METHOD(grCollShape*, void, setCenterPos)
+    VTABLE_METHOD(grCollShape*, void, setTopPos)
+    VTABLE_METHOD(grCollShape*, void, getCenterPos)
+    VTABLE_METHOD(grCollShape*, void, getDownPos)
+    VTABLE_METHOD(grCollShape*, void, getLeftPos)
+    VTABLE_METHOD(grCollShape*, void, getRightPos)
+    VTABLE_METHOD(grCollShape*, void, getTopPos)
+    VTABLE_METHOD(grCollShape*, void, move)
+    VTABLE_METHOD(grCollShape*, void, set)
+    VTABLE_METHOD(grCollShape*, void, getHeight)
+    VTABLE_METHOD(grCollShape*, void, getWidth)
+    VTABLE_METHOD(grCollShape*, void, test)
+    VTABLE_METHOD(grCollShape*, void, updateAABBox)
+    VTABLE_METHOD(grCollShape*, void, setLR)
+    VTABLE_METHOD(grCollShape*, void, setUD)
+    VTABLE_METHOD(grCollShape*, void, setLR1)
+    VTABLE_METHOD(grCollShape*, void, modifyDownY)
     
     grCollShape_vtable* vtable;
 };
@@ -74,8 +74,12 @@ struct grCollStatus {
 
     char _spacer2[0x6E - 0x60 - 4];
 
-    // 0x14
-    char airGroundState;
+    // 0x6E
+    char targetLineCategory;
+
+    char _spacer3[0x75 - 0x6E - 1];
+    // 0x75
+    char touchFlags;
 };
 
 
@@ -117,7 +121,7 @@ struct soGroundShapeImpl {
     STATIC_METHOD(0x8073a8c8, soGroundShapeImpl, void, update)
     STATIC_METHOD(0x8073a958, soGroundShapeImpl, void, getCorrectPos)
     STATIC_METHOD(0x8073ab00, soGroundShapeImpl, void, attach)
-    STATIC_METHOD(0x8073ab28, soGroundShapeImpl, void, isAttach)
+    STATIC_METHOD(0x8073ab28, soGroundShapeImpl, bool, isAttach)
     STATIC_METHOD(0x8073ab44, soGroundShapeImpl, void, detach)
     STATIC_METHOD(0x8073ab68, soGroundShapeImpl, void, setAttackPoint)
     STATIC_METHOD(0x8073abb4, soGroundShapeImpl, void, getAttackPointBreak)

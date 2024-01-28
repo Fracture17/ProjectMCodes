@@ -11,7 +11,10 @@
 
 struct scMelee {
 
-    char _spacer[0x24];
+    char** sceneName;
+    void* vtable;
+
+    void* players[7];
 
     stLoaderStage* stageLoader;
 

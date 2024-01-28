@@ -25,7 +25,10 @@
 // displays a heatmap of where hitboxes go
 #define HITBOX_HEATMAP_PAGE 1
 // used to help figure out the range of projectiles, attacks, etc
-#define HITBOX_HEATMAP_BOUNDS 0
+#define HITBOX_HEATMAP_BOUNDS 1
+
+// toggles the inclusion of movement tracking page
+#define SHOULD_INCLUDE_MOVEMENT_TRACKER 1
 
 // toggles the inclusion of any AI mods at all
 #define SHOULD_INCLUDE_AI 1

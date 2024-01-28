@@ -1,0 +1,41 @@
+class ftStatusUniqProcess...
+  ...GimmickLadder
+    function adjustLadderMovement
+      getFloat(0x21..4)
+      setFloat(0x21..4)
+      getFloat(0x21..5)
+      setFloat(0x21..5)
+  ...Rebirth
+    function attachEffect
+      getConstantFloat(0xbea)
+      setInt(0x20..3) // effect ID
+  ...WalkUtil
+    function calcWalkSpeed
+      getConstantFloat(0xbbc)
+      setFloat(param_8)
+
+class ftPopoUniqProcess...
+  ...Rebirth
+    function attachEffect
+      getInt(0x10..0)
+  
+
+class ftYoshi
+  class SpecialS
+    function checkCancel
+      
+class ftLink
+  class Final
+    function catch_success
+      getInt(0x20..3)
+
+class ftToonLink
+  class Final
+    function catch_success
+      getInt(0x20..3)
+    
+class ftDiddy
+  class SpecialBarrelJet
+    function changeKineticAir
+      getParam(0x1b)
+    

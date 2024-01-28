@@ -270,7 +270,7 @@ protected:
 
 class StringOption : public StandardOption { 
 public:
-  StringOption(const char* name, const char* value) : value(value) {
+  StringOption(const char* name, const char** value) : value(value) {
     this->name = name;
     this->canModify = false;
   }
@@ -281,7 +281,7 @@ public:
   void render(TextPrinter* printer, char* buffer);
 
 protected:
-  const char* value;
+  const char** value;
 };
 
 class TempLogOption : public StandardOption { 
@@ -298,6 +298,7 @@ public:
 protected:
   const char* name;
 };
+
 
 class NamedIndexOption : public StandardOption {
 public: 

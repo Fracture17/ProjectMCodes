@@ -39,7 +39,7 @@ void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
     // {"fall", predictions.FALL, 0xFFFFFFFF},
     {"shield", predictions.SHIELD, 0x00FF00FF},
     // {"airdodge", predictions.AIRDODGE, 0xFFFFFFFF},
-    {"roll", predictions.ROLL, 0xFFFFFFFF},
+    {"roll", predictions.ROLL, 0xFFFF00FF},
     // {"tech", predictions.TECH, 0xFFFFFFFF},
     {"attack", predictions.ATTACK, 0xFF0000FF},
     {"grab", predictions.GRAB, 0x0088FFFF}
@@ -80,6 +80,7 @@ TrainingData playerTrainingData[] = {
   TrainingData(),
   TrainingData()
 };
+TrainingDataOptions DEFAULT_TRAININGDATA_OPTIONS = TrainingDataOptions();
 GlobalCustomData GCD;
 
 CurrentItemParams currentItemParams = CurrentItemParams();
@@ -185,6 +186,34 @@ PlayerPage::PlayerPage(Menu*& myMenu, char pNum) : Page(myMenu), playerNum(pNum)
   sprintf(this->title, "Player %d", pNum + 1);
 }
 
+//////////////////////////////////
+// ResetMenuOption
+//////////////////////////////////
+void ResetMenuOption::select() { 
+  memcpy(&playerTrainingData[pNum].options, &DEFAULT_TRAININGDATA_OPTIONS, sizeof(TrainingDataOptions));
+};
+void ResetMenuOption::render(TextPrinter* printer, char* buffer) {
+  sprintf(buffer, (isCurrent) ? "(A) %s !" : "%s !", name);
+  printer->setTextColor((isCurrent) ? 0xFF0000FF : 0xFF8888DD);
+  printer->printLine(buffer);
+};
+
+//////////////////////////////////
+// MeleeToggleOption
+//////////////////////////////////
+void MeleeToggleOption::modify(float amount) {
+  memset(&(data.options.controlCodes), (amount > 0), sizeof(ControlCodes));
+}
+void MeleeToggleOption::render(TextPrinter* printer, char* buffer) {
+  ControlCodes CCodesTemp = ControlCodes();
+  memset(&CCodesTemp, true, sizeof(ControlCodes));
+  bool isEnabled = (memcmp(&CCodesTemp, &(data.options.controlCodes), sizeof(ControlCodes)) == 0);
+  printer->setTextColor((isCurrent) ? 0xFFFF00FF : 0xFFFF88DD);
+  sprintf(buffer, "%s: %s", name, isEnabled ? "on" : "off");
+  printer->printLine(buffer);
+}
+
+
 void PlayerPage::show() {
     // if (pNum == 0) {
     //   Page* AIRangePage = new Page(fudgeMenu);
@@ -204,11 +233,18 @@ void PlayerPage::show() {
     //   this->addOption(new PageLink("AIRangeFinder", AIRangePage));
     // }
 
+    // #if PLAYER_PHYSICS_PAGE == 1
+      Page* physicsPage = new PlayerPhysicsPage(menu, data);
+      // this->data->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);
+      // PSAData->addOption(this->data->debug.psaData.subactionSwitcher);
+      this->addOption(new PageLink(physicsPage->getTitle(), physicsPage));
+    // #endif
+
     #if AI_DEBUGGING_PAGE == 1
       Page* AIDP = new AIDebugPage(menu, data);
       this->addOption(new PageLink(AIDP->getTitle(), AIDP));
     #endif
-
+    
     #if COMBO_TRAINER_PAGE == 1
       Page* comboTrainerPage = new ComboTrainerPage(menu, data);
       this->addOption(new PageLink(comboTrainerPage->getTitle(), comboTrainerPage));
@@ -224,20 +260,24 @@ void PlayerPage::show() {
       this->addOption(new PageLink(heatmapPage->getTitle(), heatmapPage));
     #endif
 
-    #if AI_STAT_PAGES == 1
+    #if AI_STAT_PAGES == 1 || SHOULD_INCLUDE_MOVEMENT_TRACKER == 1
       Page* predictionPage = new AIPredictionPage(menu, data, playerNum);
       this->addOption(new PageLink(predictionPage->getTitle(), predictionPage));
+    #endif 
 
+    #if AI_STAT_PAGES == 1
       Page* AIPP = new AIPersonalityPage(menu, data);
       this->addOption(new PageLink(AIPP->getTitle(), AIPP));
     #endif
 
-    this->addOption(new BoolOption("actionable overlay", data.actionableOverlay));
-    this->addOption(new IntOption("actionable sound", data.actionableSE, -1, 0xFF));
-    this->addOption(new IntOption("input display", data.inputDisplayType, 0, 2));
+    this->addOption(new BoolOption("actionable overlay", data.options.actionableOverlay));
+    this->addOption(new IntOption("actionable sound", data.options.actionableSE, -1, 0xFF));
+    this->addOption(new IntOption("input display", data.options.inputDisplayType, 0, 2));
     #if CONTROLLER_INFO_PAGE  == 1
-      this->addOption(new NamedIndexOption("type", ControllerInfoPage::dataType, data.inputDisplayType, 3));
+      this->addOption(new NamedIndexOption("type", ControllerInfoPage::dataType, data.options.inputDisplayType, 3));
     #endif
+
+    this->addOption(new ResetMenuOption(playerNum));
 
     #if PSA_DATA_PAGE == 1
       Page* PSAData = new PSADataPage(menu, data);

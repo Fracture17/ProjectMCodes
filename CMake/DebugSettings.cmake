@@ -13,8 +13,27 @@ set(VERBOSE 1)
 
 # Replicates -Os with broken flags excluded
 set(CMAKE_CXX_FLAGS 
-  "-O1 -ggdb3 -nostartfiles -fomit-frame-pointer -fno-unwind-tables -fno-stack-check -fno-function-cse -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps=obj -fverbose-asm -fno-threadsafe-statics \
-    -fcaller-saves \
+  "-O1 -ggdb3 \
+    -nostartfiles \
+    -fomit-frame-pointer \
+    -fno-unwind-tables \
+    -fno-stack-check \
+    -fno-function-cse \
+    -ffunction-sections \
+    -fdata-sections \
+    -fno-exceptions \
+    -fno-rtti \
+    -fno-asynchronous-unwind-tables \
+    -std=c++17 \
+    -fno-builtin \
+    -ffreestanding \
+    -mcpu=750 \
+    -mmultiple \
+    -fno-inline \
+    -save-temps=obj \
+    -fverbose-asm \
+    -fno-threadsafe-statics \
+    \
     -fcode-hoisting \
     -fcrossjumping \
     -fcse-follow-jumps  -fcse-skip-blocks \
@@ -34,17 +53,37 @@ set(CMAKE_CXX_FLAGS
     -fpeephole2 \
     -frerun-cse-after-loop  \
     -fsched-interblock  -fsched-spec \
+    \
     -fstore-merging \
     -fstrict-aliasing \
     -fthread-jumps \
     -ftree-builtin-call-dce \
-    -ftree-loop-vectorize \
-    -ftree-pre \
     -ftree-slp-vectorize \
     -ftree-switch-conversion  -ftree-tail-merge \
     -ftree-vrp \
     -finline-functions \
+    \
+    -fschedule-insns2 \
+    -fvect-cost-model=cheap \
+    \
+    -fgcse-after-reload \
+    -floop-interchange \
+    -floop-unroll-and-jam \
+    -fpredictive-commoning \
+    -fsplit-loops \
+    -ftree-loop-distribution \
   ")
+
+  # enbiggens size
+  # -ftree-loop-vectorize \
+  # -ftree-pre \
+
+
+  # -fipa-bit-cp  -fipa-cp  -fipa-icf \
+  # -fipa-cp-clone \
+  # -fipa-ra \
+  # -fipa-sra \
+  # -fipa-vrp \
 
 ## UNCOMMENT FOR DEBUGGING
 # set(CMAKE_CXX_FLAGS "-Og -ggdb3 -nostartfiles -fomit-frame-pointer -fno-unwind-tables -fno-stack-check -fno-function-cse -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps=obj -fverbose-asm -fno-threadsafe-statics")
@@ -54,6 +93,29 @@ set(CMAKE_CXX_FLAGS
 
 # optimizations and what they do:
 # https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
+
+# -ggdb3 \
+# -nostartfiles \
+# -fomit-frame-pointer \
+# -fno-unwind-tables \
+# -fno-stack-check \
+# -fno-function-cse \
+# -ffunction-sections \
+# -fdata-sections \
+# -fno-exceptions \
+# -fno-rtti \
+# -fno-asynchronous-unwind-tables \
+# -std=c++17 \
+# -fno-builtin \
+# -ffreestanding \
+# -mcpu=750 \
+# -mmultiple \
+### POSSIBLY CAN GO WITHOUT
+### -fno-inline \
+# -save-temps=obj \
+# -fverbose-asm \
+# -fno-threadsafe-statics \
+# \
 
 # FULL Os OPTIMIZATIONS:
 # -fcaller-saves \

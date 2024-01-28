@@ -186,7 +186,7 @@ void initializeAITargetingData(int currPlayerAction, soPostureModuleImpl* postur
   }
 }
 void collectAITargetingData(double radius, float pos1[3], float pos2[3], unsigned int* colour) {
-  if (currPlayerNum == 0 && !playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].heatmapOpts.active && (*colour == hitboxColour || *colour == grabboxColour)) {
+  if (currPlayerNum == 0 && !playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].options.heatmap.active && (*colour == hitboxColour || *colour == grabboxColour)) {
     if (-radius < pos1[2] && pos1[2] < radius) {
       if (pos1[0] - radius < fudgeAI.xMin) fudgeAI.xMin = pos1[0] - radius;
       if (pos1[0] + radius > fudgeAI.xMax) fudgeAI.xMax = pos1[0] + radius;
@@ -245,9 +245,10 @@ extern "C" {
   void storeRenderingData(double radius, float scaleMatrix[3][4], float pos1[3], float pos2[3], unsigned int* colour1, unsigned int* colour2, float viewingMatrix[3][4]) {
     collectAITargetingData(radius, pos1, pos2, colour1);
     
-    if (!playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].heatmapOpts.active && *colour1 == hitboxColour) {
-      auto opts = playerTrainingData[currPlayerNum].heatmapOpts;
-      auto currData = ((*opts.data).size() == 0) ? nullptr : (*opts.data)[(*opts.data).size() - 1];
+    if (!playersProcessed[currPlayerNum] && playerTrainingData[currPlayerNum].options.heatmap.active && *colour1 == hitboxColour) {
+      auto opts = playerTrainingData[currPlayerNum].options.heatmap;
+      auto heatmapData = playerTrainingData[currPlayerNum].heatmapData;
+      auto currData = ((*heatmapData).size() == 0) ? nullptr : (*heatmapData)[(*heatmapData).size() - 1];
       if (currData == nullptr || currData->frame < framesAfterActionableGround[currPlayerNum]) {
         // this process of manually allocating data is done to test to see if we ARE able to do so in the first place
         // without it, we might end up crashing the game by calling a constructor and trying to write to a location
@@ -257,16 +258,16 @@ extern "C" {
         // function to allocate data
         void* test = malloc((sizeof(HitboxDataFrame) + sizeof(HitboxData) * 4) * 8);
 
-        while (test == nullptr && (*opts.data).size() > 0) {
-          // bubbleCount -= (*opts.data)[0]->hitboxes.size();
-          (*opts.data)[0]->hitboxes.clear();
-          (*opts.data).erase(0);
+        while (test == nullptr && (*heatmapData).size() > 0) {
+          // bubbleCount -= (*heatmapData)[0]->hitboxes.size();
+          (*heatmapData)[0]->hitboxes.clear();
+          (*heatmapData).erase(0);
           test = malloc(sizeof(HitboxDataFrame) + sizeof(HitboxData));
         } 
         
         if (test != nullptr) {
           free(test);
-          (*opts.data).push(new HitboxDataFrame {
+          (*heatmapData).push(new HitboxDataFrame {
             vector<HitboxData *>(),
             framesAfterActionableGround[currPlayerNum],
             opts.lifetime
@@ -275,7 +276,7 @@ extern "C" {
           free(test);
           return;
         }
-        currData = (*opts.data)[(*opts.data).size() - 1];
+        currData = (*heatmapData)[(*heatmapData).size() - 1];
       }
       else if (currData->hitboxes[0]->pos1[0] == pos1[0] && currData->hitboxes[0]->pos1[1] == pos1[1]) {
         playersProcessed[currPlayerNum] = true;
@@ -288,10 +289,10 @@ extern "C" {
       HitboxData* hbd = (HitboxData*) malloc(sizeof(HitboxData));
       
       // OSReport("bubble count: %d\n", bubbleCount);
-      while (hbd == nullptr && (*opts.data).size() > 0) {
-        // bubbleCount -= (*opts.data)[0]->hitboxes.size();
-        (*opts.data)[0]->hitboxes.clear();
-        (*opts.data).erase(0);
+      while (hbd == nullptr && (*heatmapData).size() > 0) {
+        // bubbleCount -= (*heatmapData)[0]->hitboxes.size();
+        (*heatmapData)[0]->hitboxes.clear();
+        (*heatmapData).erase(0);
         hbd = (HitboxData*) malloc(sizeof(HitboxData));
       } 
       
@@ -311,16 +312,23 @@ extern "C" {
 };
 
 void renderAllStoredHitboxes() {
+  // OSReport("Here: 1\n");
   startNormalDraw();
+  // OSReport("Here: 2\n");
   for (int i = 0; i < 4; i++) {
-    if (!playerTrainingData[i].heatmapOpts.active) continue;
-    auto heatmapOpts = playerTrainingData[i].heatmapOpts;
-    auto size = (*heatmapOpts.data).size();
+    // OSReport("Here: 3\n");
+    if (!playerTrainingData[i].options.heatmap.active) continue;
+    auto heatmapOpts = playerTrainingData[i].options.heatmap;
+    auto size = (*playerTrainingData[i].heatmapData).size();
     if (size == 0) continue;
+    // OSReport("Here: 4\n");
     for (int j = size - 1; j >= 0; j--) {
-      auto currData = (*heatmapOpts.data)[j];
+      // OSReport("Here: 5\n");
+      auto currData = (*playerTrainingData[i].heatmapData)[j];
       auto hbVecSize = currData->hitboxes.size();
+      // OSReport("Here: 6\n");
       for (int k = 0; k < hbVecSize; k++) {
+        // OSReport("Here: 7\n");
         auto hb = currData->hitboxes[k];
         auto colour = hb->colour1;
         int changeAmount = (float) currData->frame / ((float) heatmapOpts.colorChangeFrame / 255.0);
@@ -328,29 +336,24 @@ void renderAllStoredHitboxes() {
         else colour.red -= changeAmount;
         if ((int) colour.blue + changeAmount > 255) { colour.blue = 255; }
         else colour.blue += changeAmount;
+        // OSReport("Here: 8\n");
 
         displayBubble(hb->radius, hb->scaleMatrix, hb->pos1, hb->pos2, &colour.value, &colour.value, CAMERA_MANAGER->cameras[0].modelView);
-
-
-        // Assists fudge with AI stuff
-        if (i == 0) {
-          
-        }
       }
     }
   }
 }
 void storedHitboxTick() {
   for (int i = 0; i < 4; i++) {
-    auto heatmapOpts = playerTrainingData[i].heatmapOpts;
-    auto size = (*heatmapOpts.data).size();
+    auto heatmapOpts = playerTrainingData[i].options.heatmap;
+    auto size = (*playerTrainingData[i].heatmapData).size();
     if (size == 0) continue;
     for (int j = size - 1; j >= 0; j--) {
-      auto currData = (*heatmapOpts.data)[j];
-      if (!playerTrainingData[i].heatmapOpts.active || -- currData->life <= 0) {
+      auto currData = (*playerTrainingData[i].heatmapData)[j];
+      if (!heatmapOpts.active || -- currData->life <= 0) {
         // bubbleCount -= currData->hitboxes.size();
         currData->hitboxes.clear();
-        (*heatmapOpts.data).erase(j);
+        (*playerTrainingData[i].heatmapData).erase(j);
       }
     }
   }

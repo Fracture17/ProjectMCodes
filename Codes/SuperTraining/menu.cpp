@@ -259,7 +259,7 @@ void StringOption::modify(float amount) {}
 void StringOption::select() {}
 void StringOption::deselect() {}
 void StringOption::render(TextPrinter* printer, char* buffer) {
-  sprintf(buffer, "%s: %s", name, value);
+  sprintf(buffer, "%s: %s", name, *value);
   printer->printLine(buffer);
 }
 
@@ -274,6 +274,7 @@ void TempLogOption::render(TextPrinter* printer, char* buffer) {
   sprintf(buffer, (isCurrent) ? "(A) %s !" : "%s !", name);
   printer->printLine(buffer);
 };
+
 
 //////////////////////////////////
 // NamedIndexOption

@@ -47,7 +47,7 @@ struct GameGlobal {
 //modified with get and setRumbleSetting
 #define PORT_RUMBLE_SETTINGS ((bool*)(0x9017be60))
 
-#define GAME_GLOBAL ((const GameGlobal*)(0x90181300))
+#define GAME_GLOBAL ((const GameGlobal*) (0x90181300))
 
 enum Training_Option : int {
     JUMP = 0x0,

@@ -9,6 +9,7 @@
 #include "Containers/Vec3f.h"
 #include "Containers/Vec2f.h"
 #include "Containers/ArrayVector.h"
+#include "Containers/PropertyVector.h"
 
 struct soKineticEnergyNormal_vtable {
     char*** objDescriptor;
@@ -49,22 +50,22 @@ struct soKineticEnergyNormal_vtable {
 };
 
 struct soKineticEnergyNormal {
-    VTABLE_METHOD(void, isNull)
-    VTABLE_METHOD(void, updateEnergy)
-    VTABLE_METHOD(xyDouble, getSpeed)
-    VTABLE_METHOD(void, getSpeed3f)
-    VTABLE_METHOD(void, getRotation)
-    VTABLE_METHOD(void, resetEnergy)
-    VTABLE_METHOD(void, clearSpeed)
-    VTABLE_METHOD(void, clearRotSpeed)
-    VTABLE_METHOD_1ARG(void, mulSpeed, Vec2f*, multiplier)
-    VTABLE_METHOD(void, mulAccel)
-    VTABLE_METHOD(void, reflectSpeed)
-    VTABLE_METHOD(void, reflectAccel)
-    VTABLE_METHOD(void, onConsiderGroundFriction)
-    VTABLE_METHOD(void, offConsiderGroundFriction)
-    VTABLE_METHOD(void, __dt)
-    VTABLE_METHOD(void, init)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, isNull)
+    VTABLE_METHOD_1ARG(soKineticEnergyNormal*, void, updateEnergy, struct soModuleAccessor*, accesser)
+    VTABLE_METHOD(soKineticEnergyNormal*, xyDouble, getSpeed)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, getSpeed3f)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, getRotation)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, resetEnergy)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, clearSpeed)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, clearRotSpeed)
+    VTABLE_METHOD_1ARG(soKineticEnergyNormal*, void, mulSpeed, Vec2f*, multiplier)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, mulAccel)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, reflectSpeed)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, reflectAccel)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, onConsiderGroundFriction)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, offConsiderGroundFriction)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, __dt)
+    VTABLE_METHOD(soKineticEnergyNormal*, void, init)
 
     soKineticEnergyNormal_vtable* vtable;
 
@@ -75,6 +76,9 @@ struct soKineticEnergyNormal {
 
     // 0xC
     float yVel;
+
+    // 0x10
+    float yAccel;
 };
 
 struct soKineticEnergyVector {
@@ -150,36 +154,36 @@ enum KineticEnergyType {
 
 struct soModuleAccessor;
 struct soKineticModuleImpl {
-    VTABLE_METHOD(void, isNull)
-    VTABLE_METHOD(void, activate)
-    VTABLE_METHOD(void, deactivate)
-    VTABLE_METHOD(void, addEnergy)
-    VTABLE_METHOD_1ARG(void, eraseEnergy, int, index)
-    VTABLE_METHOD(void, eraseEnergyAll)
-    VTABLE_METHOD_1ARG(soKineticEnergyNormal*, getEnergy, int, index)
-    VTABLE_METHOD_1ARG(void, isContain, soKineticEnergyNormal_vtable**, kineticEnergyInstance)
-    VTABLE_METHOD(void, updateEnergy)
-    VTABLE_METHOD(void, clearSpeedAll)
-    VTABLE_METHOD(void, suspendEnergyAll)
-    VTABLE_METHOD(void, resumeEnergyAll)
-    VTABLE_METHOD(void, unableEnergyAll)
+    VTABLE_METHOD(soKineticModuleImpl*, void, isNull)
+    VTABLE_METHOD(soKineticModuleImpl*, void, activate)
+    VTABLE_METHOD(soKineticModuleImpl*, void, deactivate)
+    VTABLE_METHOD(soKineticModuleImpl*, void, addEnergy)
+    VTABLE_METHOD_1ARG(soKineticModuleImpl*, void, eraseEnergy, int, index)
+    VTABLE_METHOD(soKineticModuleImpl*, void, eraseEnergyAll)
+    VTABLE_METHOD_1ARG(soKineticModuleImpl*, soKineticEnergyNormal*, getEnergy, int, index)
+    VTABLE_METHOD_1ARG(soKineticModuleImpl*, void, isContain, soKineticEnergyNormal_vtable**, kineticEnergyInstance)
+    VTABLE_METHOD(soKineticModuleImpl*, void, updateEnergy)
+    VTABLE_METHOD(soKineticModuleImpl*, void, clearSpeedAll)
+    VTABLE_METHOD(soKineticModuleImpl*, void, suspendEnergyAll)
+    VTABLE_METHOD(soKineticModuleImpl*, void, resumeEnergyAll)
+    VTABLE_METHOD(soKineticModuleImpl*, void, unableEnergyAll)
     // 1 args
-    VTABLE_METHOD(void, getSumSpeed)
+    VTABLE_METHOD(soKineticModuleImpl*, xyDouble, getSumSpeed)
     // 2 args
-    VTABLE_METHOD(void, getSumSpeed3f)
+    VTABLE_METHOD(soKineticModuleImpl*, void, getSumSpeed3f)
     // 1 args
-    VTABLE_METHOD(void, getSumRotation)
+    VTABLE_METHOD(soKineticModuleImpl*, void, getSumRotation)
     // 2 args
-    VTABLE_METHOD(void, setConsiderGroundFriction)
+    VTABLE_METHOD(soKineticModuleImpl*, void, setConsiderGroundFriction)
     // 2 args (vec2f, whichEnergies)
-    VTABLE_METHOD_2ARG(void, mulSpeed, Vec2f, muls, int, energies)
+    VTABLE_METHOD_2ARG(soKineticModuleImpl*, void, mulSpeed, Vec2f, muls, int, energies)
     // 2 args (vec2f, whichEnergies)
-    VTABLE_METHOD(void, mulAccel)
+    VTABLE_METHOD(soKineticModuleImpl*, void, mulAccel)
     // 2 args (vec2f, whichEnergies)
-    VTABLE_METHOD(void, reflectSpeed)
-    VTABLE_METHOD(void, reflectAccel)
-    VTABLE_METHOD(void, changeKinetic)
-    VTABLE_METHOD(void, getKineticType)
+    VTABLE_METHOD(soKineticModuleImpl*, void, reflectSpeed)
+    VTABLE_METHOD(soKineticModuleImpl*, void, reflectAccel)
+    VTABLE_METHOD(soKineticModuleImpl*, void, changeKinetic)
+    VTABLE_METHOD(soKineticModuleImpl*, void, getKineticType)
 
     soKineticModuleImpl_vtable* vtable;
 

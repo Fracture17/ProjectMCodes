@@ -9,7 +9,6 @@
 #include "stddef.h"
 #include "CLibs/InitializerList.h"
 
-
 // the most scuffed vector implementation of all time
 template<class T>
 class vector {
@@ -187,8 +186,11 @@ size_t vector<T>::findIf(bool (*condition)(const T& x)) {
     return this->size();
 }*/
 
+// 814106a4
+// 817d9cf8
 template<class T>
 void vector<T>::clear() {
+    // OSReport("length: %d\n", length);
     for(int i = 0; i < length; i++) {
         delete Array[i];
     }
@@ -196,7 +198,7 @@ void vector<T>::clear() {
 }
 
 template<class T>
-T *vector<T>::allocate(size_t newSize) {
+inline T *vector<T>::allocate(size_t newSize) {
     return (T*)malloc(sizeof(T) * newSize);
 }
 
