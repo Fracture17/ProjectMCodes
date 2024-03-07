@@ -723,6 +723,7 @@ extern "C" {
 
         // functional stack pop
         if (switchCase == 0x5E) {
+            // OSReport("STACK_POP %04x, %d, %.3f\n", selfAi->aiScript, functionalStackPtr, functionalStack[functionalStackPtr]);
             if (functionalStackPtr >= 0) {
                 fn_result = functionalStack[functionalStackPtr];
                 fn_shouldReturnResult = 1;
@@ -1217,6 +1218,25 @@ extern "C" {
                     }
                     else {
                         rq_result = false;
+                    }
+                }
+                break;
+            }
+            case 0x102A: { // LastJumpSquatFrame
+                rq_shouldReturnResult = true;
+                auto ChId = aiActInst->aiInputPtr->charId;
+                if (ChId >= CHAR_ID::Zakoboy && ChId <= CHAR_ID::Zakoball) {
+                    rq_result = true;
+                } else {
+                    auto* ftEntry = aiActInst->aiInputPtr->ftEntryPtr;
+                    if (ftEntry != nullptr && ftEntry->ftStageObject != nullptr && ((int) ftEntry->ftStageObject) > 0x80000000) {
+                        auto* motionModule = ftEntry->ftStageObject->modules->motionModule;
+                        auto jumpSquatFrames = ftEntry->ftStageObject->modules->paramCustomizeModule->jumpSquatFrames;
+                        // OSReport("JSFrame: %.3f; nextFrame: %.3f\n", jumpSquatFrames * motionModule->mainAnimationData.frameSpeedModifier, motionModule->getFrame() + motionModule->mainAnimationData.frameSpeedModifier);
+                        rq_result = (motionModule->getFrame() + motionModule->mainAnimationData.frameSpeedModifier) == (jumpSquatFrames * motionModule->mainAnimationData.frameSpeedModifier); 
+                    }
+                    else {
+                        rq_result = true;
                     }
                 }
                 break;
@@ -2456,8 +2476,16 @@ extern "C" {
                 //     moveCurrKnockback *= (0.5 + (playerTrainingData[oPNum].turboData.comboHitCount + 1) * 0.15);
                 //     hitstun *= (2 / (playerTrainingData[oPNum].turboData.comboHitCount * 0.25 + 1));
                 // }
+                
+                bool isTurbo = FIGHTER_MANAGER->getOwner(FIGHTER_MANAGER->getEntryId(pNum))->hasCurry();
+                // if (GCD.superTurbo && ) {
+                //     moveCurrKnockback *= (0.5 + (playerTrainingData[oPNum].turboData.comboHitCount + 1) * 0.15);
+                //     hitstun *= (2 / (playerTrainingData[oPNum].turboData.comboHitCount * 0.25 + 1));
+                // }
 
                 float endlag = moveIASA - ((moveDuration / 2) + moveHitFrame);
+                if (isTurbo) endlag *= 0.5;
+
                 aiActInst->variables[varToMod] += (hitstun - endlag) * 0.1;
                 // OEndLag += 2;
                 if (((OEndLag + 5) > moveHitFrame || (stageWidth / 2 - EstOTopNX < 0) || _randf() < 0.3) && (xVelRequired < moveCurrKnockback * moveXVelMultiplier || yVelRequired < moveCurrKnockback * moveYVelMultiplier) && (moveAngle <= 210 || moveAngle >= 330)) {
@@ -2472,7 +2500,7 @@ extern "C" {
                 if (xVelRequired > 0) {
                     if ((moveAngle >= 75 && moveAngle <= 105) && moveYVelMultiplier * moveCurrKnockback > 100) {
                         if (debugEnabled) OSReport("; (+ launch-high)");
-                        aiActInst->variables[varToMod] += 30;
+                        aiActInst->variables[varToMod] += 20;
                     } 
                     if ((moveAngle >= 230 && moveAngle <= 310) && moveYVelMultiplier * moveCurrKnockback > 70 && EstOYDistFloor > 20) {
                         if (debugEnabled) OSReport("; (+ launch-low)");
@@ -2504,9 +2532,10 @@ extern "C" {
                 //     endlag -= 10;
                 // }
                 // endlag *= 1.65;
-                if (EstOYDistFloor < 5) {
-                    hitstun *= 0.7;
-                }
+                // NOTE THING 
+                // if (EstOYDistFloor < 5) {
+                //     hitstun *= 0.7;
+                // }
                 if (endlag < hitstun) {
                     if ((moveAngle >= 220 && moveAngle <= 320) || (moveAngle > 75 && moveAngle < 105)) {
                         if (jumpVelocity * hitstun * 20 > moveYVelMultiplier * moveCurrKnockback && XTerminalVelocity * hitstun * 3 > moveXVelMultiplier * moveCurrKnockback) {
@@ -2514,7 +2543,7 @@ extern "C" {
                             aiActInst->variables[varToMod] += 25;
                             if ((moveAngle > 75 && moveAngle < 105)) {
                                 aiActInst->variables[varToMod] += 30;
-                                aiActInst->variables[varToMod] *= 1 + ((hitstun - endlag) / 5);
+                                aiActInst->variables[varToMod] *= 1 + ((hitstun - endlag) / 12);
                                 return;
                             }
                             if ((moveAngle >= 220 && moveAngle <= 320)) {
@@ -2534,9 +2563,10 @@ extern "C" {
                             else aiActInst->variables[varToMod] += 20;
                             aiActInst->variables[varToMod] += 10 * (1 - (moveXVelMultiplier * moveCurrKnockback / 100));
                             aiActInst->variables[varToMod] += 15;
+                            if (isTurbo && GCD.superTurbo) aiActInst->variables[varToMod] *= 1.5;
                         }
                     }
-                    aiActInst->variables[varToMod] *= 1 + ((hitstun - endlag) / 25);
+                    aiActInst->variables[varToMod] *= 1 + ((hitstun - endlag) / 10);
                 }
                 return;
             }
@@ -2670,13 +2700,14 @@ extern "C" {
                 }
                 return;
             }
-            _STACK_PUSH: { // OSReport("STACK_PUSH\n");
+            _STACK_PUSH: {
                 float value = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
                 bool isLongTerm = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
                 if (isLongTerm) {
                     LTFStackPtr++;
                     LTFStack[LTFStackPtr] = value;
                 } else {
+                    // OSReport("STACK_PUSH: %04x, %d, %.3f\n", aiActInst->aiScript, functionalStackPtr + 1, value);
                     if (functionalStackPtr >= FUNCTIONAL_STACK_LEN) {
                         OSReport("========WARNING: FUNCTIONAL STACK OVERFLOW @ %08x (p%d)========\n", aiActInst->currentInstruction, pNum);
                     }
@@ -2685,8 +2716,9 @@ extern "C" {
                 }
                 return;
             }
-            _STACK_TOSS: { // OSReport("STACK_TOSS\n");
+            _STACK_TOSS: {
                 int numToPop = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                // OSReport("STACK_TOSS: %.3f\n", numToPop);
                 functionalStackPtr -= numToPop;
                 if (functionalStackPtr < 0) {
                     functionalStackPtr = 0;

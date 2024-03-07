@@ -46,6 +46,8 @@
 #endif 
 
 #define _checkTransition_soStatusModule ((void (*)(soStatusModuleImpl* self, soModuleAccessor* accesser)) 0x80780098)
+#define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
+#define _randf ((double (*)()) 0x8003fb64)
 
 #define sprintf ((int (*)(char* buffer, const char* format, ...)) 0x803f89fc)
 #define snprintf ((int (*)(char* buffer, size_t maxSize, const char* format, ...)) 0x803f8924)
@@ -126,6 +128,52 @@ DATA_WRITE(0x80920CC8, 0x60000000);
 DATA_WRITE(0x80920E50, 0x60000000);
 DATA_WRITE(0x80920D88, 0x60000000);
 DATA_WRITE(0x80920F10, 0x60000000);
+
+// basically just make sure they can never ever press the shield button when offstage
+
+#if SHOULD_INCLUDE_AI != 1
+#include "Brawl/AI/aiScriptData.h"
+#define _GetPlayerNo_aiChrIdx ((int (*)(char* chrIdx)) 0x808fd68c)
+#define _getButtonMask_soController ((unsigned int (*)(int btn)) 0x8076544c)
+
+INJECTION("CHECK_AI_SHIELDPRESS", 0x8091780C, R"(
+    SAVE_REGS
+    mr r3, r26
+    mr r4, r28
+    bl checkAIShield
+    RESTORE_REGS
+)");
+
+
+extern "C" void checkAIShield(AiScriptData* aiActInst, unsigned int* buttons) {
+    auto* modules = FIGHTER_MANAGER->getFighter(_GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx))->modules;
+    soPostureModuleImpl& posModule = *modules->postureModule;
+    float xTest = posModule.xPos;
+    float yTest = posModule.yPos;
+
+    Vec3f startPos {
+        xTest,
+        yTest,
+        0
+    };
+
+    Vec3f destPos {
+        xTest,
+        yTest - 40,
+        0
+    };
+
+    Vec3f ret1 {-1,-1,-1};
+    Vec3f ret2 {-1,-1,-1};
+
+    int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+    // OSReport("CHECKING...\n");
+    if (rayResult) {
+        // OSReport("ON GROUND!\n");
+        *buttons = *buttons | _getButtonMask_soController(3);
+    }
+}
+#endif
 #endif
 
 //unsigned int BASE_SCALE = CAMERA_MANAGER->cameras[0].scale;
@@ -155,8 +203,6 @@ int modeIdx = 0;
 double md_debugDamage = 0;
 int md_debugTarget = 0;
 
-#define _stRayCheck_vec3f ((int (*)(Vec3f* start, Vec3f* dest, Vec3f* retValue, Vec3f* normalVec, int unkTrue, int unk0, int unk0_1, int unk1)) 0x809326d8)
-#define _randf ((double (*)()) 0x8003fb64)
 enum RandPosType : int {
     RANDOM,
     SAFE,
@@ -469,22 +515,15 @@ bool isAttackStart(int status) {
     return false;
 }
 
-void gameplayFixes(Fighter* fighter, int pNum) {
-    auto& anmData = fighter->modules->motionModule->mainAnimationData;
-    auto& groundModule = fighter->modules->groundModule;
-    auto& posModule = fighter->modules->postureModule;
-    auto& kinModule = fighter->modules->kineticModule;
-    auto& energies = kinModule->kineticEnergyVector->energies;
+void aerialTransitionFix(Fighter* fighter) {
     auto& statMod = fighter->modules->statusModule;
-    auto& ftParams = fighter->modules->paramCustomizeModule;
+    auto& posModule = fighter->modules->postureModule;
+    auto& groundModule = fighter->modules->groundModule;
     auto prevAction = fighter->modules->statusModule->previousAction;
-    
-    float vertSpeed = kinModule->energyMotion.getSpeed().yPos;
-    
-    Vec3f EMPTY_VEC3F = {0, 0, 0};
-    
-    if (playerTrainingData[pNum].options.controlCodes.aerialTransitionFix
-    && ((groundModule->groundShapeImplVec->at(0))->collStatus->touchFlags & 0x80) == 0x80
+
+    if (
+    // playerTrainingData[pNum].options.controlCodes.aerialTransitionFix &&
+    ((groundModule->groundShapeImplVec->at(0))->collStatus->touchFlags & 0x80) == 0x80
     && ((prevAction == 0x33 && statMod->action == 0xE)
         || (prevAction == 0x45 && statMod->action == 0x49))
     ) {
@@ -501,46 +540,22 @@ void gameplayFixes(Fighter* fighter, int pNum) {
         posModule->prevYPos = newPos.y;
         (groundModule->groundShapeImplVec->at(0))->reset(&newPos);
     }
+}
 
-    if (GCD.cliffJump2Mod
-    && anmData.animFrame == 0
-    && statMod->action == 0x21
-    && prevAction == 0x7a) {
-        Vec3f startPos = {posModule->xPos, posModule->prevYPos - 1};
-        Vec3f destPos = {
-            10 * posModule->direction,
-            0,
-            0
-        };
-        Vec3f ret1 = {-1,-1,-1};
-        Vec3f ret2 = {-1,-1,-1};
-        int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
-        if (rayResult) { 
-            destPos = {};
-            startPos.f1 = ret1.f1 + 2 * posModule->direction;
-            startPos.f2 += 20;
-            destPos = {0, -30, 0};
-            rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
-            if (rayResult) { 
-                Vec2f newPos = {ret1.f1, ret1.f2 + 0.5};
-                posModule->xPos = newPos.x;
-                posModule->yPos = newPos.y;
-                posModule->prevXPos = newPos.x;
-                posModule->prevYPos = newPos.y;
-                _updatePosture_StageObject(fighter, true);
-                _updateRoughPos_StageObject(fighter);
-                _updateNodeSRT_StageObject(fighter);
-                (groundModule->groundShapeImplVec->at(0))->reset(&newPos);
-                // groundModule->attachGround();
-            }
-        }
-    }
+void smoothWavedashes(Fighter* fighter) {
+    auto& anmData = fighter->modules->motionModule->mainAnimationData;
+    auto& groundModule = fighter->modules->groundModule;
+    auto& posModule = fighter->modules->postureModule;
+    auto& statMod = fighter->modules->statusModule;
+    auto& kinModule = fighter->modules->kineticModule;
+    float vertSpeed = kinModule->energyMotion.getSpeed().yPos;
+    auto prevAction = fighter->modules->statusModule->previousAction;
 
-    if (playerTrainingData[pNum].options.controlCodes.smoothWavedashes
-    && anmData.animFrame == 0 
+    if (//playerTrainingData[pNum].options.controlCodes.smoothWavedashes
+    anmData.animFrame == 0 
     && statMod->action == 0x21
-    && statMod->previousAction != 0x72
-    && statMod->previousAction != 0x7a
+    && prevAction != 0x72
+    && prevAction != 0x7a
     // && fighter->getInput()->aiActPtr->scriptValues->character != CHAR_ID::Gkoopa
     && vertSpeed < -0.001) {
 
@@ -599,6 +614,82 @@ void gameplayFixes(Fighter* fighter, int pNum) {
             if (rayResult) { posModule->xPos = posModule->prevXPos; }
         }
     }
+}
+
+void fastfallTumble(Fighter* fighter) {
+    auto& kinModule = fighter->modules->kineticModule;
+    auto& energies = kinModule->kineticEnergyVector->energies;
+    auto& statMod = fighter->modules->statusModule;
+    auto& ftParams = fighter->modules->paramCustomizeModule;
+    
+    soControllerImpl& controllerImpl = (*(ftControllerModuleImpl*)fighter->modules->controllerModule).controller;
+    // (*(float*)0x80B88338) = fastfall sensitivity
+    soKineticEnergyNormal* gravityEnergies = *(energies.at(1));
+    if (// playerTrainingData[pNum].options.controlCodes.fastfallTumble
+    statMod->action == 0x49) {
+        float ffSpeed = ftParams->fastFallSpeed * -1;
+        if ((controllerImpl.stickY - controllerImpl.stickPrevY) < (*(float*)0x80B88338) && gravityEnergies->yVel <= 0) {
+            gravityEnergies->yVel = ffSpeed;
+            gravityEnergies->yAccel = 0;
+        }
+        if (gravityEnergies->yVel <= ffSpeed) {
+            gravityEnergies->yVel = ffSpeed;
+        }
+    }
+}
+
+void gameplayFixes(Fighter* fighter, int pNum) {
+    auto& anmData = fighter->modules->motionModule->mainAnimationData;
+    auto& groundModule = fighter->modules->groundModule;
+    auto& posModule = fighter->modules->postureModule;
+    auto& kinModule = fighter->modules->kineticModule;
+    auto& energies = kinModule->kineticEnergyVector->energies;
+    auto& statMod = fighter->modules->statusModule;
+    auto& ftParams = fighter->modules->paramCustomizeModule;
+    auto prevAction = fighter->modules->statusModule->previousAction;
+    
+    float vertSpeed = kinModule->energyMotion.getSpeed().yPos;
+    
+    Vec3f EMPTY_VEC3F = {0, 0, 0};
+    
+    aerialTransitionFix(fighter);
+
+
+    if (GCD.cliffJump2Mod
+    && anmData.animFrame == 0
+    && statMod->action == 0x21
+    && prevAction == 0x7a) {
+        Vec3f startPos = {posModule->xPos, posModule->prevYPos - 1};
+        Vec3f destPos = {
+            10 * posModule->direction,
+            0,
+            0
+        };
+        Vec3f ret1 = {-1,-1,-1};
+        Vec3f ret2 = {-1,-1,-1};
+        int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+        if (rayResult) { 
+            destPos = {};
+            startPos.f1 = ret1.f1 + 2 * posModule->direction;
+            startPos.f2 += 20;
+            destPos = {0, -30, 0};
+            rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+            if (rayResult) { 
+                Vec2f newPos = {ret1.f1, ret1.f2 + 0.5};
+                posModule->xPos = newPos.x;
+                posModule->yPos = newPos.y;
+                posModule->prevXPos = newPos.x;
+                posModule->prevYPos = newPos.y;
+                _updatePosture_StageObject(fighter, true);
+                _updateRoughPos_StageObject(fighter);
+                _updateNodeSRT_StageObject(fighter);
+                (groundModule->groundShapeImplVec->at(0))->reset(&newPos);
+                // groundModule->attachGround();
+            }
+        }
+    }
+
+    smoothWavedashes(fighter);
 
     if (playerTrainingData[pNum].options.controlCodes.instantFastFall
     && _isFlag_soWorkManageModuleImpl(fighter->modules->workModule, 0x20000000 | 0x02000000 | 0x2)) {
@@ -671,26 +762,13 @@ void gameplayFixes(Fighter* fighter, int pNum) {
         }
     }
 
-    soControllerImpl& controllerImpl = (*(ftControllerModuleImpl*)fighter->modules->controllerModule).controller;
-    // (*(float*)0x80B88338) = fastfall sensitivity
-    soKineticEnergyNormal* gravityEnergies = *(energies.at(1));
-    if (playerTrainingData[pNum].options.controlCodes.fastfallTumble
-    && statMod->action == 0x49) {
-        float ffSpeed = ftParams->fastFallSpeed * -1;
-        if ((controllerImpl.stickY - controllerImpl.stickPrevY) < (*(float*)0x80B88338) && gravityEnergies->yVel <= 0) {
-            gravityEnergies->yVel = ffSpeed;
-            gravityEnergies->yAccel = 0;
-        }
-        if (gravityEnergies->yVel <= ffSpeed) {
-            gravityEnergies->yVel = ffSpeed;
-        }
-    }
+    fastfallTumble(fighter);
 
     if (GCD.superTurbo) {
         bool startOfAttack = isAttackStart(statMod->action);
         bool isAttacking = (statMod->action >= 0x26 && statMod->action <= 0x34) || statMod->action >= 0x112;
         bool wasAttacking = (statMod->previousAction >= 0x26 && statMod->previousAction <= 0x34) || statMod->previousAction >= 0x112;
-        if (statMod->action >= 0x43 && statMod->action <= 0x46 && (chId != CHAR_ID::Nana && chId != CHAR_ID::Popo)) {
+        if (statMod->action >= 0x43 && statMod->action <= 0x46) {
             auto* attackerInfo = fighter->modules->damageModuleImpl->getAttackerInfoDirect();
             auto selfStopModule = fighter->modules->ftStopModule;
 
@@ -799,7 +877,7 @@ void gameplayFixes(Fighter* fighter, int pNum) {
 
                                 fighter->modules->effectModule->req_13(1 + damageMagnitude * 0.2, 0x8, 0, &EMPTY_VEC3F, &effectDirectionVector, &EMPTY_VEC3F, &EMPTY_VEC3F, true, 0);
                                 fighter->modules->effectModule->req_13(0.3 + damageMagnitude * 0.1, 0x16, 0, &EMPTY_VEC3F, &effectDirectionVector, &EMPTY_VEC3F, &EMPTY_VEC3F, true, 0);
-                                x
+                                
                                 memcpy(&posModule->xPos, &posModule->prevXPos, sizeof(Vec3f));
                                 posModule->xPos -= damageXVel;
                                 posModule->yPos -= damageYVel;

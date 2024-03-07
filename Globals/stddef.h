@@ -1,19 +1,28 @@
 #pragma once
 
+// #include "FuncMap.h"
+
 #define VTABLE_METHOD(THISTYPE, RET_TYPE, FN_NAME) \
-/* inline */ RET_TYPE FN_NAME() { return ((RET_TYPE (*)(THISTYPE self)) this->vtable->fn__ ## FN_NAME)(this); }
+inline __attribute__((always_inline)) RET_TYPE FN_NAME() { return ((RET_TYPE (*)(THISTYPE self)) this->vtable->fn__ ## FN_NAME)(this); }
 #define VTABLE_METHOD_1ARG(THISTYPE, RET_TYPE, FN_NAME, TYPE1, NAME1) \
-/* inline */ RET_TYPE FN_NAME(TYPE1 NAME1) { return ((RET_TYPE (*)(THISTYPE self, TYPE1 NAME1)) this->vtable->fn__ ## FN_NAME)(this, NAME1); }
+inline __attribute__((always_inline)) RET_TYPE FN_NAME(TYPE1 NAME1) { return ((RET_TYPE (*)(THISTYPE self, TYPE1 NAME1)) this->vtable->fn__ ## FN_NAME)(this, NAME1); }
 #define VTABLE_METHOD_2ARG(THISTYPE, RET_TYPE, FN_NAME, TYPE1, NAME1, TYPE2, NAME2) \
-/* inline */ RET_TYPE FN_NAME(TYPE1 NAME1, TYPE2 NAME2) { return ((RET_TYPE (*)(THISTYPE self, TYPE1 NAME1, TYPE2 NAME2)) this->vtable->fn__ ## FN_NAME)(this, NAME1, NAME2); }
+inline __attribute__((always_inline)) RET_TYPE FN_NAME(TYPE1 NAME1, TYPE2 NAME2) { return ((RET_TYPE (*)(THISTYPE self, TYPE1 NAME1, TYPE2 NAME2)) this->vtable->fn__ ## FN_NAME)(this, NAME1, NAME2); }
 
 #define STATIC_METHOD(ADDRESS, SELF_TYPE, RET_TYPE, FN_NAME) \
-/* inline */ RET_TYPE FN_NAME() { return ((RET_TYPE (*)(SELF_TYPE * self)) ADDRESS)(this); }
+inline __attribute__((always_inline)) RET_TYPE FN_NAME() { return ((RET_TYPE (*)(SELF_TYPE * self)) ADDRESS)(this); }
 #define STATIC_METHOD_1ARG(ADDRESS, SELF_TYPE, RET_TYPE, FN_NAME, TYPE1, NAME1) \
-/* inline */ RET_TYPE FN_NAME(TYPE1 NAME1) { return ((RET_TYPE (*)(SELF_TYPE * self, TYPE1 NAME1)) ADDRESS)(this, NAME1); }
+inline __attribute__((always_inline)) RET_TYPE FN_NAME(TYPE1 NAME1) { return ((RET_TYPE (*)(SELF_TYPE * self, TYPE1 NAME1)) ADDRESS)(this, NAME1); }
 #define STATIC_METHOD_3ARG(ADDRESS, SELF_TYPE, RET_TYPE, FN_NAME, TYPE1, NAME1, TYPE2, NAME2, TYPE3, NAME3) \
-/* inline */ RET_TYPE FN_NAME(TYPE1 NAME1, TYPE2 NAME2, TYPE3 NAME3) { return ((RET_TYPE (*)(SELF_TYPE * self, TYPE1 NAME1, TYPE2 NAME2, TYPE3 NAME3)) ADDRESS)(this, NAME1, NAME2, NAME3); }
+inline __attribute__((always_inline)) RET_TYPE FN_NAME(TYPE1 NAME1, TYPE2 NAME2, TYPE3 NAME3) { return ((RET_TYPE (*)(SELF_TYPE * self, TYPE1 NAME1, TYPE2 NAME2, TYPE3 NAME3)) ADDRESS)(this, NAME1, NAME2, NAME3); }
 // #define _setGrCollisisonMode ((void (*)(soGroundModuleImpl * self, int collisionMode)) 0x80730a04)
+
+#define KNOWN_METHOD(THISTYPE, RET_TYPE, FN_NAME) \
+inline __attribute__((always_inline)) RET_TYPE FN_NAME() { return ((RET_TYPE (*)(THISTYPE self)) ADDRESSES:: ## FN_NAME)(this); }
+#define KNOWN_METHOD_1ARG(THISTYPE, RET_TYPE, FN_NAME, TYPE1, NAME1) \
+inline __attribute__((always_inline)) RET_TYPE FN_NAME(TYPE1 NAME1) { return ((RET_TYPE (*)(THISTYPE self, TYPE1 NAME1)) ADDRESSES:: ## FN_NAME)(this, NAME1); }
+#define KNOWN_METHOD_2ARG(THISTYPE, RET_TYPE, FN_NAME, TYPE1, NAME1, TYPE2, NAME2) \
+inline __attribute__((always_inline)) RET_TYPE FN_NAME(TYPE1 NAME1, TYPE2 NAME2) { return ((RET_TYPE (*)(THISTYPE self, TYPE1 NAME1, TYPE2 NAME2)) ADDRESSES:: ## FN_NAME)(this, NAME1, NAME2); }
 
 
 union xyDouble {

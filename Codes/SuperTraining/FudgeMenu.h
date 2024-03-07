@@ -349,9 +349,9 @@ struct PositionalData {
 
 struct ControlCodes {
   bool meleeJumpsEnabled = false;
-  bool aerialTransitionFix = false;
-  bool smoothWavedashes = false;
-  bool fastfallTumble = false;
+  // bool aerialTransitionFix = true;
+  // bool smoothWavedashes = true;
+  // bool fastfallTumble = true;
   bool meleeDJC = false;
   bool instantFastFall = false;
 };
@@ -400,7 +400,7 @@ struct TrainingData {
 
 struct GlobalCustomData {
   // bool smoothWavedashes = false;
-  bool cliffJump2Mod = true;
+  bool cliffJump2Mod = false;
   // bool aerialTransitionFix = false;
   bool xDirCardinalCoersion = false;
 

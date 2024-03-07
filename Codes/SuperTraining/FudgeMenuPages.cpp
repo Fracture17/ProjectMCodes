@@ -53,10 +53,11 @@ void PlayerPhysicsPage::show() {
   ADD_UNPAUSE
 
   addOption(new MeleeToggleOption(data));
-  addOption(new BoolOption("landing fix", data.options.controlCodes.aerialTransitionFix));
-  addOption(new BoolOption("can FF in tumble", data.options.controlCodes.fastfallTumble));
+  // REMOVED BECAUSE ALWAYS ACTIVE
+  // addOption(new BoolOption("landing fix", data.options.controlCodes.aerialTransitionFix));
+  // addOption(new BoolOption("can FF in tumble", data.options.controlCodes.fastfallTumble));
   addOption(new BoolOption("melee jumps", data.options.controlCodes.meleeJumpsEnabled));
-  addOption(new BoolOption("smooth wavedashes", data.options.controlCodes.smoothWavedashes));
+  // addOption(new BoolOption("smooth wavedashes", data.options.controlCodes.smoothWavedashes));
   addOption(new BoolOption("melee DJC", data.options.controlCodes.meleeDJC));
   addOption(new BoolOption("instant fastfall", data.options.controlCodes.instantFastFall));
 }

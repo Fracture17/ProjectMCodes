@@ -356,10 +356,11 @@ float MovementTracker::approxChance(int CPULevel, char actionType) {
 float MovementTracker::approxCommit(int CPULevel) {
   float actionWeight = weightCache[MOV_ATTACK] + weightCache[MOV_GRAB];
   float chance = actionWeight / (weightCacheTotal + (weightCacheTotal == 0));
+  if (weightCache[MOV_GRAB] < 1.0) chance *= 2;
   // CPULevel Fuzz
   if (CPULevel <= 100) {
     float chanceFuzz = ((95 - CPULevel) * 0.01) * chance * _randf();
-    chanceFuzz * 0.35;
+    chanceFuzz *= 0.35;
     chance -= chanceFuzz;
     // I am very lazy :)
     // chance *= 1.5;
