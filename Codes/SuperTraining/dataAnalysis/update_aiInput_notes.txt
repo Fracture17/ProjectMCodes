@@ -1,0 +1,8 @@
+!md_down: 
+
+md_none:
+  change_md(0x1, no target, 0, 0)
+
+md_away_5:
+  change_md(0x66, get_nearest_target, 0x1100, 0)
+  md_away p

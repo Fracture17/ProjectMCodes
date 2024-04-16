@@ -28,13 +28,8 @@ struct AiParam {
     int* ATKDPtr;
     // 0x8
     char levelValue;
-
-    char _spacer[0x48 - 0x8 - 1];
-    // 0x48
-    FtInput* ftInput;
-    // 0x4C
-    AiInput* aiInput;
-
+    char _spacer1[0xC - 0x8 - 1];
+    int disabledCmds;
 };
 
 #define _searchAtkData_ATKDHead ((ATKDContent* (*)(int * self, short subactionID)) 0x8092a744) 

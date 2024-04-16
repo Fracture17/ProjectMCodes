@@ -65,6 +65,10 @@ void Page::modify(float amount) {
 void Page::render(TextPrinter* printer, char* buffer) {
   char len = options.size();
   for (char i = 0; i < len; i++) {
+    if (options[i] == nullptr) {
+      OSReport("NULL OPTION @ %08x\n", &options[i]);
+      continue;
+    }
     if (!options[i]->canModify) printer->setTextColor(0xFFAAAADD);
     else if (i == currentOption && isSelected) printer->setTextColor(0xFFFF00FF);
     else if (i == currentOption) printer->setTextColor(0xFFFFFFFF);
@@ -266,6 +270,7 @@ void StringOption::render(TextPrinter* printer, char* buffer) {
 //////////////////////////////////
 // TempLogOption
 //////////////////////////////////
+#if HITBOX_HEATMAP_PAGE == 1
 extern FudgeAIHitbox fudgeAI;
 void TempLogOption::modify(float amount) {};
 void TempLogOption::select() { OSReport("xOffset = %.3f\nyOffset = %.3f\nxRange = %.3f\nyRange = %.3f\n", fudgeAI.trueXMin, fudgeAI.trueYMin, fudgeAI.width, fudgeAI.height); };
@@ -274,6 +279,7 @@ void TempLogOption::render(TextPrinter* printer, char* buffer) {
   sprintf(buffer, (isCurrent) ? "(A) %s !" : "%s !", name);
   printer->printLine(buffer);
 };
+#endif
 
 
 //////////////////////////////////

@@ -268,6 +268,8 @@ struct AiStat {
     u8 attackAnimFrame;
     // 0x1BD
     u8 attackAnimFrameAgain;
+    // 
+    char _spacer_structSize[0x1C4 - 0x1BD - 1];
 };
 
 static_assert(offsetof(AiStat, character) == 0xAC, "improper character offset!!");

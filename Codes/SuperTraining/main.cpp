@@ -312,42 +312,34 @@ INJECTION("INIT_AI_TRAINING_SCRIPTS", 0x8081f4b0, R"(
 
 // // const char* STR_DEFAULT = "DEFAULT"; 
 extern "C" void initAiTrainingScripts(FtEntry* fighterEntry) {
-    AiInput* aiInput = fighterEntry->owner->aiInputPtr;
-    if (aiInput == nullptr) return; 
-    auto AIData = aiInput->aiActPtr->AIScriptPac;
-    if (AIData == nullptr) return;
-    int numEntries = AIData->numEntries;
+    auto& owner = *fighterEntry->owner;
+    if (owner.aiInputPtr == nullptr) return; 
+    AiInput& aiInput = *owner.aiInputPtr;
+    if (aiInput.aiActPtr->AIScriptPac == nullptr) return;
+    auto& AIData = *aiInput.aiActPtr->AIScriptPac;
+    int numEntries = AIData.numEntries;
     int pNum = FIGHTER_MANAGER->getPlayerNo(fighterEntry->entryId);
     // 90181014 p2FtInput
     OSReport("=========PNum: %d; addr: %08x==========\n", pNum, &fighterEntry->ftInput );
     if (pNum > 3) return;
 
-    if (playerTrainingData[pNum].options.AI.unlocked && fighterEntry->owner->aiInputPtr->fighterId != playerTrainingData[pNum].aiData.fighterID) {
+    if (playerTrainingData[pNum].options.AI.unlocked && aiInput.fighterId != playerTrainingData[pNum].aiData.fighterID) {
         if (getPlayerCount() == 2) {
             for (int i = 0; i < 4; i++)
                 movementTrackers[i].reset();
         } else {
             movementTrackers[pNum].reset();
         }
-        playerTrainingData[pNum].aiData.fighterID = fighterEntry->owner->aiInputPtr->fighterId;
-        playerTrainingData[pNum].aiData.personality.AICEData = AIData;
+        playerTrainingData[pNum].aiData.fighterID = aiInput.fighterId;
+        playerTrainingData[pNum].aiData.personality.AICEData = &AIData;
 
         for (int i = 0; i < numEntries; i++) {
-            int strCount = AIData->getStringCount(i);
+            int strCount = AIData.getStringCount(i);
             // IMPORTANT: alphabetical order
-            if (strCount > 0 && strcmp(AIData->getStringEntry(i, 0), "PERSONALITY") == 0) {
-                playerTrainingData[pNum].options.AI.aggression = atof(AIData->getStringEntry(i, 1));
-                playerTrainingData[pNum].options.AI.bait_dashAwayChance = atof(AIData->getStringEntry(i, 2));
-                playerTrainingData[pNum].options.AI.bait_wdashAwayChance = atof(AIData->getStringEntry(i, 3));
-                playerTrainingData[pNum].options.AI.baitChance = atof(AIData->getStringEntry(i, 4));
-                playerTrainingData[pNum].options.AI.braveChance = atof(AIData->getStringEntry(i, 5));
-                playerTrainingData[pNum].options.AI.circleCampChance = atof(AIData->getStringEntry(i, 6));
-                playerTrainingData[pNum].options.AI.djumpiness = atof(AIData->getStringEntry(i, 7));
-                playerTrainingData[pNum].options.AI.jumpiness = atof(AIData->getStringEntry(i, 8));
-                playerTrainingData[pNum].options.AI.platChance = atof(AIData->getStringEntry(i, 9));
-                playerTrainingData[pNum].options.AI.reactionTime = atof(AIData->getStringEntry(i, 10));
-                playerTrainingData[pNum].options.AI.SDIChance = atof(AIData->getStringEntry(i, 11));
-                playerTrainingData[pNum].options.AI.wall_chance = atof(AIData->getStringEntry(i, 12));
+            if (strCount > 0 && strcmp(AIData.getStringEntry(i, 0), "PERSONALITY") == 0) {
+                for (int pIdx = 1; pIdx <= 12; pIdx++) {
+                    playerTrainingData[pNum].options.AI.pIndexes.asArray[pIdx - 1] = atof(AIData.getStringEntry(i, pIdx));
+                }
             }
         }
     } 
@@ -451,47 +443,47 @@ extern "C" void controllerFixes(soControllerImpl* controllerImpl, AiInput* aiInp
         if (controllerImpl->stickY >= 0.96) { controllerImpl->stickY = 1; }
         else if (controllerImpl->stickY <= -0.96) { controllerImpl->stickY = -1; }
     }
-    if (GCD.GCCShieldToHardpressCoersion) {
-        int pNum = _GetPlayerNo_aiChrIdx(&aiInput->cpuIdx);
-        // TODO: make this tolerance a setting somehow
-        if (pNum < 4) {
-            // OSReport("pNum < 4");
-            OSReport("curr inputs: %08x\n", controllerImpl->inputs.bits);
-            if (PREVIOUS_PADS[pNum].triggerLeft > 200) {
-                PREVIOUS_PADS[pNum].button.L = true;
-                controllerImpl->inputs.shield = true;
-                controllerImpl->buttons.shield = true;
-                controllerImpl->trigger.shield = true;
-            }
-            if (PREVIOUS_PADS[pNum].triggerRight > 200) {
-                PREVIOUS_PADS[pNum].button.R = true;
-                controllerImpl->inputs.shield = true;
-                controllerImpl->buttons.shield = true;
-                controllerImpl->trigger.shield = true;
-            }
-            OSReport("post-inputs: %08x\n", controllerImpl->inputs.bits);
-        }
-    }
-    if (GCD.horizontalWavedash || GCD.bufferWavedash) {
-        Fighter* fighter = aiInput->ftEntryPtr->ftStageObject;
-        if (fighter != nullptr) {
-            auto& anmData = fighter->modules->motionModule->mainAnimationData;
-            auto& statMod = fighter->modules->statusModule;
-            if (GCD.horizontalWavedash 
-            && statMod->action == 0xA
-            && (controllerImpl->stickX >= 0.96 || controllerImpl->stickX <= -0.96)
-            && controllerImpl->stickY <= 0.0) {
-                controllerImpl->stickY = -0.3;
-            }
-            if (GCD.bufferWavedash
-            && statMod->action == 0xA
-            && controllerImpl->inputs.shield
-            && !controllerImpl->inputs.attack
-            && ((anmData.frameSpeedModifier * (fighter->modules->paramCustomizeModule->jumpSquatFrames - 2)) == anmData.animFrame)) {
-                controllerImpl->inputs.shield = false;
-            }
-        }
-    }
+    // if (GCD.GCCShieldToHardpressCoersion) {
+    //     int pNum = _GetPlayerNo_aiChrIdx(&aiInput->cpuIdx);
+    //     // TODO: make this tolerance a setting somehow
+    //     if (pNum < 4) {
+    //         // OSReport("pNum < 4");
+    //         OSReport("curr inputs: %08x\n", controllerImpl->inputs.bits);
+    //         if (PREVIOUS_PADS[pNum].triggerLeft > 200) {
+    //             PREVIOUS_PADS[pNum].button.L = true;
+    //             controllerImpl->inputs.shield = true;
+    //             controllerImpl->buttons.shield = true;
+    //             controllerImpl->trigger.shield = true;
+    //         }
+    //         if (PREVIOUS_PADS[pNum].triggerRight > 200) {
+    //             PREVIOUS_PADS[pNum].button.R = true;
+    //             controllerImpl->inputs.shield = true;
+    //             controllerImpl->buttons.shield = true;
+    //             controllerImpl->trigger.shield = true;
+    //         }
+    //         OSReport("post-inputs: %08x\n", controllerImpl->inputs.bits);
+    //     }
+    // }
+    // if (GCD.horizontalWavedash || GCD.bufferWavedash) {
+    //     Fighter* fighter = aiInput->ftEntryPtr->ftStageObject;
+    //     if (fighter != nullptr) {
+    //         auto& anmData = fighter->modules->motionModule->mainAnimationData;
+    //         auto& statMod = fighter->modules->statusModule;
+    //         if (GCD.horizontalWavedash 
+    //         && statMod->action == 0xA
+    //         && (controllerImpl->stickX >= 0.96 || controllerImpl->stickX <= -0.96)
+    //         && controllerImpl->stickY <= 0.0) {
+    //             controllerImpl->stickY = -0.3;
+    //         }
+    //         if (GCD.bufferWavedash
+    //         && statMod->action == 0xA
+    //         && controllerImpl->inputs.shield
+    //         && !controllerImpl->inputs.attack
+    //         && ((anmData.frameSpeedModifier * (fighter->modules->paramCustomizeModule->jumpSquatFrames - 2)) == anmData.animFrame)) {
+    //             controllerImpl->inputs.shield = false;
+    //         }
+    //     }
+    // }
 }
 
 bool isAttackStart(int status) {
@@ -1487,6 +1479,7 @@ extern "C" void updatePreFrame() {
     if (fudgeMenu == nullptr) {
         fudgeMenu = new Menu();
         Page* mainPage = new MainPage(fudgeMenu);        
+        OSReport("FUDGEMENU: %08x; MAINPAGE: %08x\n", fudgeMenu, mainPage);
         fudgeMenu->nextPage(mainPage);
     }
     
@@ -1941,7 +1934,9 @@ extern "C" void updatePreFrame() {
         }
         
         startNormalDraw();
-        renderAllStoredHitboxes();
+        #if HITBOX_HEATMAP_PAGE == 1
+            renderAllStoredHitboxes();
+        #endif
     }
     else {
         playerNumBitfield = 0;
@@ -1989,7 +1984,9 @@ extern "C" void updateUnpaused(soModuleAccessor* accessor) {
     
     if (updateFrame) {
         renderables.updateTick();
-        storedHitboxTick();
+        #if HITBOX_HEATMAP_PAGE == 1
+            storedHitboxTick();
+        #endif
 
         for (int i = 0; i < 4; i++) {
             #if SHOULD_INCLUDE_AI == 1 || SHOULD_INCLUDE_MOVEMENT_TRACKER == 1

@@ -22,10 +22,11 @@ public:
     float calcOptionConfidence(int player, int lookAmount);
 
     void plusOne(int player);
+    void set(int player, char value);
     float average(int player, int lookAmount);
     float get(int player);
 private:
-    char playerRPS[4][PATTERN_MAN_LENGTH] = {
+    signed char playerRPS[4][PATTERN_MAN_LENGTH] = {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -119,11 +120,16 @@ float PatternManager::average(int player, int lookAmount) {
         if (idx < 0) idx = PATTERN_MAN_MAX_IDX;
         value --;
     }
+
     return (total / (lookAmount + 1));
 }
 
 void PatternManager::plusOne(int player) {
     playerRPS[player][indexes[player]] += 1;
+}
+
+void PatternManager::set(int player, char value) {
+    playerRPS[player][indexes[player]] = value;
 }
 
 float PatternManager::get(int player) {

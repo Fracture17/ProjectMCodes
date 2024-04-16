@@ -2,6 +2,9 @@
 #ifndef PROJECTMCODES_HITBOXHEATMAP_H
 #define PROJECTMCODES_HITBOXHEATMAP_H
 
+#include "_TrainingOptionDefs.h"
+#if HITBOX_HEATMAP_PAGE == 1
+
 #include <Wii/GX/GX.h>
 #include "Containers/vector.h"
 
@@ -59,5 +62,7 @@ struct FudgeAIHitbox {
 extern FudgeAIHitbox fudgeAI;
 // void storeRenderingData();
 // void storePlayerData();
+
+#endif
 
 #endif // PROJECTMCODES_HITBOXHEATMAP_H

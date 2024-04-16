@@ -46,6 +46,8 @@ class SegmentManager:
         for func in sortedFunctions:
             for s in self.codeSegments:
                 if s.canInsert(func):
+                    print(s.name)
+                    print(func)
                     s.insert(func)
                     break
             else:
@@ -73,13 +75,16 @@ class SegmentManager:
                 if section in segment.sections:
                     break
             else:
+                print(segment.name)
+                print(section)
                 extraSections.append(section)
 
         for section in extraSections:
             # print(f'ex: {section}')
             for segment in self.extraSegments:
                 if segment.canInsert(section):
-                    # print(segment.name)
+                    print(segment.name)
+                    print(section)
                     segment.insert(section)
                     break
             else:

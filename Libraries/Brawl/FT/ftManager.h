@@ -57,7 +57,7 @@ struct FtManager {
 //gets the number of fighters attached to the given fighter entryid (ex. ice climbers = 1)
 #define _getFighterCount_ftManager ((unsigned int (*)(FtManager * self, EntryID entry)) 0x80814ec4)
 // gets the total number of fighters in the match
-#define _getFighterNo_ftManager ((unsigned int (*)(FtManager * self, EntryID entry)) 0x808154a0)
+#define _getFighterNo_ftManager(entry) ((unsigned int (*)(FtManager * self, EntryID entry)) 0x808154a0)(FIGHTER_MANAGER, entry)
 
 #define _getInput_ftManager ((AiInput* (*)(FtManager * self, EntryID entry)) 0x80815a38)
 

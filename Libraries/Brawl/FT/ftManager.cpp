@@ -37,7 +37,7 @@ unsigned int FtManager::getFighterCount(EntryID entry) {
 }
 
 unsigned int FtManager::getFighterNo(EntryID entry) {
-    return _getFighterNo_ftManager(this, entry);
+    return _getFighterNo_ftManager(entry);
 }
 
 AiInput* FtManager::getInput(EntryID entry) {

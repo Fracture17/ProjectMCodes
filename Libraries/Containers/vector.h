@@ -125,6 +125,10 @@ bool vector<T>::insert(const T& val, u32 index) {
 
 template<class T>
 void vector<T>::pop_back() {
+    if (length == 0) {
+        OSReport("=======VECTOR ALREADY CLEAR=======\n");
+        return;
+    }
     delete Array[--length];
 }
 

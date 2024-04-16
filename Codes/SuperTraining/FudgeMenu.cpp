@@ -11,9 +11,10 @@
 
 Menu* fudgeMenu;
 
-extern MovementTracker movementTrackers[4]; 
+extern MovementTracker movementTrackers[4];
+
 void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
-  // predictions.IDLE = movementTrackers[pNum].approxChance(101, MOV_IDLE);
+  predictions.IDLE = movementTrackers[pNum].approxChance(101, MOV_IDLE);
   // predictions.WALK = movementTrackers[pNum].approxChance(101, MOV_MISSEDTECH);
   predictions.RUN = movementTrackers[pNum].approxChance(101, MOV_RUN);
   predictions.DASH = movementTrackers[pNum].approxChance(101, MOV_DASH);
@@ -28,8 +29,8 @@ void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
   predictions.ATTACK = movementTrackers[pNum].approxChance(101, MOV_ATTACK);
   predictions.GRAB = movementTrackers[pNum].approxChance(101, MOV_GRAB);
   
-  KVPair<float> toSort[8] = {
-    // {"idle", predictions.IDLE, 0xFFFFFFFF}, 
+  KVPair<float> toSort[9] = {
+    {"idle", predictions.IDLE, 0xFFFFFFFF}, 
     // {"walk", predictions.WALK, 0xFFFFFFFF},
     {"run", predictions.RUN, 0xFFFFFFFF},
     {"dash", predictions.DASH, 0xFFFFFFFF},
@@ -48,8 +49,9 @@ void AIPredictionOption::render(TextPrinter *printer, char *buffer) {
   qsort(toSort, 8, sizeof(KVPair<float>), 
     [](const void* a, const void* b) mutable -> int {
     if ( (*(KVPair<float>*)a).value <  (*(KVPair<float>*)b).value ) return -1;
-    if ( (*(KVPair<float>*)a).value == (*(KVPair<float>*)b).value ) return 0;
+    // if ( (*(KVPair<float>*)a).value == (*(KVPair<float>*)b).value ) return 0;
     if ( (*(KVPair<float>*)a).value >  (*(KVPair<float>*)b).value ) return 1;
+    return 0;
   });
 
   printer->setTextColor(0xFFFFFFFF);
@@ -167,13 +169,13 @@ void AIScriptPathOption::render(TextPrinter* printer, char* buffer) {
 }
 
 // void AIPersonalityPresetOption::select() {
-//   data.aiData.personality.personalityIndex = index;
-//   memcpy(&data.aiData.personality.personality, &settings, sizeof(AIPersonality));
+//   playerTrainingData[playerNum].aiData.personality.personalityIndex = index;
+//   memcpy(&playerTrainingData[playerNum].aiData.personality.personality, &settings, sizeof(AIPersonality));
 // }
 
 // void AIPersonalityPresetOption::render(TextPrinter* printer, char* buffer) {
 //   sprintf(buffer, "%s", name);
-//   if (data.aiData.personality.personalityIndex == index) printer->setTextColor(0x00AA00FF);
+//   if (playerTrainingData[playerNum].aiData.personality.personalityIndex == index) printer->setTextColor(0x00AA00FF);
 //   printer->printLine(buffer);
 // }
 
@@ -181,16 +183,15 @@ void AITrainingScriptSubmenu::addDefault(AITrainingDefaultVal* defVal) {
   defaultValues.push(defVal); 
 }
 
-PlayerPage::PlayerPage(Menu*& myMenu, char pNum) : Page(myMenu), playerNum(pNum), data(playerTrainingData[pNum]) {
-  this->playerNum = pNum;
-  sprintf(this->title, "Player %d", pNum + 1);
-}
+PlayerPage::PlayerPage(Menu*& myMenu) : Page(myMenu) {}
 
 //////////////////////////////////
 // ResetMenuOption
 //////////////////////////////////
 void ResetMenuOption::select() { 
+  OSReport("pNum:%d, pre update: %d;", pNum, (char) playerTrainingData[pNum].options.AI.debug);
   memcpy(&playerTrainingData[pNum].options, &DEFAULT_TRAININGDATA_OPTIONS, sizeof(TrainingDataOptions));
+  OSReport(" default ai debug?: %d; updated value?: %d\n", (char) DEFAULT_TRAININGDATA_OPTIONS.AI.debug, (char) playerTrainingData[pNum].options.AI.debug);
 };
 void ResetMenuOption::render(TextPrinter* printer, char* buffer) {
   sprintf(buffer, (isCurrent) ? "(A) %s !" : "%s !", name);
@@ -218,11 +219,11 @@ void PlayerPage::show() {
     // if (pNum == 0) {
     //   Page* AIRangePage = new Page(fudgeMenu);
     //   AIRangePage->setTitle("AIRangeFinder");
-    //   AIRangePage->addOption(new BoolOption("HM ON", this->data->heatmapOpts.active));
+    //   AIRangePage->addOption(new BoolOption("HM ON", playerTrainingData[GCD.menuPlayerSelected]->heatmapOpts.active));
 
-    //   AIRangePage->addOption(new BoolOption("enabled", this->data->debug.enabled));
-    //   AIRangePage->addOption(new BoolOption("fix position", this->data->debug.fixPosition));
-    //   AIRangePage->addOption(new ControlOption("set position", this->data->debug.settingPosition));
+    //   AIRangePage->addOption(new BoolOption("enabled", playerTrainingData[GCD.menuPlayerSelected]->debug.enabled));
+    //   AIRangePage->addOption(new BoolOption("fix position", playerTrainingData[GCD.menuPlayerSelected]->debug.fixPosition));
+    //   AIRangePage->addOption(new ControlOption("set position", playerTrainingData[GCD.menuPlayerSelected]->debug.settingPosition));
 
     //   AIRangePage->addOption(new FloatOption("xmin", fudgeAI.trueXMin, false));
     //   AIRangePage->addOption(new FloatOption("ymin", fudgeAI.trueYMin, false));
@@ -234,71 +235,71 @@ void PlayerPage::show() {
     // }
 
     // #if PLAYER_PHYSICS_PAGE == 1
-      Page* physicsPage = new PlayerPhysicsPage(menu, data);
-      // this->data->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);
-      // PSAData->addOption(this->data->debug.psaData.subactionSwitcher);
+      Page* physicsPage = new PlayerPhysicsPage(menu, GCD.menuPlayerSelected);
+      // playerTrainingData[GCD.menuPlayerSelected]->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);
+      // PSAData->addOption(playerTrainingData[GCD.menuPlayerSelected]->debug.psaData.subactionSwitcher);
       this->addOption(new PageLink(physicsPage->getTitle(), physicsPage));
     // #endif
 
     #if AI_DEBUGGING_PAGE == 1
-      Page* AIDP = new AIDebugPage(menu, data);
+      Page* AIDP = new AIDebugPage(menu, GCD.menuPlayerSelected);
       this->addOption(new PageLink(AIDP->getTitle(), AIDP));
     #endif
     
     #if COMBO_TRAINER_PAGE == 1
-      Page* comboTrainerPage = new ComboTrainerPage(menu, data);
+      Page* comboTrainerPage = new ComboTrainerPage(menu, GCD.menuPlayerSelected);
       this->addOption(new PageLink(comboTrainerPage->getTitle(), comboTrainerPage));
     #endif
 
     #if TRAJECTORY_LINE_PAGE == 1
-      Page* trajectoryLinePage = new TrajectoryLinePage(menu, data);
+      Page* trajectoryLinePage = new TrajectoryLinePage(menu, GCD.menuPlayerSelected);
       this->addOption(new PageLink(trajectoryLinePage->getTitle(), trajectoryLinePage));
     #endif
 
     #if HITBOX_HEATMAP_PAGE == 1
-      Page* heatmapPage = new HeatmapPage(menu, data);
+      Page* heatmapPage = new HeatmapPage(menu, GCD.menuPlayerSelected);
       this->addOption(new PageLink(heatmapPage->getTitle(), heatmapPage));
     #endif
 
     #if AI_STAT_PAGES == 1 || SHOULD_INCLUDE_MOVEMENT_TRACKER == 1
-      Page* predictionPage = new AIPredictionPage(menu, data, playerNum);
+      Page* predictionPage = new AIPredictionPage(menu, GCD.menuPlayerSelected);
       this->addOption(new PageLink(predictionPage->getTitle(), predictionPage));
     #endif 
 
     #if AI_STAT_PAGES == 1
-      Page* AIPP = new AIPersonalityPage(menu, data);
+      Page* AIPP = new AIPersonalityPage(menu, GCD.menuPlayerSelected);
       this->addOption(new PageLink(AIPP->getTitle(), AIPP));
     #endif
 
-    this->addOption(new BoolOption("actionable overlay", data.options.actionableOverlay));
-    this->addOption(new IntOption("actionable sound", data.options.actionableSE, -1, 0xFF));
-    this->addOption(new IntOption("input display", data.options.inputDisplayType, 0, 2));
+    this->addOption(new BoolOption("actionable overlay", playerTrainingData[GCD.menuPlayerSelected].options.actionableOverlay));
+    this->addOption(new IntOption("actionable sound", playerTrainingData[GCD.menuPlayerSelected].options.actionableSE, -1, 0xFF));
+    this->addOption(new IntOption("input display", playerTrainingData[GCD.menuPlayerSelected].options.inputDisplayType, 0, 2));
     #if CONTROLLER_INFO_PAGE  == 1
-      this->addOption(new NamedIndexOption("type", ControllerInfoPage::dataType, data.options.inputDisplayType, 3));
+      this->addOption(new NamedIndexOption("type", ControllerInfoPage::dataType, playerTrainingData[GCD.menuPlayerSelected].options.inputDisplayType, 3));
     #endif
 
-    this->addOption(new ResetMenuOption(playerNum));
+    this->addOption(new ResetMenuOption(GCD.menuPlayerSelected));
 
     #if PSA_DATA_PAGE == 1
-      Page* PSAData = new PSADataPage(menu, data);
-      // this->data->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);
-      // PSAData->addOption(this->data->debug.psaData.subactionSwitcher);
+      Page* PSAData = new PSADataPage(menu, GCD.menuPlayerSelected);
+      // playerTrainingData[GCD.menuPlayerSelected]->debug.psaData.subactionSwitcher = new SubpageOption("Choose Subaction", 5, 1, true);
+      // PSAData->addOption(playerTrainingData[GCD.menuPlayerSelected]->debug.psaData.subactionSwitcher);
       this->addOption(new PageLink(PSAData->getTitle(), PSAData));
     #endif
 
     #if CONTROLLER_INFO_PAGE  == 1
-      Page* controllerInfo = new ControllerInfoPage(menu, data);
+      Page* controllerInfo = new ControllerInfoPage(menu, GCD.menuPlayerSelected);
       this->addOption(new PageLink(controllerInfo->getTitle(), controllerInfo));
     #endif
 
     #if POSITIONAL_DATA_PAGE == 1
-      Page* positionalDataPage = new PositionalDataPage(menu, data);
+      Page* positionalDataPage = new PositionalDataPage(menu, GCD.menuPlayerSelected);
       this->addOption(new PageLink(positionalDataPage->getTitle(), positionalDataPage)); 
     #endif
 }
 
 void PlayerPage::select() { 
-  selectedPlayer = this->playerNum; 
+  selectedPlayer = GCD.menuPlayerSelected; 
   Page::select();
 }
 void PlayerPage::deselect() { 

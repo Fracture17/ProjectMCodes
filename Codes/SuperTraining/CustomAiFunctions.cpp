@@ -67,13 +67,14 @@ void updateData(soModuleAccessor * accesser, int toRecord, bool isAction) {
     // checking the base type for the "ft" prefix ensures it's an actual fighter
     // 0x6674 = "ft"
     if (****((short****)accesser->paramCustomizeModule) != 0x6674) return;
-    AiInput* aiInput = ((Fighter*) accesser->owningObject)->getOwner()->aiInputPtr;
+    AiInput& aiInput = *((Fighter*) accesser->owningObject)->getOwner()->aiInputPtr;
     // alloy check
-    auto ChId = aiInput->charId;
-    if (ChId == CHAR_ID::Zakoboy || ChId == CHAR_ID::Zakogirl || ChId == CHAR_ID::Zakochild || ChId == CHAR_ID::Zakoball) return;
+    auto ChId = aiInput.charId;
+    // if (ChId == CHAR_ID::Zakoboy || ChId == CHAR_ID::Zakogirl || ChId == CHAR_ID::Zakochild || ChId == CHAR_ID::Zakoball) return;
+    if (ChId >= CHAR_ID::Zakoboy && ChId <= CHAR_ID::Zakoball) return;
     // obligatory nana check
-    if (aiInput->ftEntryPtr->isSubFighter(accesser)) return;
-    auto pNum = _GetPlayerNo_aiChrIdx(&aiInput->cpuIdx);
+    if (aiInput.ftEntryPtr->isSubFighter(accesser)) return;
+    auto pNum = _GetPlayerNo_aiChrIdx(&aiInput.cpuIdx);
     if (pNum >= 4) return;
 
     // get YDistFloor (+1)
@@ -104,7 +105,7 @@ void updateData(soModuleAccessor * accesser, int toRecord, bool isAction) {
     }
 
     if (getPlayerCount() == 2 && accesser->groundModule != nullptr) {
-        auto oEntryID = FIGHTER_MANAGER->getEntryId(aiInput->aiTarget);
+        auto oEntryID = FIGHTER_MANAGER->getEntryId(aiInput.aiTarget);
         auto oPNum = FIGHTER_MANAGER->getPlayerNo(oEntryID);
         auto oFighter = FIGHTER_MANAGER->getFighter(oEntryID);
         if (oFighter == nullptr) return;
@@ -133,7 +134,7 @@ void updateData(soModuleAccessor * accesser, int toRecord, bool isAction) {
 
 extern "C" {
     bool recordSubaction = false;
-    void recordData(unsigned char toRecord, soModuleAccessor * accesser, bool isAction) {
+    inline __attribute__((always_inline)) void recordData(unsigned char toRecord, soModuleAccessor * accesser, bool isAction) {
         updateData(accesser, isAction ? toRecord : 0, isAction);
     }
     // void trackSubactionChange(int* subactionPtr, soMotionModule * motionModule) {
@@ -195,6 +196,7 @@ extern "C" {
 #define _danger_check_aiInput ((void (*)(AiInput* aiInputPtr, unsigned int unk1, unsigned int unk2)) 0x80906378)
 #define _act_change ((void (*)(AiScriptData * self, unsigned int nextScript, char* nextTargetAIChrIdx, int unk2, int unk3)) 0x80918554)
 #define _target_check_aiInput ((void (*)(AiInput* self)) 0x80907ba4)
+#define change_md_aiInput ((void (*)(AiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5)) 0x809049d0)
 
 // 0x80903348 = return statement area
 // 0x809017A0 = AIAct script execution
@@ -248,18 +250,36 @@ extern "C" void stickModMul(Vec2f* thing) {
 }
 
 extern "C" void initAIFrame(AiInput * aiInput) {
-    if (aiInput->aiActPtr->aiStatPtr->character != CHAR_ID::Nana && (aiInput->aiActPtr->aiScript < 0x8000 || (aiInput->aiMd != 0x1))) {
+    if (aiInput->aiActPtr->aiScript < 0x8000 || (aiInput->aiMd != 0x1)) {
+        OSReport("SET TO 8000; AISCRIPT: %04x\n", aiInput->aiActPtr->aiScript);
         aiInput->aiMd = 1;
         _act_change(aiInput->aiActPtr, 0x8100, &aiInput->aiTarget, 0, 0);
     }
-    
     aiInput->aiTarget = 0;
-    _target_check_aiInput(aiInput);
+    _target_check_aiInput(aiInput);   
     // OSReport("AI Script: %04x\n", aiInput->aiActPtr->aiScript);
     
     // OSReport("TARGET: %d\n", aiInput->aiTarget);
 }
 
+INJECTION("INIT_NANA_AI_FRAME", 0x8090351c, R"(
+    SAVE_REGS
+    bl initAIFrameNana
+    RESTORE_REGS
+    mr r23, r3
+)") 
+
+extern "C" void initAIFrameNana(AiInput* aiInput) {
+    if (aiInput->aiMd == 0x0) {
+        // aiInput->aiMd = 0x7a;
+        // aiInput->moreInfoUnion.infos.isValidNanaState = true;
+        unsigned char dummy = 0x00;
+        change_md_aiInput(aiInput, 0x7a, &dummy, 0x6100, 0);
+        OSReport("; nana MD & Act changed\n");
+        // OSReport("; nana MD changed\n");
+        aiInput->aiActPtr->framesSinceScriptChanged = 5;
+    }    
+}
 
 // Raycast ignore Nonetype collision [Eon]
 // that gal is a witch (in a good/cool way) I swear to god
@@ -286,7 +306,6 @@ INJECTION("FORCE_AI_TAUNT_ROUTINE", 0x809112cc, R"(
     bctr
 )");
 
-#define change_md_aiInput ((void (*)(AiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5)) 0x809049d0)
 extern "C" void forceAiTauntRoutine(AiInput *aiInputInst) {
     unsigned char dummy = 0xff;
     // setting it to md 0x1 will make it alternate between md 0x1 and md 0x14, and we don't want that.
@@ -303,6 +322,7 @@ INJECTION("mdThreeFix", 0x80909b98, R"(
 
 // 0x60000000 = nop
 
+#if IS_242 == 1
 // FORCED_JUMP_FIX
 DATA_WRITE(0x809028dc, 0x60000000);
 // FORCED_JUMP_FIX2
@@ -426,6 +446,7 @@ DATA_WRITE(0x8090300c, 0x60000000);
 DATA_WRITE(0x80903094, 0x60000000);
 // FORCED_INPUT_FIX48
 DATA_WRITE(0x809030a0, 0x60000000);
+#endif
 
 // FORCED MD FIX
 // DATA_WRITE(0x808fe864, 0x60606060);
@@ -491,6 +512,12 @@ extern "C" void CPUForceMd(AiInput * aiInput, unsigned int intent, int newAction
     // OSReport("ADDR: %08x\n", aiInput);
 
     if (aiInput->aiActPtr->aiStatPtr->character == CHAR_ID::Nana) {
+        OSReport("-- [NANA] MD CHANGE --\n");
+        OSReport("current action: %04x; ", aiInput->aiActPtr->aiScript);
+        OSReport("new action?: %04x;\n", newAction);
+        OSReport("current md: %02x; ", aiInput->aiMd);
+        OSReport("new md: %02x\n", intent);
+        
         if (intent == aimd_value::md_nana_return) {
             intent = aimd_value::md_nana_grabbing;
         }
@@ -536,7 +563,7 @@ bool debugSwitch[4] = {true, true, true, true};
 extern "C" void filterMDCall(AiInput *aiInputInst,unsigned int newMode,unsigned char *param_3,unsigned int newOrOldAction,int param_5) {
     int pNum = _GetPlayerNo_aiChrIdx(&aiInputInst->cpuIdx);
     if (pNum >= 4) pNum = 0;
-    if (!disabledSwitch[pNum]) {
+    if (!disabledSwitch[pNum] || aiInputInst->aiActPtr->aiInputPtr->charId == CHAR_ID::Nana) {
         change_md_aiInput(aiInputInst, newMode, param_3, newOrOldAction, param_5);
     }
     return;
@@ -665,7 +692,7 @@ WeightedDie dynamicDice[2] = {
 extern bool isMMS;
 extern "C" {
     double fn_result = 0;
-    void aiFunctionHandlers(float unk_f10, AiParam* targetAiParam, unsigned int switchCase, AiScriptData* selfAi, u32 sp, u32 rtoc) {
+    void aiFunctionHandlers(float unk_f10, AiStat* targetAiStat, unsigned int switchCase, AiScriptData* selfAi, u32 sp, u32 rtoc) {
         fn_shouldReturnResult = 0;
 
 
@@ -683,7 +710,7 @@ extern "C" {
         char targetPlayerNo = -1;
         bool shouldGetAiTarget = (switchCase & 0x0100) >> 8;
 
-        // OSReport("aiParam: %08x\n", &targetAiParam);
+        // OSReport("aiInput: %08x\n", &targetAiStat);
         // OSReport("aiInput: %08x\n", &targetAiParam->aiInput);
         // OSReport("cpuIdx: %08x\n", &targetAiParam->aiInput->cpuIdx);
         // OSReport("&targetAiParam->aiInput->cpuIdx: %08x\n", &targetAiParam->aiInput->cpuIdx);
@@ -691,25 +718,27 @@ extern "C" {
 
         if (shouldGetAiTarget) {
             switchCase -= 0x100;
-            targetPlayerNo = _GetPlayerNo_aiChrIdx(&targetAiParam->aiInput->cpuIdx);
+            targetPlayerNo = _GetPlayerNo_aiChrIdx(&targetAiStat->aiInput->cpuIdx);
             EntryID eID = FIGHTER_MANAGER->getEntryId(targetPlayerNo);
             targetFighterEntry = _getEntity_ftEntryManager(FIGHTER_MANAGER->entryManager, eID);
-            bool getChild = targetAiParam->aiInput->aiActPtr->aiStatPtr->character == CHAR_ID::Nana;
+            bool getChild = targetAiStat->character == CHAR_ID::Nana;
             targetFighter = FIGHTER_MANAGER->getFighter(eID, getChild);
         } else {
             targetPlayerNo = _GetPlayerNo_aiChrIdx(&selfAi->aiInputPtr->cpuIdx);
             EntryID eID = FIGHTER_MANAGER->getEntryId(targetPlayerNo);
             targetFighterEntry = _getEntity_ftEntryManager(FIGHTER_MANAGER->entryManager, eID);
-            bool getChild = selfAi->aiInputPtr->aiActPtr->aiStatPtr->character == CHAR_ID::Nana;
+            bool getChild = selfAi->aiStatPtr->character == CHAR_ID::Nana;
             targetFighter = FIGHTER_MANAGER->getFighter(eID, getChild);
         }
         switchCase -= 0x1000;
 
-        if (switchCase == 0x62) {
-            fn_result = SC_MELEE->stageLoader->stage->framesPassed;
-            // OSReport("counter = %.3f; %08x; \n", fn_result, fn_result);
-            fn_shouldReturnResult = 1;
-            return;
+        switch(switchCase) {
+            case 0x62:
+                fn_result = SC_MELEE->stageLoader->stage->framesPassed;
+                // OSReport("counter = %.3f; %08x; \n", fn_result, fn_result);
+                fn_shouldReturnResult = 1;
+                return;
+
         }
 
         if (isMMS) {
@@ -721,300 +750,241 @@ extern "C" {
             }
         }
 
-        // functional stack pop
-        if (switchCase == 0x5E) {
-            // OSReport("STACK_POP %04x, %d, %.3f\n", selfAi->aiScript, functionalStackPtr, functionalStack[functionalStackPtr]);
-            if (functionalStackPtr >= 0) {
-                fn_result = functionalStack[functionalStackPtr];
-                fn_shouldReturnResult = 1;
-                functionalStackPtr --;
+        switch(switchCase) {
+            // functional stack pop
+            case 0x5E:
+                if (functionalStackPtr >= 0) {
+                    // OSReport("STACK_POP: %04x, %d, %.3f\n", selfAi->aiScript, functionalStackPtr, functionalStack[functionalStackPtr]);
+                    fn_result = functionalStack[functionalStackPtr];
+                    fn_shouldReturnResult = 1;
+                    functionalStackPtr --;
+                } else {
+                    OSReport("====FSP ACCESS ERROR====\n");
+                }
                 return;
-            } else {
-                OSReport("========ERROR: TRIED TO ACCESS STACK VARIABLE THAT DIDN'T EXIST========\n");
-            }
-        }
+            case 0x5F:
+                LTFStackPtr++;
+                if (LTFStackPtr >= 0) {
+                    fn_result = LTFStack[LTFStackPtr];
+                    fn_shouldReturnResult = 1;
+                } else {
+                    OSReport("====LTF ACCESS ERROR====\n");
+                }
+                return;
 
-        if (switchCase == 0x5F) {
-            LTFStackPtr++;
-            if (LTFStackPtr >= 0) {
-                fn_result = LTFStack[LTFStackPtr];
-                fn_shouldReturnResult = 1;
-                return;
-            } else {
-                OSReport("========ERROR: TRIED TO ACCESS LTF STACK VARIABLE THAT DIDN'T EXIST========\n");
-            }
+            
         }
 
         // hack to ensure MMS doesn't die
         if (targetFighterEntry == nullptr || targetFighter == nullptr || targetFighter->modules == nullptr) {
-            OSReport("no target!!: %02x; shouldGetTarget? %d; ftEntry: %08x; targetPlayerNo: %d; targetFighter: %08x\n", switchCase, shouldGetAiTarget, targetFighterEntry, targetPlayerNo, targetFighter);
+            // OSReport("no target!!: %02x; shouldGetTarget? %d; ftEntry: %08x; targetPlayerNo: %d; targetFighter: %08x\n", switchCase, shouldGetAiTarget, targetFighterEntry, targetPlayerNo, targetFighter);
             fn_result = 0;
             fn_shouldReturnResult = 1;
             return;
         }
 
-        if (switchCase == 0x41) {
-            fn_result = targetFighter->modules->ftStopModule->hitlagMaybe;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-
-        if (switchCase == 0x22) {
-            auto entry = selfAi->aiStatPtr->aiInput->ftEntryPtr;
-            if (entry != nullptr && entry->ftStageObject != nullptr) {
-                soModuleAccessor* accessorPtr = entry->ftStageObject->modules;
-                auto& pcModule = *accessorPtr->paramCustomizeModule;
-                float currXVel = selfAi->aiStatPtr->xVel;
-                float absCurrXVel = currXVel - 2 * currXVel * (currXVel < 0);
-                float lostMomentum = (pcModule.jumpSquatFrames * pcModule.groundFriction * 2);
-                float adjustedXVel = 
-                    (currXVel == 0) ? 0 
-                    : (currXVel + (lostMomentum - lostMomentum * 2 * (currXVel > 0)));
-                if (absCurrXVel < lostMomentum) {
-                    adjustedXVel = 0;
+        fn_shouldReturnResult = 1;
+        switch(switchCase) {
+            case 0x41: {
+                fn_result = targetFighter->modules->ftStopModule->hitlagMaybe;
+                return;
+            } case 0x22: {
+                auto entry = selfAi->aiStatPtr->aiInput->ftEntryPtr;
+                if (entry != nullptr && entry->ftStageObject != nullptr) {
+                    soModuleAccessor* accessorPtr = entry->ftStageObject->modules;
+                    auto& pcModule = *accessorPtr->paramCustomizeModule;
+                    float currXVel = selfAi->aiStatPtr->xVel;
+                    float absCurrXVel = currXVel - 2 * currXVel * (currXVel < 0);
+                    float lostMomentum = (pcModule.jumpSquatFrames * pcModule.groundFriction * 2);
+                    float adjustedXVel = 
+                        (currXVel == 0) ? 0 
+                        : (currXVel + (lostMomentum - lostMomentum * 2 * (currXVel > 0)));
+                    if (absCurrXVel < lostMomentum) {
+                        adjustedXVel = 0;
+                    }
+                    fn_result = adjustedXVel;
+                } else {
+                    fn_result = 1;
                 }
-                fn_result = adjustedXVel;
-            } else {
-                fn_result = 1;
-            }
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        // 0x817d13f0, f4, f8
-
-        // 0x8081c874
-        // 0x817d10d0
-        // 0x817d0fa4        
-        if (switchCase == 0x27 || switchCase == 0x28) {
-            AiStat& stat = *(switchCase == 0x28 ? targetAiParam->aiInput->aiActPtr->aiStatPtr : selfAi->aiStatPtr);
-            auto entry = stat.aiInput->ftEntryPtr;
-            if (entry != nullptr && entry->ftStageObject != nullptr) {
-                soModuleAccessor* accessorPtr = entry->ftStageObject->modules;
-                if (accessorPtr != nullptr) {
-                    soModuleAccessor& accessor = *accessorPtr;
-                    fn_result = stat.hurtboxSize * 2;
-                    if (!stat.floorInfoBitfield.infos.isTouchingGround || (accessor.statusModule->action == 0xB && accessor.motionModule->getFrame() <= 10)) {
-                        fn_result -= (stat.topNPos.f2 - stat.position.f2);
+                return;
+            } 
+            case 0x27:
+            case 0x28: {
+                AiStat& stat = *(switchCase == 0x28 ? targetAiStat->aiInput->aiActPtr->aiStatPtr : selfAi->aiStatPtr);
+                auto entry = stat.aiInput->ftEntryPtr;
+                if (entry != nullptr && entry->ftStageObject != nullptr) {
+                    soModuleAccessor* accessorPtr = entry->ftStageObject->modules;
+                    if (accessorPtr != nullptr) {
+                        soModuleAccessor& accessor = *accessorPtr;
+                        fn_result = stat.hurtboxSize * 2;
+                        if (!stat.floorInfoBitfield.infos.isTouchingGround || (accessor.statusModule->action == 0xB && accessor.motionModule->getFrame() <= 10)) {
+                            fn_result -= (stat.topNPos.f2 - stat.position.f2);
+                        }
+                    } else {
+                        fn_result = 5;
                     }
                 } else {
                     fn_result = 5;
                 }
-            } else {
-                fn_result = 5;
-            }
-            fn_shouldReturnResult = 1;
-            return;
-        }
-
-        if (switchCase == 0x4C) { // IsOnStage
-            fn_shouldReturnResult = 1;
-            if (targetFighter->modules->groundModule == nullptr) {
-                fn_result = 0;
                 return;
-            }
-
-            Vec3f startPos = {};
-            targetFighter->modules->groundModule->getCorrectPos(&startPos);
-
-            Vec3f destPos {
-                0,
-                -500,
-                0
-            };
-
-            Vec3f ret1 {-1,-1,-1};
-            Vec3f ret2 {-1,-1,-1};
-
-            int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
-            
-            fn_result = -1;
-            if (rayResult) {
-                fn_result = 1;
-                return;
-            }
-
-            fn_result = 0;
-            return;
-        }
-
-        if (switchCase == 0x4B) { // YDistFloor
-            if (targetFighter->modules->groundModule == nullptr) {
-                fn_result = -1;
-                return;
-            }
-            Vec3f startPos = {};
-            xyDouble dPos = targetFighter->modules->groundModule->getDownPos();
-            startPos.f1 = dPos.xPos;
-            startPos.f2 = dPos.yPos;
-            startPos.f3 = 0;
-            Vec3f destPos {
-                0,
-                -500,
-                0
-            };
-
-            Vec3f ret1 {-1,-1,-1};
-            Vec3f ret2 {-1,-1,-1};
-
-            int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
-            
-            fn_result = -1;
-            if (rayResult) {
-                startPos.f1 -= ret1.f1;
-                startPos.f2 -= ret1.f2;
-                fn_result = _length_vec3f(&startPos);
-                // OSReport("NORMALIZED RESULT: %.3f\n", res);
-            }
-
-            fn_shouldReturnResult = 1;
-            return;
-        }
-
-        if (switchCase == 0x51) {
-            fn_result = FIGHTER_MANAGER->getInput(targetFighterEntry->entryId)->aiMd;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        if (switchCase == 0x52) {
-            fn_result = targetPlayerNo;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        if (switchCase == 0x53) {
-            if (targetFighterEntry == nullptr) {
-                fn_result = -1;
-            } else {
-                fn_result = 0;
-    //            OSReport("move id: %08x\n", targetFighterEntry->owner->ownerDataPtr->currStaleQueueNum);
-                for (int i = 0; i < 9; i++) {
-    //                OSReport("i: %d; moveNum: %08x\n", i, targetFighterEntry->owner->ownerDataPtr->staleMoveQueue[i].attack);
-                    if (targetFighterEntry->owner->ownerDataPtr->staleMoveQueue[i].attack == targetFighterEntry->owner->ownerDataPtr->currStaleQueueNum) {
-                        fn_result++;
-                    }
+            } case 0x4C: { // IsOnStage
+                // OSReport("isOnStage \n");
+                if (targetFighter->modules->groundModule == nullptr) {
+                    fn_result = 0;
+                    return;
                 }
-            }
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        if (switchCase == 0x54) {
-            if (targetFighter->modules->groundModule == nullptr) fn_result = 0;
-            else fn_result = targetFighter->modules->groundModule->isPassableGround(0);
-            fn_shouldReturnResult = 1;
-            return;
-        }
 
-        if (switchCase == 0x55) {
-//            OSReport("ftEntry Address: %08x\n", targetFighterEntry);
-//            OSReport("ftSo Address: %08x\n", targetFighter);
-//            OSReport("UnkFtPtr Address: %08x\n", targetFighter->modFnAccessor);
-//            OSReport("Supposed cancelModule address: %08x\n", targetFighter->modFnAccessor->getFtCancelModule(targetFighter));
-            if (targetFighter == nullptr) {
+                Vec3f startPos = {};
+                targetFighter->modules->groundModule->getCorrectPos(&startPos);
+
+                Vec3f destPos {
+                    0,
+                    -500,
+                    0
+                };
+
+                Vec3f ret1 {-1,-1,-1};
+                Vec3f ret2 {-1,-1,-1};
+
+                int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+                
+                fn_result = -1;
+                if (rayResult) {
+                    fn_result = 1;
+                    return;
+                }
+
                 fn_result = 0;
                 return;
+            } case 0x4B: { // YDistFloor
+                if (targetFighter->modules->groundModule == nullptr) {
+                    fn_result = -1;
+                    return;
+                }
+                Vec3f startPos = {};
+                xyDouble dPos = targetFighter->modules->groundModule->getDownPos();
+                startPos.f1 = dPos.xPos;
+                startPos.f2 = dPos.yPos;
+                startPos.f3 = 0;
+                Vec3f destPos {
+                    0,
+                    -500,
+                    0
+                };
+
+                Vec3f ret1 {-1,-1,-1};
+                Vec3f ret2 {-1,-1,-1};
+
+                int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, true, 0, 1, 1);
+                
+                fn_result = -1;
+                if (rayResult) {
+                    startPos.f1 -= ret1.f1;
+                    startPos.f2 -= ret1.f2;
+                    fn_result = _length_vec3f(&startPos);
+                    // OSReport("NORMALIZED RESULT: %.3f\n", res);
+                }
+
+                return;
+            } case 0x51: { // AIMD
+                fn_result = FIGHTER_MANAGER->getInput(targetFighterEntry->entryId)->aiMd;
+                return;
+            } case 0x52: { // targetPlayerNum
+                fn_result = targetPlayerNo;
+                return;
+        //     } case 0x53: { // staleMoveAmount
+        //         if (targetFighterEntry == nullptr) {
+        //             fn_result = -1;
+        //         } else {
+        //             fn_result = 0;
+        // //            OSReport("move id: %08x\n", targetFighterEntry->owner->ownerDataPtr->currStaleQueueNum);
+        //             for (int i = 0; i < 9; i++) {
+        // //                OSReport("i: %d; moveNum: %08x\n", i, targetFighterEntry->owner->ownerDataPtr->staleMoveQueue[i].attack);
+        //                 if (targetFighterEntry->owner->ownerDataPtr->staleMoveQueue[i].attack == targetFighterEntry->owner->ownerDataPtr->currStaleQueueNum) {
+        //                     fn_result++;
+        //                 }
+        //             }
+        //         }
+            } case 0x54: { // isPassableGround
+                if (targetFighter->modules->groundModule == nullptr) fn_result = 0;
+                else fn_result = targetFighter->modules->groundModule->isPassableGround(0);
+                return;
+            } case 0x55: { // canCancelAttack
+            //    OSReport("ftEntry Address: %08x\n", targetFighterEntry);
+            //    OSReport("ftSo Address: %08x\n", targetFighter);
+            //    OSReport("UnkFtPtr Address: %08x\n", targetFighter->modFnAccessor);
+            //    OSReport("Supposed cancelModule address: %08x\n", targetFighter->modFnAccessor->getFtCancelModule(targetFighter));
+                if (targetFighter == nullptr) {
+                    fn_result = 0;
+                    return;
+                }
+                fn_result = targetFighter
+                        ->getCancelModule()
+                        ->isEnableCancel();
+
+                return;
+            } case 0x56: { // weight
+                fn_result = targetFighter->modules->paramCustomizeModule->weight;
+                return;
+            } case 0x57: { // gravity
+                fn_result = targetFighter->modules->paramCustomizeModule->gravity;
+                return;
+            } case 0x58: { // fastfallSpeed
+                fn_result = targetFighter->modules->paramCustomizeModule->fastFallSpeed;
+                return;
+            } case 0x59: { // endFrame
+                auto motionModule = targetFighter->modules->motionModule;
+                if (motionModule != nullptr && motionModule->mainAnimationData.resPtr != nullptr) {
+                    fn_result = motionModule->getEndFrame();
+                } else fn_result = -1;
+                return;
+            } case 0x5A: { // width
+                auto groundModule = targetFighter->modules->groundModule;
+                if (groundModule == nullptr) fn_result = 0;
+                else fn_result = (groundModule->getRightPos().xPos - groundModule->getLeftPos().xPos) * 1.5;
+                return;
+            } case 0x5B: // ECB Center X
+              case 0x5C: { // ECB Center Y
+                auto groundModule = targetFighter->modules->groundModule;
+                if (groundModule == nullptr) fn_result = 0;
+                else if (switchCase == 0x5B) fn_result = (groundModule->getRightPos().xPos + groundModule->getLeftPos().xPos) / 2;
+                else fn_result = (groundModule->getUpPos().yPos + groundModule->getDownPos().yPos) / 2;
+                return;
+            } case 0x5D: { // player count
+                fn_result = getPlayerCount();
+                return;
+            } case 0x60: { // shieldStunRemain
+                auto RABasicsArr = (*(int (*)[targetFighter->modules->workModule->RAVariables->basicsSize])targetFighter->modules->workModule->RAVariables->basics);
+                fn_result = RABasicsArr[0x5];
+                return;
+            } case 0x61: { // scale
+                fn_result = targetFighter->getOwner()->scale;
+                return;
+            } case 0x63: { // action category
+                fn_result = targetFighterEntry->ftInput->aiInputMain->aiActPtr->aiStatPtr->aiActionCategory;
+                return;
+            } case 0x70: { // action timer
+                fn_result = targetFighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector.threadUnion.ActionMain.cmdInterpreter->logicalFrame;
+                return;
+            } case 0x71: { // throw frame
+                fn_result = playerTrainingData[targetPlayerNo < 4 ? targetPlayerNo : 0].debug.psaData.throwFrame;
+                return;
+            } case 0xFD: { // debugValue
+                fn_result = playerTrainingData[targetPlayerNo].options.AI.debugValue;
+                return;
+            } case 0xFE: { // training mode option
+                fn_result = -1;
+                if (SCENE_NAME == 0x71547261) {
+                    fn_result = *TRAINING_MODE_OPTION;
+                }
+                return;
+            } case 0xFF: { // is debug enabled
+                fn_result = targetPlayerNo < 4 ? playerTrainingData[targetPlayerNo].options.AI.debug : false;
+                return;
             }
-            fn_result = targetFighter
-                    ->getCancelModule()
-                    ->isEnableCancel();
-
-            fn_shouldReturnResult = 1;
-            return;
-        }
-
-        // weight
-        if (switchCase == 0x56) {
-            fn_result = targetFighter->modules->paramCustomizeModule->weight;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        // gravity
-        if (switchCase == 0x57) {
-            fn_result = targetFighter->modules->paramCustomizeModule->gravity;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        // fastfallspeed
-        if (switchCase == 0x58) {
-            fn_result = targetFighter->modules->paramCustomizeModule->fastFallSpeed;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        // endframe
-        if (switchCase == 0x59) {
-
-            // fn_result = 1;
-            // fn_shouldReturnResult = 1;
-            auto motionModule = targetFighter->modules->motionModule;
-            if (motionModule != nullptr && motionModule->mainAnimationData.resPtr != nullptr) {
-                fn_result = motionModule->getEndFrame();
-                fn_shouldReturnResult = 1;
+            default: {
+                fn_shouldReturnResult = 0;
             }
-            return;
-        }
-        // width
-        if (switchCase == 0x5A) {
-            auto groundModule = targetFighter->modules->groundModule;
-            if (groundModule == nullptr) fn_result = 0;
-            else fn_result = (groundModule->getRightPos().xPos - groundModule->getLeftPos().xPos) * 1.5;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        // ECB Center X
-        if (switchCase == 0x5B) {
-            auto groundModule = targetFighter->modules->groundModule;
-            if (groundModule == nullptr) fn_result = 0;
-            else fn_result = (groundModule->getRightPos().xPos + groundModule->getLeftPos().xPos) / 2;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        // ECB Center Y
-        if (switchCase == 0x5C) {
-            auto groundModule = targetFighter->modules->groundModule;
-            if (groundModule == nullptr) fn_result = 0;
-            else fn_result = (groundModule->getUpPos().yPos + groundModule->getDownPos().yPos) / 2;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-
-        // player count
-        if (switchCase == 0x5D) {
-            fn_result = getPlayerCount();
-            fn_shouldReturnResult = 1;
-            return;
-        } // 80623560
-
-        // shieldStunRemain
-        if (switchCase == 0x60) {
-            auto RABasicsArr = (*(int (*)[targetFighter->modules->workModule->RAVariables->basicsSize])targetFighter->modules->workModule->RAVariables->basics);
-            fn_result = RABasicsArr[0x5];
-            fn_shouldReturnResult = 1;
-            return;
-        }
-
-        // scale
-        if (switchCase == 0x61) {
-            fn_result = targetFighter->getOwner()->scale;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        
-        // action category
-        if (switchCase == 0x63) {
-            fn_result = targetFighterEntry->ftInput->aiInputMain->aiActPtr->aiStatPtr->aiActionCategory;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-
-        if (switchCase == 0x70) {
-            fn_result = targetFighter->modules->animCmdModule->threadList->instanceUnitFullPropertyArrayVector.threadUnion.ActionMain.cmdInterpreter->logicalFrame;
-            fn_shouldReturnResult = 1;
-            return;
-        }
-
-        // throw frame
-        if (switchCase == 0x71) {
-            fn_result = playerTrainingData[targetPlayerNo < 4 ? targetPlayerNo : 0].debug.psaData.throwFrame;
-            fn_shouldReturnResult = 1;
-            return;
         }
 
         if (switchCase >= 0x80 && switchCase <= 0x8B && targetPlayerNo >= 4) {
@@ -1037,41 +1007,9 @@ extern "C" {
             }
             return;
         }
-        fn_shouldReturnResult = 1;
-        switch (switchCase) {
-            case 0x80: fn_result = playerTrainingData[targetPlayerNo].options.AI.aggression; return;
-            case 0x81: fn_result = playerTrainingData[targetPlayerNo].options.AI.bait_dashAwayChance; return;
-            case 0x82: fn_result = playerTrainingData[targetPlayerNo].options.AI.bait_wdashAwayChance; return;
-            case 0x83: fn_result = playerTrainingData[targetPlayerNo].options.AI.baitChance; return;
-            case 0x84: fn_result = playerTrainingData[targetPlayerNo].options.AI.braveChance; return;
-            case 0x85: fn_result = playerTrainingData[targetPlayerNo].options.AI.circleCampChance; return;
-            case 0x86: fn_result = playerTrainingData[targetPlayerNo].options.AI.djumpiness; return;
-            case 0x87: fn_result = playerTrainingData[targetPlayerNo].options.AI.jumpiness; return;
-            case 0x88: fn_result = playerTrainingData[targetPlayerNo].options.AI.platChance; return;
-            case 0x89: fn_result = playerTrainingData[targetPlayerNo].options.AI.SDIChance; return;
-            case 0x8A: fn_result = playerTrainingData[targetPlayerNo].options.AI.wall_chance; return;
-            case 0x8B: fn_result = playerTrainingData[targetPlayerNo].options.AI.reactionTime; return;
-            default:
-                fn_shouldReturnResult = 0;
-        }
-
-        if (switchCase == 0xFD) {
-            fn_result = playerTrainingData[targetPlayerNo].options.AI.debugValue;
+        if (switchCase >= 0x80 && switchCase <= 0x8B) {
             fn_shouldReturnResult = 1;
-            return;
-        }
-
-        if (switchCase == 0xFE) {
-            fn_result = -1;
-            if (SCENE_NAME == 0x71547261) {
-                fn_result = *TRAINING_MODE_OPTION;
-            }
-            fn_shouldReturnResult = 1;
-            return;
-        }
-        if (switchCase == 0xFF) {
-            fn_result = targetPlayerNo < 4 ? playerTrainingData[targetPlayerNo].options.AI.debug : false;
-            fn_shouldReturnResult = 1;
+            fn_result = playerTrainingData[targetPlayerNo].options.AI.pIndexes.asArray[switchCase - 0x80];
             return;
         }
     };
@@ -1358,10 +1296,11 @@ extern "C" {
         gotoCmdScripts[gotoCmdStackPtr] = aiActInst->aiScript;
         gotoCmdScriptHeads[gotoCmdStackPtr] = aiActInst->constPtr;
         int pNum = _GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx);
-        if (nextScript != 0x8505 && pNum < 4) {
-            auto& scriptPath = playerTrainingData[pNum].aiData.scriptPath;
-            scriptPath.push(new AIScriptCache {(unsigned short) nextScript, (char) gotoCmdStackPtr + 1});
-        }
+        // if (nextScript != 0x8505 && pNum < 4) {
+        //     auto& scriptPath = playerTrainingData[pNum].aiData.scriptPath;
+        //     scriptPath.push(new AIScriptCache {(unsigned short) nextScript, (char) gotoCmdStackPtr + 1});
+        // }
+        
         // OSReport("XGoto: (%08x) ==> %d: %08x: [\n", aiActInst->aiScript, gotoCmdStackPtr, aiActInst->constPtr);
         // for (int i = 0; i < gotoCmdStackPtr; i++) {
         //     OSReport("%08x, ", gotoCmdScriptHeads[i]);
@@ -1798,16 +1737,16 @@ extern "C" {
 
         return ((0.01 * kbg) * ((1.4 * (((0.05 * (damage * (damage + _floor(percent)))) + (damage + _floor(percent)) * 0.1) * (2.0 - (2.0 * (weight * 0.01)) / (1.0 + (weight * 0.01))))) + 18) + bkb);
     }
-    float calculatePercentForKnockback(float target, float damage, float bkb, float kbg, float weight, bool isWeightDependent) {
-        // big shoutouts to https://www.symbolab.com/solver/solve-for-equation-calculator/solve%20for%20p%2C%20t%20%3D%20%5Cleft(%5Cleft(0.01%20%5Ccdot%20k%5Cright)%20%5Ccdot%5Cleft(%5Cleft(1.4%20%5Ccdot%5Cleft(%5Cleft(%5Cleft(0.05%20%5Ccdot%5Cleft(d%20%5Ccdot%5Cleft(d%20%2B%20p%5Cright)%5Cright)%5Cright)%20%2B%20%5Cleft(d%20%2B%20p%5Cright)%20%5Ccdot%200.1%5Cright)%20%5Ccdot%5Cleft(2.0%20-%20%5Cleft(2.0%20%5Ccdot%5Cleft(w%20%5Ccdot%200.01%5Cright)%5Cright)%20%2F%20%5Cleft(1.0%20%2B%20%5Cleft(w%20%5Ccdot%200.01%5Cright)%5Cright)%5Cright)%5Cright)%5Cright)%20%2B%2018%5Cright)%20%2B%20b%5Cright)?or=input
-        // t = ((0.01 * k) * ((1.4 * (((0.05 * (d * (d + p))) + (d + p) * 0.1) * (2.0 - (2.0 * (w * 0.01)) / (1.0 + (w * 0.01))))) + 18) + b)
-        // percent = (((target * weight + 100 * target - weight * bkb - 100 * bkb - 0.18 * kbg * weight - 18 * kbg) / (2.8 * kbg - 0.028 * kbg * weight)) - 0.05 * damage * damage - 0.1 * damage) * 0.05 * damage + 0.1
-        if (isWeightDependent) {
-            f32 kb = ((((bkb * 10 / 20) + 1) * 1.4 * (200 / (weight + 100)) + 18) * (kbg / 100));
-            return (kb > target) ? 0 : 1000;
-        }
-        return  (((target * weight + 100 * target - weight * bkb - 100 * bkb - 0.18 * kbg * weight - 18 * kbg) / (2.8 * kbg - 0.028 * kbg * weight)) - 0.05 * damage * damage - 0.1 * damage) * 0.05 * damage + 0.1;
-    }
+    // float calculatePercentForKnockback(float target, float damage, float bkb, float kbg, float weight, bool isWeightDependent) {
+    //     // big shoutouts to https://www.symbolab.com/solver/solve-for-equation-calculator/solve%20for%20p%2C%20t%20%3D%20%5Cleft(%5Cleft(0.01%20%5Ccdot%20k%5Cright)%20%5Ccdot%5Cleft(%5Cleft(1.4%20%5Ccdot%5Cleft(%5Cleft(%5Cleft(0.05%20%5Ccdot%5Cleft(d%20%5Ccdot%5Cleft(d%20%2B%20p%5Cright)%5Cright)%5Cright)%20%2B%20%5Cleft(d%20%2B%20p%5Cright)%20%5Ccdot%200.1%5Cright)%20%5Ccdot%5Cleft(2.0%20-%20%5Cleft(2.0%20%5Ccdot%5Cleft(w%20%5Ccdot%200.01%5Cright)%5Cright)%20%2F%20%5Cleft(1.0%20%2B%20%5Cleft(w%20%5Ccdot%200.01%5Cright)%5Cright)%5Cright)%5Cright)%5Cright)%20%2B%2018%5Cright)%20%2B%20b%5Cright)?or=input
+    //     // t = ((0.01 * k) * ((1.4 * (((0.05 * (d * (d + p))) + (d + p) * 0.1) * (2.0 - (2.0 * (w * 0.01)) / (1.0 + (w * 0.01))))) + 18) + b)
+    //     // percent = (((target * weight + 100 * target - weight * bkb - 100 * bkb - 0.18 * kbg * weight - 18 * kbg) / (2.8 * kbg - 0.028 * kbg * weight)) - 0.05 * damage * damage - 0.1 * damage) * 0.05 * damage + 0.1
+    //     if (isWeightDependent) {
+    //         f32 kb = ((((bkb * 10 / 20) + 1) * 1.4 * (200 / (weight + 100)) + 18) * (kbg / 100));
+    //         return (kb > target) ? 0 : 1000;
+    //     }
+    //     return  (((target * weight + 100 * target - weight * bkb - 100 * bkb - 0.18 * kbg * weight - 18 * kbg) / (2.8 * kbg - 0.028 * kbg * weight)) - 0.05 * damage * damage - 0.1 * damage) * 0.05 * damage + 0.1;
+    // }
     void RELOCATE_INSTRUCTION() {
         if (forcedNextInstruction != nullptr) {
             asm("mr r30, %0"
@@ -1915,8 +1854,10 @@ extern "C" {
             &&_incrementPrediction,
             // 0x55
             &&_getCurrentPredictValue,
-            // 0x58 - 0x55 - 1 = 2
-            REP2(nullptr)
+            // 0x56
+            &&_setPredictValue,
+            // 0x57
+            nullptr,
             // 0x58
             &&_getCommitPredictChance,
             // 0x59
@@ -2223,11 +2164,11 @@ extern "C" {
                 return;
             }
             _setAIMD: { // OSReport("setAIMD\n");
-                int newMode = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-                int newScript = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                // int newMode = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                // int newScript = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
 
-                unsigned char dummy = 0xff;
-                change_md_aiInput(aiActInst->aiInputPtr, newMode, &dummy, newScript, 0);
+                // unsigned char dummy = 0xff;
+                // change_md_aiInput(aiActInst->aiInputPtr, newMode, &dummy, newScript, 0);
                 return;
             }
             _switchTarget: { // OSReport("switchTarget\n"); // 8055b284
@@ -2243,15 +2184,15 @@ extern "C" {
                 return;
             }
             _calcKnockback: { // OSReport("calcKnockback\n");
-                int varToMod = args[1];
-                float percent = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                float damage = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                float bkb = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
-                float kbg = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
-                float weight = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
-                int isWeightDependent = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
+                // int varToMod = args[1];
+                // float percent = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                // float damage = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                // float bkb = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                // float kbg = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                // float weight = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                // int isWeightDependent = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
 
-                aiActInst->variables[varToMod] = calculateKnockback(percent, damage, bkb, kbg, weight, isWeightDependent); ;
+                // aiActInst->variables[varToMod] = calculateKnockback(percent, damage, bkb, kbg, weight, isWeightDependent); ;
                 return;
             }
             _calcYChange: { // OSReport("calcYChange\n");
@@ -2265,14 +2206,18 @@ extern "C" {
                 
                 float accumulator = 0;
                 float tracker = ySpeed;
+                s32 fastfallDelay = 1;
                 s32 remainder = frameCount;
                 while (remainder > 0) {
                     remainder --;
                     accumulator += tracker;
                     tracker -= gravity;
                     if (tracker < fastFallSpeed || (tracker <= 0 && fastFallImmediate)) {
-                        tracker = fastFallSpeed;
-                        break;
+                        if (fastfallDelay <= 0) {
+                            tracker = fastFallSpeed;
+                            break;
+                        }
+                        fastfallDelay --;
                     }
                     else if (tracker < maxFallSpeed) {
                         tracker = maxFallSpeed;
@@ -2376,8 +2321,8 @@ extern "C" {
 
                 int rayResult = _stRayCheck_vec3f(&startPos, &destPos, &ret1, &ret2, detectPlats, 0, 1, 1);
                 if (rayResult) {
-                    aiActInst->variables[retX] = (float) ret1.f1;
-                    aiActInst->variables[retY] = (float) ret1.f2;
+                    aiActInst->variables[retX] = (float) math_fabs(ret1.f1);
+                    aiActInst->variables[retY] = (float) math_fabs(ret1.f2);
                 } else {
                     aiActInst->variables[retX] = (float) -1;
                     aiActInst->variables[retY] = (float) -1;
@@ -2391,15 +2336,15 @@ extern "C" {
                 return;
             }
             _calcPercentForKnockback: { // OSReport("calcPercentForKnockback\n");
-                int varToMod = args[1];
-                float target = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                float damage = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                float bkb = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
-                float kbg = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
-                float weight = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
-                int isWeightDependent = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
+                // int varToMod = args[1];
+                // float target = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                // float damage = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                // float bkb = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
+                // float kbg = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
+                // float weight = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
+                // int isWeightDependent = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
 
-                aiActInst->variables[varToMod] = calculatePercentForKnockback(target, damage, bkb, kbg, weight, isWeightDependent);
+                // aiActInst->variables[varToMod] = calculatePercentForKnockback(target, damage, bkb, kbg, weight, isWeightDependent);
                 return;
             }
             _calcMoveWeight: { // OSReport("calcMoveWeight\n");
@@ -2624,6 +2569,13 @@ extern "C" {
                 aiActInst->variables[varToMod] = result;
                 return;
             }
+            _setPredictValue: { // OSReport("getCurrentPredictValue\n");
+                if (oPNum >= 4) oPNum = 0;
+                char value = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                int managerNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                rpsManagers[managerNum].set(oPNum, value);
+                return;
+            }
             _predictOMov: { // OSReport("predictOMov\n");
                 if (oPNum >= 4) oPNum = 0;
                 int varToMod = args[1];
@@ -2633,31 +2585,31 @@ extern "C" {
                 return;
             }
             _bitOR: { // OSReport("bitOR\n");
-                int varToMod = args[1];
-                int op1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                int op2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                aiActInst->variables[varToMod] = op1 | op2; 
+                // int varToMod = args[1];
+                // int op1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                // int op2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                // aiActInst->variables[varToMod] = op1 | op2; 
                 return;
             }
             _bitAND: { // OSReport("bitAND\n");
-                int varToMod = args[1];
-                int op1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                int op2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                aiActInst->variables[varToMod] = op1 & op2; 
+                // int varToMod = args[1];
+                // int op1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                // int op2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                // aiActInst->variables[varToMod] = op1 & op2; 
                 return;
             }
             _bitLSHIFT: { // OSReport("bitLSHIFT\n");
-                int varToMod = args[1];
-                int op1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                int op2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                aiActInst->variables[varToMod] = op1 << op2; 
+                // int varToMod = args[1];
+                // int op1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                // int op2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                // aiActInst->variables[varToMod] = op1 << op2; 
                 return;
             }
             _bitRSHIFT: { // OSReport("bitRSHIFT\n");
-                int varToMod = args[1];
-                int op1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                int op2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
-                aiActInst->variables[varToMod] = op1 >> op2; 
+                // int varToMod = args[1];
+                // int op1 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                // int op2 = _get_script_value_aiScriptData(aiActInst, *(int *) &args[3], 0);
+                // aiActInst->variables[varToMod] = op1 >> op2; 
                 return;
             }
             _mathMOD: { // OSReport("mathMOD\n");
@@ -2691,13 +2643,13 @@ extern "C" {
                 return;
             }
             _copyVarByNum: { // OSReport("copyVarByNum\n");
-                int varNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
-                int varFrom = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
-                if (varNum >= 24 || varFrom >= 24) {
-                    OSReport("========WARNING: TRIED OBTAIN DATA FROM VARNUM %d\n========", varNum);
-                } else {
-                    aiActInst->variables[varNum] = aiActInst->variables[varFrom];
-                }
+                // int varNum = _get_script_value_aiScriptData(aiActInst, *(int *) &args[1], 0);
+                // int varFrom = _get_script_value_aiScriptData(aiActInst, *(int *) &args[2], 0);
+                // if (varNum >= 24 || varFrom >= 24) {
+                //     OSReport("========WARNING: TRIED OBTAIN DATA FROM VARNUM %d\n========", varNum);
+                // } else {
+                //     aiActInst->variables[varNum] = aiActInst->variables[varFrom];
+                // }
                 return;
             }
             _STACK_PUSH: {
@@ -2908,7 +2860,7 @@ extern "C" {
                         if (pNum < 4) {
                             auto& scriptPath = playerTrainingData[pNum].aiData.scriptPath;
                             scriptPath.pop_back();
-                            scriptPath.pop_back();
+                            // scriptPath.pop_back();
                         }
                         return;
                     }
@@ -2977,79 +2929,10 @@ extern "C" {
                 amount *= multiplier;
                 int pNum = _GetPlayerNo_aiChrIdx(&aiActInst->aiInputPtr->cpuIdx);
                 if (!playerTrainingData[pNum].options.AI.autoAdjust) amount = 0;
-                switch(index) {
-                    case 0x0: {
-                        playerTrainingData[pNum].options.AI.aggression += amount;
-                        if (playerTrainingData[pNum].options.AI.aggression > 10) playerTrainingData[pNum].options.AI.aggression = 10;
-                        else if (playerTrainingData[pNum].options.AI.aggression < -1) playerTrainingData[pNum].options.AI.aggression = -1;
-                        return;
-                    }
-                    case 0x1: {
-                        playerTrainingData[pNum].options.AI.bait_dashAwayChance += amount;
-                        if (playerTrainingData[pNum].options.AI.bait_dashAwayChance > 10) playerTrainingData[pNum].options.AI.bait_dashAwayChance = 10;
-                        else if (playerTrainingData[pNum].options.AI.bait_dashAwayChance < -1) playerTrainingData[pNum].options.AI.bait_dashAwayChance = -1;
-                        return;
-                    }
-                    case 0x10: {
-                        playerTrainingData[pNum].options.AI.bait_wdashAwayChance += amount;
-                        if (playerTrainingData[pNum].options.AI.bait_wdashAwayChance > 10) playerTrainingData[pNum].options.AI.bait_wdashAwayChance = 10;
-                        else if (playerTrainingData[pNum].options.AI.bait_wdashAwayChance < -1) playerTrainingData[pNum].options.AI.bait_wdashAwayChance = -1;
-                        return;
-                    }
-                    case 0x3: {
-                        playerTrainingData[pNum].options.AI.baitChance += amount;
-                        if (playerTrainingData[pNum].options.AI.baitChance > 10) playerTrainingData[pNum].options.AI.baitChance = 10;
-                        else if (playerTrainingData[pNum].options.AI.baitChance < -1) playerTrainingData[pNum].options.AI.baitChance = -1;
-                        return;
-                    }
-                    case 0x4: {
-                        playerTrainingData[pNum].options.AI.braveChance += amount;
-                        if (playerTrainingData[pNum].options.AI.braveChance > 10) playerTrainingData[pNum].options.AI.braveChance = 10;
-                        else if (playerTrainingData[pNum].options.AI.braveChance < -1) playerTrainingData[pNum].options.AI.braveChance = -1;
-                        return;
-                    }
-                    case 0x5: {
-                        playerTrainingData[pNum].options.AI.circleCampChance += amount;
-                        if (playerTrainingData[pNum].options.AI.circleCampChance > 10) playerTrainingData[pNum].options.AI.circleCampChance = 10;
-                        else if (playerTrainingData[pNum].options.AI.circleCampChance < -1) playerTrainingData[pNum].options.AI.circleCampChance = -1;
-                        return;
-                    }
-                    case 0x6: {
-                        playerTrainingData[pNum].options.AI.djumpiness += amount;
-                        if (playerTrainingData[pNum].options.AI.djumpiness > 10) playerTrainingData[pNum].options.AI.djumpiness = 10;
-                        else if (playerTrainingData[pNum].options.AI.djumpiness < -1) playerTrainingData[pNum].options.AI.djumpiness = -1;
-                        return;
-                    }
-                    case 0x7: {
-                        playerTrainingData[pNum].options.AI.jumpiness += amount;
-                        if (playerTrainingData[pNum].options.AI.jumpiness > 10) playerTrainingData[pNum].options.AI.jumpiness = 10;
-                        else if (playerTrainingData[pNum].options.AI.jumpiness < -1) playerTrainingData[pNum].options.AI.jumpiness = -1;
-                        return;
-                    }
-                    case 0x8: {
-                        playerTrainingData[pNum].options.AI.platChance += amount;
-                        if (playerTrainingData[pNum].options.AI.platChance > 10) playerTrainingData[pNum].options.AI.platChance = 10;
-                        else if (playerTrainingData[pNum].options.AI.platChance < -1) playerTrainingData[pNum].options.AI.platChance = -1;
-                        return;
-                    }
-                    case 0x9: {
-                        playerTrainingData[pNum].options.AI.SDIChance += amount;
-                        if (playerTrainingData[pNum].options.AI.SDIChance > 10) playerTrainingData[pNum].options.AI.SDIChance = 10;
-                        else if (playerTrainingData[pNum].options.AI.SDIChance < -1) playerTrainingData[pNum].options.AI.SDIChance = -1;
-                        return;
-                    }
-                    case 0xA: {
-                        playerTrainingData[pNum].options.AI.wall_chance += amount;
-                        if (playerTrainingData[pNum].options.AI.wall_chance > 10) playerTrainingData[pNum].options.AI.wall_chance = 10;
-                        else if (playerTrainingData[pNum].options.AI.wall_chance < -1) playerTrainingData[pNum].options.AI.wall_chance = -1;
-                        return;
-                    }
-                    case 0xB: {
-                        playerTrainingData[pNum].options.AI.reactionTime += amount;
-                        if (playerTrainingData[pNum].options.AI.reactionTime > 10) playerTrainingData[pNum].options.AI.reactionTime = 10;
-                        else if (playerTrainingData[pNum].options.AI.reactionTime < -1) playerTrainingData[pNum].options.AI.reactionTime = -1;
-                        return;
-                    }
+                if (index < 12) {
+                    playerTrainingData[pNum].options.AI.pIndexes.asArray[index] += amount;
+                    if (playerTrainingData[pNum].options.AI.pIndexes.asArray[index] > 10) playerTrainingData[pNum].options.AI.pIndexes.asArray[index] = 10;
+                    else if (playerTrainingData[pNum].options.AI.pIndexes.asArray[index] < -1) playerTrainingData[pNum].options.AI.pIndexes.asArray[index] = -1;
                 }
                 return;
             }
@@ -3076,6 +2959,7 @@ extern "C" {
                     int toSet = functionalStack[functionalStackPtr];
                     // OSReport("%d, ", toSet);
                     functionalStackPtr --;
+                    // OSReport("toset: %d, data: %.3f\n", toSet, data[i]);
                     aiActInst->variables[toSet] = data[i];
                 }
                 // OSReport("\n");
@@ -3096,17 +2980,17 @@ extern "C" {
                 u8 green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[4], 0);
                 u8 blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[5], 0);
                 u8 alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
-                if (alpha == 255) {
-                    Point * pt = new Point{
-                            0x000000FF,
-                            (float) x1,
-                            (float) y1,
-                            42,
-                            false
-                    };
-                    pt->autoTimer = false;
-                    renderables.items.tick.push(pt);
-                }
+                // if (alpha == 255) {
+                //     Point * pt = new Point{
+                //             0x000000FF,
+                //             (float) x1,
+                //             (float) y1,
+                //             42,
+                //             false
+                //     };
+                //     pt->autoTimer = false;
+                //     renderables.items.tick.push(pt);
+                // }
                 Point * pt = new Point{
                         (red << 24) | (green << 16) | (blue << 8) | ((alpha > 255) ? 255 : alpha),
                         (float) x1,
@@ -3127,19 +3011,19 @@ extern "C" {
                 u8 green = _get_script_value_aiScriptData(aiActInst, *(int *) &args[6], 0);
                 u8 blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
                 u8 alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
-                if (alpha == 255) {
-                    Line * ln = new Line{
-                            0x000000FF,
-                            (float) x1,
-                            (float) y1,
-                            (float) x2,
-                            (float) y2,
-                            42,
-                            false
-                    };
-                    ln->autoTimer = false;
-                    renderables.items.tick.push(ln);
-                }
+                // if (alpha == 255) {
+                //     Line * ln = new Line{
+                //             0x000000FF,
+                //             (float) x1,
+                //             (float) y1,
+                //             (float) x2,
+                //             (float) y2,
+                //             42,
+                //             false
+                //     };
+                //     ln->autoTimer = false;
+                //     renderables.items.tick.push(ln);
+                // }
                 Line * ln = new Line{
                         (red << 24) | (green << 16) | (blue << 8) | ((alpha > 255) ? 255 : alpha),
                         (float) x1,
@@ -3163,19 +3047,19 @@ extern "C" {
                 u8 blue = _get_script_value_aiScriptData(aiActInst, *(int *) &args[7], 0);
                 u8 alpha = _get_script_value_aiScriptData(aiActInst, *(int *) &args[8], 0);
                 // OSReport("RECT RGBA: %d %d %d %d\n", red, green, blue, alpha);
-                if (alpha == 255) {
-                    RectOutline * ro = new RectOutline{
-                            0x000000FF,
-                            (float) (y - height),
-                            (float) (y + height),
-                            (float) (x - width),
-                            (float) (x + width),
-                            42,
-                            false
-                    };
-                    ro->autoTimer = false;
-                    renderables.items.tick.push(ro);
-                }
+                // if (alpha == 255) {
+                //     RectOutline * ro = new RectOutline{
+                //             0x000000FF,
+                //             (float) (y - height),
+                //             (float) (y + height),
+                //             (float) (x - width),
+                //             (float) (x + width),
+                //             42,
+                //             false
+                //     };
+                //     ro->autoTimer = false;
+                //     renderables.items.tick.push(ro);
+                // }
                 RectOutline * ro = new RectOutline{
                     (red << 24) | (green << 16) | (blue << 8) | ((alpha > 255) ? 255 : alpha),
                     (float) (y - height),
@@ -3294,17 +3178,10 @@ SIMPLE_INJECTION(clearPredictions, 0x800dc590, "li r9, 2") {
             debugSwitch[i] = true;
             // clear personality
             if (playerTrainingData[i].options.AI.unlocked) {
-                playerTrainingData[i].options.AI.aggression = 0;
-                playerTrainingData[i].options.AI.bait_dashAwayChance = 0;
-                playerTrainingData[i].options.AI.bait_wdashAwayChance = 0;
-                playerTrainingData[i].options.AI.baitChance = 0;
-                playerTrainingData[i].options.AI.braveChance = 0;
-                playerTrainingData[i].options.AI.circleCampChance = 0;
-                playerTrainingData[i].options.AI.djumpiness = 0;
-                playerTrainingData[i].options.AI.jumpiness = 0;
-                playerTrainingData[i].options.AI.platChance = 0;
-                playerTrainingData[i].options.AI.SDIChance = 0;
-                playerTrainingData[i].options.AI.wall_chance = 0;
+                for (int pIdx = 0; pIdx < 12; pIdx++) {
+                    OSReport("nulled ADDR: %08x\n", &playerTrainingData[pIdx].options.AI.pIndexes.asArray[pIdx]);
+                    playerTrainingData[pIdx].options.AI.pIndexes.asArray[pIdx] = 0;
+                }
             }
         }
         rpsManagers[i].clearAll();

@@ -1,3 +1,6 @@
+#include "_TrainingOptionDefs.h"
+#if HITBOX_HEATMAP_PAGE == 1
+
 #include "Assembly.h"
 #include "Memory.h"
 #include "Brawl/FT/Fighter.h"
@@ -359,3 +362,4 @@ void storedHitboxTick() {
   }
 }
 
+#endif

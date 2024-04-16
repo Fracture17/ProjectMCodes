@@ -63,6 +63,9 @@ struct AiManager {
 // vBrawl: 0x80b89a20
 #define AI_MANAGER ((AiManager *) 0x80622d20)
 
+#define chkIpHumanUpdate(aiChrIdx) ((bool (*)(AiManager* aiMgr, int* aiChrIdx)) 0x808fc8a4)(AI_MANAGER, aiChrIdx)
+#define get_aiStat(aiChrIdx) ((bool (*)(AiManager* aiMgr, int* aiChrIdx)) 0x808fc96c)(AI_MANAGER, aiChrIdx)
+
 // gets the AI's target
 #define _getAiCpuTarget_aiManager ((EntryID (*)(AiManager * self, int port_number)) 0x808fd740)
 

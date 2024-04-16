@@ -1,6 +1,8 @@
 #pragma once
+#ifndef STDDEF
+#define STDDEF
 
-// #include "FuncMap.h"
+#include "FuncMap.h"
 
 #define VTABLE_METHOD(THISTYPE, RET_TYPE, FN_NAME) \
 inline __attribute__((always_inline)) RET_TYPE FN_NAME() { return ((RET_TYPE (*)(THISTYPE self)) this->vtable->fn__ ## FN_NAME)(this); }
@@ -131,3 +133,5 @@ inline void* DynamicCast(void* toCast, int vtableOffset, void* sourceDescriptor,
 
 // template<class R, class... ArgTypes>
 // function(R(*)(ArgTypes...)) -> function<R(ArgTypes...)>;
+
+#endif

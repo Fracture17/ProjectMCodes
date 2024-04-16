@@ -10,6 +10,8 @@
 
 // total size is 0x2C
 struct IpHuman {
+    STATIC_METHOD_1ARG(0x80048250, IpHuman, void, update, IpHuman*, ip)
+
     char _spacer[0x8];
     //0x8
     //0 based, + 0x10 if replay

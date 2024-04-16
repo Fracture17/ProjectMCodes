@@ -49,7 +49,7 @@ enum aimd_value : int {
 struct AiInput {
     IpHuman inputs;
 
-    char _spacer3[0x2C - sizeof(IpHuman)];
+    char _spacer0[0x2C - sizeof(IpHuman)];
 
     // 0x2C
     int fighterId;
@@ -80,7 +80,7 @@ struct AiInput {
             // change_md => 0
             bool unk6 : 1; // pacRegist/[aiInput]
             bool unk5 : 1; // pacRegist/[aiInput]
-            bool unk4 : 1;
+            bool chAiThing : 1;
             // change_md => 0
             bool unk3 : 1;
             // change_md => 0
@@ -90,7 +90,7 @@ struct AiInput {
     } infoUnion;
 
     // contains ARC data
-    char _spacer4[0x40 - 0x3C - 2];
+    char _spacer1[0x40 - 0x3C - 2];
 
     // 0x40
     char swingChkByte1;
@@ -98,14 +98,44 @@ struct AiInput {
     char swingChkByte2;
     // 0x42
     char cpuIdx;
-    char _spacer5[0x44 - 0x42 - 1];
+    char _spacer2[0x44 - 0x42 - 1];
 
     // 0x44
     AiScriptData* aiActPtr;
 
     // 0x48
     int aiMd;
-    char _spacer6[0x58 - 0x48 - 4];
+    char _spacer3[0x50 - 0x48 - 4];
+
+     // 0x50
+    union MoreVariousAIInfoUnion {
+        unsigned short raw;
+        struct VariousAIInfos {
+            bool unk16 : 1;
+            bool unk15 : 1;
+            bool unk14 : 1;
+            bool unk13 : 1;
+            bool unk12 : 1;
+            bool unk11 : 1;
+            bool unk10 : 1;
+            bool unk9 : 1;
+
+            // change_md => 0
+            bool unk8 : 1;
+            bool unk7 : 1; // pacRegist/[aiInput] if this is on then unk5 and unk6 get toggled off, otherwise this gets toggled on
+            // change_md => 0
+            bool unk6 : 1; // pacRegist/[aiInput]
+            bool unk5 : 1; // pacRegist/[aiInput]
+            bool chAiThing : 1;
+            // change_md => 0
+            bool unk3 : 1;
+            // change_md => 0
+            bool unk2 : 1;
+            bool unk1 : 1;
+        } infos;
+    } moreInfoUnion;
+    
+    char _spacer4[0x58 - 0x50 - 2];
 
     // 0x58
     short aiThing;
@@ -113,19 +143,30 @@ struct AiInput {
     short unk_5C;
     // 0x5E
     short recoveryTimer;
-    char _spacer7[0x84 - 0x5E - 2];
+    char _spacer5[0x84 - 0x5E - 2];
 
     // 0x84
     int aiItemTarget;
 
-    char _spacer8[0x90 - 0x84 - 4];
+    char _spacer6[0x90 - 0x84 - 4];
     // 0x90
     AiParam aiParam;
+    char _spacer7[0xD8 - 0x90 - sizeof(AiParam)];
 
-    char _spacer9[0x110 - 0x90 - sizeof(AiParam)];
+    // 0xD8
+    FtInput* ftInput;
+    // 0xDC
+    AiInput* aiInput;
+
+    char _spacer8[0x110 - 0xDC - 4];
     // 0x110
     char aiTarget;
-    char _spacer10[0x144 - 0x110 - 1];
+    char _spacer9[0x113 - 0x110 - 1];
+    
+    // 0x113
+    char CPUType;
+    
+    char _spacer10[0x144 - 0x113 - 1];
 
     // 0x144
     FtEntry* ftEntryPtr;

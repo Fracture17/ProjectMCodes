@@ -19,92 +19,91 @@ struct GameplayPage : public BasicPage {
 };
 
 struct PlayerPhysicsPage : public BasicPage {
-  PlayerPhysicsPage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "Physics"), data(d) {};
+  PlayerPhysicsPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "Physics"), pNum(d) {};
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 struct AIDebugPage : public BasicPage {
-  AIDebugPage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "AI Debug"), data(d) {};
+  AIDebugPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "AI Debug"), pNum(d) {};
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 struct MeterOptionsPage : public BasicPage {
-  MeterOptionsPage(Menu* myMenu, TrainingData& d)
-  : BasicPage(myMenu, "Meter Options"), data(d) {}
+  MeterOptionsPage(Menu* myMenu, int& d)
+  : BasicPage(myMenu, "Meter Options"), pNum(d) {}
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 struct ComboTrainerPage : public BasicPage {
-  ComboTrainerPage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "Combo Trainer"), data(d) {};
+  ComboTrainerPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "Combo Trainer"), pNum(d) {};
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 struct TrajectoryLinePage : public BasicPage {
-  TrajectoryLinePage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "Trajectory Line"), data(d) {};
+  TrajectoryLinePage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "Trajectory Line"), pNum(d) {};
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 struct HeatmapPage : public BasicPage {
-  HeatmapPage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "Heatmap"), data(d) {};
+  HeatmapPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "Heatmap"), pNum(d) {};
   void show(); 
-  TrainingData& data;
+  int& pNum;
 };
 
 struct AIPredictionPage : public BasicPage {
-  AIPredictionPage(Menu* myMenu, TrainingData& d, char pNum) 
-  : BasicPage(myMenu, "Option Predictions"), data(d), pNum(pNum) {};
+  AIPredictionPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "Option Predictions"), pNum(d) {};
   void show();
-  TrainingData& data;
-  char pNum;
+  int& pNum;
 };
 
 struct AIPersonalityPage : public BasicPage {
-  AIPersonalityPage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "AI Personality"), data(d) {};
+  AIPersonalityPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "AI Personality"), pNum(d) {};
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 struct PSADataPage : public BasicPage {
-  PSADataPage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "PSA Data"), data(d) {};
+  PSADataPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "PSA Data"), pNum(d) {};
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 struct PSAScriptPage : public BasicPage {
   static const char* threadNames[];
 
-  PSAScriptPage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "Full Script"), data(d) {};
+  PSAScriptPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "Full Script"), pNum(d) {};
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 struct ControllerInfoPage : public BasicPage {
   static const char* dataType[];
 
-  ControllerInfoPage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "Controller Info"), data(d) {};
+  ControllerInfoPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "Controller Info"), pNum(d) {};
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 struct PositionalDataPage : public BasicPage {
-  PositionalDataPage(Menu* myMenu, TrainingData& d) 
-  : BasicPage(myMenu, "Positional Data"), data(d) {};
+  PositionalDataPage(Menu* myMenu, int& d) 
+  : BasicPage(myMenu, "Positional Data"), pNum(d) {};
   void show();
-  TrainingData& data;
+  int& pNum;
 };
 
 #endif

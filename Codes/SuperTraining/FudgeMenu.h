@@ -2,6 +2,8 @@
 #ifndef PROJECTMCODES_FUDGEMENU_H
 #define PROJECTMCODES_FUDGEMENU_H
 
+#include "_TrainingOptionDefs.h"
+
 #include "menu.h"
 #include "Containers/vector.h"
 #include "Brawl/AI/AICEPac.h"
@@ -15,6 +17,7 @@
 #define OSReport ((void (*)(const char* text, ...)) 0x801d8600)
 #define qsort ((void (*)(void* base, size_t num, size_t size, int (*comparator)(const void*, const void*))) 0x803f8acc)
 
+#if HITBOX_HEATMAP_PAGE == 1
 class ResetFudgeAIOption : public StandardOption {
 public:
   ResetFudgeAIOption() {}
@@ -30,6 +33,7 @@ public:
     printer->printLine("reset bounds");
   };
 };
+#endif
 
 class KineticObserverOption : public StandardOption {
 public:
@@ -265,18 +269,23 @@ struct AIOptions {
   bool unlocked = true;
   bool autoAdjust = true;
   float debugValue = 0;
-  float braveChance = 0;
-  float baitChance = 0;
-  float aggression = 0;
-  float wall_chance = 0;
-  float circleCampChance = 0;
-  float bait_dashAwayChance = 0;
-  float bait_wdashAwayChance = 0;
-  float jumpiness = 0;
-  float djumpiness = 0;
-  float platChance = 0;
-  float SDIChance = 0;
-  float reactionTime = 0;
+  union {
+    struct {
+      float aggression = 0;
+      float bait_dashAwayChance = 0;
+      float bait_wdashAwayChance = 0;
+      float baitChance = 0;
+      float braveChance = 0;
+      float circleCampChance = 0;
+      float djumpiness = 0;
+      float jumpiness = 0;
+      float platChance = 0;
+      float reactionTime = 0;
+      float SDIChance = 0;
+      float wall_chance = 0;
+    } asName;
+    float asArray[12] = {};
+  } pIndexes = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 };
 
 struct AIData {
@@ -307,6 +316,7 @@ struct TrajectoryOptions {
   int segmentLength = 10;
 };
 
+#if HITBOX_HEATMAP_PAGE == 1
 struct HeatmapOptions {
   bool active = false;
   int lifetime = 0;
@@ -314,6 +324,7 @@ struct HeatmapOptions {
   int colorChangeFrame = 25;
   int bubbleLimit = 150;
 };
+#endif
 
 struct ControllerData {
   bool cStick = false;
@@ -349,9 +360,9 @@ struct PositionalData {
 
 struct ControlCodes {
   bool meleeJumpsEnabled = false;
-  // bool aerialTransitionFix = true;
-  // bool smoothWavedashes = true;
-  // bool fastfallTumble = true;
+  bool aerialTransitionFix = true;
+  bool smoothWavedashes = true;
+  bool fastfallTumble = false;
   bool meleeDJC = false;
   bool instantFastFall = false;
 };
@@ -359,7 +370,9 @@ struct ControlCodes {
 struct TrainingDataOptions {
   ControlCodes controlCodes;
   TrajectoryOptions trajectory;
+  #if HITBOX_HEATMAP_PAGE == 1
   HeatmapOptions heatmap;
+  #endif
   comboTrainerOptions comboTrainer;
   AIOptions AI;
   int inputDisplayType = 0;
@@ -392,7 +405,9 @@ struct TrainingData {
   bool hasPlayedSE = false;
   PositionalData posData;
   
+  #if HITBOX_HEATMAP_PAGE == 1
   vector<HitboxDataFrame*>* heatmapData = new vector<HitboxDataFrame*>();
+  #endif
   comboTrainerData debug;
   ControllerData controllerData;
   SuperTurboData turboData;
@@ -402,7 +417,7 @@ struct GlobalCustomData {
   // bool smoothWavedashes = false;
   bool cliffJump2Mod = false;
   // bool aerialTransitionFix = false;
-  bool xDirCardinalCoersion = false;
+  bool xDirCardinalCoersion = true;
 
   // bool smoothWavedashes = true;
   // bool cliffJump2Mod = true;
@@ -414,10 +429,11 @@ struct GlobalCustomData {
   bool immediateDashVel = false;
   // bool meleeJumpVel = false;
   // bool yoshiDJC = false;
-  bool horizontalWavedash = false;
-  bool bufferWavedash = false;
+  // bool horizontalWavedash = false;
+  // bool bufferWavedash = false;
   bool superTurbo = true;
   bool alwaysTurbo = false;
+  int menuPlayerSelected = 0;
   // bool physicsDelayFix = true;
 };
 
@@ -460,14 +476,12 @@ protected:
 };
 
 struct PlayerPage : public Page {
-  PlayerPage(Menu*& myMenu, char pNum);
+  PlayerPage(Menu*& myMenu);
   void show();
   void select();
   void deselect();
   const char* getTitle();
-  TrainingData& data;
-  char playerNum;
-  char title[sizeof("Player X")];
+  const char* title = "Player";
 };
 
 struct CurrentItemParams {

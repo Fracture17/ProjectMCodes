@@ -79,11 +79,6 @@ set(CMAKE_CXX_FLAGS
   # -ftree-pre \
 
 
-  # -fipa-bit-cp  -fipa-cp  -fipa-icf \
-  # -fipa-cp-clone \
-  # -fipa-ra \
-  # -fipa-sra \
-  # -fipa-vrp \
 
 ## UNCOMMENT FOR DEBUGGING
 # set(CMAKE_CXX_FLAGS "-Og -ggdb3 -nostartfiles -fomit-frame-pointer -fno-unwind-tables -fno-stack-check -fno-function-cse -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-asynchronous-unwind-tables -std=c++17 -fno-builtin -ffreestanding -mcpu=750 -mmultiple -fno-inline -save-temps=obj -fverbose-asm -fno-threadsafe-statics")

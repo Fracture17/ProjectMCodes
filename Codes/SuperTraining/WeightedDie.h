@@ -4,14 +4,17 @@
 #include "Containers/vector.h"
 
 struct WeightedValue {
+  WeightedValue() {}
   WeightedValue(float value, float weight) : value(value), weight(weight) {};
-  float value;
-  float weight;
+  float value = 0;
+  float weight = 0;
 };
 
+constexpr const int weightsSize = 0x30;
 class WeightedDie {
 
-  vector<WeightedValue*> weights = vector<WeightedValue*>();
+  WeightedValue weights[weightsSize];
+  char weightsLength = 0;
 
 public:
   WeightedDie() {};
